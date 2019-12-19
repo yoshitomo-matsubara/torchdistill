@@ -37,9 +37,11 @@ train:
     batch_size: 32
     log_freq: 10000
     optimizer:
-        type: 'Adam'
+        type: 'SGD'
         params:
             lr: 0.001
+            momentum: 0.9
+            weight_decay: 0.0005
     criterion:
         type: 'general'
         org_term:
