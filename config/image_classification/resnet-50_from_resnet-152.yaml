@@ -19,7 +19,7 @@ dataset:
 teacher_model:
     name: &teacher_model_name 'resnet152'
     params:
-        num_classes: 10000
+        num_classes: 1000
         pretrained: True
     experiment: &teacher_experiment !join [*dataset_name, '-', *teacher_model_name]
     ckpt: !join ['./resource/ckpt/org/', *teacher_experiment, '.pt']
@@ -35,7 +35,7 @@ student_model:
 train:
     num_epochs: 90
     batch_size: 1
-    log_freq: 1000
+    log_freq: 50000
     optimizer:
         type: 'Adam'
         params:
