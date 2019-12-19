@@ -7,6 +7,8 @@ import torch
 import torch.utils.data
 import torchvision
 from torch import nn
+from torch.nn.parallel import DistributedDataParallel
+
 
 from myutils.common import file_util, yaml_util
 from myutils.pytorch import func_util, module_util
@@ -64,7 +66,7 @@ def get_model(model_config, device, distributed, sync_bn):
     model_name = model_config['name']
     model = torchvision.models.__dict__[model_name](**model_config['params'])
     if distributed and sync_bn:
-        model = torch.nn.SyncBatchNorm.convert_sync_batchnorm(model)
+        model = nn.SyncBatchNorm.convert_sync_batchnorm(model)
 
     ckpt_file_path = model_config['ckpt']
     load_ckpt(ckpt_file_path, model=model, strict=True)
@@ -74,7 +76,7 @@ def get_model(model_config, device, distributed, sync_bn):
 def save_ckpt(model, optimizer, lr_scheduler, best_value, config, args, output_file_path):
     file_util.make_parent_dirs(output_file_path)
     model_state_dict =\
-        model.module.state_dict() if isinstance(model, nn.parallel.DistributedDataParallel) else model.state_dict()
+        model.module.state_dict() if isinstance(model, DistributedDataParallel) else model.state_dict()
     main_util.save_on_master({'model': model_state_dict, 'optimizer': optimizer.state_dict(), 'best_value': best_value,
                               'lr_scheduler': lr_scheduler.state_dict(), 'config': config, 'args': args},
                              output_file_path)
@@ -103,7 +105,7 @@ def distill_one_epoch(distillation_box, train_data_loader, optimizer, device, ep
 
 
 @torch.no_grad()
-def evaluate(model, data_loader, device, log_freq=100):
+def evaluate(model, data_loader, device, log_freq=1000):
     num_threads = torch.get_num_threads()
     torch.set_num_threads(1)
     model.eval()
@@ -177,7 +179,7 @@ def main(args):
             raise RuntimeError('Failed to import apex. Please install apex from https://www.github.com/nvidia/apex '
                                'to enable mixed-precision training.')
 
-    distributed, device_ids = main_util.init_distributed_mode(args)
+    distributed, device_ids = main_util.init_distributed_mode(args.world_size, args.dist_util)
     torch.backends.cudnn.benchmark = True
     config = yaml_util.load_yaml_file(args.config)
     device = torch.device(args.device)
@@ -197,7 +199,7 @@ def main(args):
 
     if distributed:
         teacher_model = torch.nn.parallel.DistributedDataParallel(teacher_model, device_ids=device_ids)
-        student_model = torch.nn.parallel.DistributedDataParallel(student_model, device_ids=device_ids)
+        student_model = DistributedDataParallel(student_model, device_ids=device_ids)
 
     start_epoch = args.start_epoch
     if not args.test_only:

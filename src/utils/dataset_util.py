@@ -19,7 +19,7 @@ def get_cache_path(file_path, dataset_type):
     return cache_path
 
 
-def load_image_folder_dataset(dir_path, dataset_type,  input_size, rough_size, normalizer, use_cache, split_name):
+def load_image_folder_dataset(dir_path, dataset_type, rough_size, input_size, normalizer, use_cache, split_name):
     input_size = tuple(input_size)
     rough_size = tuple(rough_size)
     # Data loading code
@@ -64,9 +64,10 @@ def load_image_folder_dataset(dir_path, dataset_type,  input_size, rough_size, n
             normalizer,
         ]))
     if use_cache:
-        print('Saving dataset_test to {}'.format(cache_path))
+        print('Saving {} dataset_test to {}'.format(split_name, cache_path))
         file_util.make_parent_dirs(cache_path)
         image_util.save_on_master((eval_dataset, dir_path), cache_path)
+    print('\t', time.time() - st)
     return eval_dataset
 
 
