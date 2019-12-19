@@ -25,7 +25,7 @@ teacher_model:
     ckpt: !join ['./resource/ckpt/teacher/', *teacher_experiment, '.pt']
 
 student_model:
-    name: &student_model_name 'resnet50'
+    name: &student_model_name 'alexnet'
     params:
         num_classes: 1000
         pretrained: True
