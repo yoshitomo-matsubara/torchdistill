@@ -6,7 +6,7 @@ from myutils.pytorch import func_util
 
 class KDLoss(nn.KLDivLoss):
     def __init__(self, temperature, alpha=None, reduction='batchmean', **kwargs):
-        super().__init__(reduction)
+        super().__init__(reduction=reduction)
         self.temperature = temperature
         self.alpha = alpha
         cel_reduction = 'mean' if reduction == 'batchmean' else reduction
