@@ -37,8 +37,8 @@ def get_argparser():
                              'O0 for FP32 training, O1 for mixed precision training.'
                              'For further detail, see https://github.com/NVIDIA/apex/tree/master/examples/imagenet')
     # distributed training parameters
-    parser.add_argument('--world-size', default=1, type=int, help='number of distributed processes')
-    parser.add_argument('--dist-url', default='env://', help='url used to set up distributed training')
+    parser.add_argument('--world_size', default=1, type=int, help='number of distributed processes')
+    parser.add_argument('--dist_url', default='env://', help='url used to set up distributed training')
     return parser
 
 
