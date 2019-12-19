@@ -21,7 +21,6 @@ def get_cache_path(file_path, dataset_type):
 
 def load_image_folder_dataset(dir_path, dataset_type, rough_size, input_size, normalizer, use_cache, split_name):
     input_size = tuple(input_size)
-    rough_size = tuple(rough_size)
     # Data loading code
     st = time.time()
     cache_path = get_cache_path(dir_path, dataset_type)

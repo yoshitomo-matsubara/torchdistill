@@ -3,7 +3,7 @@ dataset:
     type: 'imagefolder'
     root: &root_dir !join ['./resource/dataset/', *dataset_name]
     num_workers: 16
-    rough_size: [256, 256]
+    rough_size: 256
     input_size: [224, 224]
     splits:
         train:
