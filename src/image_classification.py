@@ -177,7 +177,7 @@ def main(args):
             raise RuntimeError('Failed to import apex. Please install apex from https://www.github.com/nvidia/apex '
                                'to enable mixed-precision training.')
 
-    distributed, device_ids = main_util.init_distributed_mode(args.world_size, args.dist_util)
+    distributed, device_ids = main_util.init_distributed_mode(args.world_size, args.dist_url)
     torch.backends.cudnn.benchmark = True
     config = yaml_util.load_yaml_file(args.config)
     device = torch.device(args.device)
