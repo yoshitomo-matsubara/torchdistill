@@ -19,7 +19,7 @@ dataset:
 teacher_model:
     name: &teacher_model_name 'resnet152'
     params:
-        num_classes: 1000
+        num_classes: 10000
         pretrained: True
     experiment: &teacher_experiment !join [*dataset_name, '-', *teacher_model_name]
     ckpt: !join ['./resource/ckpt/org/', *teacher_experiment, '.pt']
@@ -48,7 +48,7 @@ train:
                 params:
                     temperature: 20.0
                     alpha: 1.0
-                    reduction: 'mean'
+                    reduction: 'batchmean'
             factor: 1.0
         sub_terms:
             layer1:
