@@ -14,17 +14,19 @@ class DistillationBox(nn.Module):
         def extract_output(self, input, output):
             self.__dict__['distillation_box']['output'] = output
 
-        for loss_name, loss_config in criterion_config['sub_terms'].items():
-            teacher_path, student_path = loss_config['ts_modules']
-            self.target_module_pairs.append((teacher_path, student_path))
-            teacher_module = module_util.get_module(self.teacher_model, teacher_path)
-            student_module = module_util.get_module(self.student_model, student_path)
-            teacher_module.__dict__['distillation_box'] = {'loss_name': loss_name, 'path_from_root': teacher_path,
-                                                           'is_teacher': True}
-            student_module.__dict__['distillation_box'] = {'loss_name': loss_name, 'path_from_root': student_path,
-                                                           'is_teacher': False}
-            teacher_module.register_forward_hook(extract_output)
-            student_module.register_forward_hook(extract_output)
+        sub_terms_config = criterion_config.get('sub_terms', None)
+        if sub_terms_config is not None:
+            for loss_name, loss_config in sub_terms_config.items():
+                teacher_path, student_path = loss_config['ts_modules']
+                self.target_module_pairs.append((teacher_path, student_path))
+                teacher_module = module_util.get_module(self.teacher_model, teacher_path)
+                student_module = module_util.get_module(self.student_model, student_path)
+                teacher_module.__dict__['distillation_box'] = {'loss_name': loss_name, 'path_from_root': teacher_path,
+                                                               'is_teacher': True}
+                student_module.__dict__['distillation_box'] = {'loss_name': loss_name, 'path_from_root': student_path,
+                                                               'is_teacher': False}
+                teacher_module.register_forward_hook(extract_output)
+                student_module.register_forward_hook(extract_output)
 
         org_term_config = criterion_config['org_term']
         org_criterion_config = org_term_config['criterion']
