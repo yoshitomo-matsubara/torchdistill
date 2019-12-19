@@ -210,8 +210,8 @@ def main(args):
                 distributed, start_epoch, config, args)
 
     if not args.student_only:
-        evaluate(teacher_model, test_data_loader, device, title='[Teacher: {}]'.format(teacher_model_config['type']))
-    evaluate(student_model, test_data_loader, device, title='[Student: {}]'.format(student_model_config['type']))
+        evaluate(teacher_model, test_data_loader, device, title='[Teacher: {}]'.format(teacher_model_config['name']))
+    evaluate(student_model, test_data_loader, device, title='[Student: {}]'.format(student_model_config['name']))
 
 
 if __name__ == '__main__':
