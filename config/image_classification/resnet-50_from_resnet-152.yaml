@@ -22,7 +22,7 @@ teacher_model:
         num_classes: 1000
         pretrained: True
     experiment: &teacher_experiment !join [*dataset_name, '-', *teacher_model_name]
-    ckpt: !join ['./resource/ckpt/org/', *teacher_experiment, '.pt']
+    ckpt: !join ['./resource/ckpt/teacher/', *teacher_experiment, '.pt']
 
 student_model:
     name: &student_model_name 'resnet50'
@@ -30,7 +30,7 @@ student_model:
         num_classes: 1000
         pretrained: True
     experiment: &student_experiment !join [*dataset_name, '-', *student_model_name, '_from_', *teacher_model_name]
-    ckpt: !join ['./resource/ckpt/mimic/', *student_experiment, '.pt']
+    ckpt: !join ['./resource/ckpt/student/', *student_experiment, '.pt']
 
 train:
     num_epochs: 90

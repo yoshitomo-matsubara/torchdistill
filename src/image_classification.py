@@ -27,7 +27,8 @@ def get_argparser():
     parser.add_argument('-use_cache', action='store_true',
                         help='Cache the datasets for quicker initialization. It also serializes the transforms')
     parser.add_argument('-sync_bn', action='store_true', help='Use sync batch norm')
-    parser.add_argument('-test_only', action='store_true', help='Only test the model')
+    parser.add_argument('-test_only', action='store_true', help='Only test the models')
+    parser.add_argument('-student_only', action='store_true', help='Test the student model only')
     # Mixed precision training parameters
     parser.add_argument('-apex', action='store_true',
                         help='Use apex for mixed precision training')
@@ -202,6 +203,9 @@ def main(args):
     if not args.test_only:
         distill(teacher_model, student_model, train_sampler, train_data_loader, val_data_loader, device,
                 distributed, start_epoch, config, args)
+
+    if not args.student_only:
+        evaluate(teacher_model, test_data_loader, device=device)
     evaluate(student_model, test_data_loader, device=device)
 
 
