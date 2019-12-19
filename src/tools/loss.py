@@ -5,11 +5,12 @@ from myutils.pytorch import func_util
 
 
 class KDLoss(nn.KLDivLoss):
-    def __init__(self, temperature, alpha=None, **kwargs):
-        super().__init__(**kwargs)
+    def __init__(self, temperature, alpha=None, reduction='batchmean', **kwargs):
+        super().__init__(reduction)
         self.temperature = temperature
         self.alpha = alpha
-        self.cross_entropy_loss = nn.CrossEntropyLoss(**kwargs)
+        cel_reduction = 'mean' if reduction == 'batchmean' else reduction
+        self.cross_entropy_loss = nn.CrossEntropyLoss(reduction=cel_reduction, **kwargs)
 
     def forward(self, student_output, teacher_output, labels=None):
         soft_loss = super().forward(torch.log_softmax(student_output / self.temperature, dim=1),
