@@ -45,7 +45,7 @@ class DistillationBox(nn.Module):
                 for i, sub_outputs in enumerate(student_outputs):
                     org_loss_dict[i] = self.org_criterion(sub_outputs, targets)
         else:
-            org_loss_dict = {0: self.org_criteria(student_outputs, targets)}
+            org_loss_dict = {0: self.org_criterion(student_outputs, targets)}
 
         output_dict = dict()
         for teacher_path, student_path in self.target_module_pairs:
