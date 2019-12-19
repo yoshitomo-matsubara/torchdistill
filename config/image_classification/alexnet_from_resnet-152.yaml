@@ -51,20 +51,6 @@ train:
                     reduction: 'batchmean'
             factor: 1.0
         sub_terms:
-            layer1:
-                ts_modules: ['layer1', 'layer1']
-                criterion:
-                    type: 'MSELoss'
-                    params:
-                        reduction: 'mean'
-                factor: 1.0
-            layer2:
-                ts_modules: ['layer2', 'layer2']
-                criterion:
-                    type: 'MSELoss'
-                    params:
-                        reduction: 'mean'
-                factor: 1.0
     scheduler:
         type: 'MultiStepLR'
         params:
