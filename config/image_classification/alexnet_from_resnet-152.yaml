@@ -34,7 +34,7 @@ student_model:
 
 train:
     num_epochs: 20
-    batch_size: 1
+    batch_size: 32
     log_freq: 10000
     optimizer:
         type: 'Adam'
