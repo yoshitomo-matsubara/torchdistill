@@ -35,7 +35,7 @@ class CustomLoss(nn.Module):
     def __init__(self, criterion_config):
         super().__init__()
         term_dict = dict()
-        for loss_name, loss_config in criterion_config['terms'].items():
+        for loss_name, loss_config in criterion_config['sub_terms'].items():
             sub_criterion_config = loss_config['criterion']
             sub_criterion = func_util.get_loss(sub_criterion_config['type'], sub_criterion_config['params'])
             term_dict[loss_name] = (loss_config['ts_modules'], sub_criterion, loss_config['factor'])
@@ -48,6 +48,7 @@ class CustomLoss(nn.Module):
 class GeneralizedCustomLoss(CustomLoss):
     def __init__(self, criterion_config):
         super().__init__(criterion_config)
+        self.org_loss_factor = criterion_config['org_term']['factor']
 
     def forward(self, output_dict, org_loss_dict):
         loss_dict = dict()
@@ -58,7 +59,7 @@ class GeneralizedCustomLoss(CustomLoss):
         sub_total_loss = sum(loss for loss in loss_dict.values())
         if self.org_loss_factor == 0:
             return sub_total_loss
-        return sub_total_loss + sum(loss for loss in org_loss_dict.values())
+        return sub_total_loss + self.org_loss_factor * sum(loss for loss in org_loss_dict.values())
 
 
 CUSTOM_LOSS_DICT = {

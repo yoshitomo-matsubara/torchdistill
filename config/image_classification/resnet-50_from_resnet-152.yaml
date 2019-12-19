@@ -7,17 +7,17 @@ dataset:
     input_size: [224, 224]
     splits:
         train:
-            images: !join [*root_dir, '/train2017']
+            images: !join [*root_dir, '/train']
         val:
-            images: !join [*root_dir, '/val2017']
+            images: !join [*root_dir, '/val']
         test:
-            images: !join [*root_dir, '/val2017']
+            images: !join [*root_dir, '/val']
     normalizer:
         mean: [0.485, 0.456, 0.406]
         std: [0.229, 0.224, 0.225]
 
 teacher_model:
-    name: &teacher_model_name 'renet152'
+    name: &teacher_model_name 'resnet152'
     params:
         num_classes: 1000
         pretrained: True

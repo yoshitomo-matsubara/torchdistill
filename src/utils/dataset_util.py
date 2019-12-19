@@ -45,7 +45,7 @@ def load_image_folder_dataset(dir_path, dataset_type,  input_size, rough_size, n
                 print('Saving dataset_train to {}'.format(cache_path))
                 file_util.make_parent_dirs(cache_path)
                 image_util.save_on_master((train_dataset, dir_path), cache_path)
-            print('Took', time.time() - st)
+            print('\t', time.time() - st)
             return train_dataset
 
     if use_cache and file_util.check_if_exists(cache_path):
