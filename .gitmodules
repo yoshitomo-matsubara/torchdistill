@@ -1,0 +1,3 @@
+[submodule "src/myutils"]
+	path = src/myutils
+	url = https://github.com/yoshitomo-matsubara/myutils.git
