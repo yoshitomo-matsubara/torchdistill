@@ -31,6 +31,7 @@ class DistillationBox(nn.Module):
         self.org_criterion = get_single_loss(org_criterion_config)
         self.org_factor = org_term_config['factor']
         self.criterion = get_custom_loss(criterion_config)
+        self.use_teacher_output = isinstance(self.org_criterion, KDLoss)
 
     def forward(self, sample_batch, targets):
         teacher_outputs = self.teacher_model(sample_batch)
@@ -38,14 +39,16 @@ class DistillationBox(nn.Module):
         # Model with auxiliary classifier returns multiple outputs
         if isinstance(student_outputs, (list, tuple)):
             org_loss_dict = dict()
-            if isinstance(self.org_criterion, KDLoss):
+            if self.use_teacher_output:
                 for i, sub_student_outputs, sub_teacher_outputs in enumerate(zip(student_outputs, teacher_outputs)):
                     org_loss_dict[i] = self.org_criterion(sub_student_outputs, sub_teacher_outputs, targets)
             else:
                 for i, sub_outputs in enumerate(student_outputs):
                     org_loss_dict[i] = self.org_criterion(sub_outputs, targets)
         else:
-            org_loss_dict = {0: self.org_criterion(student_outputs, targets)}
+            org_loss = self.org_criterion(student_outputs, teacher_outputs, targets) if self.use_teacher_output\
+                else self.org_criterion(student_outputs, targets)
+            org_loss_dict = {0: org_loss}
 
         output_dict = dict()
         for teacher_path, student_path in self.target_module_pairs:
