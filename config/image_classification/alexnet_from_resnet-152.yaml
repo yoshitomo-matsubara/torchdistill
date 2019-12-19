@@ -33,7 +33,7 @@ student_model:
     ckpt: !join ['./resource/ckpt/student/', *student_experiment, '.pt']
 
 train:
-    num_epochs: 90
+    num_epochs: 20
     batch_size: 1
     log_freq: 50000
     optimizer:
@@ -54,7 +54,7 @@ train:
     scheduler:
         type: 'MultiStepLR'
         params:
-            milestones: [30, 60]
+            milestones: [5, 15]
             gamma: 0.1
 
 test:
