@@ -75,7 +75,7 @@ def get_data_loaders(dataset_config, batch_size, use_cache, distributed):
     rough_size = dataset_config['rough_size']
     input_size = dataset_config['input_size']
     normalizer = transforms.Normalize(**dataset_config['normalizer'])
-    if dataset_type == 'image_folder':
+    if dataset_type == 'imagefolder':
         dataset_splits_config = dataset_config['splits']
         train_dataset = load_image_folder_dataset(dataset_splits_config['train']['images'], dataset_type,
                                                   rough_size, input_size, normalizer, use_cache, 'train')
