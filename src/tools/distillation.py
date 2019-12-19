@@ -34,7 +34,7 @@ class DistillationBox(nn.Module):
 
     def forward(self, sample_batch, targets):
         teacher_outputs = self.teacher_model(sample_batch)
-        student_outputs = self.student_model(sample_batch, targets)
+        student_outputs = self.student_model(sample_batch)
         # Model with auxiliary classifier returns multiple outputs
         if isinstance(student_outputs, (list, tuple)):
             org_loss_dict = dict()
