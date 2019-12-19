@@ -4,11 +4,9 @@ import sys
 import time
 
 import torch
-import torch.utils.data
 import torchvision
 from torch import nn
 from torch.nn.parallel import DistributedDataParallel
-
 
 from myutils.common import file_util, yaml_util
 from myutils.pytorch import func_util, module_util
@@ -198,7 +196,7 @@ def main(args):
         student_model, optimizer = amp.initialize(student_model, optimizer, opt_level=args.apex_opt_level)
 
     if distributed:
-        teacher_model = torch.nn.parallel.DistributedDataParallel(teacher_model, device_ids=device_ids)
+        teacher_model = nn.DataParallel(teacher_model, device_ids=device_ids)
         student_model = DistributedDataParallel(student_model, device_ids=device_ids)
 
     start_epoch = args.start_epoch
