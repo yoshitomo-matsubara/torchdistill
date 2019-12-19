@@ -103,7 +103,10 @@ def distill_one_epoch(distillation_box, train_data_loader, optimizer, device, ep
 
 
 @torch.no_grad()
-def evaluate(model, data_loader, device, log_freq=1000):
+def evaluate(model, data_loader, device, log_freq=1000, title=None):
+    if title is not None:
+        print(title)
+
     num_threads = torch.get_num_threads()
     torch.set_num_threads(1)
     model.eval()
@@ -126,7 +129,7 @@ def evaluate(model, data_loader, device, log_freq=1000):
     metric_logger.synchronize_between_processes()
     top1_accuracy = metric_logger.acc1.global_avg
     top5_accuracy = metric_logger.acc5.global_avg
-    print(' * Acc@1 {:.4f}\tAcc@5 {:.4f}'.format(top1_accuracy, top5_accuracy))
+    print(' * Acc@1 {:.4f}\tAcc@5 {:.4f}\n'.format(top1_accuracy, top5_accuracy))
     torch.set_num_threads(num_threads)
     return metric_logger.acc1.global_avg
 
@@ -185,9 +188,11 @@ def main(args):
     train_sampler, train_data_loader, val_data_loader, test_data_loader =\
         dataset_util.get_data_loaders(config['dataset'], train_config['batch_size'], args.use_cache, distributed)
 
-    teacher_model = get_model(config['teacher_model'], device, distributed, False)
+    teacher_model_config = config['teacher_model']
+    teacher_model = get_model(teacher_model_config, device, distributed, False)
     module_util.freeze_module_params(teacher_model)
-    student_model = get_model(config['student_model'], device, distributed, args.sync_bn)
+    student_model_config = config['student_model']
+    student_model = get_model(student_model_config, device, distributed, args.sync_bn)
 
     optim_config = train_config['optimizer']
     optimizer = func_util.get_optimizer(student_model, optim_config['type'], optim_config['params'])
@@ -205,8 +210,8 @@ def main(args):
                 distributed, start_epoch, config, args)
 
     if not args.student_only:
-        evaluate(teacher_model, test_data_loader, device=device)
-    evaluate(student_model, test_data_loader, device=device)
+        evaluate(teacher_model, test_data_loader, device, title='[Teacher: {}]'.format(teacher_model_config['type']))
+    evaluate(student_model, test_data_loader, device, title='[Student: {}]'.format(student_model_config['type']))
 
 
 if __name__ == '__main__':
