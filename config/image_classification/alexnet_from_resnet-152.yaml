@@ -35,7 +35,7 @@ student_model:
 train:
     num_epochs: 20
     batch_size: 32
-    log_freq: 10000
+    log_freq: 1000
     optimizer:
         type: 'SGD'
         params:
