@@ -17,7 +17,9 @@ class KDLoss(nn.KLDivLoss):
                                     torch.softmax(teacher_output / self.temperature, dim=1))
         if self.alpha is None or labels is None:
             return soft_loss
-        return self.alpha * soft_loss + (1 - self.alpha) * self.cross_entropy_loss(student_output, labels)
+
+        hard_loss = self.cross_entropy_loss(student_output, labels)
+        return self.alpha * soft_loss * (self.temperature ** 2) + (1 - self.alpha) * hard_loss
 
 
 SINGLE_LOSS_DICT = {
