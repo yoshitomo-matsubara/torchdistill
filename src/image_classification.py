@@ -208,6 +208,7 @@ def main(args):
     if not args.test_only:
         distill(teacher_model, student_model, train_sampler, train_data_loader, val_data_loader, device,
                 distributed, start_epoch, config, args)
+        load_ckpt(student_model_config['ckpt'], model=student_model, strict=True)
 
     if not args.student_only:
         evaluate(teacher_model, test_data_loader, device, title='[Teacher: {}]'.format(teacher_model_config['name']))
