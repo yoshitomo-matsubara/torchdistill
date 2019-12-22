@@ -151,6 +151,8 @@ def distill(teacher_model, student_model, train_sampler, train_data_loader, val_
         best_val_map, _, _ = load_ckpt(ckpt_file_path, optimizer=optimizer, lr_scheduler=lr_scheduler)
 
     log_freq = train_config['log_freq']
+    student_model_without_ddp = \
+        student_model.module if isinstance(student_model, DistributedDataParallel) else student_model
     for epoch in range(start_epoch, train_config['num_epochs']):
         if distributed:
             train_sampler.set_epoch(epoch)
@@ -163,7 +165,8 @@ def distill(teacher_model, student_model, train_sampler, train_data_loader, val_
             print('Updating ckpt (Best top1 accuracy: {:.4f} -> {:.4f})'.format(best_val_top1_accuracy,
                                                                                 val_top1_accuracy))
             best_val_top1_accuracy = val_top1_accuracy
-            save_ckpt(student_model, optimizer, lr_scheduler, best_val_top1_accuracy, config, args, ckpt_file_path)
+            save_ckpt(student_model_without_ddp, optimizer, lr_scheduler,
+                      best_val_top1_accuracy, config, args, ckpt_file_path)
         lr_scheduler.step()
 
     total_time = time.time() - start_time
