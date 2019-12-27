@@ -25,7 +25,7 @@ teacher_model:
     ckpt: !join ['./resource/ckpt/teacher/', *teacher_experiment, '.pt']
 
 student_model:
-    name: &student_model_name 'alexnet'
+    name: &student_model_name 'resnet18'
     params:
         num_classes: 1000
         pretrained: True
@@ -48,8 +48,8 @@ train:
             criterion:
                 type: 'kd'
                 params:
-                    temperature: 20.0
-                    alpha: 1.0
+                    temperature: 1.0
+                    alpha: 0.9
                     reduction: 'batchmean'
             factor: 1.0
         sub_terms:
