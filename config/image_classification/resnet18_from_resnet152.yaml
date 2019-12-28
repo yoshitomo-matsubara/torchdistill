@@ -1,0 +1,63 @@
+dataset:
+    name: &dataset_name 'ilsvrc2012'
+    type: 'imagefolder'
+    root: &root_dir !join ['./resource/dataset/', *dataset_name]
+    num_workers: 16
+    rough_size: 256
+    input_size: [224, 224]
+    splits:
+        train:
+            images: !join [*root_dir, '/train']
+        val:
+            images: !join [*root_dir, '/val']
+        test:
+            images: !join [*root_dir, '/val']
+    normalizer:
+        mean: [0.485, 0.456, 0.406]
+        std: [0.229, 0.224, 0.225]
+
+teacher_model:
+    name: &teacher_model_name 'resnet152'
+    params:
+        num_classes: 1000
+        pretrained: True
+    experiment: &teacher_experiment !join [*dataset_name, '-', *teacher_model_name]
+    ckpt: !join ['./resource/ckpt/teacher/', *teacher_experiment, '.pt']
+
+student_model:
+    name: &student_model_name 'resnet18'
+    params:
+        num_classes: 1000
+        pretrained: True
+    experiment: &student_experiment !join [*dataset_name, '-', *student_model_name, '_from_', *teacher_model_name]
+    ckpt: !join ['./resource/ckpt/student/', *student_experiment, '.pt']
+
+train:
+    num_epochs: 20
+    batch_size: 32
+    log_freq: 1000
+    optimizer:
+        type: 'SGD'
+        params:
+            lr: 0.001
+            momentum: 0.9
+            weight_decay: 0.0005
+    criterion:
+        type: 'general'
+        org_term:
+            criterion:
+                type: 'kd'
+                params:
+                    temperature: 1.0
+                    alpha: 0.9
+                    reduction: 'batchmean'
+            factor: 1.0
+        sub_terms:
+    scheduler:
+        type: 'MultiStepLR'
+        params:
+            milestones: [5, 15]
+            gamma: 0.1
+
+test:
+    batch_size: 1
