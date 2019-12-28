@@ -24,20 +24,25 @@ wget https://raw.githubusercontent.com/soumith/imagenetloader.torch/master/valpr
 mv valpre.sh ${VAL_DIR}
 sh valpre.sh
 ```
-
-#### 3. Train AlexNet (student) under supervision of ResNet-152 (teacher)  
+#### 1.3 Distill knowledge of ResNet-152
+e.g., Teacher: ResNet-152, Student: AlexNet  
 a) Use one GPU
 ```
-pipenv run python src/image_classification.py --config config/image_classification/alexnet_from_resnet-152.yaml
+pipenv run python src/image_classification.py --config config/image_classification/alexnet_from_resnet152.yaml
 ```  
 b) Use multiple GPUs
 ```
-pipenv run python -m torch.distributed.launch --nproc_per_node=${NUM_GPUS} --use_env src/image_classification.py --world_size ${NUM_GPUS} --config config/image_classification/alexnet_from_resnet-152.yaml
+pipenv run python -m torch.distributed.launch --nproc_per_node=${NUM_GPUS} --use_env src/image_classification.py --world_size ${NUM_GPUS} --config config/image_classification/alexnet_from_resnet152.yaml
 ```
 c) Use CPU
 ```
-pipenv run python src/image_classification.py --device cpu --config config/image_classification/alexnet_from_resnet-152.yaml
+pipenv run python src/image_classification.py --device cpu --config config/image_classification/alexnet_from_resnet152.yaml
 ```  
+#### 1.4 Top 1 accuracy of student models
+| Teacher \\ Student    | AlexNet   | ResNet-18 |  
+| :---                  | ---:      | ---:      |  
+| Pretrained (no *KD*)  | 56.52     | 69.76     |  
+| ResNet-152            | 57.22     | 69.86     |
 
 
 ## References
