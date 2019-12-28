@@ -20,8 +20,15 @@ pipenv install
 #### 1.1 Download and unzip ImageNet datasets (ILSVRC2012 in this example)
 #### 1.2 Execute the following commands
 ```
+cd kdkit/
+mkdir ./resource/dataset/ilsvrc2012/{train,val} -p
+
+# Download the training and validation datasets from ImageNet website
+# Untar them under train and val dirs respectively
+
 wget https://raw.githubusercontent.com/soumith/imagenetloader.torch/master/valprep.sh
-mv valpre.sh ${VAL_DIR}
+mv valpre.sh ./resource/dataset/ilsvrc2012/val/
+cd ./resource/dataset/ilsvrc2012/val/
 sh valpre.sh
 ```
 #### 1.3 Distill knowledge of ResNet-152
