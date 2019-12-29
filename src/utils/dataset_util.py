@@ -70,7 +70,7 @@ def load_image_folder_dataset(dir_path, dataset_type, rough_size, input_size, no
     return eval_dataset
 
 
-def get_data_loaders(dataset_config, batch_size, use_cache, distributed):
+def get_data_loaders(dataset_config, distill_batch_size, test_batch_size, use_cache, distributed):
     dataset_type = dataset_config['type']
     rough_size = dataset_config['rough_size']
     input_size = dataset_config['input_size']
@@ -102,10 +102,10 @@ def get_data_loaders(dataset_config, batch_size, use_cache, distributed):
         test_sampler = SequentialSampler(test_dataset)
 
     num_workers = dataset_config['num_workers']
-    train_data_loader = DataLoader(train_dataset, batch_size=batch_size, sampler=train_sampler,
+    train_data_loader = DataLoader(train_dataset, batch_size=distill_batch_size, sampler=train_sampler,
                                    num_workers=num_workers, pin_memory=True)
-    val_data_loader = DataLoader(val_dataset, batch_size=batch_size, sampler=val_sampler,
+    val_data_loader = DataLoader(val_dataset, batch_size=distill_batch_size, sampler=val_sampler,
                                  num_workers=num_workers, pin_memory=True)
-    test_data_loader = DataLoader(test_dataset, batch_size=1, sampler=test_sampler,
+    test_data_loader = DataLoader(test_dataset, batch_size=test_batch_size, sampler=test_sampler,
                                   num_workers=num_workers, pin_memory=True)
     return train_sampler, train_data_loader, val_data_loader, test_data_loader

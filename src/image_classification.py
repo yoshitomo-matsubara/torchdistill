@@ -189,7 +189,8 @@ def main(args):
     device = torch.device(args.device)
     train_config = config['train']
     train_sampler, train_data_loader, val_data_loader, test_data_loader =\
-        dataset_util.get_data_loaders(config['dataset'], train_config['batch_size'], args.use_cache, distributed)
+        dataset_util.get_data_loaders(config['dataset'], train_config['batch_size'],
+                                      config['test']['batch_size'], args.use_cache, distributed)
 
     teacher_model_config = config['teacher_model']
     teacher_model = get_model(teacher_model_config, device, distributed, False)
