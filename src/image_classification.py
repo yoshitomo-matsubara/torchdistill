@@ -137,7 +137,6 @@ def evaluate(model, data_loader, device, log_freq=1000, title=None):
 def distill(teacher_model, student_model, train_sampler, train_data_loader, val_data_loader, device,
             distributed, start_epoch, config, args):
     print('Start knowledge distillation')
-    start_time = time.time()
     train_config = config['train']
 
     distillation_box = DistillationBox(teacher_model, student_model, train_config['criterion'])
@@ -153,6 +152,7 @@ def distill(teacher_model, student_model, train_sampler, train_data_loader, val_
     log_freq = train_config['log_freq']
     student_model_without_ddp = \
         student_model.module if isinstance(student_model, DistributedDataParallel) else student_model
+    start_time = time.time()
     for epoch in range(start_epoch, train_config['num_epochs']):
         if distributed:
             train_sampler.set_epoch(epoch)
