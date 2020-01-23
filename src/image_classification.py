@@ -11,7 +11,8 @@ from torch.nn.parallel import DistributedDataParallel
 from myutils.common import file_util, yaml_util
 from myutils.pytorch import func_util, module_util
 from tools.distillation import DistillationBox
-from utils import dataset_util, image_util, main_util
+from utils import dataset_util, main_util
+from utils.image_util import MetricLogger, SmoothedValue, compute_accuracy
 
 try:
     from apex import amp
@@ -81,9 +82,9 @@ def save_ckpt(model, optimizer, lr_scheduler, best_value, config, args, output_f
 
 
 def distill_one_epoch(distillation_box, train_data_loader, optimizer, device, epoch, log_freq, use_apex=False):
-    metric_logger = image_util.MetricLogger(delimiter='  ')
-    metric_logger.add_meter('lr', image_util.SmoothedValue(window_size=1, fmt='{value}'))
-    metric_logger.add_meter('img/s', image_util.SmoothedValue(window_size=10, fmt='{value}'))
+    metric_logger = MetricLogger(delimiter='  ')
+    metric_logger.add_meter('lr', SmoothedValue(window_size=1, fmt='{value}'))
+    metric_logger.add_meter('img/s', SmoothedValue(window_size=10, fmt='{value}'))
     header = 'Epoch: [{}]'.format(epoch)
     for sample_batch, targets in metric_logger.log_every(train_data_loader, log_freq, header):
         start_time = time.time()
@@ -110,7 +111,7 @@ def evaluate(model, data_loader, device, log_freq=1000, title=None):
     num_threads = torch.get_num_threads()
     torch.set_num_threads(1)
     model.eval()
-    metric_logger = image_util.MetricLogger(delimiter='  ')
+    metric_logger = MetricLogger(delimiter='  ')
     header = 'Test:'
     with torch.no_grad():
         for image, target in metric_logger.log_every(data_loader, log_freq, header):
@@ -118,7 +119,7 @@ def evaluate(model, data_loader, device, log_freq=1000, title=None):
             target = target.to(device, non_blocking=True)
             output = model(image)
 
-            acc1, acc5 = image_util.accuracy(output, target, topk=(1, 5))
+            acc1, acc5 = compute_accuracy(output, target, topk=(1, 5))
             # FIXME need to take into account that the datasets
             # could have been padded in distributed setup
             batch_size = image.shape[0]
@@ -137,9 +138,7 @@ def evaluate(model, data_loader, device, log_freq=1000, title=None):
 def distill(teacher_model, student_model, train_sampler, train_data_loader, val_data_loader, device,
             distributed, start_epoch, config, args):
     print('Start knowledge distillation')
-    start_time = time.time()
     train_config = config['train']
-
     distillation_box = DistillationBox(teacher_model, student_model, train_config['criterion'])
     ckpt_file_path = config['student_model']['ckpt']
     optim_config = train_config['optimizer']
@@ -153,6 +152,7 @@ def distill(teacher_model, student_model, train_sampler, train_data_loader, val_
     log_freq = train_config['log_freq']
     student_model_without_ddp = \
         student_model.module if isinstance(student_model, DistributedDataParallel) else student_model
+    start_time = time.time()
     for epoch in range(start_epoch, train_config['num_epochs']):
         if distributed:
             train_sampler.set_epoch(epoch)
@@ -189,7 +189,8 @@ def main(args):
     device = torch.device(args.device)
     train_config = config['train']
     train_sampler, train_data_loader, val_data_loader, test_data_loader =\
-        dataset_util.get_data_loaders(config['dataset'], train_config['batch_size'], args.use_cache, distributed)
+        dataset_util.get_data_loaders(config['dataset'], train_config['batch_size'],
+                                      config['test']['batch_size'], args.use_cache, distributed)
 
     teacher_model_config = config['teacher_model']
     teacher_model = get_model(teacher_model_config, device, distributed, False)
