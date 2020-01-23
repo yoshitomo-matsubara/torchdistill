@@ -138,7 +138,6 @@ def distill(teacher_model, student_model, train_sampler, train_data_loader, val_
             distributed, start_epoch, config, args):
     print('Start knowledge distillation')
     train_config = config['train']
-
     distillation_box = DistillationBox(teacher_model, student_model, train_config['criterion'])
     ckpt_file_path = config['student_model']['ckpt']
     optim_config = train_config['optimizer']
