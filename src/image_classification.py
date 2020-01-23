@@ -135,7 +135,7 @@ def evaluate(model, data_loader, device, log_freq=1000, title=None):
     return metric_logger.acc1.global_avg
 
 
-def distill(teacher_model, student_model, train_sampler, train_data_loader, val_data_loader, device,
+def distill(teacher_model, student_model, train_data_loader, val_data_loader, device,
             distributed, start_epoch, config, args):
     print('Start knowledge distillation')
     train_config = config['train']
@@ -155,7 +155,7 @@ def distill(teacher_model, student_model, train_sampler, train_data_loader, val_
     start_time = time.time()
     for epoch in range(start_epoch, train_config['num_epochs']):
         if distributed:
-            train_sampler.set_epoch(epoch)
+            train_data_loader.sampler.set_epoch(epoch)
 
         teacher_model.eval()
         student_model.train()
@@ -188,7 +188,7 @@ def main(args):
     config = yaml_util.load_yaml_file(args.config)
     device = torch.device(args.device)
     train_config = config['train']
-    train_sampler, train_data_loader, val_data_loader, test_data_loader =\
+    train_data_loader, val_data_loader, test_data_loader =\
         dataset_util.get_data_loaders(config['dataset'], train_config['batch_size'],
                                       config['test']['batch_size'], args.use_cache, distributed)
 
@@ -210,7 +210,7 @@ def main(args):
 
     start_epoch = args.start_epoch
     if not args.test_only:
-        distill(teacher_model, student_model, train_sampler, train_data_loader, val_data_loader, device,
+        distill(teacher_model, student_model, train_data_loader, val_data_loader, device,
                 distributed, start_epoch, config, args)
         student_model_without_ddp =\
             student_model.module if isinstance(student_model, DistributedDataParallel) else student_model

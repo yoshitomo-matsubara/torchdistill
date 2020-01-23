@@ -108,4 +108,4 @@ def get_data_loaders(dataset_config, distill_batch_size, test_batch_size, use_ca
                                  num_workers=num_workers, pin_memory=True)
     test_data_loader = DataLoader(test_dataset, batch_size=test_batch_size, sampler=test_sampler,
                                   num_workers=num_workers, pin_memory=True)
-    return train_sampler, train_data_loader, val_data_loader, test_data_loader
+    return train_data_loader, val_data_loader, test_data_loader
