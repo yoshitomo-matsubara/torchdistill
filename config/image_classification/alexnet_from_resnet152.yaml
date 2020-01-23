@@ -49,7 +49,7 @@ train:
                 type: 'kd'
                 params:
                     temperature: 1.0
-                    alpha: 0.9
+                    alpha: 0.5
                     reduction: 'batchmean'
             factor: 1.0
         sub_terms:
