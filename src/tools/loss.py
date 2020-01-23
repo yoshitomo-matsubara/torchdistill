@@ -15,7 +15,7 @@ class KDLoss(nn.KLDivLoss):
     def forward(self, student_output, teacher_output, labels=None):
         soft_loss = super().forward(torch.log_softmax(student_output / self.temperature, dim=1),
                                     torch.softmax(teacher_output / self.temperature, dim=1))
-        if (self.alpha is None and self.alpha != 0) or labels is None:
+        if self.alpha is None or self.alpha != 0 or labels is None:
             return soft_loss
 
         hard_loss = self.cross_entropy_loss(student_output, labels)
