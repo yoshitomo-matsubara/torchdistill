@@ -159,7 +159,7 @@ class MetricLogger(object):
         print('{} Total time: {}'.format(header, total_time_str))
 
 
-def accuracy(output, target, topk=(1,)):
+def compute_accuracy(output, target, topk=(1,)):
     """Computes the accuracy over the k top predictions for the specified values of k"""
     with torch.no_grad():
         maxk = max(topk)

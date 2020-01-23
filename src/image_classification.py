@@ -11,7 +11,8 @@ from torch.nn.parallel import DistributedDataParallel
 from myutils.common import file_util, yaml_util
 from myutils.pytorch import func_util, module_util
 from tools.distillation import DistillationBox
-from utils import dataset_util, image_util, main_util
+from utils import dataset_util, main_util
+from utils.image_util import MetricLogger, SmoothedValue, compute_accuracy
 
 try:
     from apex import amp
@@ -81,9 +82,9 @@ def save_ckpt(model, optimizer, lr_scheduler, best_value, config, args, output_f
 
 
 def distill_one_epoch(distillation_box, train_data_loader, optimizer, device, epoch, log_freq, use_apex=False):
-    metric_logger = image_util.MetricLogger(delimiter='  ')
-    metric_logger.add_meter('lr', image_util.SmoothedValue(window_size=1, fmt='{value}'))
-    metric_logger.add_meter('img/s', image_util.SmoothedValue(window_size=10, fmt='{value}'))
+    metric_logger = MetricLogger(delimiter='  ')
+    metric_logger.add_meter('lr', SmoothedValue(window_size=1, fmt='{value}'))
+    metric_logger.add_meter('img/s', SmoothedValue(window_size=10, fmt='{value}'))
     header = 'Epoch: [{}]'.format(epoch)
     for sample_batch, targets in metric_logger.log_every(train_data_loader, log_freq, header):
         start_time = time.time()
@@ -110,7 +111,7 @@ def evaluate(model, data_loader, device, log_freq=1000, title=None):
     num_threads = torch.get_num_threads()
     torch.set_num_threads(1)
     model.eval()
-    metric_logger = image_util.MetricLogger(delimiter='  ')
+    metric_logger = MetricLogger(delimiter='  ')
     header = 'Test:'
     with torch.no_grad():
         for image, target in metric_logger.log_every(data_loader, log_freq, header):
@@ -118,7 +119,7 @@ def evaluate(model, data_loader, device, log_freq=1000, title=None):
             target = target.to(device, non_blocking=True)
             output = model(image)
 
-            acc1, acc5 = image_util.accuracy(output, target, topk=(1, 5))
+            acc1, acc5 = compute_accuracy(output, target, topk=(1, 5))
             # FIXME need to take into account that the datasets
             # could have been padded in distributed setup
             batch_size = image.shape[0]
