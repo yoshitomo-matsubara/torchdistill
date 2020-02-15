@@ -96,8 +96,8 @@ def distill_one_epoch(distillation_box, train_data_loader, optimizer, device, ep
                 scaled_loss.backward()
         else:
             loss.backward()
-        optimizer.step()
 
+        optimizer.step()
         batch_size = sample_batch.shape[0]
         metric_logger.update(loss=loss.item(), lr=optimizer.param_groups[0]['lr'])
         metric_logger.meters['img/s'].update(batch_size / (time.time() - start_time))
