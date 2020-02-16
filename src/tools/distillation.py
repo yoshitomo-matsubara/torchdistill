@@ -3,6 +3,7 @@ from torch.nn import DataParallel
 from torch.nn.parallel.distributed import DistributedDataParallel
 
 from myutils.pytorch import module_util
+from tools.exception import ForwardTerminationException
 from tools.loss import KDLoss, get_single_loss, get_custom_loss
 
 
@@ -18,14 +19,19 @@ def extract_output(self, input, output):
     self.__dict__['distillation_box']['output'] = output
 
 
+def forward_termination_hook(self, input, output):
+    self.__dict__['distillation_box']['output'] = output
+    raise ForwardTerminationException
+
+
 class DistillationBox(nn.Module):
-    def __init__(self, teacher_model, student_model, criterion_config):
-        super().__init__()
-        self.teacher_model = teacher_model
-        self.student_model = student_model
-        self.target_module_pairs = list()
+    def setup(self, criterion_config):
+        self.target_module_pairs.clear()
+        self.target_module_handles.clear()
         sub_terms_config = criterion_config.get('sub_terms', None)
         if sub_terms_config is not None:
+            teacher_model = self.teacher_model
+            student_model = self.student_model
             teacher_model_without_dp =\
                 teacher_model.module if isinstance(teacher_model, DataParallel) else teacher_model
             student_model_without_ddp = \
@@ -39,8 +45,10 @@ class DistillationBox(nn.Module):
                                           is_teacher=True)
                 set_distillation_box_info(student_module, loss_name=loss_name, path_from_root=student_path,
                                           is_teacher=False)
-                teacher_module.register_forward_hook(extract_output)
-                student_module.register_forward_hook(extract_output)
+                forward_hook = forward_termination_hook if loss_config.get('end', False) else extract_output
+                teacher_handle = teacher_module.register_forward_hook(forward_hook)
+                student_handle = student_module.register_forward_hook(forward_hook)
+                self.target_module_handles.append((teacher_handle, student_handle))
 
         org_term_config = criterion_config['org_term']
         org_criterion_config = org_term_config['criterion']
@@ -48,6 +56,14 @@ class DistillationBox(nn.Module):
         self.org_factor = org_term_config['factor']
         self.criterion = get_custom_loss(criterion_config)
         self.use_teacher_output = isinstance(self.org_criterion, KDLoss)
+
+    def __init__(self, teacher_model, student_model, criterion_config):
+        super().__init__()
+        self.teacher_model = teacher_model
+        self.student_model = student_model
+        self.target_module_pairs, self.target_module_handles = list(), list()
+        self.org_criterion, self.org_factor, self.criterion, self.use_teacher_output = None, None, None, None
+        self.setup(criterion_config)
 
     def forward(self, sample_batch, targets):
         teacher_outputs = self.teacher_model(sample_batch)
@@ -79,3 +95,70 @@ class DistillationBox(nn.Module):
 
         total_loss = self.criterion(output_dict, org_loss_dict)
         return total_loss
+
+    def clean_modules(self):
+        for teacher_handle, student_handle in self.target_module_handles:
+            teacher_handle.remove()
+            student_handle.remove()
+
+
+class MultiStagesDistillationBox(DistillationBox):
+    def __init__(self, teacher_model, student_model, criterion_config):
+        super().__init__(teacher_model, student_model, criterion_config['stage1'])
+        self.criterion_config = criterion_config
+        self.stage_number = 1
+        print('Stage {}'.format(self.stage_number))
+
+    def sub_forward(self, sample_batch):
+        try:
+            teacher_outputs = self.teacher_model(sample_batch)
+        except ForwardTerminationException as te:
+            teacher_outputs = te
+
+        try:
+            student_outputs = self.student_model(sample_batch)
+        except ForwardTerminationException as se:
+            student_outputs = se
+        return teacher_outputs, student_outputs
+
+    def forward(self, sample_batch, targets):
+        teacher_outputs, student_outputs = self.half_forward(sample_batch)
+        org_loss_dict = dict()
+        if not isinstance(teacher_outputs, ForwardTerminationException) and \
+                not isinstance(student_outputs, ForwardTerminationException):
+            # Model with auxiliary classifier returns multiple outputs
+            if isinstance(student_outputs, (list, tuple)):
+                if self.use_teacher_output:
+                    for i, sub_student_outputs, sub_teacher_outputs in enumerate(zip(student_outputs, teacher_outputs)):
+                        org_loss_dict[i] = self.org_criterion(sub_student_outputs, sub_teacher_outputs, targets)
+                else:
+                    for i, sub_outputs in enumerate(student_outputs):
+                        org_loss_dict[i] = self.org_criterion(sub_outputs, targets)
+            else:
+                org_loss = self.org_criterion(student_outputs, teacher_outputs, targets) if self.use_teacher_output\
+                    else self.org_criterion(student_outputs, targets)
+                org_loss_dict = {0: org_loss}
+
+        output_dict = dict()
+        teacher_model_without_dp = \
+            self.teacher_model.module if isinstance(self.teacher_model, DataParallel) else self.teacher_model
+        student_model_without_ddp = \
+            self.student_model.module if isinstance(self.student_model, DistributedDataParallel) else self.student_model
+        for teacher_path, student_path in self.target_module_pairs:
+            teacher_dict = get_distillation_box_info(module_util.get_module(teacher_model_without_dp, teacher_path))
+            student_dict = get_distillation_box_info(module_util.get_module(student_model_without_ddp, student_path))
+            output_dict[teacher_dict['loss_name']] = ((teacher_dict['path_from_root'], teacher_dict.pop('output')),
+                                                      (student_dict['path_from_root'], student_dict.pop('output')))
+
+        total_loss = self.criterion(output_dict, org_loss_dict)
+        return total_loss
+
+    def advance_to_next_stage(self):
+        for teacher_handle, student_handle in self.target_module_handles:
+            teacher_handle.remove()
+            student_handle.remove()
+
+        self.stage_number += 1
+        criterion_config = self.criterion_config['stage{}'.format(self.stage_number)]
+        self.setup(criterion_config)
+        print('Advanced to stage {}'.format(self.stage_number))
