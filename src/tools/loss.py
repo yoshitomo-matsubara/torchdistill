@@ -19,7 +19,7 @@ class KDLoss(nn.KLDivLoss):
             return soft_loss
 
         hard_loss = self.cross_entropy_loss(student_output, labels)
-        return self.alpha * soft_loss * (self.temperature ** 2) + (1 - self.alpha) * hard_loss
+        return self.alpha * (self.temperature ** 2) * soft_loss + (1 - self.alpha) * hard_loss
 
 
 SINGLE_LOSS_DICT = {
@@ -64,7 +64,7 @@ class GeneralizedCustomLoss(CustomLoss):
         sub_total_loss = sum(loss for loss in loss_dict.values()) if len(loss_dict) > 0 else 0
         if self.org_loss_factor == 0:
             return sub_total_loss
-        return sub_total_loss + self.org_loss_factor * sum(loss for loss in org_loss_dict.values())
+        return sub_total_loss + self.org_loss_factor * sum(org_loss_dict.values() if len(org_loss_dict) > 0 else [])
 
 
 CUSTOM_LOSS_DICT = {
