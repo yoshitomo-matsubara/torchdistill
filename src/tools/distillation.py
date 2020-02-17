@@ -52,8 +52,9 @@ class DistillationBox(nn.Module):
 
         org_term_config = criterion_config['org_term']
         org_criterion_config = org_term_config['criterion']
-        self.org_criterion = get_single_loss(org_criterion_config)
-        self.org_factor = org_term_config['factor']
+        if org_criterion_config is not None:
+            self.org_criterion = get_single_loss(org_criterion_config)
+
         self.criterion = get_custom_loss(criterion_config)
         self.use_teacher_output = isinstance(self.org_criterion, KDLoss)
 
@@ -62,25 +63,29 @@ class DistillationBox(nn.Module):
         self.teacher_model = teacher_model
         self.student_model = student_model
         self.target_module_pairs, self.target_module_handles = list(), list()
-        self.org_criterion, self.org_factor, self.criterion, self.use_teacher_output = None, None, None, None
+        self.org_criterion, self.criterion, self.use_teacher_output = None, None, None
         self.setup(criterion_config)
+
+    def check_if_org_loss_required(self):
+        return self.org_criterion is not None
 
     def forward(self, sample_batch, targets):
         teacher_outputs = self.teacher_model(sample_batch)
         student_outputs = self.student_model(sample_batch)
-        # Model with auxiliary classifier returns multiple outputs
-        if isinstance(student_outputs, (list, tuple)):
-            org_loss_dict = dict()
-            if self.use_teacher_output:
-                for i, sub_student_outputs, sub_teacher_outputs in enumerate(zip(student_outputs, teacher_outputs)):
-                    org_loss_dict[i] = self.org_criterion(sub_student_outputs, sub_teacher_outputs, targets)
+        org_loss_dict = dict()
+        if self.check_if_org_loss_required():
+            # Model with auxiliary classifier returns multiple outputs
+            if isinstance(student_outputs, (list, tuple)):
+                if self.use_teacher_output:
+                    for i, sub_student_outputs, sub_teacher_outputs in enumerate(zip(student_outputs, teacher_outputs)):
+                        org_loss_dict[i] = self.org_criterion(sub_student_outputs, sub_teacher_outputs, targets)
+                else:
+                    for i, sub_outputs in enumerate(student_outputs):
+                        org_loss_dict[i] = self.org_criterion(sub_outputs, targets)
             else:
-                for i, sub_outputs in enumerate(student_outputs):
-                    org_loss_dict[i] = self.org_criterion(sub_outputs, targets)
-        else:
-            org_loss = self.org_criterion(student_outputs, teacher_outputs, targets) if self.use_teacher_output\
-                else self.org_criterion(student_outputs, targets)
-            org_loss_dict = {0: org_loss}
+                org_loss = self.org_criterion(student_outputs, teacher_outputs, targets) if self.use_teacher_output\
+                    else self.org_criterion(student_outputs, targets)
+                org_loss_dict = {0: org_loss}
 
         output_dict = dict()
         teacher_model_without_dp = \
@@ -96,6 +101,9 @@ class DistillationBox(nn.Module):
         total_loss = self.criterion(output_dict, org_loss_dict)
         return total_loss
 
+    def post_process(self, **kwargs):
+        pass
+
     def clean_modules(self):
         for teacher_handle, student_handle in self.target_module_handles:
             teacher_handle.remove()
@@ -104,9 +112,11 @@ class DistillationBox(nn.Module):
 
 class MultiStagesDistillationBox(DistillationBox):
     def __init__(self, teacher_model, student_model, criterion_config):
-        super().__init__(teacher_model, student_model, criterion_config['stage1'])
+        stage1_config = criterion_config['stage1']
+        super().__init__(teacher_model, student_model, stage1_config['criterion'])
         self.criterion_config = criterion_config
         self.stage_number = 1
+        self.stage_end_epoch = stage1_config['end_epoch']
         print('Stage {}'.format(self.stage_number))
 
     def sub_forward(self, sample_batch):
@@ -125,7 +135,7 @@ class MultiStagesDistillationBox(DistillationBox):
         teacher_outputs, student_outputs = self.half_forward(sample_batch)
         org_loss_dict = dict()
         if not isinstance(teacher_outputs, ForwardTerminationException) and \
-                not isinstance(student_outputs, ForwardTerminationException):
+                not isinstance(student_outputs, ForwardTerminationException) and self.check_if_org_loss_required():
             # Model with auxiliary classifier returns multiple outputs
             if isinstance(student_outputs, (list, tuple)):
                 if self.use_teacher_output:
@@ -159,6 +169,11 @@ class MultiStagesDistillationBox(DistillationBox):
             student_handle.remove()
 
         self.stage_number += 1
-        criterion_config = self.criterion_config['stage{}'.format(self.stage_number)]
-        self.setup(criterion_config)
+        next_stage_config = self.criterion_config['stage{}'.format(self.stage_number)]
+        self.setup(next_stage_config['criterion'])
+        self.stage_end_epoch = next_stage_config['end_epoch']
         print('Advanced to stage {}'.format(self.stage_number))
+
+    def post_process(self, epoch, **kwargs):
+        if epoch == self.stage_end_epoch:
+            self.advance_to_next_stage()

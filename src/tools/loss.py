@@ -53,7 +53,7 @@ class CustomLoss(nn.Module):
 class GeneralizedCustomLoss(CustomLoss):
     def __init__(self, criterion_config):
         super().__init__(criterion_config)
-        self.org_loss_factor = criterion_config['org_term']['factor']
+        self.org_loss_factor = criterion_config['org_term'].get('factor', None)
 
     def forward(self, output_dict, org_loss_dict):
         loss_dict = dict()
@@ -62,7 +62,7 @@ class GeneralizedCustomLoss(CustomLoss):
             loss_dict[loss_name] = criterion(teacher_output, student_output) * factor
 
         sub_total_loss = sum(loss for loss in loss_dict.values()) if len(loss_dict) > 0 else 0
-        if self.org_loss_factor == 0:
+        if self.org_loss_factor is None or self.org_loss_factor == 0:
             return sub_total_loss
         return sub_total_loss + self.org_loss_factor * sum(org_loss_dict.values() if len(org_loss_dict) > 0 else [])
 

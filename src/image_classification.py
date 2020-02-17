@@ -168,7 +168,9 @@ def distill(teacher_model, student_model, train_data_loader, val_data_loader, de
             best_val_top1_accuracy = val_top1_accuracy
             save_ckpt(student_model_without_ddp, optimizer, lr_scheduler,
                       best_val_top1_accuracy, config, args, ckpt_file_path)
+
         lr_scheduler.step()
+        distillation_box.post_process(epoch=epoch)
 
     total_time = time.time() - start_time
     total_time_str = str(datetime.timedelta(seconds=int(total_time)))
