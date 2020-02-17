@@ -33,17 +33,17 @@ sh valpre.sh
 ```
 #### 1.3 Distill knowledge of ResNet-152
 e.g., Teacher: ResNet-152, Student: AlexNet  
-a) Use one GPU
+a) Use GPU(s) for single training process
 ```
-pipenv run python src/image_classification.py --config config/image_classification/alexnet_from_resnet152.yaml
+pipenv run python src/image_classification.py --config config/image_classification/kd/alexnet_from_resnet152.yaml
 ```  
-b) Use multiple GPUs
+b) Use GPUs for multiple distributed training processes
 ```
-pipenv run python -m torch.distributed.launch --nproc_per_node=${NUM_GPUS} --use_env src/image_classification.py --world_size ${NUM_GPUS} --config config/image_classification/alexnet_from_resnet152.yaml
+pipenv run python -m torch.distributed.launch --nproc_per_node=${NUM_GPUS} --use_env src/image_classification.py --world_size ${NUM_GPUS} --config config/image_classification/kd/alexnet_from_resnet152.yaml
 ```
 c) Use CPU
 ```
-pipenv run python src/image_classification.py --device cpu --config config/image_classification/alexnet_from_resnet152.yaml
+pipenv run python src/image_classification.py --device cpu --config config/image_classification/kd/alexnet_from_resnet152.yaml
 ```  
 #### 1.4 Top 1 accuracy of student models
 | Teacher \\ Student    | AlexNet   | ResNet-18 |  
