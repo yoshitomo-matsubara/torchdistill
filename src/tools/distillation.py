@@ -177,3 +177,9 @@ class MultiStagesDistillationBox(DistillationBox):
     def post_process(self, epoch, **kwargs):
         if epoch == self.stage_end_epoch:
             self.advance_to_next_stage()
+
+
+def get_distillation_box(teacher_model, student_model, main_criterion_config):
+    if 'stage1' in main_criterion_config:
+        return MultiStagesDistillationBox(teacher_model, student_model, main_criterion_config)
+    return DistillationBox(teacher_model, student_model, main_criterion_config)

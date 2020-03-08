@@ -12,7 +12,7 @@ from torch.nn.parallel import DistributedDataParallel
 
 from myutils.common import file_util, yaml_util
 from myutils.pytorch import func_util, module_util
-from tools.distillation import DistillationBox
+from tools.distillation import get_distillation_box
 from utils import dataset_util, main_util
 from utils.image_util import MetricLogger, SmoothedValue, compute_accuracy
 
@@ -141,7 +141,7 @@ def distill(teacher_model, student_model, train_data_loader, val_data_loader, de
             distributed, start_epoch, config, args):
     print('Start knowledge distillation')
     train_config = config['train']
-    distillation_box = DistillationBox(teacher_model, student_model, train_config['criterion'])
+    distillation_box = get_distillation_box(teacher_model, student_model, train_config['criterion'])
     ckpt_file_path = config['student_model']['ckpt']
     optim_config = train_config['optimizer']
     optimizer = func_util.get_optimizer(student_model, optim_config['type'], optim_config['params'])
