@@ -132,7 +132,7 @@ class MultiStagesDistillationBox(DistillationBox):
         return teacher_outputs, student_outputs
 
     def forward(self, sample_batch, targets):
-        teacher_outputs, student_outputs = self.half_forward(sample_batch)
+        teacher_outputs, student_outputs = self.sub_forward(sample_batch)
         org_loss_dict = dict()
         if not isinstance(teacher_outputs, ForwardTerminationException) and \
                 not isinstance(student_outputs, ForwardTerminationException) and self.check_if_org_loss_required():
