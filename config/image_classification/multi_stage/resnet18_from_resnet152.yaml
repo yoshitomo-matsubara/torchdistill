@@ -47,6 +47,7 @@ train:
             criterion:
                 type: 'general'
                 org_term:
+                    factor: 0.0
                 sub_terms:
                     layer1:
                         ts_modules: ['conv1', 'conv1']
