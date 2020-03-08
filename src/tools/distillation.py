@@ -51,7 +51,7 @@ class DistillationBox(nn.Module):
                 self.target_module_handles.append((teacher_handle, student_handle))
 
         org_term_config = criterion_config.get('org_term', dict())
-        org_criterion_config = org_term_config.get('criterion', None)
+        org_criterion_config = org_term_config.get('criterion', None) if isinstance(org_term_config, dict) else None
         if org_criterion_config is not None:
             self.org_criterion = get_single_loss(org_criterion_config)
 
