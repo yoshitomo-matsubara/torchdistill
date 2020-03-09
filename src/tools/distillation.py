@@ -15,7 +15,7 @@ def get_distillation_box_info(module):
     return module.__dict__['distillation_box']
 
 
-def extract_output(self, input, output):
+def extract_output_hook(self, input, output):
     self.__dict__['distillation_box']['output'] = output
 
 
@@ -45,7 +45,7 @@ class DistillationBox(nn.Module):
                                           is_teacher=True)
                 set_distillation_box_info(student_module, loss_name=loss_name, path_from_root=student_path,
                                           is_teacher=False)
-                forward_hook = forward_termination_hook if loss_config.get('end', False) else extract_output
+                forward_hook = forward_termination_hook if loss_config.get('end', False) else extract_output_hook
                 teacher_handle = teacher_module.register_forward_hook(forward_hook)
                 student_handle = student_module.register_forward_hook(forward_hook)
                 self.target_module_handles.append((teacher_handle, student_handle))
@@ -122,13 +122,13 @@ class MultiStagesDistillationBox(DistillationBox):
     def sub_forward(self, sample_batch):
         try:
             teacher_outputs = self.teacher_model(sample_batch)
-        except ForwardTerminationException as te:
-            teacher_outputs = te
+        except ForwardTerminationException:
+            teacher_outputs = None
 
         try:
             student_outputs = self.student_model(sample_batch)
-        except ForwardTerminationException as se:
-            student_outputs = se
+        except ForwardTerminationException:
+            student_outputs = None
         return teacher_outputs, student_outputs
 
     def forward(self, sample_batch, targets):
