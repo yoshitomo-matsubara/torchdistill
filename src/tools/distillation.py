@@ -144,7 +144,7 @@ class MultiStagesDistillationBox(DistillationBox):
                 else:
                     for i, sub_outputs in enumerate(student_outputs):
                         org_loss_dict[i] = self.org_criterion(sub_outputs, targets)
-            else:
+            elif student_outputs is not None:
                 org_loss = self.org_criterion(student_outputs, teacher_outputs, targets) if self.use_teacher_output\
                     else self.org_criterion(student_outputs, targets)
                 org_loss_dict = {0: org_loss}
