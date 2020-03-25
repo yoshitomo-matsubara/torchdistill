@@ -111,36 +111,6 @@ class MultiStagesDistillationBox(DistillationBox):
         self.stage_end_epoch = stage1_config['end_epoch']
         print('Stage {}'.format(self.stage_number))
 
-    def forward(self, sample_batch, targets):
-        teacher_outputs = self.teacher_model(sample_batch)
-        student_outputs = self.student_model(sample_batch)
-        org_loss_dict = dict()
-        if self.check_if_org_loss_required():
-            # Models with auxiliary classifier returns multiple outputs
-            if isinstance(student_outputs, (list, tuple)):
-                if self.use_teacher_output:
-                    for i, sub_student_outputs, sub_teacher_outputs in enumerate(zip(student_outputs, teacher_outputs)):
-                        org_loss_dict[i] = self.org_criterion(sub_student_outputs, sub_teacher_outputs, targets)
-                else:
-                    for i, sub_outputs in enumerate(student_outputs):
-                        org_loss_dict[i] = self.org_criterion(sub_outputs, targets)
-            else:
-                org_loss = self.org_criterion(student_outputs, teacher_outputs, targets) if self.use_teacher_output\
-                    else self.org_criterion(student_outputs, targets)
-                org_loss_dict = {0: org_loss}
-
-        output_dict = dict()
-        for teacher_path, student_path in self.target_module_pairs:
-            teacher_module_dict = self.teacher_info_dict[teacher_path]
-            student_module_dict = self.student_info_dict[student_path]
-            output_dict[teacher_module_dict['loss_name']] = (
-                (teacher_module_dict['path_from_root'], teacher_module_dict.pop('output')),
-                (student_module_dict['path_from_root'], student_module_dict.pop('output'))
-            )
-
-        total_loss = self.criterion(output_dict, org_loss_dict)
-        return total_loss
-
     def advance_to_next_stage(self):
         for teacher_handle, student_handle in self.target_module_handles:
             teacher_handle.remove()
