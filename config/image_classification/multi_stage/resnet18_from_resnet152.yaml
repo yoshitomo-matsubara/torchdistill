@@ -56,7 +56,6 @@ train:
                             params:
                                 reduction: 'sum'
                         factor: 1.0
-                        end: False
                     layer2:
                         ts_modules: ['relu', 'relu']
                         criterion:
@@ -64,7 +63,6 @@ train:
                             params:
                                 reduction: 'sum'
                         factor: 1.0
-                        end: False
                     layer3:
                         ts_modules: ['maxpool', 'maxpool']
                         criterion:
@@ -72,7 +70,6 @@ train:
                             params:
                                 reduction: 'sum'
                         factor: 1.0
-                        end: True
             end_epoch: 9
         stage2:
             criterion:
