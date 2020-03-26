@@ -1,9 +1,18 @@
+import sys
+
 from torch import nn
 from torch.nn import DataParallel
 from torch.nn.parallel.distributed import DistributedDataParallel
 
-from myutils.pytorch import module_util
+from myutils.pytorch.func_util import get_optimizer, get_scheduler
+from myutils.pytorch.module_util import check_if_wrapped, get_module, unfreeze_module_params
 from tools.loss import KDLoss, get_single_loss, get_custom_loss
+from utils.model_util import redesign_model
+
+try:
+    from apex import amp
+except ImportError:
+    amp = None
 
 
 def set_distillation_box_info(info_dict, module_path, **kwargs):
@@ -17,24 +26,35 @@ def register_forward_hook_with_dict(module, module_path, info_dict):
 
 
 class DistillationBox(nn.Module):
-    def setup(self, criterion_config):
+    def setup(self, train_config):
+        # Set up train_data_loader
+        data_loader_id = train_config.get('train_dataset', None)
+        if data_loader_id is not None and data_loader_id in self.data_loader_dict:
+            self.train_data_loader = self.data_loader_dict[data_loader_id]
+
+        # Define teacher and student models used in this stage
         self.target_module_pairs.clear()
         self.target_module_handles.clear()
+        teacher_config = train_config.get('teacher', None)
+        self.teacher_model = self.org_teacher_model if teacher_config is None \
+            else redesign_model(self.org_teacher_model, teacher_config, 'teacher', self.teacher_device_ids)
+        student_config = train_config.get('student', None)
+        self.student_model = self.org_student_model if student_config is None \
+            else redesign_model(self.org_student_model, student_config, 'student', self.student_device_ids)
+
+        # Define loss function used in this stage
+        criterion_config = train_config['criterion']
         sub_terms_config = criterion_config.get('sub_terms', None)
         if sub_terms_config is not None:
-            # TODO: Build teacher and student models with DP/DDP here; Teacher doesn't require grad
-            teacher_model = self.org_teacher_model
-            student_model = self.org_student_model
-
-            teacher_model_without_dp =\
-                teacher_model.module if isinstance(teacher_model, DataParallel) else teacher_model
-            student_model_without_ddp = \
-                student_model.module if isinstance(student_model, DistributedDataParallel) else student_model
+            org_teacher_model =\
+                self.org_teacher_model.module if check_if_wrapped(self.org_teacher_model) else self.org_teacher_model
+            org_student_model = \
+                self.org_student_model.module if check_if_wrapped(self.org_student_model) else self.org_student_model
             for loss_name, loss_config in sub_terms_config.items():
                 teacher_path, student_path = loss_config['ts_modules']
                 self.target_module_pairs.append((teacher_path, student_path))
-                teacher_module = module_util.get_module(teacher_model_without_dp, teacher_path)
-                student_module = module_util.get_module(student_model_without_ddp, student_path)
+                teacher_module = get_module(org_teacher_model, teacher_path)
+                student_module = get_module(org_student_model, student_path)
                 set_distillation_box_info(self.teacher_info_dict, teacher_path, loss_name=loss_name,
                                           path_from_root=teacher_path, is_teacher=True)
                 set_distillation_box_info(self.student_info_dict, student_path, loss_name=loss_name,
@@ -51,17 +71,59 @@ class DistillationBox(nn.Module):
         self.criterion = get_custom_loss(criterion_config)
         self.use_teacher_output = isinstance(self.org_criterion, KDLoss)
 
-    def __init__(self, teacher_model, student_model, criterion_config):
+        # Set up optimizer and scheduler
+        optim_config = train_config['optimizer']
+        self.optimizer = get_optimizer(self.student_model, optim_config['type'], optim_config['params'])
+        scheduler_config = train_config.get('scheduler', None)
+        self.lr_scheduler = None if scheduler_config is None \
+            else get_scheduler(self.optimizer, scheduler_config['type'], scheduler_config['params'])
+
+        # Set up apex if you require mixed-precision training
+        self.apex = False
+        apex_config = train_config.get('apex', None)
+        if apex_config is not None and apex_config.get('requires', False):
+            if sys.version_info < (3, 0):
+                raise RuntimeError('Apex currently only supports Python 3. Aborting.')
+            if amp is None:
+                raise RuntimeError('Failed to import apex. Please install apex from https://www.github.com/nvidia/apex '
+                                   'to enable mixed-precision training.')
+            self.student_model, self.optimizer =\
+                amp.initialize(self.student_model, self.optimizer, opt_level=apex_config['opt_level'])
+            self.apex = True
+
+    def __init__(self, teacher_model, student_model, data_loader_dict, train_config):
         super().__init__()
         self.org_teacher_model = teacher_model
         self.org_student_model = student_model
+        self.data_loader_dict = data_loader_dict
+        self.teacher_model = None
+        self.student_model = None
+        self.teacher_device_ids =\
+            teacher_model.device_ids if isinstance(teacher_model, (DataParallel, DistributedDataParallel)) else None
+        self.student_device_ids =\
+            student_model.device_ids if isinstance(student_model, (DataParallel, DistributedDataParallel)) else None
         self.target_module_pairs, self.target_module_handles = list(), list()
         self.teacher_info_dict, self.student_info_dict = dict(), dict()
+        self.train_data_loader, self.optimizer, self.lr_scheduler = None, None, None
         self.org_criterion, self.criterion, self.use_teacher_output = None, None, None
-        self.setup(criterion_config)
+        self.apex = None
+        self.setup(train_config)
+
+    def pre_process(self, distributed, epoch, **kwargs):
+        if distributed:
+            self.train_data_loader.sampler.set_epoch(epoch)
 
     def check_if_org_loss_required(self):
         return self.org_criterion is not None
+
+    def update_params(self, loss):
+        self.optimizer.zero_grad()
+        if self.apex:
+            with amp.scale_loss(loss, self.optimizer) as scaled_loss:
+                scaled_loss.backward()
+        else:
+            loss.backward()
+        self.optimizer.step()
 
     def forward(self, sample_batch, targets):
         teacher_outputs = self.teacher_model(sample_batch)
@@ -94,30 +156,30 @@ class DistillationBox(nn.Module):
         return total_loss
 
     def post_process(self, **kwargs):
-        pass
+        if self.lr_scheduler is not None:
+            self.lr_scheduler.step()
 
     def clean_modules(self):
+        unfreeze_module_params(self.org_teacher_model)
+        unfreeze_module_params(self.org_student_model)
         for teacher_handle, student_handle in self.target_module_handles:
             teacher_handle.remove()
             student_handle.remove()
 
 
 class MultiStagesDistillationBox(DistillationBox):
-    def __init__(self, teacher_model, student_model, criterion_config):
-        stage1_config = criterion_config['stage1']
-        super().__init__(teacher_model, student_model, stage1_config['criterion'])
-        self.criterion_config = criterion_config
+    def __init__(self, teacher_model, student_model, data_loader_dict, train_config):
+        stage1_config = train_config['stage1']
+        super().__init__(teacher_model, student_model, data_loader_dict, stage1_config['criterion'])
+        self.train_config = train_config
         self.stage_number = 1
         self.stage_end_epoch = stage1_config['end_epoch']
         print('Stage {}'.format(self.stage_number))
 
     def advance_to_next_stage(self):
-        for teacher_handle, student_handle in self.target_module_handles:
-            teacher_handle.remove()
-            student_handle.remove()
-
+        self.clean_modules()
         self.stage_number += 1
-        next_stage_config = self.criterion_config['stage{}'.format(self.stage_number)]
+        next_stage_config = self.train_config['stage{}'.format(self.stage_number)]
         self.setup(next_stage_config['criterion'])
         self.stage_end_epoch = next_stage_config['end_epoch']
         print('Advanced to stage {}'.format(self.stage_number))
@@ -127,7 +189,7 @@ class MultiStagesDistillationBox(DistillationBox):
             self.advance_to_next_stage()
 
 
-def get_distillation_box(teacher_model, student_model, main_criterion_config):
-    if 'stage1' in main_criterion_config:
-        return MultiStagesDistillationBox(teacher_model, student_model, main_criterion_config)
-    return DistillationBox(teacher_model, student_model, main_criterion_config)
+def get_distillation_box(teacher_model, student_model, data_loader_dict, train_config):
+    if 'stage1' in train_config:
+        return MultiStagesDistillationBox(teacher_model, student_model, data_loader_dict, train_config)
+    return DistillationBox(teacher_model, student_model, data_loader_dict, train_config)

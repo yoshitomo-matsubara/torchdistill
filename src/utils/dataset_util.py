@@ -75,10 +75,14 @@ def get_data_loaders(dataset_config, distill_batch_size, test_batch_size, use_ca
     rough_size = dataset_config['rough_size']
     input_size = dataset_config['input_size']
     normalizer = transforms.Normalize(**dataset_config['normalizer'])
+    train_dict = dict()
     if dataset_type == 'imagefolder':
         dataset_splits_config = dataset_config['splits']
-        train_dataset = load_image_folder_dataset(dataset_splits_config['train']['images'], dataset_type,
-                                                  rough_size, input_size, normalizer, use_cache, 'train')
+        for split_name in dataset_splits_config.keys():
+            if split_name not in ('val', 'test'):
+                train_dataset = load_image_folder_dataset(dataset_splits_config[split_name]['images'], dataset_type,
+                                                          rough_size, input_size, normalizer, use_cache, 'train')
+                train_dict[split_name]['dataset'] = train_dataset
         val_dir_path = dataset_splits_config['val']['images']
         val_dataset = load_image_folder_dataset(val_dir_path, dataset_type,
                                                 rough_size, input_size, normalizer, use_cache, 'validation')
@@ -93,19 +97,27 @@ def get_data_loaders(dataset_config, distill_batch_size, test_batch_size, use_ca
         raise ValueError('dataset_type `{}` is not expected'.format(dataset_type))
 
     if distributed:
-        train_sampler = DistributedSampler(train_dataset)
+        for train_key in train_dict.keys():
+            train_dict[train_key]['sampler'] = DistributedSampler(train_dict[train_key]['dataset'])
+
         val_sampler = DistributedSampler(val_dataset)
         test_sampler = DistributedSampler(test_dataset)
     else:
-        train_sampler = RandomSampler(train_dataset)
+        for train_key in train_dict.keys():
+            train_dict[train_key]['sampler'] = RandomSampler(train_dict[train_key]['dataset'])
+
         val_sampler = SequentialSampler(val_dataset)
         test_sampler = SequentialSampler(test_dataset)
 
+    data_loader_dict = dict()
     num_workers = dataset_config['num_workers']
-    train_data_loader = DataLoader(train_dataset, batch_size=distill_batch_size, sampler=train_sampler,
-                                   num_workers=num_workers, pin_memory=True)
-    val_data_loader = DataLoader(val_dataset, batch_size=distill_batch_size, sampler=val_sampler,
-                                 num_workers=num_workers, pin_memory=True)
-    test_data_loader = DataLoader(test_dataset, batch_size=test_batch_size, sampler=test_sampler,
-                                  num_workers=num_workers, pin_memory=True)
-    return train_data_loader, val_data_loader, test_data_loader
+    for train_key in train_dict.keys():
+        data_loader_dict[train_key] =\
+            DataLoader(train_dict[train_key]['dataset'], batch_size=distill_batch_size,
+                       sampler=train_dict[train_key]['sampler'], num_workers=num_workers, pin_memory=True)
+
+    data_loader_dict['val'] = DataLoader(val_dataset, batch_size=distill_batch_size, sampler=val_sampler,
+                                         num_workers=num_workers, pin_memory=True)
+    data_loader_dict['test'] = DataLoader(test_dataset, batch_size=test_batch_size, sampler=test_sampler,
+                                          num_workers=num_workers, pin_memory=True)
+    return data_loader_dict

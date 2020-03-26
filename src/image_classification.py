@@ -1,6 +1,5 @@
 import argparse
 import datetime
-import sys
 import time
 
 import torch
@@ -16,11 +15,6 @@ from tools.distillation import get_distillation_box
 from utils import dataset_util, main_util
 from utils.image_util import MetricLogger, SmoothedValue, compute_accuracy
 
-try:
-    from apex import amp
-except ImportError:
-    amp = None
-
 
 def get_argparser():
     parser = argparse.ArgumentParser(description='Knowledge distillation for image classification models')
@@ -32,13 +26,6 @@ def get_argparser():
     parser.add_argument('-sync_bn', action='store_true', help='Use sync batch norm')
     parser.add_argument('-test_only', action='store_true', help='Only test the models')
     parser.add_argument('-student_only', action='store_true', help='Test the student model only')
-    # Mixed precision training parameters
-    parser.add_argument('-apex', action='store_true',
-                        help='Use apex for mixed precision training')
-    parser.add_argument('--apex_opt_level', default='O1', type=str,
-                        help='For apex mixed precision training'
-                             'O0 for FP32 training, O1 for mixed precision training.'
-                             'For further detail, see https://github.com/NVIDIA/apex/tree/master/examples/imagenet')
     # distributed training parameters
     parser.add_argument('--world_size', default=1, type=int, help='number of distributed processes')
     parser.add_argument('--dist_url', default='env://', help='url used to set up distributed training')
@@ -83,23 +70,16 @@ def save_ckpt(model, optimizer, lr_scheduler, best_value, config, args, output_f
                              output_file_path)
 
 
-def distill_one_epoch(distillation_box, train_data_loader, optimizer, device, epoch, log_freq, use_apex=False):
+def distill_one_epoch(distillation_box, optimizer, device, epoch, log_freq):
     metric_logger = MetricLogger(delimiter='  ')
     metric_logger.add_meter('lr', SmoothedValue(window_size=1, fmt='{value}'))
     metric_logger.add_meter('img/s', SmoothedValue(window_size=10, fmt='{value}'))
     header = 'Epoch: [{}]'.format(epoch)
-    for sample_batch, targets in metric_logger.log_every(train_data_loader, log_freq, header):
+    for sample_batch, targets in metric_logger.log_every(distillation_box.train_data_loader, log_freq, header):
         start_time = time.time()
         sample_batch, targets = sample_batch.to(device), targets.to(device)
         loss = distillation_box(sample_batch, targets)
-        optimizer.zero_grad()
-        if use_apex:
-            with amp.scale_loss(loss, optimizer) as scaled_loss:
-                scaled_loss.backward()
-        else:
-            loss.backward()
-
-        optimizer.step()
+        distillation_box.update_params(loss)
         batch_size = sample_batch.shape[0]
         metric_logger.update(loss=loss.item(), lr=optimizer.param_groups[0]['lr'])
         metric_logger.meters['img/s'].update(batch_size / (time.time() - start_time))
@@ -137,11 +117,10 @@ def evaluate(model, data_loader, device, log_freq=1000, title=None):
     return metric_logger.acc1.global_avg
 
 
-def distill(teacher_model, student_model, train_data_loader, val_data_loader, device,
-            distributed, start_epoch, config, args):
+def distill(teacher_model, student_model, data_loader_dict, device, distributed, start_epoch, config, args):
     print('Start knowledge distillation')
     train_config = config['train']
-    distillation_box = get_distillation_box(teacher_model, student_model, train_config['criterion'])
+    distillation_box = get_distillation_box(teacher_model, student_model, data_loader_dict, train_config)
     ckpt_file_path = config['student_model']['ckpt']
     optim_config = train_config['optimizer']
     optimizer = func_util.get_optimizer(student_model, optim_config['type'], optim_config['params'])
@@ -154,14 +133,13 @@ def distill(teacher_model, student_model, train_data_loader, val_data_loader, de
     log_freq = train_config['log_freq']
     student_model_without_ddp = \
         student_model.module if isinstance(student_model, DistributedDataParallel) else student_model
+    val_data_loader = data_loader_dict['val']
     start_time = time.time()
     for epoch in range(start_epoch, train_config['num_epochs']):
-        if distributed:
-            train_data_loader.sampler.set_epoch(epoch)
-
+        distillation_box.pre_process(distributed=distributed, epoch=epoch)
         teacher_model.eval()
         student_model.train()
-        distill_one_epoch(distillation_box, train_data_loader, optimizer, device, epoch, log_freq, args.apex)
+        distill_one_epoch(distillation_box, optimizer, device, epoch, log_freq)
         val_top1_accuracy = evaluate(student_model, val_data_loader, device=device, log_freq=log_freq)
         if val_top1_accuracy > best_val_top1_accuracy and main_util.is_main_process():
             print('Updating ckpt (Best top1 accuracy: {:.4f} -> {:.4f})'.format(best_val_top1_accuracy,
@@ -170,7 +148,7 @@ def distill(teacher_model, student_model, train_data_loader, val_data_loader, de
             save_ckpt(student_model_without_ddp, optimizer, lr_scheduler,
                       best_val_top1_accuracy, config, args, ckpt_file_path)
 
-        lr_scheduler.step()
+        # lr_scheduler.step()
         distillation_box.post_process(epoch=epoch)
 
     dist.barrier()
@@ -181,20 +159,14 @@ def distill(teacher_model, student_model, train_data_loader, val_data_loader, de
 
 
 def main(args):
-    if args.apex:
-        if sys.version_info < (3, 0):
-            raise RuntimeError('Apex currently only supports Python 3. Aborting.')
-        if amp is None:
-            raise RuntimeError('Failed to import apex. Please install apex from https://www.github.com/nvidia/apex '
-                               'to enable mixed-precision training.')
-
     distributed, device_ids = main_util.init_distributed_mode(args.world_size, args.dist_url)
     print(args)
     cudnn.benchmark = True
     config = yaml_util.load_yaml_file(args.config)
     device = torch.device(args.device)
     train_config = config['train']
-    train_data_loader, val_data_loader, test_data_loader =\
+    # train_data_loader, val_data_loader, test_data_loader =\
+    data_loader_dict =\
         dataset_util.get_data_loaders(config['dataset'], train_config['batch_size'],
                                       config['test']['batch_size'], args.use_cache, distributed)
 
@@ -203,25 +175,18 @@ def main(args):
     module_util.freeze_module_params(teacher_model)
     student_model_config = config['student_model']
     student_model = get_model(student_model_config, device, distributed, args.sync_bn)
-
-    optim_config = train_config['optimizer']
-    optimizer = func_util.get_optimizer(student_model, optim_config['type'], optim_config['params'])
-    use_apex = args.apex
-    if use_apex:
-        student_model, optimizer = amp.initialize(student_model, optimizer, opt_level=args.apex_opt_level)
-
     if distributed:
         teacher_model = DataParallel(teacher_model, device_ids=device_ids)
         student_model = DistributedDataParallel(student_model, device_ids=device_ids)
 
     start_epoch = args.start_epoch
     if not args.test_only:
-        distill(teacher_model, student_model, train_data_loader, val_data_loader, device,
-                distributed, start_epoch, config, args)
+        distill(teacher_model, student_model, data_loader_dict, device, distributed, start_epoch, config, args)
         student_model_without_ddp =\
             student_model.module if isinstance(student_model, DistributedDataParallel) else student_model
         load_ckpt(student_model_config['ckpt'], model=student_model_without_ddp, strict=True)
 
+    test_data_loader = data_loader_dict['test']
     if not args.student_only:
         evaluate(teacher_model, test_data_loader, device, title='[Teacher: {}]'.format(teacher_model_config['name']))
     evaluate(student_model, test_data_loader, device, title='[Student: {}]'.format(student_model_config['name']))
