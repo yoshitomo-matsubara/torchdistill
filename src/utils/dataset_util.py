@@ -9,7 +9,7 @@ from torch.utils.data.distributed import DistributedSampler
 from torchvision import transforms
 
 from myutils.common import file_util
-from utils import image_util, main_util
+from utils import main_util
 
 
 def get_cache_path(file_path, dataset_type):
@@ -43,7 +43,7 @@ def load_image_folder_dataset(dir_path, dataset_type, rough_size, input_size, no
             if use_cache:
                 print('Saving dataset_train to {}'.format(cache_path))
                 file_util.make_parent_dirs(cache_path)
-                image_util.save_on_master((train_dataset, dir_path), cache_path)
+                main_util.save_on_master((train_dataset, dir_path), cache_path)
             print('\t', time.time() - st)
             return train_dataset
 
