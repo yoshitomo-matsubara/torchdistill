@@ -9,11 +9,12 @@ from torch.backends import cudnn
 from torch.nn import DataParallel, SyncBatchNorm
 from torch.nn.parallel import DistributedDataParallel
 
+from misc.log import SmoothedValue, MetricLogger
 from myutils.common import file_util, yaml_util
 from myutils.pytorch import func_util, module_util
 from tools.distillation import get_distillation_box
 from utils import dataset_util, main_util
-from utils.image_util import MetricLogger, SmoothedValue, compute_accuracy
+from utils.eval_util import compute_accuracy
 
 
 def get_argparser():
