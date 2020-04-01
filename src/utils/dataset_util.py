@@ -80,9 +80,11 @@ def get_data_loaders(dataset_config, distill_batch_size, test_batch_size, use_ca
         dataset_splits_config = dataset_config['splits']
         for split_name in dataset_splits_config.keys():
             if split_name not in ('val', 'test'):
+                train_dict[split_name] = dict()
                 train_dataset = load_image_folder_dataset(dataset_splits_config[split_name]['images'], dataset_type,
                                                           rough_size, input_size, normalizer, use_cache, 'train')
                 train_dict[split_name]['dataset'] = train_dataset
+
         val_dir_path = dataset_splits_config['val']['images']
         val_dataset = load_image_folder_dataset(val_dir_path, dataset_type,
                                                 rough_size, input_size, normalizer, use_cache, 'validation')
