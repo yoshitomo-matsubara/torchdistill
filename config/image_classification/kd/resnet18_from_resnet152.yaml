@@ -41,6 +41,7 @@ models:
 
 train:
     log_freq: 1000
+    num_epochs: 20
     train_data_loader:
         dataset_id: 'ilsvrc2012/train'
         random_sample: True

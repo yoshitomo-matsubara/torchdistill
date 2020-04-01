@@ -42,6 +42,7 @@ models:
 train:
     log_freq: 1000
     stage1:
+        num_epochs: 10
         train_data_loader:
             dataset_id: 'ilsvrc2012/train'
             random_sample: True
@@ -52,7 +53,6 @@ train:
             random_sample: False
             batch_size: 32
             num_workers: 16
-        num_epochs: 10
         apex:
             requires: False
             opt_level: '01'
