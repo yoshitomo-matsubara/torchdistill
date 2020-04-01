@@ -16,8 +16,8 @@ def redesign_model(org_model, model_config, model_label, device_ids=None):
     module_dict = OrderedDict()
     frozen_module_path_set = set(model_config.get('frozen_modules', list()))
     for module_path in module_paths:
-        # TODO: load adaption modules defined as lists of list (name, module) if module_path matches;
-        #  Names of adaption modules should not conflict with those of original modules
+        # TODO: load adaptation modules defined as lists of list (name, module) if module_path matches;
+        #  Names of adaptation modules should not conflict with those of original modules
         module = get_module(org_model, module_path)
         if module_path in frozen_module_path_set:
             freeze_module_params(module)

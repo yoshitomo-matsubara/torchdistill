@@ -57,7 +57,7 @@ train:
             wrapper: 'DistributedDataParallel'
             requires_grad: False
         student:
-            adaption: []
+            adaptation: []
             sequential: ['conv1', 'relu', 'maxpool']
             frozen_modules: []
             wrapper: 'DistributedDataParallel'
@@ -107,8 +107,8 @@ train:
             wrapper: 'DistributedDataParallel'
             requires_grad: False
         student:
+            adaptation: []
             sequential: []
-            adaption: []
             wrapper: 'DistributedDataParallel'
             requires_grad: True
             frozen_modules: []
