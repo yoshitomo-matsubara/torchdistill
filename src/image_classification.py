@@ -122,7 +122,7 @@ def distill(teacher_model, student_model, dataset_dict, device, distributed, sta
     print('Start knowledge distillation')
     train_config = config['train']
     distillation_box = get_distillation_box(teacher_model, student_model, dataset_dict, train_config, distributed)
-    ckpt_file_path = config['student_model']['ckpt']
+    ckpt_file_path = config['models']['student_model']['ckpt']
     best_val_top1_accuracy = 0.0
     optimizer, lr_scheduler = distillation_box.optimizer, distillation_box.lr_scheduler
     if file_util.check_if_exists(ckpt_file_path):
