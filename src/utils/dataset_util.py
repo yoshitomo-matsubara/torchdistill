@@ -82,7 +82,7 @@ def get_dataset_dict(dataset_config, use_cache):
         dataset_splits_config = dataset_config['splits']
         for split_name in dataset_splits_config.keys():
             split_config = dataset_splits_config[split_name]
-            dataset_dict[split_name] =\
+            dataset_dict[split_config['dataset_id']] =\
                 load_image_folder_dataset(split_config['images'], split_config['data_aug'], dataset_type, rough_size,
                                           input_size, normalizer, use_cache, split_name)
     else:
