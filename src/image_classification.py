@@ -161,10 +161,11 @@ def main(args):
     config = yaml_util.load_yaml_file(args.config)
     device = torch.device(args.device)
     dataset_dict = dataset_util.get_all_dataset(config['datasets'], args.use_cache)
-    teacher_model_config = config['teacher_model']
+    models_config = config['models']
+    teacher_model_config = models_config['teacher_model']
     teacher_model = get_model(teacher_model_config, device, distributed, False)
     module_util.freeze_module_params(teacher_model)
-    student_model_config = config['student_model']
+    student_model_config = models_config['student_model']
     student_model = get_model(student_model_config, device, distributed, args.sync_bn)
     if distributed:
         teacher_model = DataParallel(teacher_model, device_ids=device_ids)
