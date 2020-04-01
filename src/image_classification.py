@@ -11,7 +11,7 @@ from torch.nn.parallel import DistributedDataParallel
 
 from misc.log import SmoothedValue, MetricLogger
 from myutils.common import file_util, yaml_util
-from myutils.pytorch import func_util, module_util
+from myutils.pytorch import module_util
 from tools.distillation import get_distillation_box
 from utils import dataset_util, main_util
 from utils.eval_util import compute_accuracy
@@ -71,7 +71,7 @@ def save_ckpt(model, optimizer, lr_scheduler, best_value, config, args, output_f
                              output_file_path)
 
 
-def distill_one_epoch(distillation_box, optimizer, device, epoch, log_freq):
+def distill_one_epoch(distillation_box, device, epoch, log_freq):
     metric_logger = MetricLogger(delimiter='  ')
     metric_logger.add_meter('lr', SmoothedValue(window_size=1, fmt='{value}'))
     metric_logger.add_meter('img/s', SmoothedValue(window_size=10, fmt='{value}'))
@@ -82,7 +82,7 @@ def distill_one_epoch(distillation_box, optimizer, device, epoch, log_freq):
         loss = distillation_box(sample_batch, targets)
         distillation_box.update_params(loss)
         batch_size = sample_batch.shape[0]
-        metric_logger.update(loss=loss.item(), lr=optimizer.param_groups[0]['lr'])
+        metric_logger.update(loss=loss.item(), lr=distillation_box.optimizer.param_groups[0]['lr'])
         metric_logger.meters['img/s'].update(batch_size / (time.time() - start_time))
 
 
@@ -118,38 +118,33 @@ def evaluate(model, data_loader, device, log_freq=1000, title=None):
     return metric_logger.acc1.global_avg
 
 
-def distill(teacher_model, student_model, data_loader_dict, device, distributed, start_epoch, config, args):
+def distill(teacher_model, student_model, dataset_dict, device, distributed, start_epoch, config, args):
     print('Start knowledge distillation')
     train_config = config['train']
-    distillation_box = get_distillation_box(teacher_model, student_model, data_loader_dict, train_config)
+    distillation_box = get_distillation_box(teacher_model, student_model, dataset_dict, train_config, distributed)
     ckpt_file_path = config['student_model']['ckpt']
-    optim_config = train_config['optimizer']
-    optimizer = func_util.get_optimizer(student_model, optim_config['type'], optim_config['params'])
-    scheduler_config = train_config['scheduler']
-    lr_scheduler = func_util.get_scheduler(optimizer, scheduler_config['type'], scheduler_config['params'])
     best_val_top1_accuracy = 0.0
+    optimizer, lr_scheduler = distillation_box.optimizer, distillation_box.lr_scheduler
     if file_util.check_if_exists(ckpt_file_path):
-        best_val_map, _, _ = load_ckpt(ckpt_file_path, optimizer=optimizer, lr_scheduler=lr_scheduler)
+        best_val_map, _, _ =\
+            load_ckpt(ckpt_file_path, optimizer=optimizer, lr_scheduler=lr_scheduler)
 
     log_freq = train_config['log_freq']
     student_model_without_ddp = \
         student_model.module if isinstance(student_model, DistributedDataParallel) else student_model
-    val_data_loader = data_loader_dict['val']
     start_time = time.time()
     for epoch in range(start_epoch, train_config['num_epochs']):
-        distillation_box.pre_process(distributed=distributed, epoch=epoch)
+        distillation_box.pre_process(epoch=epoch)
         teacher_model.eval()
         student_model.train()
-        distill_one_epoch(distillation_box, optimizer, device, epoch, log_freq)
-        val_top1_accuracy = evaluate(student_model, val_data_loader, device=device, log_freq=log_freq)
+        distill_one_epoch(distillation_box, device, epoch, log_freq)
+        val_top1_accuracy = evaluate(student_model, distillation_box.val_data_loader, device=device, log_freq=log_freq)
         if val_top1_accuracy > best_val_top1_accuracy and main_util.is_main_process():
             print('Updating ckpt (Best top1 accuracy: {:.4f} -> {:.4f})'.format(best_val_top1_accuracy,
                                                                                 val_top1_accuracy))
             best_val_top1_accuracy = val_top1_accuracy
             save_ckpt(student_model_without_ddp, optimizer, lr_scheduler,
                       best_val_top1_accuracy, config, args, ckpt_file_path)
-
-        # lr_scheduler.step()
         distillation_box.post_process(epoch=epoch)
 
     dist.barrier()
@@ -165,12 +160,7 @@ def main(args):
     cudnn.benchmark = True
     config = yaml_util.load_yaml_file(args.config)
     device = torch.device(args.device)
-    train_config = config['train']
-    # train_data_loader, val_data_loader, test_data_loader =\
-    data_loader_dict =\
-        dataset_util.get_data_loaders(config['dataset'], train_config['batch_size'],
-                                      config['test']['batch_size'], args.use_cache, distributed)
-
+    dataset_dict = dataset_util.get_all_dataset(config['datasets'], args.use_cache)
     teacher_model_config = config['teacher_model']
     teacher_model = get_model(teacher_model_config, device, distributed, False)
     module_util.freeze_module_params(teacher_model)
@@ -182,12 +172,15 @@ def main(args):
 
     start_epoch = args.start_epoch
     if not args.test_only:
-        distill(teacher_model, student_model, data_loader_dict, device, distributed, start_epoch, config, args)
+        distill(teacher_model, student_model, dataset_dict, device, distributed, start_epoch, config, args)
         student_model_without_ddp =\
             student_model.module if isinstance(student_model, DistributedDataParallel) else student_model
         load_ckpt(student_model_config['ckpt'], model=student_model_without_ddp, strict=True)
 
-    test_data_loader = data_loader_dict['test']
+    test_config = config['test']
+    test_data_loader_config = test_config['test_data_loader']
+    test_data_loader = dataset_util.build_data_loader(dataset_dict[test_data_loader_config['dataset_id']],
+                                                      test_data_loader_config, distributed)
     if not args.student_only:
         evaluate(teacher_model, test_data_loader, device, title='[Teacher: {}]'.format(teacher_model_config['name']))
     evaluate(student_model, test_data_loader, device, title='[Student: {}]'.format(student_model_config['name']))

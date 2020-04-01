@@ -7,6 +7,7 @@ from torch.nn.parallel.distributed import DistributedDataParallel
 from myutils.pytorch.func_util import get_optimizer, get_scheduler
 from myutils.pytorch.module_util import check_if_wrapped, get_module, unfreeze_module_params
 from tools.loss import KDLoss, get_single_loss, get_custom_loss
+from utils.dataset_util import build_data_loaders
 from utils.model_util import redesign_model
 
 try:
@@ -27,10 +28,15 @@ def register_forward_hook_with_dict(module, module_path, info_dict):
 
 class DistillationBox(nn.Module):
     def setup(self, train_config):
-        # Set up train_data_loader
-        data_loader_id = train_config.get('train_dataset', None)
-        if data_loader_id is not None and data_loader_id in self.data_loader_dict:
-            self.train_data_loader = self.data_loader_dict[data_loader_id]
+        # Set up train and val data loaders
+        train_data_loader_config = train_config.get('train_data_loader', dict())
+        val_data_loader_config = train_config.get('val_data_loader', dict())
+        train_data_loader, val_data_loader =\
+            build_data_loaders(self.dataset_dict, [train_data_loader_config, val_data_loader_config], self.distributed)
+        if train_data_loader is not None:
+            self.train_data_loader = train_data_loader
+        if val_data_loader is not None:
+            self.val_data_loader = val_data_loader
 
         # Define teacher and student models used in this stage
         self.target_module_pairs.clear()
@@ -91,11 +97,12 @@ class DistillationBox(nn.Module):
                 amp.initialize(self.student_model, self.optimizer, opt_level=apex_config['opt_level'])
             self.apex = True
 
-    def __init__(self, teacher_model, student_model, data_loader_dict, train_config):
+    def __init__(self, teacher_model, student_model, dataset_dict, train_config, distributed):
         super().__init__()
         self.org_teacher_model = teacher_model
         self.org_student_model = student_model
-        self.data_loader_dict = data_loader_dict
+        self.dataset_dict = dataset_dict
+        self.distributed = distributed
         self.teacher_model = None
         self.student_model = None
         self.teacher_device_ids =\
@@ -104,13 +111,13 @@ class DistillationBox(nn.Module):
             student_model.device_ids if isinstance(student_model, (DataParallel, DistributedDataParallel)) else None
         self.target_module_pairs, self.target_module_handles = list(), list()
         self.teacher_info_dict, self.student_info_dict = dict(), dict()
-        self.train_data_loader, self.optimizer, self.lr_scheduler = None, None, None
+        self.train_data_loader, self.val_data_loader, self.optimizer, self.lr_scheduler = None, None, None, None
         self.org_criterion, self.criterion, self.use_teacher_output = None, None, None
         self.apex = None
         self.setup(train_config)
 
-    def pre_process(self, distributed, epoch, **kwargs):
-        if distributed:
+    def pre_process(self, epoch=None, **kwargs):
+        if self.distributed:
             self.train_data_loader.sampler.set_epoch(epoch)
 
     def check_if_org_loss_required(self):
@@ -168,9 +175,9 @@ class DistillationBox(nn.Module):
 
 
 class MultiStagesDistillationBox(DistillationBox):
-    def __init__(self, teacher_model, student_model, data_loader_dict, train_config):
+    def __init__(self, teacher_model, student_model, data_loader_dict, train_config, distributed):
         stage1_config = train_config['stage1']
-        super().__init__(teacher_model, student_model, data_loader_dict, stage1_config['criterion'])
+        super().__init__(teacher_model, student_model, data_loader_dict, stage1_config['criterion'], distributed)
         self.train_config = train_config
         self.stage_number = 1
         self.stage_end_epoch = stage1_config['end_epoch']
@@ -189,7 +196,7 @@ class MultiStagesDistillationBox(DistillationBox):
             self.advance_to_next_stage()
 
 
-def get_distillation_box(teacher_model, student_model, data_loader_dict, train_config):
+def get_distillation_box(teacher_model, student_model, data_loader_dict, train_config, distributed):
     if 'stage1' in train_config:
-        return MultiStagesDistillationBox(teacher_model, student_model, data_loader_dict, train_config)
-    return DistillationBox(teacher_model, student_model, data_loader_dict, train_config)
+        return MultiStagesDistillationBox(teacher_model, student_model, data_loader_dict, train_config, distributed)
+    return DistillationBox(teacher_model, student_model, data_loader_dict, train_config, distributed)

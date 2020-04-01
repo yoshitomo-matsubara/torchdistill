@@ -3,10 +3,10 @@ import os
 import time
 
 import torch
-import torchvision
 from torch.utils.data import DataLoader, RandomSampler, SequentialSampler
 from torch.utils.data.distributed import DistributedSampler
 from torchvision import transforms
+from torchvision.datasets import ImageFolder
 
 from myutils.common import file_util
 from utils import main_util
@@ -19,20 +19,21 @@ def get_cache_path(file_path, dataset_type):
     return cache_path
 
 
-def load_image_folder_dataset(dir_path, dataset_type, rough_size, input_size, normalizer, use_cache, split_name):
+def load_image_folder_dataset(dir_path, data_aug, dataset_type, rough_size, input_size,
+                              normalizer, use_cache, split_name):
     input_size = tuple(input_size)
     # Data loading code
     st = time.time()
     cache_path = get_cache_path(dir_path, dataset_type)
-    if split_name == 'train':
+    if data_aug:
         if use_cache and file_util.check_if_exists(cache_path):
             # Attention, as the transforms are also cached!
             print('Loading cached training dataset from {}'.format(cache_path))
             train_dataset, _ = torch.load(cache_path)
             return train_dataset
         else:
-            print('Loading training data')
-            train_dataset = torchvision.datasets.ImageFolder(
+            print('Loading {} data'.format(split_name))
+            train_dataset = ImageFolder(
                 dir_path,
                 transforms.Compose([
                     transforms.RandomResizedCrop(input_size),
@@ -54,7 +55,7 @@ def load_image_folder_dataset(dir_path, dataset_type, rough_size, input_size, no
         return eval_dataset
 
     print('Loading {} data'.format(split_name))
-    eval_dataset = torchvision.datasets.ImageFolder(
+    eval_dataset = ImageFolder(
         dir_path,
         transforms.Compose([
             transforms.Resize(rough_size),
@@ -66,60 +67,49 @@ def load_image_folder_dataset(dir_path, dataset_type, rough_size, input_size, no
         print('Saving {} dataset_test to {}'.format(split_name, cache_path))
         file_util.make_parent_dirs(cache_path)
         main_util.save_on_master((eval_dataset, dir_path), cache_path)
+
     print('\t', time.time() - st)
     return eval_dataset
 
 
-def get_data_loaders(dataset_config, distill_batch_size, test_batch_size, use_cache, distributed):
+def get_dataset_dict(dataset_config, use_cache):
     dataset_type = dataset_config['type']
     rough_size = dataset_config['rough_size']
     input_size = dataset_config['input_size']
     normalizer = transforms.Normalize(**dataset_config['normalizer'])
-    train_dict = dict()
+    dataset_dict = dict()
     if dataset_type == 'imagefolder':
         dataset_splits_config = dataset_config['splits']
         for split_name in dataset_splits_config.keys():
-            if split_name not in ('val', 'test'):
-                train_dict[split_name] = dict()
-                train_dataset = load_image_folder_dataset(dataset_splits_config[split_name]['images'], dataset_type,
-                                                          rough_size, input_size, normalizer, use_cache, 'train')
-                train_dict[split_name]['dataset'] = train_dataset
-
-        val_dir_path = dataset_splits_config['val']['images']
-        val_dataset = load_image_folder_dataset(val_dir_path, dataset_type,
-                                                rough_size, input_size, normalizer, use_cache, 'validation')
-        test_dir_path = dataset_splits_config['test']['images']
-        if test_dir_path is not None and test_dir_path != val_dir_path:
-            test_dataset = load_image_folder_dataset(test_dir_path, dataset_type, rough_size, input_size, normalizer,
-                                                     use_cache, 'test')
-        else:
-            print('Shallow-copying validation dataset for test dataset')
-            test_dataset = val_dataset
+            split_config = dataset_splits_config[split_name]
+            dataset_dict[split_name] =\
+                load_image_folder_dataset(split_config['images'], split_config['data_aug'], dataset_type, rough_size,
+                                          input_size, normalizer, use_cache, split_name)
     else:
         raise ValueError('dataset_type `{}` is not expected'.format(dataset_type))
+    return dataset_dict
 
-    if distributed:
-        for train_key in train_dict.keys():
-            train_dict[train_key]['sampler'] = DistributedSampler(train_dict[train_key]['dataset'])
 
-        val_sampler = DistributedSampler(val_dataset)
-        test_sampler = DistributedSampler(test_dataset)
-    else:
-        for train_key in train_dict.keys():
-            train_dict[train_key]['sampler'] = RandomSampler(train_dict[train_key]['dataset'])
+def get_all_dataset(datasets_config, use_cache):
+    dataset_dict = dict()
+    for dataset_name in datasets_config.keys():
+        sub_dataset_dict = get_dataset_dict(datasets_config[dataset_name], use_cache)
+        dataset_dict.update(sub_dataset_dict)
+    return dataset_dict
 
-        val_sampler = SequentialSampler(val_dataset)
-        test_sampler = SequentialSampler(test_dataset)
 
-    data_loader_dict = dict()
-    num_workers = dataset_config['num_workers']
-    for train_key in train_dict.keys():
-        data_loader_dict[train_key] =\
-            DataLoader(train_dict[train_key]['dataset'], batch_size=distill_batch_size,
-                       sampler=train_dict[train_key]['sampler'], num_workers=num_workers, pin_memory=True)
+def build_data_loader(dataset, data_loader_config, distributed):
+    batch_size, num_workers = data_loader_config['batch_size'], data_loader_config['num_workers']
+    sampler = DistributedSampler(dataset) if distributed \
+        else RandomSampler(dataset) if data_loader_config.get('random_sample', False) else SequentialSampler(dataset)
+    return DataLoader(dataset, batch_size=batch_size, sampler=sampler, num_workers=num_workers, pin_memory=True)
 
-    data_loader_dict['val'] = DataLoader(val_dataset, batch_size=distill_batch_size, sampler=val_sampler,
-                                         num_workers=num_workers, pin_memory=True)
-    data_loader_dict['test'] = DataLoader(test_dataset, batch_size=test_batch_size, sampler=test_sampler,
-                                          num_workers=num_workers, pin_memory=True)
-    return data_loader_dict
+
+def build_data_loaders(dataset_dict, data_loader_configs, distributed):
+    data_loader_list = list()
+    for data_loader_config in data_loader_configs:
+        dataset_id = data_loader_config.get('dataset_id', None)
+        data_loader = None if dataset_id is None or dataset_id not in dataset_dict \
+            else build_data_loader(dataset_dict[dataset_id], data_loader_config, distributed)
+        data_loader_list.append(data_loader)
+    return data_loader_list
