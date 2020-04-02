@@ -54,7 +54,7 @@ train:
     optimizer:
         type: 'SGD'
         params:
-            lr: 0.001
+            lr: 0.0001
             momentum: 0.9
             weight_decay: 0.0005
     scheduler:
