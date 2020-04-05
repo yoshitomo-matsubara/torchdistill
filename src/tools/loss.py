@@ -19,7 +19,7 @@ class KDLoss(nn.KLDivLoss):
             return soft_loss
 
         hard_loss = self.cross_entropy_loss(student_output, labels)
-        return self.alpha * hard_loss + (1 - self.alpha) * soft_loss * (self.temperature ** 2)
+        return self.alpha * hard_loss + (1 - self.alpha) * (self.temperature ** 2) * soft_loss
 
 
 SINGLE_LOSS_DICT = {

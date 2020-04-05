@@ -49,7 +49,7 @@ pipenv run python src/image_classification.py --device cpu --config config/image
 | Teacher \\ Student    | AlexNet   | ResNet-18 |  
 | :---                  | ---:      | ---:      |  
 | Pretrained (no *KD*)  | 56.52     | 69.76     |  
-| ResNet-152            | 57.22     | 69.86     |
+| ResNet-152            | 57.22     | 70.34     |
 
 
 ## References
