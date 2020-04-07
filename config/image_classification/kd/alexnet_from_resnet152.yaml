@@ -63,10 +63,10 @@ train:
             milestones: [5, 15]
             gamma: 0.1
     criterion:
-        type: 'general'
+        type: 'GeneralizedCustomLoss'
         org_term:
             criterion:
-                type: 'kd'
+                type: 'KDLoss'
                 params:
                     temperature: 1.0
                     alpha: 0.5

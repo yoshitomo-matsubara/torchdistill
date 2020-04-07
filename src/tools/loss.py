@@ -3,7 +3,19 @@ from torch import nn
 
 from myutils.pytorch import func_util
 
+SINGLE_LOSS_CLASS_DICT = dict()
+CUSTOM_LOSS_CLASS_DICT = dict()
 
+
+def register_single_loss(cls):
+    SINGLE_LOSS_CLASS_DICT[cls.__name__] = cls
+
+
+def register_custom_loss(cls):
+    CUSTOM_LOSS_CLASS_DICT[cls.__name__] = cls
+
+
+@register_single_loss
 class KDLoss(nn.KLDivLoss):
     def __init__(self, temperature, alpha=None, reduction='batchmean', **kwargs):
         super().__init__(reduction=reduction)
@@ -22,15 +34,10 @@ class KDLoss(nn.KLDivLoss):
         return self.alpha * hard_loss + (1 - self.alpha) * (self.temperature ** 2) * soft_loss
 
 
-SINGLE_LOSS_DICT = {
-    'kd': KDLoss
-}
-
-
 def get_single_loss(single_criterion_config):
     loss_type = single_criterion_config['type']
-    if loss_type in SINGLE_LOSS_DICT:
-        return SINGLE_LOSS_DICT[loss_type](**single_criterion_config['params'])
+    if loss_type in SINGLE_LOSS_CLASS_DICT:
+        return SINGLE_LOSS_CLASS_DICT[loss_type](**single_criterion_config['params'])
     return func_util.get_loss(loss_type, single_criterion_config['params'])
 
 
@@ -67,13 +74,8 @@ class GeneralizedCustomLoss(CustomLoss):
         return sub_total_loss + self.org_loss_factor * sum(org_loss_dict.values() if len(org_loss_dict) > 0 else [])
 
 
-CUSTOM_LOSS_DICT = {
-    'general': GeneralizedCustomLoss
-}
-
-
 def get_custom_loss(criterion_config):
     criterion_type = criterion_config['type']
-    if criterion_type in CUSTOM_LOSS_DICT:
-        return CUSTOM_LOSS_DICT[criterion_type](criterion_config)
+    if criterion_type in CUSTOM_LOSS_CLASS_DICT:
+        return CUSTOM_LOSS_CLASS_DICT[criterion_type](criterion_config)
     raise ValueError('criterion_type `{}` is not expected'.format(criterion_type))
