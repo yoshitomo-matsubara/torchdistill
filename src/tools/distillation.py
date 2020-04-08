@@ -16,6 +16,12 @@ except ImportError:
     amp = None
 
 
+def extract_module(org_model, sub_model, module_path):
+    if module_path.startswith('+'):
+        return get_module(sub_model, module_path[1:])
+    return get_module(org_model, module_path)
+
+
 def set_distillation_box_info(info_dict, module_path, **kwargs):
     info_dict[module_path] = kwargs
 
@@ -59,8 +65,8 @@ class DistillationBox(nn.Module):
             for loss_name, loss_config in sub_terms_config.items():
                 teacher_path, student_path = loss_config['ts_modules']
                 self.target_module_pairs.append((teacher_path, student_path))
-                teacher_module = get_module(org_teacher_model, teacher_path)
-                student_module = get_module(org_student_model, student_path)
+                teacher_module = extract_module(org_teacher_model, self.teacher_model, teacher_path)
+                student_module = extract_module(org_student_model, self.student_model, student_path)
                 set_distillation_box_info(self.teacher_info_dict, teacher_path, loss_name=loss_name,
                                           path_from_root=teacher_path, is_teacher=True)
                 set_distillation_box_info(self.student_info_dict, student_path, loss_name=loss_name,
