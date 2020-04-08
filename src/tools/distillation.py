@@ -79,7 +79,7 @@ class DistillationBox(nn.Module):
             self.org_criterion = get_single_loss(org_criterion_config)
 
         self.criterion = get_custom_loss(criterion_config)
-        self.use_teacher_output = isinstance(self.org_criterion, KDLoss)
+        self.use_teacher_output = self.org_criterion is not None and isinstance(self.org_criterion, KDLoss)
 
         # Wrap models if necessary
         self.teacher_model = wrap_model(self.teacher_model, teacher_config, self.device, self.device_ids)
