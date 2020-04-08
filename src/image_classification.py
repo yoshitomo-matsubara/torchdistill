@@ -119,10 +119,6 @@ def evaluate(model, data_loader, device, device_ids, distributed, log_freq=1000,
     top5_accuracy = metric_logger.acc5.global_avg
     print(' * Acc@1 {:.4f}\tAcc@5 {:.4f}\n'.format(top1_accuracy, top5_accuracy))
     torch.set_num_threads(num_threads)
-    if module_util.check_if_wrapped(model):
-        model = model.module
-
-    model.cpu()
     return metric_logger.acc1.global_avg
 
 
