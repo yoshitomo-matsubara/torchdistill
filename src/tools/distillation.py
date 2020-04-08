@@ -45,28 +45,28 @@ class DistillationBox(nn.Module):
             self.val_data_loader = val_data_loader
 
         # Define teacher and student models used in this stage
+        unwrapped_org_teacher_model =\
+            self.org_teacher_model.module if check_if_wrapped(self.org_teacher_model) else self.org_teacher_model
+        unwrapped_org_student_model = \
+            self.org_student_model.module if check_if_wrapped(self.org_student_model) else self.org_student_model
         self.target_module_pairs.clear()
         self.target_module_handles.clear()
         teacher_config = train_config.get('teacher', None)
         self.teacher_model = self.org_teacher_model if teacher_config is None \
-            else redesign_model(self.org_teacher_model, teacher_config, 'teacher', self.teacher_device_ids)
+            else redesign_model(unwrapped_org_teacher_model, teacher_config, 'teacher', self.teacher_device_ids)
         student_config = train_config.get('student', None)
         self.student_model = self.org_student_model if student_config is None \
-            else redesign_model(self.org_student_model, student_config, 'student', self.student_device_ids)
+            else redesign_model(unwrapped_org_student_model, student_config, 'student', self.student_device_ids)
 
         # Define loss function used in this stage
         criterion_config = train_config['criterion']
         sub_terms_config = criterion_config.get('sub_terms', None)
         if sub_terms_config is not None:
-            org_teacher_model =\
-                self.org_teacher_model.module if check_if_wrapped(self.org_teacher_model) else self.org_teacher_model
-            org_student_model = \
-                self.org_student_model.module if check_if_wrapped(self.org_student_model) else self.org_student_model
             for loss_name, loss_config in sub_terms_config.items():
                 teacher_path, student_path = loss_config['ts_modules']
                 self.target_module_pairs.append((teacher_path, student_path))
-                teacher_module = extract_module(org_teacher_model, self.teacher_model, teacher_path)
-                student_module = extract_module(org_student_model, self.student_model, student_path)
+                teacher_module = extract_module(unwrapped_org_teacher_model, self.teacher_model, teacher_path)
+                student_module = extract_module(unwrapped_org_student_model, self.student_model, student_path)
                 set_distillation_box_info(self.teacher_info_dict, teacher_path, loss_name=loss_name,
                                           path_from_root=teacher_path, is_teacher=True)
                 set_distillation_box_info(self.student_info_dict, student_path, loss_name=loss_name,
