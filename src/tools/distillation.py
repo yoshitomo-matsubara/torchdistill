@@ -188,7 +188,7 @@ class MultiStagesDistillationBox(DistillationBox):
         super().__init__(teacher_model, student_model, data_loader_dict, stage1_config, device, device_ids, distributed)
         self.train_config = train_config
         self.stage_number = 1
-        self.stage_end_epoch = stage1_config['end_epoch']
+        self.stage_end_epoch = stage1_config['num_epochs']
         print('Stage {}'.format(self.stage_number))
 
     def advance_to_next_stage(self):
@@ -196,7 +196,7 @@ class MultiStagesDistillationBox(DistillationBox):
         self.stage_number += 1
         next_stage_config = self.train_config['stage{}'.format(self.stage_number)]
         self.setup(next_stage_config)
-        self.stage_end_epoch = next_stage_config['end_epoch']
+        self.stage_end_epoch += next_stage_config['num_epochs']
         print('Advanced to stage {}'.format(self.stage_number))
 
     def post_process(self, epoch, **kwargs):
