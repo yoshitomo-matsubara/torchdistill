@@ -1,14 +1,12 @@
 import sys
 
 from torch import nn
-from torch.nn import DataParallel
-from torch.nn.parallel.distributed import DistributedDataParallel
 
 from myutils.pytorch.func_util import get_optimizer, get_scheduler
 from myutils.pytorch.module_util import check_if_wrapped, get_module, unfreeze_module_params
 from tools.loss import KDLoss, get_single_loss, get_custom_loss
 from utils.dataset_util import build_data_loaders
-from utils.model_util import redesign_model
+from utils.model_util import redesign_model, wrap_model
 
 try:
     from apex import amp
@@ -53,10 +51,10 @@ class DistillationBox(nn.Module):
         self.target_module_handles.clear()
         teacher_config = train_config.get('teacher', None)
         self.teacher_model = self.org_teacher_model if teacher_config is None \
-            else redesign_model(unwrapped_org_teacher_model, teacher_config, 'teacher', self.teacher_device_ids)
+            else redesign_model(unwrapped_org_teacher_model, teacher_config, 'teacher')
         student_config = train_config.get('student', None)
         self.student_model = self.org_student_model if student_config is None \
-            else redesign_model(unwrapped_org_student_model, student_config, 'student', self.student_device_ids)
+            else redesign_model(unwrapped_org_student_model, student_config, 'student')
 
         # Define loss function used in this stage
         criterion_config = train_config['criterion']
@@ -83,6 +81,10 @@ class DistillationBox(nn.Module):
         self.criterion = get_custom_loss(criterion_config)
         self.use_teacher_output = isinstance(self.org_criterion, KDLoss)
 
+        # Wrap models if necessary
+        self.teacher_model = wrap_model(self.teacher_model, teacher_config, self.device, self.device_ids)
+        self.student_model = wrap_model(self.student_model, student_config, self.device, self.device_ids)
+
         # Set up optimizer and scheduler
         optim_config = train_config['optimizer']
         self.optimizer = get_optimizer(self.student_model, optim_config['type'], optim_config['params'])
@@ -103,18 +105,16 @@ class DistillationBox(nn.Module):
                 amp.initialize(self.student_model, self.optimizer, opt_level=apex_config['opt_level'])
             self.apex = True
 
-    def __init__(self, teacher_model, student_model, dataset_dict, train_config, distributed):
+    def __init__(self, teacher_model, student_model, dataset_dict, train_config, device, device_ids, distributed):
         super().__init__()
-        self.org_teacher_model = teacher_model
-        self.org_student_model = student_model
+        self.org_teacher_model = teacher_model.cpu()
+        self.org_student_model = student_model.cpu()
         self.dataset_dict = dataset_dict
+        self.device = device
+        self.device_ids = device_ids
         self.distributed = distributed
         self.teacher_model = None
         self.student_model = None
-        self.teacher_device_ids =\
-            teacher_model.device_ids if isinstance(teacher_model, (DataParallel, DistributedDataParallel)) else None
-        self.student_device_ids =\
-            student_model.device_ids if isinstance(student_model, (DataParallel, DistributedDataParallel)) else None
         self.target_module_pairs, self.target_module_handles = list(), list()
         self.teacher_info_dict, self.student_info_dict = dict(), dict()
         self.train_data_loader, self.val_data_loader, self.optimizer, self.lr_scheduler = None, None, None, None
@@ -181,9 +181,9 @@ class DistillationBox(nn.Module):
 
 
 class MultiStagesDistillationBox(DistillationBox):
-    def __init__(self, teacher_model, student_model, data_loader_dict, train_config, distributed):
+    def __init__(self, teacher_model, student_model, data_loader_dict, train_config, device, device_ids, distributed):
         stage1_config = train_config['stage1']
-        super().__init__(teacher_model, student_model, data_loader_dict, stage1_config, distributed)
+        super().__init__(teacher_model, student_model, data_loader_dict, stage1_config, device, device_ids, distributed)
         self.train_config = train_config
         self.stage_number = 1
         self.stage_end_epoch = stage1_config['end_epoch']
@@ -202,7 +202,9 @@ class MultiStagesDistillationBox(DistillationBox):
             self.advance_to_next_stage()
 
 
-def get_distillation_box(teacher_model, student_model, data_loader_dict, train_config, distributed):
+def get_distillation_box(teacher_model, student_model, data_loader_dict, train_config, device, device_ids, distributed):
     if 'stage1' in train_config:
-        return MultiStagesDistillationBox(teacher_model, student_model, data_loader_dict, train_config, distributed)
-    return DistillationBox(teacher_model, student_model, data_loader_dict, train_config, distributed)
+        return MultiStagesDistillationBox(teacher_model, student_model, data_loader_dict,
+                                          train_config, device, device_ids, distributed)
+    return DistillationBox(teacher_model, student_model, data_loader_dict, train_config,
+                           device, device_ids, distributed)

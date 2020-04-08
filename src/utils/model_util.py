@@ -7,7 +7,18 @@ from models.adaptation import get_adaptation_module
 from myutils.pytorch.module_util import get_module, freeze_module_params
 
 
-def redesign_model(org_model, model_config, model_label, device_ids=None):
+def wrap_model(model, model_config, device, device_ids=None):
+    wrapper = model_config.get('wrapper', None) if model_config is not None else None
+    model.to(device)
+    if wrapper is not None:
+        if wrapper == 'DataParallel':
+            model = DataParallel(model, device_ids=device_ids)
+        elif wrapper == 'DistributedDataParallel':
+            model = DistributedDataParallel(model, device_ids=device_ids)
+    return model
+
+
+def redesign_model(org_model, model_config, model_label):
     module_paths = model_config.get('sequential', list())
     if not isinstance(module_paths, list) or len(module_paths) == 0:
         print('Using original {} model ...'.format(model_label))
@@ -29,13 +40,6 @@ def redesign_model(org_model, model_config, model_label, device_ids=None):
         module_dict[module_path.replace('.', '__attr__')] = module
 
     model = Sequential(module_dict)
-    wrapper = model_config.get('wrapper', None)
-    if wrapper is not None:
-        if wrapper == 'DataParallel':
-            model = DataParallel(model, device_ids=device_ids)
-        elif wrapper == 'DistributedDataParallel':
-            model = DistributedDataParallel(model, device_ids=device_ids)
-
     if not model_config.get('requires_grad', True):
         freeze_module_params(model)
     return model

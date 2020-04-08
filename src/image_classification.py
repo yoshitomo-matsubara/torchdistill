@@ -64,8 +64,7 @@ def get_model(model_config, device, distributed, sync_bn):
 
 def save_ckpt(model, optimizer, lr_scheduler, best_value, config, args, output_file_path):
     file_util.make_parent_dirs(output_file_path)
-    model_state_dict =\
-        model.module.state_dict() if isinstance(model, DistributedDataParallel) else model.state_dict()
+    model_state_dict = model.module.state_dict() if module_util.check_if_wrapped(model) else model.state_dict()
     main_util.save_on_master({'model': model_state_dict, 'optimizer': optimizer.state_dict(), 'best_value': best_value,
                               'lr_scheduler': lr_scheduler.state_dict(), 'config': config, 'args': args},
                              output_file_path)
@@ -87,7 +86,12 @@ def distill_one_epoch(distillation_box, device, epoch, log_freq):
 
 
 @torch.no_grad()
-def evaluate(model, data_loader, device, log_freq=1000, title=None):
+def evaluate(model, data_loader, device, device_ids, distributed, log_freq=1000, title=None):
+    if distributed:
+        model = DistributedDataParallel(model, device_ids=device_ids)
+    elif device.type.startswith('cuda'):
+        model = DataParallel(model, device_ids=device_ids)
+
     if title is not None:
         print(title)
 
@@ -101,7 +105,6 @@ def evaluate(model, data_loader, device, log_freq=1000, title=None):
             image = image.to(device, non_blocking=True)
             target = target.to(device, non_blocking=True)
             output = model(image)
-
             acc1, acc5 = compute_accuracy(output, target, topk=(1, 5))
             # FIXME need to take into account that the datasets
             # could have been padded in distributed setup
@@ -115,13 +118,18 @@ def evaluate(model, data_loader, device, log_freq=1000, title=None):
     top5_accuracy = metric_logger.acc5.global_avg
     print(' * Acc@1 {:.4f}\tAcc@5 {:.4f}\n'.format(top1_accuracy, top5_accuracy))
     torch.set_num_threads(num_threads)
+    if module_util.check_if_wrapped(model):
+        model = model.module
+
+    model.cpu()
     return metric_logger.acc1.global_avg
 
 
-def distill(teacher_model, student_model, dataset_dict, device, distributed, start_epoch, config, args):
+def distill(teacher_model, student_model, dataset_dict, device, device_ids, distributed, start_epoch, config, args):
     print('Start knowledge distillation')
     train_config = config['train']
-    distillation_box = get_distillation_box(teacher_model, student_model, dataset_dict, train_config, distributed)
+    distillation_box =\
+        get_distillation_box(teacher_model, student_model, dataset_dict, train_config, device, device_ids, distributed)
     ckpt_file_path = config['models']['student_model']['ckpt']
     best_val_top1_accuracy = 0.0
     optimizer, lr_scheduler = distillation_box.optimizer, distillation_box.lr_scheduler
@@ -130,15 +138,15 @@ def distill(teacher_model, student_model, dataset_dict, device, distributed, sta
             load_ckpt(ckpt_file_path, optimizer=optimizer, lr_scheduler=lr_scheduler)
 
     log_freq = train_config['log_freq']
-    student_model_without_ddp = \
-        student_model.module if isinstance(student_model, DistributedDataParallel) else student_model
+    student_model_without_ddp = student_model.module if module_util.check_if_wrapped(student_model) else student_model
     start_time = time.time()
     for epoch in range(start_epoch, train_config['num_epochs']):
         distillation_box.pre_process(epoch=epoch)
         teacher_model.eval()
         student_model.train()
         distill_one_epoch(distillation_box, device, epoch, log_freq)
-        val_top1_accuracy = evaluate(student_model, distillation_box.val_data_loader, device=device, log_freq=log_freq)
+        val_top1_accuracy = evaluate(student_model, distillation_box.val_data_loader, device, device_ids, distributed,
+                                     log_freq=log_freq)
         if val_top1_accuracy > best_val_top1_accuracy and main_util.is_main_process():
             print('Updating ckpt (Best top1 accuracy: {:.4f} -> {:.4f})'.format(best_val_top1_accuracy,
                                                                                 val_top1_accuracy))
@@ -167,15 +175,11 @@ def main(args):
     module_util.freeze_module_params(teacher_model)
     student_model_config = models_config['student_model']
     student_model = get_model(student_model_config, device, distributed, args.sync_bn)
-    if distributed:
-        teacher_model = DataParallel(teacher_model, device_ids=device_ids)
-        student_model = DistributedDataParallel(student_model, device_ids=device_ids)
-
     start_epoch = args.start_epoch
     if not args.test_only:
-        distill(teacher_model, student_model, dataset_dict, device, distributed, start_epoch, config, args)
+        distill(teacher_model, student_model, dataset_dict, device, device_ids, distributed, start_epoch, config, args)
         student_model_without_ddp =\
-            student_model.module if isinstance(student_model, DistributedDataParallel) else student_model
+            student_model.module if module_util.check_if_wrapped(student_model) else student_model
         load_ckpt(student_model_config['ckpt'], model=student_model_without_ddp, strict=True)
 
     test_config = config['test']
@@ -183,8 +187,10 @@ def main(args):
     test_data_loader = dataset_util.build_data_loader(dataset_dict[test_data_loader_config['dataset_id']],
                                                       test_data_loader_config, distributed)
     if not args.student_only:
-        evaluate(teacher_model, test_data_loader, device, title='[Teacher: {}]'.format(teacher_model_config['name']))
-    evaluate(student_model, test_data_loader, device, title='[Student: {}]'.format(student_model_config['name']))
+        evaluate(teacher_model, test_data_loader, device, device_ids, distributed,
+                 title='[Teacher: {}]'.format(teacher_model_config['name']))
+    evaluate(student_model, test_data_loader, device, device_ids, distributed,
+             title='[Student: {}]'.format(student_model_config['name']))
 
 
 if __name__ == '__main__':
