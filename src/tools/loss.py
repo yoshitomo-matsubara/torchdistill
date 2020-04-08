@@ -57,6 +57,7 @@ class CustomLoss(nn.Module):
         raise NotImplementedError('forward function is not implemented')
 
 
+@register_custom_loss
 class GeneralizedCustomLoss(CustomLoss):
     def __init__(self, criterion_config):
         super().__init__(criterion_config)
