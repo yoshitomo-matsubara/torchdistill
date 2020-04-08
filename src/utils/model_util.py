@@ -7,14 +7,14 @@ from models.adaptation import get_adaptation_module
 from myutils.pytorch.module_util import get_module, freeze_module_params
 
 
-def wrap_model(model, model_config, device, device_ids=None):
+def wrap_model(model, model_config, device, device_ids=None, distributed=False):
     wrapper = model_config.get('wrapper', None) if model_config is not None else None
     model.to(device)
     if wrapper is not None:
-        if wrapper == 'DataParallel':
-            model = DataParallel(model, device_ids=device_ids)
-        elif wrapper == 'DistributedDataParallel':
+        if wrapper == 'DistributedDataParallel' and distributed:
             model = DistributedDataParallel(model, device_ids=device_ids)
+        elif wrapper in {'DataParallel', 'DistributedDataParallel'} and distributed:
+            model = DataParallel(model, device_ids=device_ids)
     return model
 
 

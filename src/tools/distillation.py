@@ -82,8 +82,10 @@ class DistillationBox(nn.Module):
         self.use_teacher_output = self.org_criterion is not None and isinstance(self.org_criterion, KDLoss)
 
         # Wrap models if necessary
-        self.teacher_model = wrap_model(self.teacher_model, teacher_config, self.device, self.device_ids)
-        self.student_model = wrap_model(self.student_model, student_config, self.device, self.device_ids)
+        self.teacher_model =\
+            wrap_model(self.teacher_model, teacher_config, self.device, self.device_ids, self.distributed)
+        self.student_model =\
+            wrap_model(self.student_model, student_config, self.device, self.device_ids, self.distributed)
 
         # Set up optimizer and scheduler
         optim_config = train_config['optimizer']
