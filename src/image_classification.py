@@ -140,7 +140,7 @@ def distill(teacher_model, student_model, dataset_dict, device, device_ids, dist
     log_freq = train_config['log_freq']
     student_model_without_ddp = student_model.module if module_util.check_if_wrapped(student_model) else student_model
     start_time = time.time()
-    for epoch in range(start_epoch, train_config['num_epochs']):
+    for epoch in range(start_epoch, distillation_box.num_epochs):
         distillation_box.pre_process(epoch=epoch)
         teacher_model.eval()
         student_model.train()

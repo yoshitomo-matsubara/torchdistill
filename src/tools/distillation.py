@@ -123,6 +123,7 @@ class DistillationBox(nn.Module):
         self.org_criterion, self.criterion, self.use_teacher_output = None, None, None
         self.apex = None
         self.setup(train_config)
+        self.num_epochs = train_config['num_epochs']
 
     def pre_process(self, epoch=None, **kwargs):
         if self.distributed:
@@ -189,7 +190,8 @@ class MultiStagesDistillationBox(DistillationBox):
         self.train_config = train_config
         self.stage_number = 1
         self.stage_end_epoch = stage1_config['num_epochs']
-        print('Stage {}'.format(self.stage_number))
+        self.num_epochs = sum(train_config[key]['num_epochs'] for key in train_config.keys())
+        print('Started stage {}'.format(self.stage_number))
 
     def advance_to_next_stage(self):
         self.clean_modules()
