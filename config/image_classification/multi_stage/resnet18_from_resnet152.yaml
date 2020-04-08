@@ -53,12 +53,21 @@ train:
             requires: False
             opt_level: '01'
         teacher:
-            sequential: ['conv1', 'relu', 'maxpool']
+            sequential: ['conv1', 'relu', 'maxpool', 'layer1']
             wrapper: 'DistributedDataParallel'
             requires_grad: False
         student:
-            adaptation: []
-            sequential: ['conv1', 'relu', 'maxpool']
+            adaptations:
+                convreg:
+                    type: 'ConvReg'
+                    params:
+                        num_input_channels: 64
+                        num_output_channels: 256
+                        kernel_size: 1
+                        stride: 1
+                        padding: 0
+                        uses_relu: True
+            sequential: ['conv1', 'relu', 'maxpool', 'layer1', '+convreg']
             frozen_modules: []
             wrapper: 'DistributedDataParallel'
             requires_grad: True
@@ -77,21 +86,7 @@ train:
                 factor: 0.0
             sub_terms:
                 layer1:
-                    ts_modules: ['conv1', 'conv1']
-                    criterion:
-                        type: 'MSELoss'
-                        params:
-                            reduction: 'sum'
-                    factor: 1.0
-                layer2:
-                    ts_modules: ['relu', 'relu']
-                    criterion:
-                        type: 'MSELoss'
-                        params:
-                            reduction: 'sum'
-                    factor: 1.0
-                layer3:
-                    ts_modules: ['maxpool', 'maxpool']
+                    ts_modules: ['layer1', '+convreg']
                     criterion:
                         type: 'MSELoss'
                         params:
@@ -107,7 +102,7 @@ train:
             wrapper: 'DistributedDataParallel'
             requires_grad: False
         student:
-            adaptation: []
+            adaptations:
             sequential: []
             wrapper: 'DistributedDataParallel'
             requires_grad: True
