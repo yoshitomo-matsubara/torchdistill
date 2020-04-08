@@ -183,7 +183,7 @@ class DistillationBox(nn.Module):
 class MultiStagesDistillationBox(DistillationBox):
     def __init__(self, teacher_model, student_model, data_loader_dict, train_config, distributed):
         stage1_config = train_config['stage1']
-        super().__init__(teacher_model, student_model, data_loader_dict, stage1_config['criterion'], distributed)
+        super().__init__(teacher_model, student_model, data_loader_dict, stage1_config, distributed)
         self.train_config = train_config
         self.stage_number = 1
         self.stage_end_epoch = stage1_config['end_epoch']
@@ -193,7 +193,7 @@ class MultiStagesDistillationBox(DistillationBox):
         self.clean_modules()
         self.stage_number += 1
         next_stage_config = self.train_config['stage{}'.format(self.stage_number)]
-        self.setup(next_stage_config['criterion'])
+        self.setup(next_stage_config)
         self.stage_end_epoch = next_stage_config['end_epoch']
         print('Advanced to stage {}'.format(self.stage_number))
 
