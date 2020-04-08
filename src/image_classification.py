@@ -87,6 +87,7 @@ def distill_one_epoch(distillation_box, device, epoch, log_freq):
 
 @torch.no_grad()
 def evaluate(model, data_loader, device, device_ids, distributed, log_freq=1000, title=None):
+    model.to(device)
     if distributed:
         model = DistributedDataParallel(model, device_ids=device_ids)
     elif device.type.startswith('cuda'):
