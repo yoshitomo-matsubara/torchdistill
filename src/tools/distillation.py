@@ -204,7 +204,7 @@ class MultiStagesDistillationBox(DistillationBox):
 
     def post_process(self, **kwargs):
         self.current_epoch += 1
-        if self.current_epoch == self.stage_end_epoch:
+        if self.current_epoch == self.stage_end_epoch and self.current_epoch < self.num_epochs:
             self.advance_to_next_stage()
 
 
