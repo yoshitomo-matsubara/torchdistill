@@ -83,12 +83,10 @@ class DistillationBox(nn.Module):
         if self.student_model is not None:
             self.student_model.cpu()
 
-        teacher_config = train_config.get('teacher', None)
-        self.teacher_model = self.org_teacher_model if teacher_config is None \
-            else redesign_model(unwrapped_org_teacher_model, teacher_config, 'teacher')
-        student_config = train_config.get('student', None)
-        self.student_model = self.org_student_model if student_config is None \
-            else redesign_model(unwrapped_org_student_model, student_config, 'student')
+        teacher_config = train_config.get('teacher', dict())
+        self.teacher_model = redesign_model(unwrapped_org_teacher_model, teacher_config, 'teacher')
+        student_config = train_config.get('student', dict())
+        self.student_model = redesign_model(unwrapped_org_student_model, student_config, 'student')
 
         # Define loss function used in this stage
         self.setup_loss(train_config, unwrapped_org_teacher_model, unwrapped_org_student_model)
