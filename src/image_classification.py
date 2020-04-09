@@ -131,8 +131,7 @@ def distill(teacher_model, student_model, dataset_dict, device, device_ids, dist
     best_val_top1_accuracy = 0.0
     optimizer, lr_scheduler = distillation_box.optimizer, distillation_box.lr_scheduler
     if file_util.check_if_exists(ckpt_file_path):
-        best_val_map, _, _ =\
-            load_ckpt(ckpt_file_path, optimizer=optimizer, lr_scheduler=lr_scheduler)
+        best_val_top1_accuracy, _, _ = load_ckpt(ckpt_file_path, optimizer=optimizer, lr_scheduler=lr_scheduler)
 
     log_freq = train_config['log_freq']
     student_model_without_ddp = student_model.module if module_util.check_if_wrapped(student_model) else student_model
