@@ -40,6 +40,4 @@ def redesign_model(org_model, model_config, model_label):
         module_dict[module_path.replace('.', '__attr__')] = module
 
     model = Sequential(module_dict)
-    if not model_config.get('requires_grad', True):
-        freeze_module_params(model)
     return model

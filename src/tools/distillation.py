@@ -3,7 +3,7 @@ import sys
 from torch import nn
 
 from myutils.pytorch.func_util import get_optimizer, get_scheduler
-from myutils.pytorch.module_util import check_if_wrapped, get_module, unfreeze_module_params
+from myutils.pytorch.module_util import check_if_wrapped, get_module, freeze_module_params, unfreeze_module_params
 from tools.loss import KDLoss, get_single_loss, get_custom_loss
 from utils.dataset_util import build_data_loaders
 from utils.model_util import redesign_model, wrap_model
@@ -98,6 +98,11 @@ class DistillationBox(nn.Module):
             wrap_model(self.teacher_model, teacher_config, self.device, self.device_ids, self.distributed)
         self.student_model =\
             wrap_model(self.student_model, student_config, self.device, self.device_ids, self.distributed)
+        if not teacher_config.get('requires_grad', True):
+            freeze_module_params(self.teacher_model)
+
+        if not student_config.get('requires_grad', True):
+            freeze_module_params(self.student_model)
 
         # Set up optimizer and scheduler
         optim_config = train_config['optimizer']
@@ -138,7 +143,7 @@ class DistillationBox(nn.Module):
         self.num_epochs = train_config['num_epochs']
 
     def pre_process(self, epoch=None, **kwargs):
-        if self.distributed:
+        if self.distributed and self.train_data_loader.sampler is not None:
             self.train_data_loader.sampler.set_epoch(epoch)
 
     def check_if_org_loss_required(self):
