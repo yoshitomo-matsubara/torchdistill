@@ -9,10 +9,12 @@ CUSTOM_LOSS_CLASS_DICT = dict()
 
 def register_single_loss(cls):
     SINGLE_LOSS_CLASS_DICT[cls.__name__] = cls
+    return cls
 
 
 def register_custom_loss(cls):
     CUSTOM_LOSS_CLASS_DICT[cls.__name__] = cls
+    return cls
 
 
 @register_single_loss

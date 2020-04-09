@@ -7,6 +7,7 @@ CLASS_DICT = dict()
 
 def register_adaptation_module(cls):
     CLASS_DICT[cls.__name__] = cls
+    return cls
 
 
 @register_adaptation_module

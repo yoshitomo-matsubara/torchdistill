@@ -5,6 +5,7 @@ CLASS_DICT = dict()
 
 def register_special_module(cls):
     CLASS_DICT[cls.__name__] = cls
+    return cls
 
 
 @register_special_module
