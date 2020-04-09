@@ -78,6 +78,12 @@ class DistillationBox(nn.Module):
         self.target_module_pairs.clear()
         self.target_module_handles.clear()
         teacher_config = train_config.get('teacher', None)
+        if self.teacher_model is not None:
+            self.teacher_model.cpu()
+
+        if self.student_model is not None:
+            self.student_model.cpu()
+
         self.teacher_model = self.org_teacher_model if teacher_config is None \
             else redesign_model(unwrapped_org_teacher_model, teacher_config, 'teacher')
         student_config = train_config.get('student', None)
