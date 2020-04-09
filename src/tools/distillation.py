@@ -77,13 +77,13 @@ class DistillationBox(nn.Module):
             self.org_student_model.module if check_if_wrapped(self.org_student_model) else self.org_student_model
         self.target_module_pairs.clear()
         self.target_module_handles.clear()
-        teacher_config = train_config.get('teacher', None)
         if self.teacher_model is not None:
             self.teacher_model.cpu()
 
         if self.student_model is not None:
             self.student_model.cpu()
 
+        teacher_config = train_config.get('teacher', None)
         self.teacher_model = self.org_teacher_model if teacher_config is None \
             else redesign_model(unwrapped_org_teacher_model, teacher_config, 'teacher')
         student_config = train_config.get('student', None)
@@ -195,6 +195,8 @@ class DistillationBox(nn.Module):
     def clean_modules(self):
         unfreeze_module_params(self.org_teacher_model)
         unfreeze_module_params(self.org_student_model)
+        self.teacher_info_dict.clear()
+        self.student_info_dict.clear()
         for teacher_handle, student_handle in self.target_module_handles:
             teacher_handle.remove()
             student_handle.remove()
