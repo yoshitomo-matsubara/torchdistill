@@ -168,7 +168,6 @@ def main(args):
     models_config = config['models']
     teacher_model_config = models_config['teacher_model']
     teacher_model = get_model(teacher_model_config, device, distributed, False)
-    module_util.freeze_module_params(teacher_model)
     student_model_config = models_config['student_model']
     student_model = get_model(student_model_config, device, distributed, args.sync_bn)
     start_epoch = args.start_epoch
