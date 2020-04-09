@@ -10,10 +10,10 @@ from myutils.pytorch.module_util import get_module, freeze_module_params
 def wrap_model(model, model_config, device, device_ids=None, distributed=False):
     wrapper = model_config.get('wrapper', None) if model_config is not None else None
     model.to(device)
-    if wrapper is not None:
+    if wrapper is not None and device.type.startswith('cuda'):
         if wrapper == 'DistributedDataParallel' and distributed:
             model = DistributedDataParallel(model, device_ids=device_ids)
-        elif wrapper in {'DataParallel', 'DistributedDataParallel'} and distributed:
+        elif wrapper in {'DataParallel', 'DistributedDataParallel'}:
             model = DataParallel(model, device_ids=device_ids)
     return model
 
