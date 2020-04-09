@@ -150,7 +150,7 @@ def distill(teacher_model, student_model, dataset_dict, device, device_ids, dist
             best_val_top1_accuracy = val_top1_accuracy
             save_ckpt(student_model_without_ddp, optimizer, lr_scheduler,
                       best_val_top1_accuracy, config, args, ckpt_file_path)
-        distillation_box.post_process(epoch=epoch)
+        distillation_box.post_process()
 
     dist.barrier()
     total_time = time.time() - start_time

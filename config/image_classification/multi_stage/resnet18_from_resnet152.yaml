@@ -54,7 +54,7 @@ train:
             opt_level: '01'
         teacher:
             sequential: ['conv1', 'relu', 'maxpool', 'layer1']
-            wrapper: 'DistributedDataParallel'
+            wrapper:
             requires_grad: False
         student:
             adaptations:
@@ -69,7 +69,7 @@ train:
                         uses_relu: True
             sequential: ['conv1', 'relu', 'maxpool', 'layer1', '+convreg']
             frozen_modules: []
-            wrapper: 'DistributedDataParallel'
+            wrapper:
             requires_grad: True
         optimizer:
             type: 'Adam'

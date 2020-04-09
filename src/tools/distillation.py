@@ -191,6 +191,7 @@ class MultiStagesDistillationBox(DistillationBox):
         self.stage_number = 1
         self.stage_end_epoch = stage1_config['num_epochs']
         self.num_epochs = sum(train_config[key]['num_epochs'] for key in train_config.keys() if key.startswith('stage'))
+        self.current_epoch = 0
         print('Started stage {}'.format(self.stage_number))
 
     def advance_to_next_stage(self):
@@ -201,8 +202,9 @@ class MultiStagesDistillationBox(DistillationBox):
         self.stage_end_epoch += next_stage_config['num_epochs']
         print('Advanced to stage {}'.format(self.stage_number))
 
-    def post_process(self, epoch, **kwargs):
-        if epoch == self.stage_end_epoch:
+    def post_process(self, **kwargs):
+        self.current_epoch += 1
+        if self.current_epoch == self.stage_end_epoch:
             self.advance_to_next_stage()
 
 
