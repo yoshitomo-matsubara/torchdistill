@@ -31,8 +31,7 @@ def register_forward_hook_with_dict(module, module_path, info_dict):
 
 
 class DistillationBox(nn.Module):
-    def setup(self, train_config):
-        # Set up train and val data loaders
+    def setup_data_loaders(self, train_config):
         train_data_loader_config = train_config.get('train_data_loader', dict())
         val_data_loader_config = train_config.get('val_data_loader', dict())
         train_data_loader, val_data_loader =\
@@ -42,21 +41,7 @@ class DistillationBox(nn.Module):
         if val_data_loader is not None:
             self.val_data_loader = val_data_loader
 
-        # Define teacher and student models used in this stage
-        unwrapped_org_teacher_model =\
-            self.org_teacher_model.module if check_if_wrapped(self.org_teacher_model) else self.org_teacher_model
-        unwrapped_org_student_model = \
-            self.org_student_model.module if check_if_wrapped(self.org_student_model) else self.org_student_model
-        self.target_module_pairs.clear()
-        self.target_module_handles.clear()
-        teacher_config = train_config.get('teacher', None)
-        self.teacher_model = self.org_teacher_model if teacher_config is None \
-            else redesign_model(unwrapped_org_teacher_model, teacher_config, 'teacher')
-        student_config = train_config.get('student', None)
-        self.student_model = self.org_student_model if student_config is None \
-            else redesign_model(unwrapped_org_student_model, student_config, 'student')
-
-        # Define loss function used in this stage
+    def setup_loss(self, train_config, unwrapped_org_teacher_model, unwrapped_org_student_model):
         criterion_config = train_config['criterion']
         sub_terms_config = criterion_config.get('sub_terms', None)
         if sub_terms_config is not None:
@@ -80,6 +65,27 @@ class DistillationBox(nn.Module):
 
         self.criterion = get_custom_loss(criterion_config)
         self.use_teacher_output = self.org_criterion is not None and isinstance(self.org_criterion, KDLoss)
+
+    def setup(self, train_config):
+        # Set up train and val data loaders
+        self.setup_data_loaders(train_config)
+
+        # Define teacher and student models used in this stage
+        unwrapped_org_teacher_model =\
+            self.org_teacher_model.module if check_if_wrapped(self.org_teacher_model) else self.org_teacher_model
+        unwrapped_org_student_model = \
+            self.org_student_model.module if check_if_wrapped(self.org_student_model) else self.org_student_model
+        self.target_module_pairs.clear()
+        self.target_module_handles.clear()
+        teacher_config = train_config.get('teacher', None)
+        self.teacher_model = self.org_teacher_model if teacher_config is None \
+            else redesign_model(unwrapped_org_teacher_model, teacher_config, 'teacher')
+        student_config = train_config.get('student', None)
+        self.student_model = self.org_student_model if student_config is None \
+            else redesign_model(unwrapped_org_student_model, student_config, 'student')
+
+        # Define loss function used in this stage
+        self.setup_loss(train_config, unwrapped_org_teacher_model, unwrapped_org_student_model)
 
         # Wrap models if necessary
         self.teacher_model =\
