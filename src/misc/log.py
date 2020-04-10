@@ -32,6 +32,7 @@ class SmoothedValue(object):
         """
         if not main_util.is_dist_avail_and_initialized():
             return
+
         t = torch.tensor([self.count, self.total], dtype=torch.float64, device='cuda')
         dist.barrier()
         dist.all_reduce(t)
@@ -79,6 +80,7 @@ class MetricLogger(object):
         for k, v in kwargs.items():
             if isinstance(v, torch.Tensor):
                 v = v.item()
+
             assert isinstance(v, (float, int))
             self.meters[k].update(v)
 
@@ -109,6 +111,7 @@ class MetricLogger(object):
         i = 0
         if not header:
             header = ''
+
         start_time = time.time()
         end = time.time()
         iter_time = SmoothedValue(fmt='{avg:.4f}')
@@ -133,6 +136,7 @@ class MetricLogger(object):
                 'time: {time}',
                 'data: {data}'
             ])
+
         MB = 1024.0 * 1024.0
         for obj in iterable:
             data_time.update(time.time() - end)
@@ -152,25 +156,10 @@ class MetricLogger(object):
                         i, len(iterable), eta=eta_string,
                         meters=str(self),
                         time=str(iter_time), data=str(data_time)))
+
             i += 1
             end = time.time()
+
         total_time = time.time() - start_time
         total_time_str = str(datetime.timedelta(seconds=int(total_time)))
         print('{} Total time: {}'.format(header, total_time_str))
-
-
-def compute_accuracy(output, target, topk=(1,)):
-    """Computes the accuracy over the k top predictions for the specified values of k"""
-    with torch.no_grad():
-        maxk = max(topk)
-        batch_size = target.size(0)
-
-        _, pred = output.topk(maxk, 1, True, True)
-        pred = pred.t()
-        correct = pred.eq(target[None])
-
-        res = []
-        for k in topk:
-            correct_k = correct[:k].flatten().sum(dtype=torch.float32)
-            res.append(correct_k * (100.0 / batch_size))
-        return res
