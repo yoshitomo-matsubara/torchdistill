@@ -91,9 +91,11 @@ class DistillationBox(nn.Module):
         self.student_model =\
             wrap_model(self.student_model, student_config, self.device, self.device_ids, self.distributed)
         if not teacher_config.get('requires_grad', True):
+            print('Freezing the whole teacher model')
             freeze_module_params(self.teacher_model)
 
         if not student_config.get('requires_grad', True):
+            print('Freezing the whole student model')
             freeze_module_params(self.student_model)
 
         # Set up optimizer and scheduler
