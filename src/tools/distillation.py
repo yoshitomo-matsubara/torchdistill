@@ -26,12 +26,16 @@ def set_distillation_box_info(info_dict, module_path, **kwargs):
 
 def register_forward_hook_with_dict(module, module_path, requires_input, requires_output, info_dict):
     def forward_hook4input(self, func_input, func_output):
+        if isinstance(func_input, tuple) and len(func_input) == 1:
+            func_input = func_input[0]
         info_dict[module_path]['input'] = func_input
 
     def forward_hook4output(self, func_input, func_output):
         info_dict[module_path]['output'] = func_output
 
     def forward_hook4io(self, func_input, func_output):
+        if isinstance(func_input, tuple) and len(func_input) == 1:
+            func_input = func_input[0]
         info_dict[module_path]['input'] = func_input
         info_dict[module_path]['output'] = func_output
 
