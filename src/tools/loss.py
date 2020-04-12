@@ -109,7 +109,7 @@ class CustomLoss(nn.Module):
         if sub_terms_config is not None:
             for loss_name, loss_config in sub_terms_config.items():
                 sub_criterion_config = loss_config['criterion']
-                sub_criterion = get_single_loss(sub_criterion_config, loss_config['params'])
+                sub_criterion = get_single_loss(sub_criterion_config, loss_config.get('params', None))
                 term_dict[loss_name] = (sub_criterion, loss_config['factor'])
         self.term_dict = term_dict
 
