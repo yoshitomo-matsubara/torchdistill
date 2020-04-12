@@ -20,7 +20,7 @@ datasets:
 
 models:
     teacher_model:
-        name: &teacher_model_name 'resnet152'
+        name: &teacher_model_name 'resnet34'
         params:
             num_classes: 1000
             pretrained: True
@@ -55,8 +55,8 @@ train:
         teacher:
             sequential: ['conv1', 'relu', 'maxpool', 'layer1', 'layer2', 'layer3', 'layer4']
             forward_hook:
-                input: ['layer1', 'layer2', 'layer3', 'layer4']
-                output: ['layer1', 'layer2', 'layer3', 'layer4']
+                input: ['layer1', 'layer3.conv2', 'layer4.conv2']
+                output: ['layer1', 'layer2.conv2', 'layer3.conv2']
             wrapper:
             requires_grad: False
         student:
@@ -64,8 +64,8 @@ train:
             sequential: ['conv1', 'relu', 'maxpool', 'layer1', 'layer2', 'layer3', 'layer4']
             frozen_modules: []
             forward_hook:
-                input: ['layer1', 'layer2', 'layer3', 'layer4']
-                output: ['layer1', 'layer2', 'layer3', 'layer4']
+                input: ['layer1', 'layer3.conv2', 'layer4.conv2']
+                output: ['layer1', 'layer2.conv2', 'layer3.conv2']
             wrapper:
             requires_grad: True
         optimizer:
@@ -99,33 +99,23 @@ train:
                                     factor: 1
                                 pair2:
                                     teacher_first:
-                                        input: 'layer2'
+                                        output: 'layer2.conv2'
                                     teacher_second:
-                                        output: 'layer2'
+                                        intput: 'layer3.conv2'
                                     student_first:
-                                        input: 'layer2'
+                                        output: 'layer2.conv2'
                                     student_second:
-                                        output: 'layer2'
+                                        input: 'layer3.conv2'
                                     factor: 1
                                 pair3:
                                     teacher_first:
-                                        input: 'layer3'
+                                        output: 'layer3.conv2'
                                     teacher_second:
-                                        output: 'layer3'
+                                        input: 'layer4.conv2'
                                     student_first:
-                                        input: 'layer3'
+                                        output: 'layer3.conv2'
                                     student_second:
-                                        output: 'layer3'
-                                    factor: 1
-                                pair4:
-                                    teacher_first:
-                                        input: 'layer4'
-                                    teacher_second:
-                                        output: 'layer4'
-                                    student_first:
-                                        input: 'layer4'
-                                    student_second:
-                                        output: 'layer4'
+                                        input: 'layer4.conv2'
                                     factor: 1
                     factor: 1.0
     stage2:
