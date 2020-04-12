@@ -24,10 +24,24 @@ def set_distillation_box_info(info_dict, module_path, **kwargs):
     info_dict[module_path] = kwargs
 
 
-def register_forward_hook_with_dict(module, module_path, info_dict):
-    def forward_hook(self, input, output):
-        info_dict[module_path]['output'] = output
-    return module.register_forward_hook(forward_hook)
+def register_forward_hook_with_dict(module, module_path, info_dict, requires_input, requires_output):
+    def forward_hook4input(self, func_input, func_output):
+        info_dict[module_path]['input'] = func_input
+
+    def forward_hook4output(self, func_input, func_output):
+        info_dict[module_path]['output'] = func_output
+
+    def forward_hook4io(self, func_input, func_output):
+        info_dict[module_path]['input'] = func_input
+        info_dict[module_path]['output'] = func_output
+
+    if requires_input and not requires_output:
+        return module.register_forward_hook(forward_hook4input)
+    elif not requires_input and requires_output:
+        return module.register_forward_hook(forward_hook4output)
+    elif requires_input and requires_output:
+        return module.register_forward_hook(forward_hook4io)
+    raise ValueError('Either requires_input or requires_output should be True')
 
 
 class DistillationBox(nn.Module):
@@ -41,28 +55,30 @@ class DistillationBox(nn.Module):
         if val_data_loader is not None:
             self.val_data_loader = val_data_loader
 
-    def setup_loss(self, train_config, unwrapped_org_teacher_model, unwrapped_org_student_model):
-        criterion_config = train_config['criterion']
-        sub_terms_config = criterion_config.get('sub_terms', None)
-        if sub_terms_config is not None:
-            for loss_name, loss_config in sub_terms_config.items():
-                teacher_path, student_path = loss_config['ts_modules']
-                self.target_module_pairs.append((teacher_path, student_path))
-                teacher_module = extract_module(unwrapped_org_teacher_model, self.teacher_model, teacher_path)
-                student_module = extract_module(unwrapped_org_student_model, self.student_model, student_path)
-                set_distillation_box_info(self.teacher_info_dict, teacher_path, loss_name=loss_name,
-                                          path_from_root=teacher_path, is_teacher=True)
-                set_distillation_box_info(self.student_info_dict, student_path, loss_name=loss_name,
-                                          path_from_root=student_path, is_teacher=False)
-                teacher_handle = register_forward_hook_with_dict(teacher_module, teacher_path, self.teacher_info_dict)
-                student_handle = register_forward_hook_with_dict(student_module, student_path, self.student_info_dict)
-                self.target_module_handles.append((teacher_handle, student_handle))
+    @staticmethod
+    def setup_hooks(model, unwrapped_org_model, model_config, info_dict):
+        pair_list = list()
+        forward_hook_config = model_config.get('forward_hook', dict())
+        if len(forward_hook_config) == 0:
+            return pair_list
 
+        input_module_path_set = set(forward_hook_config.get('input', list()))
+        output_module_path_set = set(forward_hook_config.get('output', list()))
+        for target_module_path in input_module_path_set.union(output_module_path_set):
+            requires_input = target_module_path in input_module_path_set
+            requires_output = target_module_path in output_module_path_set
+            target_module = extract_module(unwrapped_org_model, model, target_module_path)
+            handle = register_forward_hook_with_dict(target_module, target_module_path, info_dict,
+                                                     requires_input, requires_output)
+            pair_list.append((target_module_path, handle))
+        return pair_list
+
+    def setup_loss(self, train_config):
+        criterion_config = train_config['criterion']
         org_term_config = criterion_config.get('org_term', dict())
         org_criterion_config = org_term_config.get('criterion', dict()) if isinstance(org_term_config, dict) else None
-        if org_criterion_config is not None and len(org_criterion_config) > 0:
-            self.org_criterion = get_single_loss(org_criterion_config)
-
+        self.org_criterion = None if org_criterion_config is None or len(org_criterion_config) == 0 \
+            else get_single_loss(org_criterion_config)
         self.criterion = get_custom_loss(criterion_config)
         self.use_teacher_output = self.org_criterion is not None and isinstance(self.org_criterion, KDLoss)
 
@@ -75,15 +91,19 @@ class DistillationBox(nn.Module):
             self.org_teacher_model.module if check_if_wrapped(self.org_teacher_model) else self.org_teacher_model
         unwrapped_org_student_model = \
             self.org_student_model.module if check_if_wrapped(self.org_student_model) else self.org_student_model
-        self.target_module_pairs.clear()
-        self.target_module_handles.clear()
+        self.target_teacher_pairs.clear()
+        self.target_student_pairs.clear()
         teacher_config = train_config.get('teacher', dict())
         self.teacher_model = redesign_model(unwrapped_org_teacher_model, teacher_config, 'teacher')
         student_config = train_config.get('student', dict())
         self.student_model = redesign_model(unwrapped_org_student_model, student_config, 'student')
+        self.target_teacher_pairs.extend(self.setup_hooks(self.teacher_model, unwrapped_org_teacher_model,
+                                                          teacher_config, self.teacher_info_dict))
+        self.target_student_pairs.extend(self.setup_hooks(self.student_model, unwrapped_org_student_model,
+                                                          student_config, self.student_info_dict))
 
         # Define loss function used in this stage
-        self.setup_loss(train_config, unwrapped_org_teacher_model, unwrapped_org_student_model)
+        self.setup_loss(train_config)
 
         # Wrap models if necessary
         self.teacher_model =\
@@ -128,7 +148,7 @@ class DistillationBox(nn.Module):
         self.distributed = distributed
         self.teacher_model = None
         self.student_model = None
-        self.target_module_pairs, self.target_module_handles = list(), list()
+        self.target_teacher_pairs, self.target_student_pairs = list(), list()
         self.teacher_info_dict, self.student_info_dict = dict(), dict()
         self.train_data_loader, self.val_data_loader, self.optimizer, self.lr_scheduler = None, None, None, None
         self.org_criterion, self.criterion, self.use_teacher_output = None, None, None
@@ -137,20 +157,23 @@ class DistillationBox(nn.Module):
         self.num_epochs = train_config['num_epochs']
 
     def pre_process(self, epoch=None, **kwargs):
+        self.teacher_model.eval()
+        self.student_model.train()
         if self.distributed and self.train_data_loader.sampler is not None:
             self.train_data_loader.sampler.set_epoch(epoch)
 
     def check_if_org_loss_required(self):
         return self.org_criterion is not None
 
-    def update_params(self, loss):
-        self.optimizer.zero_grad()
-        if self.apex:
-            with amp.scale_loss(loss, self.optimizer) as scaled_loss:
-                scaled_loss.backward()
-        else:
-            loss.backward()
-        self.optimizer.step()
+    @staticmethod
+    def extract_outputs(model_info_dict):
+        model_output_dict = dict()
+        for module_path, model_io_dict in model_info_dict.items():
+            sub_model_io_dict = dict()
+            for key in model_io_dict.keys():
+                sub_model_io_dict[key] = model_io_dict.pop(key)
+            model_output_dict[module_path] = sub_model_io_dict
+        return model_output_dict
 
     def forward(self, sample_batch, targets):
         teacher_outputs = self.teacher_model(sample_batch)
@@ -170,17 +193,19 @@ class DistillationBox(nn.Module):
                     else self.org_criterion(student_outputs, targets)
                 org_loss_dict = {0: org_loss}
 
-        output_dict = dict()
-        for teacher_path, student_path in self.target_module_pairs:
-            teacher_module_dict = self.teacher_info_dict[teacher_path]
-            student_module_dict = self.student_info_dict[student_path]
-            output_dict[teacher_module_dict['loss_name']] = (
-                (teacher_module_dict['path_from_root'], teacher_module_dict.pop('output')),
-                (student_module_dict['path_from_root'], student_module_dict.pop('output'))
-            )
-
+        output_dict = {'teacher': self.extract_outputs(self.teacher_info_dict),
+                       'student': self.extract_outputs(self.student_info_dict)}
         total_loss = self.criterion(output_dict, org_loss_dict)
         return total_loss
+
+    def update_params(self, loss):
+        self.optimizer.zero_grad()
+        if self.apex:
+            with amp.scale_loss(loss, self.optimizer) as scaled_loss:
+                scaled_loss.backward()
+        else:
+            loss.backward()
+        self.optimizer.step()
 
     def post_process(self, **kwargs):
         if self.lr_scheduler is not None:
@@ -191,9 +216,8 @@ class DistillationBox(nn.Module):
         unfreeze_module_params(self.org_student_model)
         self.teacher_info_dict.clear()
         self.student_info_dict.clear()
-        for teacher_handle, student_handle in self.target_module_handles:
-            teacher_handle.remove()
-            student_handle.remove()
+        for _, module_handle in self.target_teacher_pairs + self.target_student_pairs:
+            module_handle.remove()
 
 
 class MultiStagesDistillationBox(DistillationBox):

@@ -138,8 +138,6 @@ def distill(teacher_model, student_model, dataset_dict, device, device_ids, dist
     start_time = time.time()
     for epoch in range(start_epoch, distillation_box.num_epochs):
         distillation_box.pre_process(epoch=epoch)
-        teacher_model.eval()
-        student_model.train()
         distill_one_epoch(distillation_box, device, epoch, log_freq)
         val_top1_accuracy = evaluate(student_model, distillation_box.val_data_loader, device, device_ids, distributed,
                                      log_freq=log_freq)
@@ -151,7 +149,9 @@ def distill(teacher_model, student_model, dataset_dict, device, device_ids, dist
                       best_val_top1_accuracy, config, args, ckpt_file_path)
         distillation_box.post_process()
 
-    dist.barrier()
+    if distributed:
+        dist.barrier()
+
     total_time = time.time() - start_time
     total_time_str = str(datetime.timedelta(seconds=int(total_time)))
     print('Training time {}'.format(total_time_str))

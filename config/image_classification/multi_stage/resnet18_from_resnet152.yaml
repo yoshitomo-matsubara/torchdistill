@@ -54,6 +54,9 @@ train:
             opt_level: '01'
         teacher:
             sequential: ['conv1', 'relu', 'maxpool', 'layer1']
+            forward_hook:
+                input: []
+                output: ['layer1']
             wrapper:
             requires_grad: False
         student:
@@ -69,6 +72,9 @@ train:
                         uses_relu: True
             sequential: ['conv1', 'relu', 'maxpool', 'layer1', '+convreg']
             frozen_modules: []
+            forward_hook:
+                input: []
+                output: ['+convreg']
             wrapper:
             requires_grad: True
         optimizer:
@@ -86,12 +92,14 @@ train:
                 factor: 0.0
             sub_terms:
                 layer1:
-                    ts_modules: ['layer1', '+convreg']
                     criterion:
                         type: 'MSELoss'
                         params:
                             reduction: 'sum'
                     factor: 1.0
+                    params:
+                        teacher_output: 'layer1'
+                        student_output: '+convreg'
     stage2:
         num_epochs: 10
         apex:

@@ -17,10 +17,23 @@ def register_custom_loss(cls):
     return cls
 
 
+class SimpleLossWrapper(nn.Module):
+    def __init__(self, single_loss, params_config):
+        super().__init__()
+        self.single_loss = single_loss
+        self.teacher_output_key = params_config['teacher_output']
+        self.student_output_key = params_config['student_output']
+
+    def forward(self, student_io_dict, teacher_io_dict, *args, **kwargs):
+        return self.single_loss(student_io_dict['output'][self.student_output_key],
+                                teacher_io_dict['output'][self.teacher_output_key], *args, **kwargs)
+
+
 @register_single_loss
 class KDLoss(nn.KLDivLoss):
     def __init__(self, temperature, alpha=None, reduction='batchmean', **kwargs):
         super().__init__(reduction=reduction)
+        self.kldiv_loss = nn.KLDivLoss(reduction=reduction)
         self.temperature = temperature
         self.alpha = alpha
         cel_reduction = 'mean' if reduction == 'batchmean' else reduction
@@ -36,11 +49,11 @@ class KDLoss(nn.KLDivLoss):
         return self.alpha * hard_loss + (1 - self.alpha) * (self.temperature ** 2) * soft_loss
 
 
-def get_single_loss(single_criterion_config):
+def get_single_loss(single_criterion_config, params_config=None):
     loss_type = single_criterion_config['type']
-    if loss_type in SINGLE_LOSS_CLASS_DICT:
-        return SINGLE_LOSS_CLASS_DICT[loss_type](**single_criterion_config['params'])
-    return func_util.get_loss(loss_type, single_criterion_config['params'])
+    single_loss = SINGLE_LOSS_CLASS_DICT[loss_type](**single_criterion_config['params']) \
+        if loss_type in SINGLE_LOSS_CLASS_DICT else func_util.get_loss(loss_type, single_criterion_config['params'])
+    return single_loss if params_config is None else SimpleLossWrapper(single_loss, params_config)
 
 
 class CustomLoss(nn.Module):
@@ -51,8 +64,8 @@ class CustomLoss(nn.Module):
         if sub_terms_config is not None:
             for loss_name, loss_config in sub_terms_config.items():
                 sub_criterion_config = loss_config['criterion']
-                sub_criterion = func_util.get_loss(sub_criterion_config['type'], sub_criterion_config['params'])
-                term_dict[loss_name] = (loss_config['ts_modules'], sub_criterion, loss_config['factor'])
+                sub_criterion = get_single_loss(sub_criterion_config, loss_config['params'])
+                term_dict[loss_name] = (sub_criterion, loss_config['factor'])
         self.term_dict = term_dict
 
     def forward(self, *args, **kwargs):
@@ -67,9 +80,10 @@ class GeneralizedCustomLoss(CustomLoss):
 
     def forward(self, output_dict, org_loss_dict):
         loss_dict = dict()
-        for loss_name, ((teacher_path, teacher_output), (student_path, student_output)) in output_dict.items():
-            _, criterion, factor = self.term_dict[loss_name]
-            loss_dict[loss_name] = criterion(teacher_output, student_output) * factor
+        student_output_dict = output_dict['student']
+        teacher_output_dict = output_dict['teacher']
+        for loss_name, (criterion, factor) in self.term_dict.items():
+            loss_dict[loss_name] = factor * criterion(student_output_dict, teacher_output_dict)
 
         sub_total_loss = sum(loss for loss in loss_dict.values()) if len(loss_dict) > 0 else 0
         if self.org_loss_factor is None or self.org_loss_factor == 0:
