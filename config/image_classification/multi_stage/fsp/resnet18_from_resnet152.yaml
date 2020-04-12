@@ -53,19 +53,19 @@ train:
             requires: False
             opt_level: '01'
         teacher:
-            sequential: ['conv1', 'relu', 'maxpool', 'layer1']
+            sequential: ['conv1', 'relu', 'maxpool', 'layer1', 'layer2', 'layer3', 'layer4']
             forward_hook:
                 input: []
-                output: ['layer1']
+                output: ['layer1', 'layer2', 'layer3', 'layer4']
             wrapper:
             requires_grad: False
         student:
             adaptations:
-            sequential: ['conv1', 'relu', 'maxpool', 'layer1', '+convreg']
+            sequential: ['conv1', 'relu', 'maxpool', 'layer1', 'layer2', 'layer3', 'layer4']
             frozen_modules: []
             forward_hook:
                 input: []
-                output: ['+convreg']
+                output: ['layer1', 'layer2', 'layer3', 'layer4']
             wrapper:
             requires_grad: True
         optimizer:
@@ -116,6 +116,16 @@ train:
                                         input: 'layer3'
                                     student_second:
                                         output: 'layer3'
+                                    factor: 1
+                                pair4:
+                                    teacher_first:
+                                        input: 'layer4'
+                                    teacher_second:
+                                        output: 'layer4'
+                                    student_first:
+                                        input: 'layer4'
+                                    student_second:
+                                        output: 'layer4'
                                     factor: 1
                     factor: 1.0
     stage2:
