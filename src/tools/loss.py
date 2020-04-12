@@ -88,7 +88,7 @@ class FSPLoss(nn.Module):
             teacher_second_feature_map = self.extract_feature_map(teacher_io_dict, pair_config['teacher_second'])
             teacher_fsp_matrices = self.compute_fsp_matrix(teacher_first_feature_map, teacher_second_feature_map)
             factor = pair_config.get('factor', 1)
-            fsp_loss += factor * (student_fsp_matrices - teacher_fsp_matrices).sqrt().pow(2)
+            fsp_loss += factor * (student_fsp_matrices - teacher_fsp_matrices).pow(2).sqrt().sum()
             if batch_size is None:
                 batch_size = student_first_feature_map.shape[0]
         return fsp_loss / batch_size
