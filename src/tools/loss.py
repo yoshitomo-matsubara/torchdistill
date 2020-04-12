@@ -1,5 +1,6 @@
 import torch
 from torch import nn
+from torch.nn.functional import adaptive_max_pool2d
 
 from myutils.pytorch import func_util
 
@@ -47,6 +48,50 @@ class KDLoss(nn.KLDivLoss):
 
         hard_loss = self.cross_entropy_loss(student_output, labels)
         return self.alpha * hard_loss + (1 - self.alpha) * (self.temperature ** 2) * soft_loss
+
+
+@register_single_loss
+class FSPLoss(nn.Module):
+    def __init__(self, fsp_pairs, **kwargs):
+        super().__init__()
+        self.fsp_pairs = fsp_pairs
+
+    @staticmethod
+    def extract_feature_map(io_dict, feature_map_config):
+        key = list(feature_map_config.keys())[0]
+        return io_dict[feature_map_config[feature_map_config[key]]][key]
+
+    @staticmethod
+    def compute_fsp_matrix(first_feature_map, second_feature_map):
+        first_h, first_w = first_feature_map.shape[2:4]
+        second_h, second_w = first_feature_map.shape[2:4]
+        target_h, target_w = min(first_h, second_h), min(first_w, second_w)
+        if first_h > target_h or first_w > target_w:
+            first_feature_map = adaptive_max_pool2d(first_feature_map, (target_h, target_w))
+
+        if second_h > target_h or second_w > target_w:
+            second_feature_map = adaptive_max_pool2d(second_feature_map, (target_h, target_w))
+
+        first_feature_map = first_feature_map.flatten(2)
+        second_feature_map = second_feature_map.flatten(2)
+        hw = first_feature_map.shape[2]
+        return torch.matmul(first_feature_map, second_feature_map.transpose(1, 2)) / hw
+
+    def forward(self, student_io_dict, teacher_io_dict):
+        fsp_loss = 0
+        batch_size = None
+        for pair_name, pair_config in self.fsp_pairs.items():
+            student_first_feature_map = self.extract_feature_map(student_io_dict, pair_config['student_first'])
+            student_second_feature_map = self.extract_feature_map(student_io_dict, pair_config['student_second'])
+            student_fsp_matrices = self.compute_fsp_matrix(student_first_feature_map, student_second_feature_map)
+            teacher_first_feature_map = self.extract_feature_map(teacher_io_dict, pair_config['teacher_first'])
+            teacher_second_feature_map = self.extract_feature_map(teacher_io_dict, pair_config['teacher_second'])
+            teacher_fsp_matrices = self.compute_fsp_matrix(teacher_first_feature_map, teacher_second_feature_map)
+            factor = pair_config.get('factor', 1)
+            fsp_loss += factor * (student_fsp_matrices - teacher_fsp_matrices).sqrt().pow(2)
+            if batch_size is None:
+                batch_size = student_first_feature_map.shape[0]
+        return fsp_loss / batch_size
 
 
 def get_single_loss(single_criterion_config, params_config=None):
