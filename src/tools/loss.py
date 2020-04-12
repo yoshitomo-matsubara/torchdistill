@@ -75,7 +75,7 @@ class FSPLoss(nn.Module):
         first_feature_map = first_feature_map.flatten(2)
         second_feature_map = second_feature_map.flatten(2)
         hw = first_feature_map.shape[2]
-        return torch.matmul(first_feature_map, second_feature_map.transpose(1, 2)), hw
+        return torch.matmul(first_feature_map, second_feature_map.transpose(1, 2)) / hw
 
     def forward(self, student_io_dict, teacher_io_dict):
         fsp_loss = 0
@@ -83,12 +83,12 @@ class FSPLoss(nn.Module):
         for pair_name, pair_config in self.fsp_pairs.items():
             student_first_feature_map = self.extract_feature_map(student_io_dict, pair_config['student_first'])
             student_second_feature_map = self.extract_feature_map(student_io_dict, pair_config['student_second'])
-            student_fsp_matrices, hw = self.compute_fsp_matrix(student_first_feature_map, student_second_feature_map)
+            student_fsp_matrices = self.compute_fsp_matrix(student_first_feature_map, student_second_feature_map)
             teacher_first_feature_map = self.extract_feature_map(teacher_io_dict, pair_config['teacher_first'])
             teacher_second_feature_map = self.extract_feature_map(teacher_io_dict, pair_config['teacher_second'])
-            teacher_fsp_matrices, _ = self.compute_fsp_matrix(teacher_first_feature_map, teacher_second_feature_map)
-            factor = pair_config.get('factor', 1) / hw
-            fsp_loss += factor * (student_fsp_matrices - teacher_fsp_matrices).sqrt().pow(2).sum()
+            teacher_fsp_matrices = self.compute_fsp_matrix(teacher_first_feature_map, teacher_second_feature_map)
+            factor = pair_config.get('factor', 1)
+            fsp_loss += factor * (student_fsp_matrices - teacher_fsp_matrices).norm(dim=1).sum()
             if batch_size is None:
                 batch_size = student_first_feature_map.shape[0]
         return fsp_loss / batch_size
