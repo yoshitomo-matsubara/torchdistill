@@ -24,7 +24,7 @@ def set_distillation_box_info(info_dict, module_path, **kwargs):
     info_dict[module_path] = kwargs
 
 
-def register_forward_hook_with_dict(module, module_path, info_dict, requires_input, requires_output):
+def register_forward_hook_with_dict(module, module_path, requires_input, requires_output, info_dict):
     def forward_hook4input(self, func_input, func_output):
         info_dict[module_path]['input'] = func_input
 
@@ -67,9 +67,10 @@ class DistillationBox(nn.Module):
         for target_module_path in input_module_path_set.union(output_module_path_set):
             requires_input = target_module_path in input_module_path_set
             requires_output = target_module_path in output_module_path_set
+            set_distillation_box_info(info_dict, target_module_path)
             target_module = extract_module(unwrapped_org_model, model, target_module_path)
-            handle = register_forward_hook_with_dict(target_module, target_module_path, info_dict,
-                                                     requires_input, requires_output)
+            handle = register_forward_hook_with_dict(target_module, target_module_path,
+                                                     requires_input, requires_output, info_dict)
             pair_list.append((target_module_path, handle))
         return pair_list
 
