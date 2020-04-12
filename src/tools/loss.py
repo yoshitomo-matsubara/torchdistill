@@ -25,8 +25,8 @@ class SimpleLossWrapper(nn.Module):
         self.student_output_key = params_config['student_output']
 
     def forward(self, student_io_dict, teacher_io_dict, *args, **kwargs):
-        return self.single_loss(student_io_dict['output'][self.student_output_key],
-                                teacher_io_dict['output'][self.teacher_output_key], *args, **kwargs)
+        return self.single_loss(student_io_dict[self.student_output_key]['output'],
+                                teacher_io_dict[self.teacher_output_key]['output'], *args, **kwargs)
 
 
 @register_single_loss
