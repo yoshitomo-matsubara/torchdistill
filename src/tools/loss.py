@@ -59,7 +59,7 @@ class FSPLoss(nn.Module):
     @staticmethod
     def extract_feature_map(io_dict, feature_map_config):
         key = list(feature_map_config.keys())[0]
-        return io_dict[feature_map_config[feature_map_config[key]]][key]
+        return io_dict[feature_map_config[key]][key]
 
     @staticmethod
     def compute_fsp_matrix(first_feature_map, second_feature_map):
