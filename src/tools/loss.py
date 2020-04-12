@@ -64,7 +64,7 @@ class FSPLoss(nn.Module):
     @staticmethod
     def compute_fsp_matrix(first_feature_map, second_feature_map):
         first_h, first_w = first_feature_map.shape[2:4]
-        second_h, second_w = first_feature_map.shape[2:4]
+        second_h, second_w = second_feature_map.shape[2:4]
         target_h, target_w = min(first_h, second_h), min(first_w, second_w)
         if first_h > target_h or first_w > target_w:
             first_feature_map = adaptive_max_pool2d(first_feature_map, (target_h, target_w))

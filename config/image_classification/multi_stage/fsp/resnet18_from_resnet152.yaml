@@ -104,7 +104,7 @@ train:
                                         output: 'layer2'
                                     student_first:
                                         input: 'layer2'
-                                    stuent_second:
+                                    student_second:
                                         output: 'layer2'
                                     factor: 1
                                 pair3:
