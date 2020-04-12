@@ -55,7 +55,7 @@ train:
         teacher:
             sequential: ['conv1', 'relu', 'maxpool', 'layer1', 'layer2', 'layer3', 'layer4']
             forward_hook:
-                input: []
+                input: ['layer1', 'layer2', 'layer3', 'layer4']
                 output: ['layer1', 'layer2', 'layer3', 'layer4']
             wrapper:
             requires_grad: False
@@ -64,7 +64,7 @@ train:
             sequential: ['conv1', 'relu', 'maxpool', 'layer1', 'layer2', 'layer3', 'layer4']
             frozen_modules: []
             forward_hook:
-                input: []
+                input: ['layer1', 'layer2', 'layer3', 'layer4']
                 output: ['layer1', 'layer2', 'layer3', 'layer4']
             wrapper:
             requires_grad: True
