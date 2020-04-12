@@ -171,7 +171,7 @@ class DistillationBox(nn.Module):
         model_output_dict = dict()
         for module_path, model_io_dict in model_info_dict.items():
             sub_model_io_dict = dict()
-            for key in model_io_dict.keys():
+            for key in list(model_io_dict.keys()):
                 sub_model_io_dict[key] = model_io_dict.pop(key)
             model_output_dict[module_path] = sub_model_io_dict
         return model_output_dict
