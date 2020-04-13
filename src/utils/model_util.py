@@ -20,17 +20,23 @@ def wrap_model(model, model_config, device, device_ids=None, distributed=False):
 
 def redesign_model(org_model, model_config, model_label):
     print('[{} model]'.format(model_label))
+    frozen_module_path_set = set(model_config.get('frozen_modules', list()))
     module_paths = model_config.get('sequential', list())
     if not isinstance(module_paths, list) or len(module_paths) == 0:
         print('\tUsing the original {} model'.format(model_label))
+        if len(frozen_module_path_set) > 0:
+            print('\tFrozen module(s): {}'.format(frozen_module_path_set))
+
+        for frozen_module_path in frozen_module_path_set:
+            module = get_module(org_model, frozen_module_path)
+            freeze_module_params(module)
         return org_model
 
     print('\tRedesigning the {} model with {}'.format(model_label, module_paths))
-    module_dict = OrderedDict()
-    frozen_module_path_set = set(model_config.get('frozen_modules', list()))
     if len(frozen_module_path_set) > 0:
         print('\tFrozen module(s): {}'.format(frozen_module_path_set))
 
+    module_dict = OrderedDict()
     adaptation_dict = model_config.get('adaptations', dict())
     for module_path in module_paths:
         if module_path.startswith('+'):
