@@ -38,7 +38,7 @@ models:
 train:
     log_freq: 1000
     stage1:
-        num_epochs: 10
+        num_epochs: 5
         train_data_loader:
             dataset_id: *imagenet_train
             random_sample: True
@@ -75,7 +75,7 @@ train:
         scheduler:
             type: 'MultiStepLR'
             params:
-                milestones: [5]
+                milestones: [3]
                 gamma: 0.1
         criterion:
             type: 'GeneralizedCustomLoss'
@@ -129,7 +129,7 @@ train:
                                     factor: 1
                     factor: 1.0
     stage2:
-        num_epochs: 10
+        num_epochs: 15
         apex:
             requires: False
             opt_level: '01'
@@ -152,7 +152,7 @@ train:
         scheduler:
             type: 'MultiStepLR'
             params:
-                milestones: [5]
+                milestones: [5, 10]
                 gamma: 0.1
         criterion:
             type: 'GeneralizedCustomLoss'
