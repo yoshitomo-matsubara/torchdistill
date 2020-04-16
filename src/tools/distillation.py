@@ -198,8 +198,9 @@ class DistillationBox(nn.Module):
         return model_output_dict
 
     def get_teacher_output(self, sample_batch):
+        sample_batch_key = sample_batch.sum().items()
         if self.caches_teacher_output:
-            cached_teacher_output_dict = load_cached_value_if_key_exist(sample_batch, self.teacher_output_dir_path)
+            cached_teacher_output_dict = load_cached_value_if_key_exist(sample_batch_key, self.teacher_output_dir_path)
             if cached_teacher_output_dict is not None:
                 teacher_outputs = cached_teacher_output_dict.get('teacher_outputs', None)
                 extracted_teacher_output_dict = cached_teacher_output_dict['extracted_outputs']
@@ -209,7 +210,7 @@ class DistillationBox(nn.Module):
         extracted_teacher_output_dict = self.extract_outputs(self.teacher_info_dict)
         if self.caches_teacher_output:
             cache_dict = {'teacher_outputs': teacher_outputs, 'extracted_outputs': extracted_teacher_output_dict}
-            cache_value_if_key_not_exist(sample_batch, cache_dict, self.teacher_output_dir_path)
+            cache_value_if_key_not_exist(sample_batch_key, cache_dict, self.teacher_output_dir_path)
         return teacher_outputs, extracted_teacher_output_dict
 
     def forward(self, sample_batch, targets):
