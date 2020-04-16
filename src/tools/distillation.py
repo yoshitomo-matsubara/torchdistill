@@ -198,7 +198,7 @@ class DistillationBox(nn.Module):
         return model_output_dict
 
     def get_teacher_output(self, sample_batch):
-        sample_batch_key = sample_batch.sum().items()
+        sample_batch_key = sample_batch.sum().item()
         if self.caches_teacher_output:
             cached_teacher_output_dict = load_cached_value_if_key_exist(sample_batch_key, self.teacher_output_dir_path)
             if cached_teacher_output_dict is not None:
