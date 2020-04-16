@@ -48,6 +48,16 @@ train:
         random_sample: False
         batch_size: 32
         num_workers: 16
+    teacher:
+        sequential: []
+        wrapper: 'DistributedDataParallel'
+        requires_grad: False
+    student:
+        adaptations:
+        sequential: []
+        wrapper: 'DistributedDataParallel'
+        requires_grad: True
+        frozen_modules: []
     apex:
         requires: False
         opt_level: '01'

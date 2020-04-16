@@ -5,10 +5,8 @@ from torch import nn
 from myutils.pytorch.func_util import get_optimizer, get_scheduler
 from myutils.pytorch.module_util import check_if_wrapped, get_module, freeze_module_params, unfreeze_module_params
 from tools.loss import KDLoss, get_single_loss, get_custom_loss
-from utils.cache_util import cache_value_if_key_not_exist, load_cached_value_if_key_exist
 from utils.dataset_util import build_data_loaders
 from utils.model_util import redesign_model, wrap_model
-from torch.utils.data import RandomSampler
 
 try:
     from apex import amp
@@ -114,13 +112,6 @@ class DistillationBox(nn.Module):
         self.target_student_pairs.extend(self.setup_hooks(self.student_model, unwrapped_org_student_model,
                                                           student_config, self.student_info_dict))
 
-        # Set up cache if necessary
-        cache_config = train_config.get('cache', dict())
-        self.teacher_output_dir_path = cache_config.get('teacher_output', None)
-        self.caches_teacher_output =\
-            self.teacher_output_dir_path is not None and \
-            (not isinstance(self.train_data_loader.sampler, RandomSampler) or self.train_data_loader.batch_size == 1)
-
         # Define loss function used in this stage
         self.setup_loss(train_config)
 
@@ -173,8 +164,7 @@ class DistillationBox(nn.Module):
         self.teacher_info_dict, self.student_info_dict = dict(), dict()
         self.train_data_loader, self.val_data_loader, self.optimizer, self.lr_scheduler = None, None, None, None
         self.org_criterion, self.criterion, self.uses_teacher_output = None, None, None
-        self.teacher_output_dir_path, self.apex = None, None
-        self.caches_teacher_output = False
+        self.apex = None
         self.setup(train_config)
         self.num_epochs = train_config['num_epochs']
 
@@ -197,24 +187,8 @@ class DistillationBox(nn.Module):
             model_output_dict[module_path] = sub_model_io_dict
         return model_output_dict
 
-    def get_teacher_output(self, sample_batch):
-        sample_batch_key = sample_batch.sum().item()
-        if self.caches_teacher_output:
-            cached_teacher_output_dict = load_cached_value_if_key_exist(sample_batch_key, self.teacher_output_dir_path)
-            if cached_teacher_output_dict is not None:
-                teacher_outputs = cached_teacher_output_dict.get('teacher_outputs', None)
-                extracted_teacher_output_dict = cached_teacher_output_dict['extracted_outputs']
-                return teacher_outputs, extracted_teacher_output_dict
-
-        teacher_outputs = self.teacher_model(sample_batch)
-        extracted_teacher_output_dict = self.extract_outputs(self.teacher_info_dict)
-        if self.caches_teacher_output:
-            cache_dict = {'teacher_outputs': teacher_outputs, 'extracted_outputs': extracted_teacher_output_dict}
-            cache_value_if_key_not_exist(sample_batch_key, cache_dict, self.teacher_output_dir_path)
-        return teacher_outputs, extracted_teacher_output_dict
-
     def forward(self, sample_batch, targets):
-        teacher_outputs, extracted_teacher_output_dict = self.get_teacher_output(sample_batch)
+        teacher_outputs = self.teacher_model(sample_batch)
         student_outputs = self.student_model(sample_batch)
         org_loss_dict = dict()
         if self.check_if_org_loss_required():
@@ -231,7 +205,7 @@ class DistillationBox(nn.Module):
                     else self.org_criterion(student_outputs, targets)
                 org_loss_dict = {0: org_loss}
 
-        output_dict = {'teacher': extracted_teacher_output_dict,
+        output_dict = {'teacher': self.extract_outputs(self.teacher_info_dict),
                        'student': self.extract_outputs(self.student_info_dict)}
         total_loss = self.criterion(output_dict, org_loss_dict)
         return total_loss

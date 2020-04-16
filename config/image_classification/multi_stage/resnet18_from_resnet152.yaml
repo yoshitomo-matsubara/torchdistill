@@ -49,9 +49,6 @@ train:
             random_sample: False
             batch_size: 32
             num_workers: 16
-        apex:
-            requires: False
-            opt_level: '01'
         teacher:
             sequential: ['conv1', 'relu', 'maxpool', 'layer1']
             forward_hook:
@@ -77,6 +74,9 @@ train:
                 output: ['+convreg']
             wrapper:
             requires_grad: True
+        apex:
+            requires: False
+            opt_level: '01'
         optimizer:
             type: 'Adam'
             params:
@@ -102,9 +102,6 @@ train:
                         student_output: '+convreg'
     stage2:
         num_epochs: 15
-        apex:
-            requires: False
-            opt_level: '01'
         teacher:
             sequential: []
             wrapper: 'DistributedDataParallel'
@@ -115,8 +112,9 @@ train:
             wrapper: 'DistributedDataParallel'
             requires_grad: True
             frozen_modules: []
-        cache:
-            teacher_output: !join ['./resource/cache/multi_stage/', *student_experiment, '/teacher_output']
+        apex:
+            requires: False
+            opt_level: '01'
         optimizer:
             type: 'SGD'
             params:
