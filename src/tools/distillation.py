@@ -210,7 +210,7 @@ class DistillationBox(nn.Module):
 
     def forward(self, sample_batch, targets, cached_data=None, cache_file_paths=None):
         teacher_outputs, extracted_teacher_output_dict =\
-            self.get_teacher_output(sample_batch, cached_data=None, cache_file_paths=None)
+            self.get_teacher_output(sample_batch, cached_data=cached_data, cache_file_paths=cache_file_paths)
         student_outputs = self.student_model(sample_batch)
         org_loss_dict = dict()
         if self.check_if_org_loss_required():
