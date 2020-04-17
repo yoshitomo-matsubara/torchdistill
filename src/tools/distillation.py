@@ -219,7 +219,8 @@ class DistillationBox(nn.Module):
 
         teacher_outputs = self.teacher_model(sample_batch)
         extracted_teacher_output_dict = extract_outputs(self.teacher_info_dict)
-        if isinstance(cached_data, (list, tuple)) and isinstance(cache_file_paths, (list, tuple)):
+        if isinstance(cached_data, (list, tuple)) \
+                and isinstance(cache_file_paths, (list, tuple)) and cache_file_paths[0] != '':
             device = sample_batch.device
             cpu_device = torch.device('cpu')
             for i, (teacher_output, cache_file_path) in enumerate(zip(teacher_outputs.cpu(), cache_file_paths)):
