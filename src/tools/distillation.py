@@ -197,7 +197,7 @@ class DistillationBox(nn.Module):
 
         teacher_outputs = self.teacher_model(sample_batch)
         extracted_teacher_output_dict = self.extract_outputs(self.teacher_info_dict)
-        if isinstance(cached_data, str) and cached_data == '':
+        if isinstance(cached_data, (list, tuple)) and isinstance(cache_file_paths, (list, tuple)):
             for i, (teacher_output, cache_file_path) in enumerate(zip(teacher_outputs, cache_file_paths)):
                 sub_dict = dict()
                 for key, value in extracted_teacher_output_dict.items():
