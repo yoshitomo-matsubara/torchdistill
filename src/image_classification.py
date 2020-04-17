@@ -22,8 +22,6 @@ def get_argparser():
     parser.add_argument('--config', required=True, help='yaml file path')
     parser.add_argument('--device', default='cuda', help='device')
     parser.add_argument('--start_epoch', default=0, type=int, metavar='N', help='start epoch')
-    parser.add_argument('-use_cache', action='store_true',
-                        help='Cache the datasets for quicker initialization. It also serializes the transforms')
     parser.add_argument('-sync_bn', action='store_true', help='Use sync batch norm')
     parser.add_argument('-test_only', action='store_true', help='Only test the models')
     parser.add_argument('-student_only', action='store_true', help='Test the student model only')
@@ -164,7 +162,7 @@ def main(args):
     cudnn.benchmark = True
     config = yaml_util.load_yaml_file(args.config)
     device = torch.device(args.device)
-    dataset_dict = dataset_util.get_all_dataset(config['datasets'], args.use_cache)
+    dataset_dict = dataset_util.get_all_dataset(config['datasets'])
     models_config = config['models']
     teacher_model_config = models_config['teacher_model']
     teacher_model = get_model(teacher_model_config, device, distributed, False)
