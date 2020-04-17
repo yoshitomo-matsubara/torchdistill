@@ -67,7 +67,7 @@ def get_all_dataset(datasets_config):
 def build_data_loader(dataset, data_loader_config, distributed):
     batch_size, num_workers = data_loader_config['batch_size'], data_loader_config['num_workers']
     cache_dir_path = data_loader_config.get('cache_output', None)
-    if cache_dir_path is not None:
+    if data_loader_config.get('cacheable', False):
         dataset = CacheableDataset(dataset, cache_dir_path, idx2subpath_func=default_idx2subpath)
 
     sampler = DistributedSampler(dataset) if distributed \

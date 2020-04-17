@@ -99,6 +99,7 @@ def extract_outputs(model_info_dict):
 class DistillationBox(nn.Module):
     def setup_data_loaders(self, train_config):
         train_data_loader_config = train_config.get('train_data_loader', dict())
+        train_data_loader_config['cacheable'] = True
         val_data_loader_config = train_config.get('val_data_loader', dict())
         train_data_loader, val_data_loader =\
             build_data_loaders(self.dataset_dict, [train_data_loader_config, val_data_loader_config], self.distributed)
