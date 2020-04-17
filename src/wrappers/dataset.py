@@ -24,7 +24,7 @@ class CacheableDataset(Dataset):
         if self.cache_dir_path is None:
             return sample, target, '', ''
 
-        cache_data = None
+        cache_data = ''
         cache_file_path = os.path.join(self.cache_dir_path, self.idx2subath_func(index) + self.ext)
         if file_util.check_if_exists(cache_file_path):
             cache_data = torch.load(cache_file_path)
