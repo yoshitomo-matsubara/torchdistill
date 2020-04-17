@@ -194,8 +194,10 @@ class DistillationBox(nn.Module):
             teacher_outputs = cached_data.get('teacher_outputs', None)
             if teacher_outputs is not None:
                 teacher_outputs = teacher_outputs.to(sample_batch.device)
-                
-            extracted_teacher_output_dict = cached_data['extracted_outputs'].to(sample_batch.device)
+
+            extracted_teacher_output_dict = cached_data['extracted_outputs']
+            for key in extracted_teacher_output_dict.keys():
+                extracted_teacher_output_dict[key] = extracted_teacher_output_dict[key].to(sample_batch.device)
             return teacher_outputs, extracted_teacher_output_dict
 
         teacher_outputs = self.teacher_model(sample_batch)
