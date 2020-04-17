@@ -192,16 +192,19 @@ class DistillationBox(nn.Module):
     def get_teacher_output(self, sample_batch, cached_data, cache_file_paths):
         if cached_data is not None and isinstance(cached_data, dict):
             teacher_outputs = cached_data.get('teacher_outputs', None)
-            extracted_teacher_output_dict = cached_data['extracted_outputs']
+            if teacher_outputs is not None:
+                teacher_outputs = teacher_outputs.to(sample_batch.device)
+                
+            extracted_teacher_output_dict = cached_data['extracted_outputs'].to(sample_batch.device)
             return teacher_outputs, extracted_teacher_output_dict
 
         teacher_outputs = self.teacher_model(sample_batch)
         extracted_teacher_output_dict = self.extract_outputs(self.teacher_info_dict)
         if isinstance(cached_data, (list, tuple)) and isinstance(cache_file_paths, (list, tuple)):
-            for i, (teacher_output, cache_file_path) in enumerate(zip(teacher_outputs, cache_file_paths)):
+            for i, (teacher_output, cache_file_path) in enumerate(zip(teacher_outputs.cpu(), cache_file_paths)):
                 sub_dict = dict()
                 for key, value in extracted_teacher_output_dict.items():
-                    sub_dict[key] = value[i]
+                    sub_dict[key] = value[i].cpu()
 
                 cache_dict = {'teacher_outputs': teacher_output, 'extracted_outputs': sub_dict}
                 make_parent_dirs(cache_file_path)
