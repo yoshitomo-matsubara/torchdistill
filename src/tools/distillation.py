@@ -9,6 +9,7 @@ from tools.loss import KDLoss, get_single_loss, get_custom_loss
 from utils.dataset_util import build_data_loaders
 from utils.model_util import redesign_model, wrap_model
 from myutils.common.file_util import make_parent_dirs
+from collections import abc
 
 try:
     from apex import amp
@@ -50,6 +51,51 @@ def register_forward_hook_with_dict(module, module_path, requires_input, require
     raise ValueError('Either requires_input or requires_output should be True')
 
 
+def set_hooks(model, unwrapped_org_model, model_config, info_dict):
+    pair_list = list()
+    forward_hook_config = model_config.get('forward_hook', dict())
+    if len(forward_hook_config) == 0:
+        return pair_list
+
+    input_module_path_set = set(forward_hook_config.get('input', list()))
+    output_module_path_set = set(forward_hook_config.get('output', list()))
+    for target_module_path in input_module_path_set.union(output_module_path_set):
+        requires_input = target_module_path in input_module_path_set
+        requires_output = target_module_path in output_module_path_set
+        set_distillation_box_info(info_dict, target_module_path)
+        target_module = extract_module(unwrapped_org_model, model, target_module_path)
+        handle = register_forward_hook_with_dict(target_module, target_module_path,
+                                                 requires_input, requires_output, info_dict)
+        pair_list.append((target_module_path, handle))
+    return pair_list
+
+
+def change_device(data, device):
+    elem_type = type(data)
+    if isinstance(data, torch.Tensor):
+        return data.to(device)
+    elif isinstance(data, tuple) and hasattr(data, '_fields'):  # namedtuple
+        return elem_type(*(change_device(samples, device) for samples in zip(*data)))
+    elif isinstance(data, (list, tuple)):
+        return elem_type(*(change_device(d, device) for d in data))
+    elif isinstance(data, abc.Mapping):
+        return {key: change_device(data[key], device) for key in data}
+    elif isinstance(data, abc.Sequence):
+        transposed = zip(*data)
+        return [change_device(samples, device) for samples in transposed]
+    return data
+
+
+def extract_outputs(model_info_dict):
+    model_output_dict = dict()
+    for module_path, model_io_dict in model_info_dict.items():
+        sub_model_io_dict = dict()
+        for key in list(model_io_dict.keys()):
+            sub_model_io_dict[key] = model_io_dict.pop(key)
+        model_output_dict[module_path] = sub_model_io_dict
+    return model_output_dict
+
+
 class DistillationBox(nn.Module):
     def setup_data_loaders(self, train_config):
         train_data_loader_config = train_config.get('train_data_loader', dict())
@@ -60,25 +106,6 @@ class DistillationBox(nn.Module):
             self.train_data_loader = train_data_loader
         if val_data_loader is not None:
             self.val_data_loader = val_data_loader
-
-    @staticmethod
-    def setup_hooks(model, unwrapped_org_model, model_config, info_dict):
-        pair_list = list()
-        forward_hook_config = model_config.get('forward_hook', dict())
-        if len(forward_hook_config) == 0:
-            return pair_list
-
-        input_module_path_set = set(forward_hook_config.get('input', list()))
-        output_module_path_set = set(forward_hook_config.get('output', list()))
-        for target_module_path in input_module_path_set.union(output_module_path_set):
-            requires_input = target_module_path in input_module_path_set
-            requires_output = target_module_path in output_module_path_set
-            set_distillation_box_info(info_dict, target_module_path)
-            target_module = extract_module(unwrapped_org_model, model, target_module_path)
-            handle = register_forward_hook_with_dict(target_module, target_module_path,
-                                                     requires_input, requires_output, info_dict)
-            pair_list.append((target_module_path, handle))
-        return pair_list
 
     def setup_loss(self, train_config):
         criterion_config = train_config['criterion']
@@ -109,10 +136,10 @@ class DistillationBox(nn.Module):
         if student_redesigned:
             self.student_model = redesign_model(unwrapped_org_student_model, student_config, 'student')
 
-        self.target_teacher_pairs.extend(self.setup_hooks(self.teacher_model, unwrapped_org_teacher_model,
-                                                          teacher_config, self.teacher_info_dict))
-        self.target_student_pairs.extend(self.setup_hooks(self.student_model, unwrapped_org_student_model,
-                                                          student_config, self.student_info_dict))
+        self.target_teacher_pairs.extend(set_hooks(self.teacher_model, unwrapped_org_teacher_model,
+                                                   teacher_config, self.teacher_info_dict))
+        self.target_student_pairs.extend(set_hooks(self.student_model, unwrapped_org_student_model,
+                                                   student_config, self.student_info_dict))
 
         # Define loss function used in this stage
         self.setup_loss(train_config)
@@ -179,34 +206,28 @@ class DistillationBox(nn.Module):
     def check_if_org_loss_required(self):
         return self.org_criterion is not None
 
-    @staticmethod
-    def extract_outputs(model_info_dict):
-        model_output_dict = dict()
-        for module_path, model_io_dict in model_info_dict.items():
-            sub_model_io_dict = dict()
-            for key in list(model_io_dict.keys()):
-                sub_model_io_dict[key] = model_io_dict.pop(key)
-            model_output_dict[module_path] = sub_model_io_dict
-        return model_output_dict
-
     def get_teacher_output(self, sample_batch, cached_data, cache_file_paths):
         if cached_data is not None and isinstance(cached_data, dict):
+            device = sample_batch.device
             teacher_outputs = cached_data.get('teacher_outputs', None)
-            if teacher_outputs is not None:
-                teacher_outputs = teacher_outputs.to(sample_batch.device)
-
             extracted_teacher_output_dict = cached_data['extracted_outputs']
-            for key in extracted_teacher_output_dict.keys():
-                extracted_teacher_output_dict[key] = extracted_teacher_output_dict[key].to(sample_batch.device)
+            if device.type != 'cpu':
+                teacher_outputs = change_device(teacher_outputs, device)
+                extracted_teacher_output_dict = change_device(extracted_teacher_output_dict, device)
             return teacher_outputs, extracted_teacher_output_dict
 
         teacher_outputs = self.teacher_model(sample_batch)
-        extracted_teacher_output_dict = self.extract_outputs(self.teacher_info_dict)
+        extracted_teacher_output_dict = extract_outputs(self.teacher_info_dict)
         if isinstance(cached_data, (list, tuple)) and isinstance(cache_file_paths, (list, tuple)):
+            device = sample_batch.device
+            cpu_device = torch.device('cpu')
             for i, (teacher_output, cache_file_path) in enumerate(zip(teacher_outputs.cpu(), cache_file_paths)):
                 sub_dict = dict()
                 for key, value in extracted_teacher_output_dict.items():
-                    sub_dict[key] = value[i].cpu()
+                    sub_dict[key] = value[i]
+
+                if device.type != 'cpu':
+                    sub_dict = change_device(sub_dict, cpu_device)
 
                 cache_dict = {'teacher_outputs': teacher_output, 'extracted_outputs': sub_dict}
                 make_parent_dirs(cache_file_path)
@@ -233,7 +254,7 @@ class DistillationBox(nn.Module):
                 org_loss_dict = {0: org_loss}
 
         output_dict = {'teacher': extracted_teacher_output_dict,
-                       'student': self.extract_outputs(self.student_info_dict)}
+                       'student': extract_outputs(self.student_info_dict)}
         total_loss = self.criterion(output_dict, org_loss_dict)
         return total_loss
 
