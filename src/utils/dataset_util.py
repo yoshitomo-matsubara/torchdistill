@@ -5,6 +5,8 @@ from torch.utils.data.distributed import DistributedSampler
 from torchvision import transforms
 from torchvision.datasets import ImageFolder
 
+from wrappers.dataset import default_idx2subpath, CacheableDataset
+
 
 def load_image_folder_dataset(dir_path, data_aug, rough_size, input_size, normalizer, split_name):
     input_size = tuple(input_size)
@@ -64,6 +66,10 @@ def get_all_dataset(datasets_config):
 
 def build_data_loader(dataset, data_loader_config, distributed):
     batch_size, num_workers = data_loader_config['batch_size'], data_loader_config['num_workers']
+    cache_dir_path = data_loader_config.get('cache_output', None)
+    if cache_dir_path is not None:
+        dataset = CacheableDataset(dataset, cache_dir_path, idx2subpath_func=default_idx2subpath)
+
     sampler = DistributedSampler(dataset) if distributed \
         else RandomSampler(dataset) if data_loader_config.get('random_sample', False) else SequentialSampler(dataset)
     return DataLoader(dataset, batch_size=batch_size, sampler=sampler, num_workers=num_workers, pin_memory=True)

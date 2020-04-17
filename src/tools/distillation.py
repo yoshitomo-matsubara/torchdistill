@@ -1,5 +1,6 @@
 import sys
 
+import torch
 from torch import nn
 
 from myutils.pytorch.func_util import get_optimizer, get_scheduler
@@ -7,6 +8,7 @@ from myutils.pytorch.module_util import check_if_wrapped, get_module, freeze_mod
 from tools.loss import KDLoss, get_single_loss, get_custom_loss
 from utils.dataset_util import build_data_loaders
 from utils.model_util import redesign_model, wrap_model
+from myutils.common.file_util import make_parent_dirs
 
 try:
     from apex import amp
@@ -187,8 +189,28 @@ class DistillationBox(nn.Module):
             model_output_dict[module_path] = sub_model_io_dict
         return model_output_dict
 
-    def forward(self, sample_batch, targets):
+    def get_teacher_output(self, sample_batch, cached_data, cache_file_paths):
+        if cached_data is not None and isinstance(cached_data, dict):
+            teacher_outputs = cached_data.get('teacher_outputs', None)
+            extracted_teacher_output_dict = cached_data['extracted_outputs']
+            return teacher_outputs, extracted_teacher_output_dict
+
         teacher_outputs = self.teacher_model(sample_batch)
+        extracted_teacher_output_dict = self.extract_outputs(self.teacher_info_dict)
+        if isinstance(cached_data, str) and cached_data == '':
+            for i, (teacher_output, cache_file_path) in enumerate(zip(teacher_outputs, cache_file_paths)):
+                sub_dict = dict()
+                for key, value in extracted_teacher_output_dict.items():
+                    sub_dict[key] = value[i]
+
+                cache_dict = {'teacher_outputs': teacher_output, 'extracted_outputs': sub_dict}
+                make_parent_dirs(cache_file_path)
+                torch.save(cache_dict, cache_file_path)
+        return teacher_outputs, extracted_teacher_output_dict
+
+    def forward(self, sample_batch, targets, cached_data=None, cache_file_paths=None):
+        teacher_outputs, extracted_teacher_output_dict =\
+            self.get_teacher_output(sample_batch, cached_data=None, cache_file_paths=None)
         student_outputs = self.student_model(sample_batch)
         org_loss_dict = dict()
         if self.check_if_org_loss_required():
@@ -205,7 +227,7 @@ class DistillationBox(nn.Module):
                     else self.org_criterion(student_outputs, targets)
                 org_loss_dict = {0: org_loss}
 
-        output_dict = {'teacher': self.extract_outputs(self.teacher_info_dict),
+        output_dict = {'teacher': extracted_teacher_output_dict,
                        'student': self.extract_outputs(self.student_info_dict)}
         total_loss = self.criterion(output_dict, org_loss_dict)
         return total_loss
