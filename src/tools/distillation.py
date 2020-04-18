@@ -133,8 +133,7 @@ class DistillationBox(nn.Module):
             self.teacher_model = redesign_model(unwrapped_org_teacher_model, teacher_config, 'teacher')
 
         student_config = train_config.get('student', dict())
-        student_redesigned = len(student_config) > 0 or (len(student_config) == 0 and self.student_model is None)
-        if student_redesigned:
+        if len(student_config) > 0 or (len(student_config) == 0 and self.student_model is None):
             self.student_model = redesign_model(unwrapped_org_student_model, student_config, 'student')
 
         self.target_teacher_pairs.extend(set_hooks(self.teacher_model, unwrapped_org_teacher_model,
@@ -160,7 +159,7 @@ class DistillationBox(nn.Module):
 
         # Set up optimizer and scheduler
         optim_config = train_config.get('optimizer', dict())
-        if student_redesigned or len(optim_config) > 0:
+        if len(optim_config) > 0:
             self.optimizer = get_optimizer(self.student_model, optim_config['type'], optim_config['params'])
 
         scheduler_config = train_config.get('scheduler', None)
