@@ -159,12 +159,16 @@ class DistillationBox(nn.Module):
 
         # Set up optimizer and scheduler
         optim_config = train_config.get('optimizer', dict())
+        optimizer_reset = False
         if len(optim_config) > 0:
             self.optimizer = get_optimizer(self.student_model, optim_config['type'], optim_config['params'])
+            optimizer_reset = True
 
         scheduler_config = train_config.get('scheduler', None)
-        self.lr_scheduler = None if scheduler_config is None \
-            else get_scheduler(self.optimizer, scheduler_config['type'], scheduler_config['params'])
+        if len(scheduler_config) > 0:
+            self.lr_scheduler = get_scheduler(self.optimizer, scheduler_config['type'], scheduler_config['params'])
+        elif optimizer_reset:
+            self.lr_scheduler = None
 
         # Set up apex if you require mixed-precision training
         self.apex = False
