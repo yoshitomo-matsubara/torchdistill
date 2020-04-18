@@ -165,7 +165,7 @@ class DistillationBox(nn.Module):
             optimizer_reset = True
 
         scheduler_config = train_config.get('scheduler', None)
-        if len(scheduler_config) > 0:
+        if scheduler_config is not None and len(scheduler_config) > 0:
             self.lr_scheduler = get_scheduler(self.optimizer, scheduler_config['type'], scheduler_config['params'])
         elif optimizer_reset:
             self.lr_scheduler = None
