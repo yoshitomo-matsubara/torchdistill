@@ -7,17 +7,6 @@ from models.adaptation import get_adaptation_module
 from myutils.pytorch.module_util import get_module, freeze_module_params, check_if_wrapped
 
 
-def wrap_model(model, model_config, device, device_ids=None, distributed=False):
-    wrapper = model_config.get('wrapper', None) if model_config is not None else None
-    model.to(device)
-    if wrapper is not None and device.type.startswith('cuda') and not check_if_wrapped(model):
-        if wrapper == 'DistributedDataParallel' and distributed:
-            model = DistributedDataParallel(model, device_ids=device_ids)
-        elif wrapper in {'DataParallel', 'DistributedDataParallel'}:
-            model = DataParallel(model, device_ids=device_ids)
-    return model
-
-
 def redesign_model(org_model, model_config, model_label):
     print('[{} model]'.format(model_label))
     frozen_module_path_set = set(model_config.get('frozen_modules', list()))
@@ -50,4 +39,15 @@ def redesign_model(org_model, model_config, model_label):
         module_dict[module_path.replace('.', '__attr__')] = module
 
     model = Sequential(module_dict)
+    return model
+
+
+def wrap_model(model, model_config, device, device_ids=None, distributed=False):
+    wrapper = model_config.get('wrapper', None) if model_config is not None else None
+    model.to(device)
+    if wrapper is not None and device.type.startswith('cuda') and not check_if_wrapped(model):
+        if wrapper == 'DistributedDataParallel' and distributed:
+            model = DistributedDataParallel(model, device_ids=device_ids)
+        elif wrapper in {'DataParallel', 'DistributedDataParallel'}:
+            model = DataParallel(model, device_ids=device_ids)
     return model
