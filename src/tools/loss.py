@@ -118,8 +118,8 @@ class FTLoss(nn.Module):
         self.reduction = reduction
 
     def forward(self, student_io_dict, teacher_io_dict):
-        paraphraser_outputs = teacher_io_dict[self.paraphraser_path]
-        translator_outputs = student_io_dict[self.translator_path]
+        paraphraser_outputs = teacher_io_dict[self.paraphraser_path]['output']
+        translator_outputs = student_io_dict[self.translator_path]['output']
         batch_size = paraphraser_outputs.shape[0]
         ft_loss = self.norm_loss(paraphraser_outputs / paraphraser_outputs.flatten(1).norm(dim=2),
                                  translator_outputs / translator_outputs.flatten(1).norm(dim=2))
