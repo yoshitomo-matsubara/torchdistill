@@ -39,7 +39,7 @@ class Paraphraser4FactorTransfer(nn.Module):
     """
 
     @staticmethod
-    def _make_tail_modules(num_output_channels, uses_bn):
+    def make_tail_modules(num_output_channels, uses_bn):
         leaky_relu = nn.LeakyReLU(0.1)
         if uses_bn:
             return [nn.BatchNorm2d(num_output_channels), leaky_relu]
