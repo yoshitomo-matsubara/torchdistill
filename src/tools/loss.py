@@ -23,11 +23,11 @@ class SimpleLossWrapper(nn.Module):
         super().__init__()
         self.single_loss = single_loss
         input_config = params_config['input']
-        self.is_input_from_teacher = input_config['is_teacher']
+        self.is_input_from_teacher = input_config['is_from_teacher']
         self.input_module_path = input_config['module_path']
         self.input_key = input_config['io']
         target_config = params_config['target']
-        self.is_target_from_teacher = target_config['is_teacher']
+        self.is_target_from_teacher = target_config['is_from_teacher']
         self.target_module_path = target_config['module_path']
         self.target_key = target_config['io']
 

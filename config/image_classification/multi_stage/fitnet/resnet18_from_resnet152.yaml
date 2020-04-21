@@ -99,11 +99,11 @@ train:
                             reduction: 'sum'
                     params:
                         input:
-                            is_teacher: False
+                            is_from_teacher: False
                             module_path: '+convreg'
                             io: 'output'
                         target:
-                            is_teacher: True
+                            is_from_teacher: True
                             module_path: 'layer1'
                             io: 'output'
                     factor: 1.0

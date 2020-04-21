@@ -77,8 +77,8 @@ train:
                         uses_bn: True
                     paraphraser_ckpt: !join ['./resource/ckpt/multi_stage/ft/', *student_experiment, '_paraphraser.pt']
             forward_hook:
-                input: ['paraphraser']
-                output: ['paraphraser']
+                input: []
+                output: ['teacher_model.layer4', 'paraphraser']
             wrapper:
             requires_grad: True
             frozen_modules: ['teacher_model.conv1', 'teacher_model.relu', 'teacher_model.maxpool', 'teacher_model.layer1', 'teacher_model.layer2', 'teacher_model.layer3', 'teacher_model.layer4', 'teacher_model.fc']
@@ -103,13 +103,13 @@ train:
                             reduction: 'sum'
                     params:
                         input:
-                            is_teacher: False
+                            is_from_teacher: False
                             module_path: 'paraphraser'
                             io: 'output'
                         target:
-                            is_teacher: False
-                            module_path: 'paraphraser'
-                            io: 'input'
+                            is_from_teacher: False
+                            module_path: 'teacher_model.layer4'
+                            io: 'output'
                     factor: 1.0
     stage2:
         num_epochs: 15
