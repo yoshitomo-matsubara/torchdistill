@@ -172,8 +172,7 @@ train:
                         params:
                             p: 1
                             reduction: 'batchmean'
-                            paraphraser:
-                                module_path: 'paraphraser'
+                            paraphraser_path: 'paraphraser'
                             translator_path: 'translator'
                     factor: 1000.0
 
