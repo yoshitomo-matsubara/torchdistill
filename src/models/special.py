@@ -129,7 +129,8 @@ class Teacher4FactorTransfer(SpecialModule):
         self.paraphraser(info_dict[self.input_module_path]['output'])
 
     def post_process(self, *args, **kwargs):
-        file_util.make_parent_dirs(self.ckpt_file_path)
+        if main_util.is_main_process():
+            file_util.make_parent_dirs(self.ckpt_file_path)
         main_util.save_on_master(self.paraphraser.state_dict(), self.ckpt_file_path)
 
 

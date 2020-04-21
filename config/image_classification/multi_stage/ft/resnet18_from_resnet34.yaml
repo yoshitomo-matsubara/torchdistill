@@ -117,8 +117,8 @@ train:
             sequential: []
             special: *teacher4ft
             forward_hook:
-                input: ['paraphraser']
-                output: ['paraphraser']
+                input: []
+                output: ['teacher_model.layer4', 'paraphraser']
             wrapper:
             requires_grad: False
         student:
@@ -136,8 +136,8 @@ train:
                         padding: 1
                         uses_bn: True
             forward_hook:
-                input: ['translator']
-                output: ['translator']
+                input: []
+                output: ['student_model.layer4', 'translator']
             wrapper:
             requires_grad: True
             frozen_modules: []
