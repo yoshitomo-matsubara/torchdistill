@@ -1,15 +1,16 @@
 import sys
+from collections import abc
 
 import torch
 from torch import nn
 
+from models.special import SpecialModule, get_special_module
+from myutils.common.file_util import make_parent_dirs
 from myutils.pytorch.func_util import get_optimizer, get_scheduler
 from myutils.pytorch.module_util import check_if_wrapped, get_module, freeze_module_params, unfreeze_module_params
 from tools.loss import KDLoss, get_single_loss, get_custom_loss
 from utils.dataset_util import build_data_loaders
 from utils.model_util import redesign_model, wrap_model
-from myutils.common.file_util import make_parent_dirs
-from collections import abc
 
 try:
     from apex import amp
@@ -108,6 +109,42 @@ class DistillationBox(nn.Module):
         if val_data_loader is not None:
             self.val_data_loader = val_data_loader
 
+    def setup_teacher_student_models(self, teacher_config, student_config):
+        unwrapped_org_teacher_model =\
+            self.org_teacher_model.module if check_if_wrapped(self.org_teacher_model) else self.org_teacher_model
+        unwrapped_org_student_model = \
+            self.org_student_model.module if check_if_wrapped(self.org_student_model) else self.org_student_model
+        self.target_teacher_pairs.clear()
+        self.target_student_pairs.clear()
+        teacher_ref_model = unwrapped_org_teacher_model
+        student_ref_model = unwrapped_org_student_model
+        if len(teacher_config) > 0 or (len(teacher_config) == 0 and self.teacher_model is None):
+            special_teacher_model_config = teacher_config.get('special', dict())
+            special_teacher_model_type = special_teacher_model_config.get('type', None)
+            if special_teacher_model_type is not None:
+                special_teacher_model = get_special_module(special_teacher_model_type,
+                                                           teacher_model=unwrapped_org_teacher_model,
+                                                           **special_teacher_model_config.get('params', dict()))
+                if special_teacher_model is not None:
+                    teacher_ref_model = special_teacher_model
+            self.teacher_model = redesign_model(teacher_ref_model, teacher_config, 'teacher')
+
+        if len(student_config) > 0 or (len(student_config) == 0 and self.student_model is None):
+            special_student_model_config = student_config.get('special', dict())
+            special_student_model_type = special_student_model_config.get('type', None)
+            if special_student_model_type is not None:
+                special_student_model = get_special_module(special_student_model_type,
+                                                           student_model=unwrapped_org_student_model,
+                                                           **special_student_model_config.get('params', dict()))
+                if special_student_model is not None:
+                    student_ref_model = special_student_model
+            self.student_model = redesign_model(student_ref_model, student_config, 'student')
+
+        self.target_teacher_pairs.extend(set_hooks(self.teacher_model, unwrapped_org_teacher_model,
+                                                   teacher_config, self.teacher_info_dict))
+        self.target_student_pairs.extend(set_hooks(self.student_model, unwrapped_org_student_model,
+                                                   student_config, self.student_info_dict))
+
     def setup_loss(self, train_config):
         criterion_config = train_config['criterion']
         org_term_config = criterion_config.get('org_term', dict())
@@ -122,24 +159,9 @@ class DistillationBox(nn.Module):
         self.setup_data_loaders(train_config)
 
         # Define teacher and student models used in this stage
-        unwrapped_org_teacher_model =\
-            self.org_teacher_model.module if check_if_wrapped(self.org_teacher_model) else self.org_teacher_model
-        unwrapped_org_student_model = \
-            self.org_student_model.module if check_if_wrapped(self.org_student_model) else self.org_student_model
-        self.target_teacher_pairs.clear()
-        self.target_student_pairs.clear()
         teacher_config = train_config.get('teacher', dict())
-        if len(teacher_config) > 0 or (len(teacher_config) == 0 and self.teacher_model is None):
-            self.teacher_model = redesign_model(unwrapped_org_teacher_model, teacher_config, 'teacher')
-
         student_config = train_config.get('student', dict())
-        if len(student_config) > 0 or (len(student_config) == 0 and self.student_model is None):
-            self.student_model = redesign_model(unwrapped_org_student_model, student_config, 'student')
-
-        self.target_teacher_pairs.extend(set_hooks(self.teacher_model, unwrapped_org_teacher_model,
-                                                   teacher_config, self.teacher_info_dict))
-        self.target_student_pairs.extend(set_hooks(self.student_model, unwrapped_org_student_model,
-                                                   student_config, self.student_info_dict))
+        self.setup_teacher_student_models(teacher_config, student_config)
 
         # Define loss function used in this stage
         self.setup_loss(train_config)
@@ -221,6 +243,9 @@ class DistillationBox(nn.Module):
             return teacher_outputs, extracted_teacher_output_dict
 
         teacher_outputs = self.teacher_model(sample_batch)
+        if isinstance(self.teacher_model, SpecialModule):
+            self.teacher_model.post_forward(self.teacher_info_dict)
+
         extracted_teacher_output_dict = extract_outputs(self.teacher_info_dict)
         if isinstance(cached_data, (list, tuple)) \
                 and isinstance(cache_file_paths, (list, tuple)) and cache_file_paths[0] != '':
@@ -243,6 +268,9 @@ class DistillationBox(nn.Module):
         teacher_outputs, extracted_teacher_output_dict =\
             self.get_teacher_output(sample_batch, cached_data=cached_data, cache_file_paths=cache_file_paths)
         student_outputs = self.student_model(sample_batch)
+        if isinstance(self.student_model, SpecialModule):
+            self.student_model.post_forward(self.student_info_dict)
+
         org_loss_dict = dict()
         if self.check_if_org_loss_required():
             # Models with auxiliary classifier returns multiple outputs
@@ -275,6 +303,10 @@ class DistillationBox(nn.Module):
     def post_process(self, **kwargs):
         if self.lr_scheduler is not None:
             self.lr_scheduler.step()
+        if isinstance(self.teacher_model, SpecialModule):
+            self.teacher_model.post_process()
+        if isinstance(self.student_model, SpecialModule):
+            self.student_model.post_process()
 
     def clean_modules(self):
         unfreeze_module_params(self.org_teacher_model)

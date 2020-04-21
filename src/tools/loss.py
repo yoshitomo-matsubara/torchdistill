@@ -22,12 +22,25 @@ class SimpleLossWrapper(nn.Module):
     def __init__(self, single_loss, params_config):
         super().__init__()
         self.single_loss = single_loss
-        self.teacher_output_key = params_config['teacher_output']
-        self.student_output_key = params_config['student_output']
+        input_config = params_config['input']
+        self.is_input_from_teacher = input_config['is_teacher']
+        self.input_module_path = input_config['module_path']
+        self.input_key = input_config['io']
+        target_config = params_config['target']
+        self.is_target_from_teacher = target_config['is_teacher']
+        self.target_module_path = target_config['module_path']
+        self.target_key = target_config['io']
+
+    @staticmethod
+    def extract_value(io_dict, path, key):
+        return io_dict[path][key]
 
     def forward(self, student_io_dict, teacher_io_dict, *args, **kwargs):
-        return self.single_loss(student_io_dict[self.student_output_key]['output'],
-                                teacher_io_dict[self.teacher_output_key]['output'], *args, **kwargs)
+        input_batch = self.extract_value(teacher_io_dict if self.is_input_from_teacher else student_io_dict,
+                                         self.input_module_path, self.input_key)
+        target_batch = self.extract_value(teacher_io_dict if self.is_target_from_teacher else student_io_dict,
+                                          self.target_module_path, self.target_key)
+        return self.single_loss(input_batch, target_batch, *args, **kwargs)
 
 
 @register_single_loss
@@ -92,6 +105,25 @@ class FSPLoss(nn.Module):
             if batch_size is None:
                 batch_size = student_first_feature_map.shape[0]
         return fsp_loss / batch_size
+
+
+@register_single_loss
+class FTLoss(nn.Module):
+    def __init__(self, p=1, reduction='batchmean', paraphraser_path='paraphraser',
+                 translator_path='translator', **kwargs):
+        super().__init__()
+        self.norm_loss = nn.L1Loss() if p == 1 else nn.MSELoss()
+        self.paraphraser_path = paraphraser_path
+        self.translator_path = translator_path
+        self.reduction = reduction
+
+    def forward(self, student_io_dict, teacher_io_dict):
+        paraphraser_outputs = teacher_io_dict[self.paraphraser_path]
+        translator_outputs = student_io_dict[self.translator_path]
+        batch_size = paraphraser_outputs.shape[0]
+        ft_loss = self.norm_loss(paraphraser_outputs / paraphraser_outputs.flatten(1).norm(dim=2),
+                                 translator_outputs / translator_outputs.flatten(1).norm(dim=2))
+        return ft_loss / batch_size if self.reduction == 'batchmean' else ft_loss
 
 
 def get_single_loss(single_criterion_config, params_config=None):
