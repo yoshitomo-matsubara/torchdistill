@@ -81,7 +81,7 @@ train:
                 output: ['paraphraser']
             wrapper:
             requires_grad: True
-            frozen_modules: ['conv1', 'relu', 'maxpool', 'layer1', 'layer2', 'layer3', 'layer4', 'fc']
+            frozen_modules: ['teacher_model.conv1', 'teacher_model.relu', 'teacher_model.maxpool', 'teacher_model.layer1', 'teacher_model.layer2', 'teacher_model.layer3', 'teacher_model.layer4', 'teacher_model.fc']
         apex:
             requires: False
             opt_level: '01'
