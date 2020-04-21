@@ -19,6 +19,9 @@ class SpecialModule(nn.Module):
     def __init__(self):
         super().__init__()
 
+    def post_forward(self, *args, **kwargs):
+        pass
+
     def post_process(self, *args, **kwargs):
         pass
 
