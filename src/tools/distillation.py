@@ -146,9 +146,9 @@ class DistillationBox(nn.Module):
                     student_ref_model = special_student_model
             self.student_model = redesign_model(student_ref_model, student_config, 'student')
 
-        self.target_teacher_pairs.extend(set_hooks(self.teacher_model, unwrapped_org_teacher_model,
+        self.target_teacher_pairs.extend(set_hooks(self.teacher_model, teacher_ref_model,
                                                    teacher_config, self.teacher_info_dict))
-        self.target_student_pairs.extend(set_hooks(self.student_model, unwrapped_org_student_model,
+        self.target_student_pairs.extend(set_hooks(self.student_model, student_ref_model,
                                                    student_config, self.student_info_dict))
 
     def setup_loss(self, train_config):
