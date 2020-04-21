@@ -3,13 +3,13 @@ import datetime
 import time
 
 import torch
-import torchvision
 from torch import distributed as dist
 from torch.backends import cudnn
-from torch.nn import DataParallel, SyncBatchNorm
+from torch.nn import DataParallel
 from torch.nn.parallel import DistributedDataParallel
 
 from misc.log import SmoothedValue, MetricLogger
+from models.official import get_image_classification_model
 from myutils.common import file_util, yaml_util
 from myutils.pytorch import module_util
 from tools.distillation import get_distillation_box
@@ -50,11 +50,7 @@ def load_ckpt(ckpt_file_path, model=None, optimizer=None, lr_scheduler=None, str
 
 
 def get_model(model_config, device, distributed, sync_bn):
-    model_name = model_config['name']
-    model = torchvision.models.__dict__[model_name](**model_config['params'])
-    if distributed and sync_bn:
-        model = SyncBatchNorm.convert_sync_batchnorm(model)
-
+    model = get_image_classification_model(model_config, distributed, sync_bn)
     ckpt_file_path = model_config['ckpt']
     load_ckpt(ckpt_file_path, model=model, strict=True)
     return model.to(device)
