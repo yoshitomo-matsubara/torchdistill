@@ -122,9 +122,12 @@ class DistillationBox(nn.Module):
             special_teacher_model_config = teacher_config.get('special', dict())
             special_teacher_model_type = special_teacher_model_config.get('type', None)
             if special_teacher_model_type is not None:
+                special_teacher_model_params_config = special_teacher_model_config.get('params', None)
+                if special_teacher_model_params_config is None:
+                    special_teacher_model_params_config = dict()
                 special_teacher_model = get_special_module(special_teacher_model_type,
                                                            teacher_model=unwrapped_org_teacher_model,
-                                                           **special_teacher_model_config.get('params', dict()))
+                                                           **special_teacher_model_params_config)
                 if special_teacher_model is not None:
                     teacher_ref_model = special_teacher_model
             self.teacher_model = redesign_model(teacher_ref_model, teacher_config, 'teacher')
@@ -133,9 +136,12 @@ class DistillationBox(nn.Module):
             special_student_model_config = student_config.get('special', dict())
             special_student_model_type = special_student_model_config.get('type', None)
             if special_student_model_type is not None:
+                special_student_model_params_config = special_student_model_config.get('params', None)
+                if special_student_model_params_config is None:
+                    special_student_model_params_config = dict()
                 special_student_model = get_special_module(special_student_model_type,
                                                            student_model=unwrapped_org_student_model,
-                                                           **special_student_model_config.get('params', dict()))
+                                                           **special_student_model_params_config)
                 if special_student_model is not None:
                     student_ref_model = special_student_model
             self.student_model = redesign_model(student_ref_model, student_config, 'student')
