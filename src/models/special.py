@@ -37,7 +37,7 @@ class EmptyModule(SpecialModule):
 
 class Paraphraser4FactorTransfer(nn.Module):
     """
-    Paraphraser for Factor Transfer described in the supplementary material of
+    Paraphraser for tactor transfer described in the supplementary material of
     "Paraphrasing Complex Network: Network Compression via Factor Transfer"
     """
 
@@ -91,7 +91,7 @@ class Paraphraser4FactorTransfer(nn.Module):
 
 class Translator4FactorTransfer(nn.Sequential):
     """
-    Translator for Factor Transfer described in the supplementary material of
+    Translator for factor transfer described in the supplementary material of
     "Paraphrasing Complex Network: Network Compression via Factor Transfer"
     Note that "the student translator has the same three convolution layers as the paraphraser"
     """
@@ -108,9 +108,7 @@ class Translator4FactorTransfer(nn.Sequential):
 @register_special_module
 class Teacher4FactorTransfer(SpecialModule):
     """
-    Supporting ResNet family only, given that "the feature maps of the last group"
-    (group: "each stacked convolutional layers") in
-    "Paraphrasing Complex Network: Network Compression via Factor Transfer" is not clear for other models.
+    Teacher for factor transfer proposed in "Paraphrasing Complex Network: Network Compression via Factor Transfer"
     """
 
     def __init__(self, base_model_config, input_module_path, paraphraser_params_config, paraphraser_ckpt, **kwargs):
@@ -137,9 +135,7 @@ class Teacher4FactorTransfer(SpecialModule):
 @register_special_module
 class Student4FactorTransfer(SpecialModule):
     """
-    Supporting ResNet family only, given that "the feature maps of the last group"
-    (group: "each stacked convolutional layers") in
-    "Paraphrasing Complex Network: Network Compression via Factor Transfer" is not clear for other models.
+    Student for factor transfer proposed in "Paraphrasing Complex Network: Network Compression via Factor Transfer"
     """
 
     def __init__(self, student_model, input_module_path, translator_params_config, **kwargs):
