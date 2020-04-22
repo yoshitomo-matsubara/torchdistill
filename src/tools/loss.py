@@ -121,8 +121,8 @@ class FTLoss(nn.Module):
         paraphraser_flat_outputs = teacher_io_dict[self.paraphraser_path]['output'].flatten(1)
         translator_flat_outputs = student_io_dict[self.translator_path]['output'].flatten(1)
         batch_size = paraphraser_flat_outputs.shape[0]
-        ft_loss = self.norm_loss(paraphraser_flat_outputs / paraphraser_flat_outputs.norm(dim=1),
-                                 translator_flat_outputs / translator_flat_outputs.norm(dim=1))
+        ft_loss = self.norm_loss(paraphraser_flat_outputs / paraphraser_flat_outputs.norm(dim=1).unsqueeze(1),
+                                 translator_flat_outputs / translator_flat_outputs.norm(dim=1).unsqueeze(1))
         return ft_loss / batch_size if self.reduction == 'batchmean' else ft_loss
 
 
