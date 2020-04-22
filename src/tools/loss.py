@@ -118,11 +118,11 @@ class FTLoss(nn.Module):
         self.reduction = reduction
 
     def forward(self, student_io_dict, teacher_io_dict):
-        paraphraser_outputs = teacher_io_dict[self.paraphraser_path]['output']
-        translator_outputs = student_io_dict[self.translator_path]['output']
-        batch_size = paraphraser_outputs.shape[0]
-        ft_loss = self.norm_loss(paraphraser_outputs / paraphraser_outputs.flatten(1).norm(dim=1),
-                                 translator_outputs / translator_outputs.flatten(1).norm(dim=1))
+        paraphraser_flat_outputs = teacher_io_dict[self.paraphraser_path]['output'].flatten(1)
+        translator_flat_outputs = student_io_dict[self.translator_path]['output'].flatten(1)
+        batch_size = paraphraser_flat_outputs.shape[0]
+        ft_loss = self.norm_loss(paraphraser_flat_outputs / paraphraser_flat_outputs.norm(dim=1),
+                                 translator_flat_outputs / translator_flat_outputs.norm(dim=1))
         return ft_loss / batch_size if self.reduction == 'batchmean' else ft_loss
 
 
