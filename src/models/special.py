@@ -7,11 +7,11 @@ from models.official import get_vision_model
 from myutils.common import file_util
 from utils import main_util
 
-CLASS_DICT = dict()
+SPECIAL_CLASS_DICT = dict()
 
 
 def register_special_module(cls):
-    CLASS_DICT[cls.__name__] = cls
+    SPECIAL_CLASS_DICT[cls.__name__] = cls
     return cls
 
 
@@ -102,7 +102,8 @@ class Translator4FactorTransfer(nn.Sequential):
             *Paraphraser4FactorTransfer.make_enc_modules(num_input_channels, num_output_channels,
                                                          kernel_size, stride, padding, uses_bn),
             *Paraphraser4FactorTransfer.make_enc_modules(num_output_channels, num_output_channels,
-                                                         kernel_size, stride, padding, uses_bn))
+                                                         kernel_size, stride, padding, uses_bn)
+        )
 
 
 @register_special_module
@@ -152,9 +153,9 @@ class Student4FactorTransfer(SpecialModule):
 
 
 def get_special_module(class_name, *args, **kwargs):
-    if class_name not in CLASS_DICT:
+    if class_name not in SPECIAL_CLASS_DICT:
         print('No special module called `{}` is registered.'.format(class_name))
         return None
 
-    instance = CLASS_DICT[class_name](*args, **kwargs)
+    instance = SPECIAL_CLASS_DICT[class_name](*args, **kwargs)
     return instance
