@@ -44,9 +44,12 @@ class CustomDenseNet(nn.Module):
         super().__init__()
         module_dict = OrderedDict()
         module_dict['bottleneck'] = bottleneck
-        ignored_set = set(short_feature_names).union({'classifier'})
+        short_features_set = set(short_feature_names)
+        if 'classifier' in short_features_set:
+            short_features_set.remove('classifier')
+
         for child_name, child_module in org_densenet.named_children():
-            if child_name not in ignored_set:
+            if child_name in short_features_set:
                 module_dict[child_name] = child_module
 
         self.features = nn.Sequential(module_dict)

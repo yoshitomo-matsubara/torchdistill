@@ -40,9 +40,12 @@ class CustomResNet(nn.Sequential):
     def __init__(self, bottleneck, short_module_names, org_resnet):
         module_dict = OrderedDict()
         module_dict['bottleneck'] = bottleneck
-        ignored_set = set(short_module_names).union({'fc'})
+        short_module_set = set(short_module_names)
+        if 'fc' in short_module_set:
+            short_module_set.remove('fc')
+
         for child_name, child_module in org_resnet.named_children():
-            if child_name not in ignored_set:
+            if child_name in short_module_set:
                 module_dict[child_name] = child_module
 
         super().__init__(module_dict)

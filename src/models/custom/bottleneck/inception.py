@@ -37,10 +37,13 @@ class CustomInception3(nn.Sequential):
     def __init__(self, bottleneck, short_module_names, org_resnet):
         module_dict = OrderedDict()
         module_dict['bottleneck'] = bottleneck
-        ignored_set = set(short_module_names).union({'fc'})
+        short_module_set = set(short_module_names)
+        if 'fc' in short_module_set:
+            short_module_set.remove('fc')
+
         child_name_list = list()
         for child_name, child_module in org_resnet.named_children():
-            if child_name not in ignored_set:
+            if child_name in short_module_set:
                 if len(child_name_list) > 0 and child_name_list[-1] == 'Conv2d_2b_3x3' \
                         and child_name == 'Conv2d_3b_1x1':
                     module_dict['maxpool1'] = nn.MaxPool2d(kernel_size=3, stride=2)
