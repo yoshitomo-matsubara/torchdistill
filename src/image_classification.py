@@ -47,14 +47,14 @@ def load_ckpt(ckpt_file_path, model=None, optimizer=None, lr_scheduler=None, str
     if lr_scheduler is not None:
         print('Loading scheduler parameters')
         lr_scheduler.load_state_dict(ckpt['lr_scheduler'])
-    return ckpt.get('best_value', 0.0), ckpt['config'], ckpt['args']
+    return ckpt.get('best_value', 0.0), ckpt.get('config', None), ckpt.get('args', None)
 
 
 def get_model(model_config, device, distributed, sync_bn):
     model = get_image_classification_model(model_config, distributed, sync_bn)
     if model is None:
         model = MODEL_DICT[model_config['name']](**model_config['params'])
-        
+
     ckpt_file_path = model_config['ckpt']
     load_ckpt(ckpt_file_path, model=model, strict=True)
     return model.to(device)
