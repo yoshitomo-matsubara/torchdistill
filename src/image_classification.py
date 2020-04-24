@@ -15,6 +15,7 @@ from myutils.pytorch import module_util
 from tools.distillation import get_distillation_box
 from utils import dataset_util, main_util
 from utils.eval_util import compute_accuracy
+from models import MODEL_DICT, MODEL_DICT
 
 
 def get_argparser():
@@ -51,6 +52,9 @@ def load_ckpt(ckpt_file_path, model=None, optimizer=None, lr_scheduler=None, str
 
 def get_model(model_config, device, distributed, sync_bn):
     model = get_image_classification_model(model_config, distributed, sync_bn)
+    if model is None:
+        model = MODEL_DICT[model_config['name']](**model_config['params'])
+        
     ckpt_file_path = model_config['ckpt']
     load_ckpt(ckpt_file_path, model=model, strict=True)
     return model.to(device)
