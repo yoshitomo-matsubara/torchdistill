@@ -28,12 +28,12 @@ models:
         ckpt: !join ['./resource/ckpt/teacher/', *teacher_experiment, '.pt']
 
     student_model:
-        name: &student_model_name 'alexnet'
+        name: &student_model_name 'resnet18'
         params:
             num_classes: 1000
             pretrained: True
         experiment: &student_experiment !join [*dataset_name, '-', *student_model_name, '_from_', *teacher_model_name]
-        ckpt: !join ['./resource/ckpt/kd/', *student_experiment, '.pt']
+        ckpt: !join ['./resource/ckpt/single_stage/kd/', *student_experiment, '.pt']
 
 train:
     log_freq: 1000
@@ -43,11 +43,22 @@ train:
         random_sample: True
         batch_size: 32
         num_workers: 16
+        cache_output:
     val_data_loader:
         dataset_id: *imagenet_val
         random_sample: False
         batch_size: 32
         num_workers: 16
+    teacher:
+        sequential: []
+        wrapper: 'DistributedDataParallel'
+        requires_grad: False
+    student:
+        adaptations:
+        sequential: []
+        wrapper: 'DistributedDataParallel'
+        requires_grad: True
+        frozen_modules: []
     apex:
         requires: False
         opt_level: '01'

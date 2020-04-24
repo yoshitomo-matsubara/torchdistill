@@ -3,13 +3,14 @@ import datetime
 import time
 
 import torch
-import torchvision
 from torch import distributed as dist
 from torch.backends import cudnn
-from torch.nn import DataParallel, SyncBatchNorm
+from torch.nn import DataParallel
 from torch.nn.parallel import DistributedDataParallel
 
 from misc.log import SmoothedValue, MetricLogger
+from models import MODEL_DICT
+from models.official import get_image_classification_model
 from myutils.common import file_util, yaml_util
 from myutils.pytorch import module_util
 from tools.distillation import get_distillation_box
@@ -22,8 +23,6 @@ def get_argparser():
     parser.add_argument('--config', required=True, help='yaml file path')
     parser.add_argument('--device', default='cuda', help='device')
     parser.add_argument('--start_epoch', default=0, type=int, metavar='N', help='start epoch')
-    parser.add_argument('-use_cache', action='store_true',
-                        help='Cache the datasets for quicker initialization. It also serializes the transforms')
     parser.add_argument('-sync_bn', action='store_true', help='Use sync batch norm')
     parser.add_argument('-test_only', action='store_true', help='Only test the models')
     parser.add_argument('-student_only', action='store_true', help='Test the student model only')
@@ -48,14 +47,13 @@ def load_ckpt(ckpt_file_path, model=None, optimizer=None, lr_scheduler=None, str
     if lr_scheduler is not None:
         print('Loading scheduler parameters')
         lr_scheduler.load_state_dict(ckpt['lr_scheduler'])
-    return ckpt.get('best_value', 0.0), ckpt['config'], ckpt['args']
+    return ckpt.get('best_value', 0.0), ckpt.get('config', None), ckpt.get('args', None)
 
 
 def get_model(model_config, device, distributed, sync_bn):
-    model_name = model_config['name']
-    model = torchvision.models.__dict__[model_name](**model_config['params'])
-    if distributed and sync_bn:
-        model = SyncBatchNorm.convert_sync_batchnorm(model)
+    model = get_image_classification_model(model_config, distributed, sync_bn)
+    if model is None:
+        model = MODEL_DICT[model_config['name']](**model_config['params'])
 
     ckpt_file_path = model_config['ckpt']
     load_ckpt(ckpt_file_path, model=model, strict=True)
@@ -65,8 +63,9 @@ def get_model(model_config, device, distributed, sync_bn):
 def save_ckpt(model, optimizer, lr_scheduler, best_value, config, args, output_file_path):
     file_util.make_parent_dirs(output_file_path)
     model_state_dict = model.module.state_dict() if module_util.check_if_wrapped(model) else model.state_dict()
+    lr_scheduler_state_dict = lr_scheduler.state_dict() if lr_scheduler is not None else None
     main_util.save_on_master({'model': model_state_dict, 'optimizer': optimizer.state_dict(), 'best_value': best_value,
-                              'lr_scheduler': lr_scheduler.state_dict(), 'config': config, 'args': args},
+                              'lr_scheduler': lr_scheduler_state_dict, 'config': config, 'args': args},
                              output_file_path)
 
 
@@ -75,10 +74,11 @@ def distill_one_epoch(distillation_box, device, epoch, log_freq):
     metric_logger.add_meter('lr', SmoothedValue(window_size=1, fmt='{value}'))
     metric_logger.add_meter('img/s', SmoothedValue(window_size=10, fmt='{value}'))
     header = 'Epoch: [{}]'.format(epoch)
-    for sample_batch, targets in metric_logger.log_every(distillation_box.train_data_loader, log_freq, header):
+    for sample_batch, targets, cached_data, cache_file_paths in \
+            metric_logger.log_every(distillation_box.train_data_loader, log_freq, header):
         start_time = time.time()
         sample_batch, targets = sample_batch.to(device), targets.to(device)
-        loss = distillation_box(sample_batch, targets)
+        loss = distillation_box(sample_batch, targets, cached_data, cache_file_paths)
         distillation_box.update_params(loss)
         batch_size = sample_batch.shape[0]
         metric_logger.update(loss=loss.item(), lr=distillation_box.optimizer.param_groups[0]['lr'])
@@ -138,8 +138,6 @@ def distill(teacher_model, student_model, dataset_dict, device, device_ids, dist
     start_time = time.time()
     for epoch in range(start_epoch, distillation_box.num_epochs):
         distillation_box.pre_process(epoch=epoch)
-        teacher_model.eval()
-        student_model.train()
         distill_one_epoch(distillation_box, device, epoch, log_freq)
         val_top1_accuracy = evaluate(student_model, distillation_box.val_data_loader, device, device_ids, distributed,
                                      log_freq=log_freq)
@@ -151,7 +149,9 @@ def distill(teacher_model, student_model, dataset_dict, device, device_ids, dist
                       best_val_top1_accuracy, config, args, ckpt_file_path)
         distillation_box.post_process()
 
-    dist.barrier()
+    if distributed:
+        dist.barrier()
+
     total_time = time.time() - start_time
     total_time_str = str(datetime.timedelta(seconds=int(total_time)))
     print('Training time {}'.format(total_time_str))
@@ -164,7 +164,7 @@ def main(args):
     cudnn.benchmark = True
     config = yaml_util.load_yaml_file(args.config)
     device = torch.device(args.device)
-    dataset_dict = dataset_util.get_all_dataset(config['datasets'], args.use_cache)
+    dataset_dict = dataset_util.get_all_dataset(config['datasets'])
     models_config = config['models']
     teacher_model_config = models_config['teacher_model']
     teacher_model = get_model(teacher_model_config, device, distributed, False)

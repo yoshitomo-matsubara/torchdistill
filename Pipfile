@@ -6,10 +6,11 @@ verify_ssl = true
 [dev-packages]
 
 [packages]
-torch = ">=1.4.0"
-torchvision = ">=0.5.0"
+torch = "==1.5.0"
+torchvision = "==0.6.0"
 numpy = "*"
 pyyaml = "*"
+scipy = "*"
 
 [requires]
 python_version = "3.6"

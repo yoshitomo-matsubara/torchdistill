@@ -2,11 +2,11 @@ from collections import OrderedDict
 
 from torch import nn
 
-CLASS_DICT = dict()
+ADAPTATION_CLASS_DICT = dict()
 
 
 def register_adaptation_module(cls):
-    CLASS_DICT[cls.__name__] = cls
+    ADAPTATION_CLASS_DICT[cls.__name__] = cls
     return cls
 
 
@@ -29,9 +29,9 @@ class ConvReg(nn.Sequential):
 
 
 def get_adaptation_module(class_name, *args, **kwargs):
-    if class_name not in CLASS_DICT:
-        print('No adaption module called `{}` is registered.'.format(class_name))
+    if class_name not in ADAPTATION_CLASS_DICT:
+        print('No adaptation module called `{}` is registered.'.format(class_name))
         return None
 
-    instance = CLASS_DICT[class_name](*args, **kwargs)
+    instance = ADAPTATION_CLASS_DICT[class_name](*args, **kwargs)
     return instance
