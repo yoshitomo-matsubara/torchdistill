@@ -46,15 +46,11 @@ class CustomResNet(nn.Sequential):
 
         for child_name, child_module in org_resnet.named_children():
             if child_name in short_module_set:
+                if child_name == 'fc':
+                    module_dict['flatten'] = nn.Flatten(1)
                 module_dict[child_name] = child_module
 
         super().__init__(module_dict)
-        self.fc = org_resnet.fc
-
-    def forward(self, x):
-        z = super().forward(x)
-        z = torch.flatten(z, 1)
-        return self.fc(z)
 
 
 @register_func
