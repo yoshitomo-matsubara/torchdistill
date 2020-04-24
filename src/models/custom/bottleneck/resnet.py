@@ -41,9 +41,6 @@ class CustomResNet(nn.Sequential):
         module_dict = OrderedDict()
         module_dict['bottleneck'] = bottleneck
         short_module_set = set(short_module_names)
-        if 'fc' in short_module_set:
-            short_module_set.remove('fc')
-
         for child_name, child_module in org_resnet.named_children():
             if child_name in short_module_set:
                 if child_name == 'fc':
