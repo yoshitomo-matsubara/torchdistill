@@ -4,10 +4,10 @@ import torch
 from torch import nn
 from torchvision.models import densenet169, densenet201
 
-from models.custom.bottleneck import register_bottleneck_class, register_bottleneck_func
+from models.registry import register_class, register_func
 
 
-@register_bottleneck_class
+@register_class
 class Bottleneck4DenseNets(nn.Sequential):
     def __init__(self, bottleneck_channel=12):
         modules = [
@@ -38,7 +38,7 @@ class Bottleneck4DenseNets(nn.Sequential):
         super().__init__(*modules)
 
 
-@register_bottleneck_class
+@register_class
 class CustomDenseNet(nn.Module):
     def __init__(self, bottleneck, short_feature_names, org_densenet):
         super().__init__()
@@ -62,7 +62,7 @@ class CustomDenseNet(nn.Module):
         return self.classifier(z)
 
 
-@register_bottleneck_func
+@register_func
 def custom_densenet169(bottleneck_channel=12, short_feature_names=None, **kwargs):
     if short_feature_names is None:
         short_feature_names = ['denseblock3', 'transition3', 'denseblock4', 'norm5']
@@ -72,7 +72,7 @@ def custom_densenet169(bottleneck_channel=12, short_feature_names=None, **kwargs
     return CustomDenseNet(bottleneck, short_feature_names, org_model)
 
 
-@register_bottleneck_func
+@register_func
 def custom_densenet201(bottleneck_channel=12, short_feature_names=None, **kwargs):
     if short_feature_names is None:
         short_feature_names = ['denseblock3', 'transition3', 'denseblock4', 'norm5']

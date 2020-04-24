@@ -4,10 +4,10 @@ import torch
 from torch import nn
 from torchvision.models import inception_v3
 
-from models.custom.bottleneck import register_bottleneck_class, register_bottleneck_func
+from models.registry import register_class, register_func
 
 
-@register_bottleneck_class
+@register_class
 class Bottleneck4Inception3(nn.Sequential):
     def __init__(self, bottleneck_channel=12):
         modules = [
@@ -32,7 +32,7 @@ class Bottleneck4Inception3(nn.Sequential):
         super().__init__(*modules)
 
 
-@register_bottleneck_class
+@register_class
 class CustomInception3(nn.Sequential):
     def __init__(self, bottleneck, short_module_names, org_resnet):
         module_dict = OrderedDict()
@@ -67,7 +67,7 @@ class CustomInception3(nn.Sequential):
         return self.fc(z)
 
 
-@register_bottleneck_func
+@register_func
 def custom_inception_v3(bottleneck_channel=12, short_module_names=None, **kwargs):
     if short_module_names is None:
         short_module_names = [
