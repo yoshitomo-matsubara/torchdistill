@@ -1,4 +1,4 @@
-from models.custom import *
+from models.custom import bottleneck
 from models.registry import CLASS_DICT, FUNC_DICT
 
 CUSTOM_MODEL_CLASS_DICT = dict()

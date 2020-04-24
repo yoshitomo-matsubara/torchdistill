@@ -1,6 +1,5 @@
 from collections import OrderedDict
 
-import torch
 from torch import nn
 from torchvision.models import inception_v3
 
@@ -38,9 +37,6 @@ class CustomInception3(nn.Sequential):
         module_dict = OrderedDict()
         module_dict['bottleneck'] = bottleneck
         short_module_set = set(short_module_names)
-        if 'fc' in short_module_set:
-            short_module_set.remove('fc')
-
         child_name_list = list()
         for child_name, child_module in org_resnet.named_children():
             if child_name in short_module_set:
@@ -52,22 +48,15 @@ class CustomInception3(nn.Sequential):
                         and child_name == 'Mixed_5b':
                     module_dict['maxpool2'] = nn.MaxPool2d(kernel_size=3, stride=2)
                     child_name_list.append('maxpool2')
+                elif child_name == 'fc':
+                    module_dict['adaptive_avgpool'] = nn.AdaptiveAvgPool2d((1, 1))
+                    module_dict['dropout'] = nn.Dropout()
+                    module_dict['flatten'] = nn.Flatten(1)
 
                 module_dict[child_name] = child_module
                 child_name_list.append(child_name)
 
         super().__init__(module_dict)
-        self.adaptive_avgpool = nn.AdaptiveAvgPool2d((1, 1))
-        self.dropout = nn.Dropout()
-        self.fc = org_resnet.fc
-
-    def forward(self, x):
-        z = super().forward(x)
-
-        z = self.adaptive_avgpool(z)
-        z = self.dropout(z)
-        z = torch.flatten(z, 1)
-        return self.fc(z)
 
 
 @register_func
