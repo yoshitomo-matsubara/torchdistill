@@ -48,7 +48,7 @@ class CustomDenseNet(nn.Module):
         if 'classifier' in short_features_set:
             short_features_set.remove('classifier')
 
-        for child_name, child_module in org_densenet.named_children():
+        for child_name, child_module in org_densenet.features.named_children():
             if child_name in short_features_set:
                 module_dict[child_name] = child_module
 
