@@ -33,12 +33,12 @@ class Bottleneck4Inception3(nn.Sequential):
 
 @register_class
 class CustomInception3(nn.Sequential):
-    def __init__(self, bottleneck, short_module_names, org_resnet):
+    def __init__(self, bottleneck, short_module_names, org_model):
         module_dict = OrderedDict()
         module_dict['bottleneck'] = bottleneck
         short_module_set = set(short_module_names)
         child_name_list = list()
-        for child_name, child_module in org_resnet.named_children():
+        for child_name, child_module in org_model.named_children():
             if child_name in short_module_set:
                 if len(child_name_list) > 0 and child_name_list[-1] == 'Conv2d_2b_3x3' \
                         and child_name == 'Conv2d_3b_1x1':
@@ -64,7 +64,7 @@ def custom_inception_v3(bottleneck_channel=12, short_module_names=None, **kwargs
     if short_module_names is None:
         short_module_names = [
             'Mixed_5b', 'Mixed_5c', 'Mixed_5d', 'Mixed_6a', 'Mixed_6b', 'Mixed_6c', 'Mixed_6d', 'Mixed_6e',
-            'Mixed_7a', 'Mixed_7b', 'Mixed_7c'
+            'Mixed_7a', 'Mixed_7b', 'Mixed_7c', 'fc'
         ]
 
     bottleneck = Bottleneck4Inception3(bottleneck_channel)
