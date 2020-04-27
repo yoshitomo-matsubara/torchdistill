@@ -86,7 +86,7 @@ def distill_one_epoch(distillation_box, device, epoch, log_freq):
 
 
 @torch.no_grad()
-def evaluate(model, data_loader, device, device_ids, distributed, log_freq=1000, title=None):
+def evaluate(model, data_loader, device, device_ids, distributed, log_freq=1000, title=None, header='Test:'):
     model.to(device)
     if distributed:
         model = DistributedDataParallel(model, device_ids=device_ids)
@@ -100,7 +100,6 @@ def evaluate(model, data_loader, device, device_ids, distributed, log_freq=1000,
     torch.set_num_threads(1)
     model.eval()
     metric_logger = MetricLogger(delimiter='  ')
-    header = 'Test:'
     with torch.no_grad():
         for image, target in metric_logger.log_every(data_loader, log_freq, header):
             image = image.to(device, non_blocking=True)
@@ -140,7 +139,7 @@ def distill(teacher_model, student_model, dataset_dict, device, device_ids, dist
         distillation_box.pre_process(epoch=epoch)
         distill_one_epoch(distillation_box, device, epoch, log_freq)
         val_top1_accuracy = evaluate(student_model, distillation_box.val_data_loader, device, device_ids, distributed,
-                                     log_freq=log_freq)
+                                     log_freq=log_freq, header='Validation:')
         if val_top1_accuracy > best_val_top1_accuracy and main_util.is_main_process():
             print('Updating ckpt (Best top1 accuracy: {:.4f} -> {:.4f})'.format(best_val_top1_accuracy,
                                                                                 val_top1_accuracy))
