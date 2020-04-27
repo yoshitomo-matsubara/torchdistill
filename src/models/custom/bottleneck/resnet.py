@@ -3,12 +3,14 @@ from collections import OrderedDict
 from torch import nn
 from torchvision.models import resnet152
 
+from models.custom.bottleneck.base import BottleneckBase
+from models.custom.bottleneck.processor import get_bottleneck_processor
 from models.registry import register_class, register_func
 
 
 @register_class
-class Bottleneck4ResNet152(nn.Sequential):
-    def __init__(self, bottleneck_channel=12):
+class Bottleneck4ResNet152(BottleneckBase):
+    def __init__(self, bottleneck_channel=12, bottleneck_idx=7, compressor=None, decompressor=None):
         modules = [
             nn.Conv2d(3, 64, kernel_size=7, stride=2, padding=3, bias=False),
             nn.BatchNorm2d(64),
@@ -31,7 +33,9 @@ class Bottleneck4ResNet152(nn.Sequential):
             nn.Conv2d(512, 512, kernel_size=2, stride=1, bias=False),
             nn.AvgPool2d(kernel_size=2, stride=1)
         ]
-        super().__init__(*modules)
+        encoder = nn.Sequential(*modules[:bottleneck_idx])
+        decoder = nn.Sequential(*modules[bottleneck_idx:])
+        super().__init__(encoder=encoder, decoder=decoder, compressor=compressor, decompressor=decompressor)
 
 
 @register_class
@@ -50,10 +54,17 @@ class CustomResNet(nn.Sequential):
 
 
 @register_func
-def custom_resnet152(bottleneck_channel=12, short_module_names=None, **kwargs):
+def custom_resnet152(bottleneck_channel=12, bottleneck_idx=7, compressor=None, decompressor=None,
+                     short_module_names=None, **kwargs):
     if short_module_names is None:
         short_module_names = ['layer3', 'layer4', 'avgpool', 'fc']
 
-    bottleneck = Bottleneck4ResNet152(bottleneck_channel)
+    if compressor is not None:
+        compressor = get_bottleneck_processor(compressor['name'], **compressor['params'])
+
+    if decompressor is not None:
+        decompressor = get_bottleneck_processor(decompressor['name'], **decompressor['params'])
+
+    bottleneck = Bottleneck4ResNet152(bottleneck_channel, bottleneck_idx, compressor, decompressor)
     org_model = resnet152(**kwargs)
     return CustomResNet(bottleneck, short_module_names, org_model)

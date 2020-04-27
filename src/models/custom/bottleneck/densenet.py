@@ -4,12 +4,14 @@ import torch
 from torch import nn
 from torchvision.models import densenet169, densenet201
 
+from models.custom.bottleneck.base import BottleneckBase
+from models.custom.bottleneck.processor import get_bottleneck_processor
 from models.registry import register_class, register_func
 
 
 @register_class
-class Bottleneck4DenseNets(nn.Sequential):
-    def __init__(self, bottleneck_channel=12):
+class Bottleneck4DenseNets(BottleneckBase):
+    def __init__(self, bottleneck_channel=12, bottleneck_idx=7, compressor=None, decompressor=None):
         modules = [
             nn.Conv2d(3, 64, kernel_size=7, stride=2, padding=3, bias=False),
             nn.BatchNorm2d(64),
@@ -35,7 +37,9 @@ class Bottleneck4DenseNets(nn.Sequential):
             nn.Conv2d(256, 256, kernel_size=2, stride=1, bias=False),
             nn.AvgPool2d(kernel_size=2, stride=2)
         ]
-        super().__init__(*modules)
+        encoder = nn.Sequential(*modules[:bottleneck_idx])
+        decoder = nn.Sequential(*modules[bottleneck_idx:])
+        super().__init__(encoder=encoder, decoder=decoder, compressor=compressor, decompressor=decompressor)
 
 
 @register_class
@@ -66,20 +70,34 @@ class CustomDenseNet(nn.Module):
 
 
 @register_func
-def custom_densenet169(bottleneck_channel=12, short_feature_names=None, **kwargs):
+def custom_densenet169(bottleneck_channel=12, bottleneck_idx=7, compressor=None, decompressor=None,
+                       short_feature_names=None, **kwargs):
     if short_feature_names is None:
         short_feature_names = ['denseblock3', 'transition3', 'denseblock4', 'norm5']
 
-    bottleneck = Bottleneck4DenseNets(bottleneck_channel)
+    if compressor is not None:
+        compressor = get_bottleneck_processor(compressor['name'], **compressor['params'])
+
+    if decompressor is not None:
+        decompressor = get_bottleneck_processor(decompressor['name'], **decompressor['params'])
+
+    bottleneck = Bottleneck4DenseNets(bottleneck_channel, bottleneck_idx, compressor, decompressor)
     org_model = densenet169(**kwargs)
     return CustomDenseNet(bottleneck, short_feature_names, org_model)
 
 
 @register_func
-def custom_densenet201(bottleneck_channel=12, short_feature_names=None, **kwargs):
+def custom_densenet201(bottleneck_channel=12, bottleneck_idx=7, compressor=None, decompressor=None,
+                       short_feature_names=None, **kwargs):
     if short_feature_names is None:
         short_feature_names = ['denseblock3', 'transition3', 'denseblock4', 'norm5']
 
-    bottleneck = Bottleneck4DenseNets(bottleneck_channel)
+    if compressor is not None:
+        compressor = get_bottleneck_processor(compressor['name'], **compressor['params'])
+
+    if decompressor is not None:
+        decompressor = get_bottleneck_processor(decompressor['name'], **decompressor['params'])
+
+    bottleneck = Bottleneck4DenseNets(bottleneck_channel, bottleneck_idx, compressor, decompressor)
     org_model = densenet201(**kwargs)
     return CustomDenseNet(bottleneck, short_feature_names, org_model)

@@ -3,12 +3,14 @@ from collections import OrderedDict
 from torch import nn
 from torchvision.models import inception_v3
 
+from models.custom.bottleneck.base import BottleneckBase
+from models.custom.bottleneck.processor import get_bottleneck_processor
 from models.registry import register_class, register_func
 
 
 @register_class
-class Bottleneck4Inception3(nn.Sequential):
-    def __init__(self, bottleneck_channel=12):
+class Bottleneck4Inception3(BottleneckBase):
+    def __init__(self, bottleneck_channel=12, bottleneck_idx=7, compressor=None, decompressor=None):
         modules = [
             nn.Conv2d(3, 64, kernel_size=7, stride=2, bias=False),
             nn.BatchNorm2d(64),
@@ -28,7 +30,9 @@ class Bottleneck4Inception3(nn.Sequential):
             nn.Conv2d(256, 192, kernel_size=2, stride=1, bias=False),
             nn.AvgPool2d(kernel_size=2, stride=1)
         ]
-        super().__init__(*modules)
+        encoder = nn.Sequential(*modules[:bottleneck_idx])
+        decoder = nn.Sequential(*modules[bottleneck_idx:])
+        super().__init__(encoder=encoder, decoder=decoder, compressor=compressor, decompressor=decompressor)
 
 
 @register_class
@@ -55,18 +59,24 @@ class CustomInception3(nn.Sequential):
 
                 module_dict[child_name] = child_module
                 child_name_list.append(child_name)
-
         super().__init__(module_dict)
 
 
 @register_func
-def custom_inception_v3(bottleneck_channel=12, short_module_names=None, **kwargs):
+def custom_inception_v3(bottleneck_channel=12, bottleneck_idx=7, compressor=None, decompressor=None,
+                        short_module_names=None, **kwargs):
     if short_module_names is None:
         short_module_names = [
             'Mixed_5b', 'Mixed_5c', 'Mixed_5d', 'Mixed_6a', 'Mixed_6b', 'Mixed_6c', 'Mixed_6d', 'Mixed_6e',
             'Mixed_7a', 'Mixed_7b', 'Mixed_7c', 'fc'
         ]
 
-    bottleneck = Bottleneck4Inception3(bottleneck_channel)
+    if compressor is not None:
+        compressor = get_bottleneck_processor(compressor['name'], **compressor['params'])
+
+    if decompressor is not None:
+        decompressor = get_bottleneck_processor(decompressor['name'], **decompressor['params'])
+
+    bottleneck = Bottleneck4Inception3(bottleneck_channel, bottleneck_idx, compressor, decompressor)
     org_model = inception_v3(**kwargs)
     return CustomInception3(bottleneck, short_module_names, org_model)
