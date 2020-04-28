@@ -36,4 +36,4 @@ def get_adaptation_module(class_name, *args, **kwargs):
 
     if class_name in ADAPTATION_CLASS_DICT:
         return ADAPTATION_CLASS_DICT[class_name](*args, **kwargs)
-    return MODULE_CLASS_DICT(*args, **kwargs)
+    return MODULE_CLASS_DICT[class_name](*args, **kwargs)
