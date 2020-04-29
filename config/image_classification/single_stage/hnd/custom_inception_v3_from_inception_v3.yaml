@@ -2,7 +2,7 @@ datasets:
     ilsvrc2012:
         name: &dataset_name 'ilsvrc2012'
         type: 'imagefolder'
-        root: &root_dir !join ['~/dataset/', *dataset_name]
+        root: &root_dir !join ['./resource/dataset/', *dataset_name]
         rough_size: 342
         input_size: [299, 299]
         splits:
