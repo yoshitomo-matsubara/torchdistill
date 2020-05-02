@@ -69,7 +69,7 @@ train:
         forward_hook:
             input: []
             output: ['+maxpool2']
-        wrapper: ''
+        wrapper:
         requires_grad: False
     student:
         adaptations:
@@ -78,7 +78,7 @@ train:
         forward_hook:
             input: []
             output: ['bottleneck']
-        wrapper: ''
+        wrapper:
         requires_grad: True
     apex:
         requires: False

@@ -69,7 +69,7 @@ train:
         forward_hook:
             input: []
             output: ['+maxpool2', 'Mixed_5d', 'Mixed_6e', 'Mixed_7c']
-        wrapper: ''
+        wrapper:
         requires_grad: False
     student:
         adaptations:
@@ -78,7 +78,7 @@ train:
         forward_hook:
             input: []
             output: ['bottleneck', 'Mixed_5d', 'Mixed_6e', 'Mixed_7c']
-        wrapper: ''
+        wrapper:
         requires_grad: True
     apex:
         requires: False

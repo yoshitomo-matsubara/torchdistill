@@ -58,7 +58,7 @@ train:
         forward_hook:
             input: []
             output: ['features.transition2']
-        wrapper: ''
+        wrapper:
         requires_grad: False
     student:
         adaptations:
@@ -67,7 +67,7 @@ train:
         forward_hook:
             input: []
             output: ['features.bottleneck']
-        wrapper: ''
+        wrapper:
         requires_grad: True
     apex:
         requires: False
