@@ -126,6 +126,52 @@ class FTLoss(nn.Module):
         return ft_loss / batch_size if self.reduction == 'batchmean' else ft_loss
 
 
+@register_single_loss
+class PKTLoss(nn.Module):
+    """
+    Refactored https://github.com/passalis/probabilistic_kt/blob/master/nn/pkt.py
+    """
+
+    def __init__(self, student_module_path, student_module_io, teacher_module_path, teacher_module_io, eps=0.0000001):
+        super().__init__()
+        self.student_module_path = student_module_path
+        self.student_module_io = student_module_io
+        self.teacher_module_path = teacher_module_path
+        self.teacher_module_io = teacher_module_io
+        self.eps = eps
+
+    def cosine_similarity_loss(self, student_outputs, teacher_outputs):
+        # Normalize each vector by its norm
+        norm_s = torch.sqrt(torch.sum(student_outputs ** 2, dim=1, keepdim=True))
+        student_outputs = student_outputs / (norm_s + self.eps)
+        student_outputs[student_outputs != student_outputs] = 0
+
+        norm_t = torch.sqrt(torch.sum(teacher_outputs ** 2, dim=1, keepdim=True))
+        teacher_outputs = teacher_outputs / (norm_t + self.eps)
+        teacher_outputs[teacher_outputs != teacher_outputs] = 0
+
+        # Calculate the cosine similarity
+        student_similarity = torch.mm(student_outputs, student_outputs.transpose(0, 1))
+        teacher_similarity = torch.mm(teacher_outputs, teacher_outputs.transpose(0, 1))
+
+        # Scale cosine similarity to 0..1
+        student_similarity = (student_similarity + 1.0) / 2.0
+        teacher_similarity = (teacher_similarity + 1.0) / 2.0
+
+        # Transform them into probabilities
+        student_similarity = student_similarity / torch.sum(student_similarity, dim=1, keepdim=True)
+        teacher_similarity = teacher_similarity / torch.sum(teacher_similarity, dim=1, keepdim=True)
+
+        # Calculate the KL-divergence
+        return torch.mean(teacher_similarity *
+                          torch.log((teacher_similarity + self.eps) / (student_similarity + self.eps)))
+
+    def forward(self, student_io_dict, teacher_io_dict):
+        student_penultimate_outputs = teacher_io_dict[self.student_module_path][self.student_module_io]
+        teacher_penultimate_outputs = student_io_dict[self.teacher_module_path][self.teacher_module_io]
+        return self.cosine_similarity_loss(student_penultimate_outputs, teacher_penultimate_outputs)
+
+
 def get_single_loss(single_criterion_config, params_config=None):
     loss_type = single_criterion_config['type']
     single_loss = SINGLE_LOSS_CLASS_DICT[loss_type](**single_criterion_config['params']) \
