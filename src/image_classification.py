@@ -74,11 +74,11 @@ def distill_one_epoch(distillation_box, device, epoch, log_freq):
     metric_logger.add_meter('lr', SmoothedValue(window_size=1, fmt='{value}'))
     metric_logger.add_meter('img/s', SmoothedValue(window_size=10, fmt='{value}'))
     header = 'Epoch: [{}]'.format(epoch)
-    for sample_batch, targets, cached_data, cache_file_paths in \
+    for sample_batch, targets, supp_dict in \
             metric_logger.log_every(distillation_box.train_data_loader, log_freq, header):
         start_time = time.time()
         sample_batch, targets = sample_batch.to(device), targets.to(device)
-        loss = distillation_box(sample_batch, targets, cached_data, cache_file_paths)
+        loss = distillation_box(sample_batch, targets, supp_dict)
         distillation_box.update_params(loss)
         batch_size = sample_batch.shape[0]
         metric_logger.update(loss=loss.item(), lr=distillation_box.optimizer.param_groups[0]['lr'])

@@ -100,7 +100,7 @@ def extract_outputs(model_info_dict):
 class DistillationBox(nn.Module):
     def setup_data_loaders(self, train_config):
         train_data_loader_config = train_config.get('train_data_loader', dict())
-        train_data_loader_config['cacheable'] = True
+        train_data_loader_config['requires_supp'] = True
         val_data_loader_config = train_config.get('val_data_loader', dict())
         train_data_loader, val_data_loader =\
             build_data_loaders(self.dataset_dict, [train_data_loader_config, val_data_loader_config], self.distributed)
@@ -238,7 +238,10 @@ class DistillationBox(nn.Module):
     def check_if_org_loss_required(self):
         return self.org_criterion is not None
 
-    def get_teacher_output(self, sample_batch, cached_data, cache_file_paths):
+    def get_teacher_output(self, sample_batch, supp_dict):
+        cached_data = supp_dict.get('cached_data', None)
+        cache_file_paths = supp_dict.get('cache_file_path', None)
+        # Use cached data if available
         if cached_data is not None and isinstance(cached_data, dict):
             device = sample_batch.device
             teacher_outputs = cached_data.get('teacher_outputs', None)
@@ -253,8 +256,8 @@ class DistillationBox(nn.Module):
             self.teacher_model.post_forward(self.teacher_info_dict)
 
         extracted_teacher_output_dict = extract_outputs(self.teacher_info_dict)
-        if isinstance(cached_data, (list, tuple)) \
-                and isinstance(cache_file_paths, (list, tuple)) and cache_file_paths[0] != '':
+        # Write cache files if output file paths (cache_file_paths) are given
+        if cache_file_paths is not None and isinstance(cache_file_paths, (list, tuple)):
             device = sample_batch.device
             cpu_device = torch.device('cpu')
             for i, (teacher_output, cache_file_path) in enumerate(zip(teacher_outputs.cpu(), cache_file_paths)):
@@ -270,9 +273,9 @@ class DistillationBox(nn.Module):
                 torch.save(cache_dict, cache_file_path)
         return teacher_outputs, extracted_teacher_output_dict
 
-    def forward(self, sample_batch, targets, cached_data=None, cache_file_paths=None):
+    def forward(self, sample_batch, targets, supp_dict):
         teacher_outputs, extracted_teacher_output_dict =\
-            self.get_teacher_output(sample_batch, cached_data=cached_data, cache_file_paths=cache_file_paths)
+            self.get_teacher_output(sample_batch, supp_dict=supp_dict)
         student_outputs = self.student_model(sample_batch)
         if isinstance(self.student_model, SpecialModule):
             self.student_model.post_forward(self.student_info_dict)
