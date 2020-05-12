@@ -1,5 +1,4 @@
 import sys
-from collections import abc
 
 import torch
 from torch import nn
@@ -7,94 +6,15 @@ from torch import nn
 from models.special import SpecialModule, get_special_module
 from myutils.common.file_util import make_parent_dirs
 from myutils.pytorch.func_util import get_optimizer, get_scheduler
-from myutils.pytorch.module_util import check_if_wrapped, get_module, freeze_module_params, unfreeze_module_params
+from myutils.pytorch.module_util import check_if_wrapped, freeze_module_params, unfreeze_module_params
 from tools.loss import KDLoss, get_single_loss, get_custom_loss
+from tools.util import redesign_model, set_hooks, wrap_model, change_device, extract_outputs
 from utils.dataset_util import build_data_loaders
-from utils.model_util import redesign_model, wrap_model
 
 try:
     from apex import amp
 except ImportError:
     amp = None
-
-
-def extract_module(org_model, sub_model, module_path):
-    if module_path.startswith('+'):
-        return get_module(sub_model, module_path[1:])
-    return get_module(org_model, module_path)
-
-
-def set_distillation_box_info(info_dict, module_path, **kwargs):
-    info_dict[module_path] = kwargs
-
-
-def register_forward_hook_with_dict(module, module_path, requires_input, requires_output, info_dict):
-    def forward_hook4input(self, func_input, func_output):
-        if isinstance(func_input, tuple) and len(func_input) == 1:
-            func_input = func_input[0]
-        info_dict[module_path]['input'] = func_input
-
-    def forward_hook4output(self, func_input, func_output):
-        info_dict[module_path]['output'] = func_output
-
-    def forward_hook4io(self, func_input, func_output):
-        if isinstance(func_input, tuple) and len(func_input) == 1:
-            func_input = func_input[0]
-        info_dict[module_path]['input'] = func_input
-        info_dict[module_path]['output'] = func_output
-
-    if requires_input and not requires_output:
-        return module.register_forward_hook(forward_hook4input)
-    elif not requires_input and requires_output:
-        return module.register_forward_hook(forward_hook4output)
-    elif requires_input and requires_output:
-        return module.register_forward_hook(forward_hook4io)
-    raise ValueError('Either requires_input or requires_output should be True')
-
-
-def set_hooks(model, unwrapped_org_model, model_config, info_dict):
-    pair_list = list()
-    forward_hook_config = model_config.get('forward_hook', dict())
-    if len(forward_hook_config) == 0:
-        return pair_list
-
-    input_module_path_set = set(forward_hook_config.get('input', list()))
-    output_module_path_set = set(forward_hook_config.get('output', list()))
-    for target_module_path in input_module_path_set.union(output_module_path_set):
-        requires_input = target_module_path in input_module_path_set
-        requires_output = target_module_path in output_module_path_set
-        set_distillation_box_info(info_dict, target_module_path)
-        target_module = extract_module(unwrapped_org_model, model, target_module_path)
-        handle = register_forward_hook_with_dict(target_module, target_module_path,
-                                                 requires_input, requires_output, info_dict)
-        pair_list.append((target_module_path, handle))
-    return pair_list
-
-
-def change_device(data, device):
-    elem_type = type(data)
-    if isinstance(data, torch.Tensor):
-        return data.to(device)
-    elif isinstance(data, tuple) and hasattr(data, '_fields'):  # namedtuple
-        return elem_type(*(change_device(samples, device) for samples in zip(*data)))
-    elif isinstance(data, (list, tuple)):
-        return elem_type(*(change_device(d, device) for d in data))
-    elif isinstance(data, abc.Mapping):
-        return {key: change_device(data[key], device) for key in data}
-    elif isinstance(data, abc.Sequence):
-        transposed = zip(*data)
-        return [change_device(samples, device) for samples in transposed]
-    return data
-
-
-def extract_outputs(model_info_dict):
-    model_output_dict = dict()
-    for module_path, model_io_dict in model_info_dict.items():
-        sub_model_io_dict = dict()
-        for key in list(model_io_dict.keys()):
-            sub_model_io_dict[key] = model_io_dict.pop(key)
-        model_output_dict[module_path] = sub_model_io_dict
-    return model_output_dict
 
 
 class DistillationBox(nn.Module):
@@ -273,13 +193,7 @@ class DistillationBox(nn.Module):
                 torch.save(cache_dict, cache_file_path)
         return teacher_outputs, extracted_teacher_output_dict
 
-    def forward(self, sample_batch, targets, supp_dict):
-        teacher_outputs, extracted_teacher_output_dict =\
-            self.get_teacher_output(sample_batch, supp_dict=supp_dict)
-        student_outputs = self.student_model(sample_batch)
-        if isinstance(self.student_model, SpecialModule):
-            self.student_model.post_forward(self.student_info_dict)
-
+    def get_org_loss_dict(self, student_outputs, teacher_outputs, targets, supp_dict):
         org_loss_dict = dict()
         if self.check_if_org_loss_required():
             # Models with auxiliary classifier returns multiple outputs
@@ -294,6 +208,16 @@ class DistillationBox(nn.Module):
                 org_loss = self.org_criterion(student_outputs, teacher_outputs, targets) if self.uses_teacher_output\
                     else self.org_criterion(student_outputs, targets)
                 org_loss_dict = {0: org_loss}
+        return org_loss_dict
+
+    def forward(self, sample_batch, targets, supp_dict):
+        teacher_outputs, extracted_teacher_output_dict =\
+            self.get_teacher_output(sample_batch, supp_dict=supp_dict)
+        student_outputs = self.student_model(sample_batch)
+        if isinstance(self.student_model, SpecialModule):
+            self.student_model.post_forward(self.student_info_dict)
+
+        org_loss_dict = self.get_org_loss_dict(student_outputs, teacher_outputs, targets, supp_dict)
 
         output_dict = {'teacher': extracted_teacher_output_dict,
                        'student': extract_outputs(self.student_info_dict)}
