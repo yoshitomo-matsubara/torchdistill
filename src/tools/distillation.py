@@ -194,23 +194,6 @@ class DistillationBox(nn.Module):
                 torch.save(cache_dict, cache_file_path)
         return teacher_outputs, extracted_teacher_output_dict
 
-    def get_org_loss_dict(self, student_outputs, teacher_outputs, targets, supp_dict):
-        org_loss_dict = dict()
-        if self.check_if_org_loss_required():
-            # Models with auxiliary classifier returns multiple outputs
-            if isinstance(student_outputs, (list, tuple)):
-                if self.uses_teacher_output:
-                    for i, sub_student_outputs, sub_teacher_outputs in enumerate(zip(student_outputs, teacher_outputs)):
-                        org_loss_dict[i] = self.org_criterion(sub_student_outputs, sub_teacher_outputs, targets)
-                else:
-                    for i, sub_outputs in enumerate(student_outputs):
-                        org_loss_dict[i] = self.org_criterion(sub_outputs, targets)
-            else:
-                org_loss = self.org_criterion(student_outputs, teacher_outputs, targets) if self.uses_teacher_output\
-                    else self.org_criterion(student_outputs, targets)
-                org_loss_dict = {0: org_loss}
-        return org_loss_dict
-
     def forward(self, sample_batch, targets, supp_dict):
         teacher_outputs, extracted_teacher_output_dict =\
             self.get_teacher_output(sample_batch, supp_dict=supp_dict)
@@ -218,8 +201,8 @@ class DistillationBox(nn.Module):
         if isinstance(self.student_model, SpecialModule):
             self.student_model.post_forward(self.student_info_dict)
 
-        org_loss_dict = self.extract_org_loss(self.org_criterion, student_outputs, teacher_outputs, targets, supp_dict,
-                                              uses_teacher_output=self.uses_teacher_output)
+        org_loss_dict = self.extract_org_loss(self.org_criterion, student_outputs, teacher_outputs, targets,
+                                              uses_teacher_output=self.uses_teacher_output, supp_dict=supp_dict)
         output_dict = {'teacher': extracted_teacher_output_dict,
                        'student': extract_outputs(self.student_info_dict)}
         total_loss = self.criterion(output_dict, org_loss_dict)
