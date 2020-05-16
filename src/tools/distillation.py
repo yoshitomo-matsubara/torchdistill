@@ -3,6 +3,7 @@ import sys
 import torch
 from torch import nn
 
+from misc.log import def_logger
 from models.special import SpecialModule, get_special_module
 from myutils.common.file_util import make_parent_dirs
 from myutils.pytorch.func_util import get_optimizer, get_scheduler
@@ -11,6 +12,7 @@ from tools.loss import KDLoss, get_single_loss, get_custom_loss, get_func2extrac
 from tools.util import redesign_model, set_hooks, wrap_model, change_device, extract_outputs
 from utils.dataset_util import build_data_loaders
 
+logger = def_logger.getChild(__name__)
 try:
     from apex import amp
 except ImportError:
@@ -99,11 +101,11 @@ class DistillationBox(nn.Module):
         self.student_model =\
             wrap_model(self.student_model, student_config, self.device, self.device_ids, self.distributed)
         if not teacher_config.get('requires_grad', True):
-            print('Freezing the whole teacher model')
+            logger.info('Freezing the whole teacher model')
             freeze_module_params(self.teacher_model)
 
         if not student_config.get('requires_grad', True):
-            print('Freezing the whole student model')
+            logger.info('Freezing the whole student model')
             freeze_module_params(self.student_model)
 
         # Set up optimizer and scheduler
@@ -243,7 +245,7 @@ class MultiStagesDistillationBox(DistillationBox):
         self.stage_end_epoch = stage1_config['num_epochs']
         self.num_epochs = sum(train_config[key]['num_epochs'] for key in train_config.keys() if key.startswith('stage'))
         self.current_epoch = 0
-        print('Started stage {}'.format(self.stage_number))
+        logger.info('Started stage {}'.format(self.stage_number))
 
     def advance_to_next_stage(self):
         self.clean_modules()
@@ -251,7 +253,7 @@ class MultiStagesDistillationBox(DistillationBox):
         next_stage_config = self.train_config['stage{}'.format(self.stage_number)]
         self.setup(next_stage_config)
         self.stage_end_epoch += next_stage_config['num_epochs']
-        print('Advanced to stage {}'.format(self.stage_number))
+        logger.info('Advanced to stage {}'.format(self.stage_number))
 
     def post_process(self, **kwargs):
         super().post_process()

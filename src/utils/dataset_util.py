@@ -5,15 +5,18 @@ from torch.utils.data.distributed import DistributedSampler
 from torchvision import transforms
 from torchvision.datasets import ImageFolder
 
+from misc.log import def_logger
 from wrappers.dataset import default_idx2subpath, BaseDatasetWrapper, CacheableDataset
+
+logger = def_logger.getChild(__name__)
 
 
 def load_image_folder_dataset(dir_path, data_aug, rough_size, input_size, normalizer, split_name):
     input_size = tuple(input_size)
-    # Data loading code
+    # Data loading
     st = time.time()
     if data_aug:
-        print('Loading {} data'.format(split_name))
+        logger.info('Loading {} data'.format(split_name))
         train_dataset = ImageFolder(
             dir_path,
             transforms.Compose([
@@ -22,10 +25,10 @@ def load_image_folder_dataset(dir_path, data_aug, rough_size, input_size, normal
                 transforms.ToTensor(),
                 normalizer,
             ]))
-        print('\t', time.time() - st)
+        logger.info('{} sec'.format(time.time() - st))
         return train_dataset
 
-    print('Loading {} data'.format(split_name))
+    logger.info('Loading {} data'.format(split_name))
     eval_dataset = ImageFolder(
         dir_path,
         transforms.Compose([
@@ -34,7 +37,7 @@ def load_image_folder_dataset(dir_path, data_aug, rough_size, input_size, normal
             transforms.ToTensor(),
             normalizer,
         ]))
-    print('\t', time.time() - st)
+    logger.info('{} sec'.format(time.time() - st))
     return eval_dataset
 
 

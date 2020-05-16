@@ -1,4 +1,5 @@
 import datetime
+import logging
 import time
 from collections import defaultdict, deque
 
@@ -6,6 +7,14 @@ import torch
 import torch.distributed as dist
 
 from utils import main_util
+
+logging.basicConfig(
+    format='%(asctime)s\t%(levelname)s\t%(name)s\t%(message)s',
+    datefmt='%Y/%m/%d %H:%M:%S',
+    level=logging.INFO,
+)
+def_logger = logging.getLogger('kdkit')
+logger = def_logger.getChild(__name__)
 
 
 class SmoothedValue(object):
@@ -107,7 +116,7 @@ class MetricLogger(object):
     def add_meter(self, name, meter):
         self.meters[name] = meter
 
-    def log_every(self, iterable, print_freq, header=None):
+    def log_every(self, iterable, log_freq, header=None):
         i = 0
         if not header:
             header = ''
@@ -142,17 +151,17 @@ class MetricLogger(object):
             data_time.update(time.time() - end)
             yield obj
             iter_time.update(time.time() - end)
-            if i % print_freq == 0:
+            if i % log_freq == 0:
                 eta_seconds = iter_time.global_avg * (len(iterable) - i)
                 eta_string = str(datetime.timedelta(seconds=int(eta_seconds)))
                 if torch.cuda.is_available():
-                    print(log_msg.format(
+                    logger.info(log_msg.format(
                         i, len(iterable), eta=eta_string,
                         meters=str(self),
                         time=str(iter_time), data=str(data_time),
                         memory=torch.cuda.max_memory_allocated() / MB))
                 else:
-                    print(log_msg.format(
+                    logger.info(log_msg.format(
                         i, len(iterable), eta=eta_string,
                         meters=str(self),
                         time=str(iter_time), data=str(data_time)))
@@ -162,4 +171,4 @@ class MetricLogger(object):
 
         total_time = time.time() - start_time
         total_time_str = str(datetime.timedelta(seconds=int(total_time)))
-        print('{} Total time: {}'.format(header, total_time_str))
+        logger.info('{} Total time: {}'.format(header, total_time_str))

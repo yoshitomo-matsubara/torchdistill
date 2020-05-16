@@ -6,9 +6,11 @@ import torch
 from PIL import Image
 from torchvision.transforms import functional
 
+from misc.log import def_logger
 from myutils.common import file_util
 from myutils.pytorch import tensor_util
 
+logger = def_logger.getChild(__name__)
 JpegCompressedTensor = namedtuple('JpegCompressedTensor', ['tensor_buffer', 'scale', 'zero_point'])
 CLASS_DICT = dict()
 
@@ -52,7 +54,7 @@ class JpegDecompressor(object):
 
     def decompress(self, jc_tensor):
         if self.prints_file_size:
-            print('{:.4f} [KB]'.format(file_util.get_binary_object_size(jc_tensor)))
+            logger.info('{:.4f} [KB]'.format(file_util.get_binary_object_size(jc_tensor)))
         img = Image.open(jc_tensor.tensor_buffer).convert('RGB')
         return jc_tensor.scale * (functional.to_tensor(img) * 255.0 - jc_tensor.zero_point)
 
@@ -62,7 +64,7 @@ class JpegDecompressor(object):
 
 def get_bottleneck_processor(class_name, *args, **kwargs):
     if class_name not in CLASS_DICT:
-        print('No bottleneck processor called `{}` is registered.'.format(class_name))
+        logger.info('No bottleneck processor called `{}` is registered.'.format(class_name))
         return None
 
     instance = CLASS_DICT[class_name](*args, **kwargs)

@@ -2,6 +2,9 @@ from collections import OrderedDict
 
 from torch import nn
 
+from misc.log import def_logger
+
+logger = def_logger.getChild(__name__)
 ADAPTATION_CLASS_DICT = dict()
 MODULE_CLASS_DICT = nn.__dict__
 
@@ -31,7 +34,7 @@ class ConvReg(nn.Sequential):
 
 def get_adaptation_module(class_name, *args, **kwargs):
     if class_name not in ADAPTATION_CLASS_DICT and class_name not in MODULE_CLASS_DICT:
-        print('No adaptation module called `{}` is registered.'.format(class_name))
+        logger.info('No adaptation module called `{}` is registered.'.format(class_name))
         return None
 
     if class_name in ADAPTATION_CLASS_DICT:
