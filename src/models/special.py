@@ -6,7 +6,9 @@ from torch import nn
 from models.official import get_vision_model
 from myutils.common import file_util
 from utils import main_util
+from utils.constant import def_logger
 
+logger = def_logger.getChild(__name__)
 SPECIAL_CLASS_DICT = dict()
 
 
@@ -154,7 +156,7 @@ class Student4FactorTransfer(SpecialModule):
 
 def get_special_module(class_name, *args, **kwargs):
     if class_name not in SPECIAL_CLASS_DICT:
-        print('No special module called `{}` is registered.'.format(class_name))
+        logger.info('No special module called `{}` is registered.'.format(class_name))
         return None
 
     instance = SPECIAL_CLASS_DICT[class_name](*args, **kwargs)

@@ -1,22 +1,19 @@
+import logging
 import os
 
 import torch
 import torch.distributed as dist
 
+from utils.constant import def_logger
+
+logger = def_logger.getChild(__name__)
+
 
 def setup_for_distributed(is_master):
     """
-    This function disables printing when not in master process
+    This function disables logging when not in master process
     """
-    import builtins as __builtin__
-    builtin_print = __builtin__.print
-
-    def print(*args, **kwargs):
-        force = kwargs.pop('force', False)
-        if is_master or force:
-            builtin_print(*args, **kwargs)
-
-    __builtin__.print = print
+    logger.setLevel(logging.INFO if is_master else logging.WARN)
 
 
 def is_dist_avail_and_initialized():
@@ -57,12 +54,12 @@ def init_distributed_mode(world_size=1, dist_url='env://'):
         rank = int(os.environ['SLURM_PROCID'])
         device_id = rank % torch.cuda.device_count()
     else:
-        print('Not using distributed mode')
+        logger.info('Not using distributed mode')
         return False, None
 
     torch.cuda.set_device(device_id)
     dist_backend = 'nccl'
-    print('| distributed init (rank {}): {}'.format(rank, dist_url), flush=True)
+    logger.info('| distributed init (rank {}): {}'.format(rank, dist_url), flush=True)
     torch.distributed.init_process_group(backend=dist_backend, init_method=dist_url,
                                          world_size=world_size, rank=rank)
     torch.distributed.barrier()

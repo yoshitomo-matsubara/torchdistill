@@ -8,20 +8,24 @@ from torch.backends import cudnn
 from torch.nn import DataParallel
 from torch.nn.parallel import DistributedDataParallel
 
-from misc.log import SmoothedValue, MetricLogger
+from misc.log import setup_log_file, SmoothedValue, MetricLogger
 from models import MODEL_DICT
 from models.official import get_image_classification_model
 from myutils.common import file_util, yaml_util
 from myutils.pytorch import module_util
 from tools.distillation import get_distillation_box
 from utils import dataset_util, main_util
+from utils.constant import def_logger
 from utils.eval_util import compute_accuracy
+
+logger = def_logger.getChild(__name__)
 
 
 def get_argparser():
     parser = argparse.ArgumentParser(description='Knowledge distillation for image classification models')
     parser.add_argument('--config', required=True, help='yaml file path')
     parser.add_argument('--device', default='cuda', help='device')
+    parser.add_argument('--log', help='log file path')
     parser.add_argument('--start_epoch', default=0, type=int, metavar='N', help='start epoch')
     parser.add_argument('-sync_bn', action='store_true', help='Use sync batch norm')
     parser.add_argument('-test_only', action='store_true', help='Only test the models')
@@ -34,18 +38,18 @@ def get_argparser():
 
 def load_ckpt(ckpt_file_path, model=None, optimizer=None, lr_scheduler=None, strict=True):
     if not file_util.check_if_exists(ckpt_file_path):
-        print('ckpt file is not found at `{}`'.format(ckpt_file_path))
+        logger.info('ckpt file is not found at `{}`'.format(ckpt_file_path))
         return None, None
 
     ckpt = torch.load(ckpt_file_path, map_location='cpu')
     if model is not None:
-        print('Loading model parameters')
+        logger.info('Loading model parameters')
         model.load_state_dict(ckpt['model'], strict=strict)
     if optimizer is not None:
-        print('Loading optimizer parameters')
+        logger.info('Loading optimizer parameters')
         optimizer.load_state_dict(ckpt['optimizer'])
     if lr_scheduler is not None:
-        print('Loading scheduler parameters')
+        logger.info('Loading scheduler parameters')
         lr_scheduler.load_state_dict(ckpt['lr_scheduler'])
     return ckpt.get('best_value', 0.0), ckpt.get('config', None), ckpt.get('args', None)
 
@@ -74,11 +78,11 @@ def distill_one_epoch(distillation_box, device, epoch, log_freq):
     metric_logger.add_meter('lr', SmoothedValue(window_size=1, fmt='{value}'))
     metric_logger.add_meter('img/s', SmoothedValue(window_size=10, fmt='{value}'))
     header = 'Epoch: [{}]'.format(epoch)
-    for sample_batch, targets, cached_data, cache_file_paths in \
+    for sample_batch, targets, supp_dict in \
             metric_logger.log_every(distillation_box.train_data_loader, log_freq, header):
         start_time = time.time()
         sample_batch, targets = sample_batch.to(device), targets.to(device)
-        loss = distillation_box(sample_batch, targets, cached_data, cache_file_paths)
+        loss = distillation_box(sample_batch, targets, supp_dict)
         distillation_box.update_params(loss)
         batch_size = sample_batch.shape[0]
         metric_logger.update(loss=loss.item(), lr=distillation_box.optimizer.param_groups[0]['lr'])
@@ -94,7 +98,7 @@ def evaluate(model, data_loader, device, device_ids, distributed, log_freq=1000,
         model = DataParallel(model, device_ids=device_ids)
 
     if title is not None:
-        print(title)
+        logger.info(title)
 
     num_threads = torch.get_num_threads()
     torch.set_num_threads(1)
@@ -116,13 +120,13 @@ def evaluate(model, data_loader, device, device_ids, distributed, log_freq=1000,
     metric_logger.synchronize_between_processes()
     top1_accuracy = metric_logger.acc1.global_avg
     top5_accuracy = metric_logger.acc5.global_avg
-    print(' * Acc@1 {:.4f}\tAcc@5 {:.4f}\n'.format(top1_accuracy, top5_accuracy))
+    logger.info(' * Acc@1 {:.4f}\tAcc@5 {:.4f}\n'.format(top1_accuracy, top5_accuracy))
     torch.set_num_threads(num_threads)
     return metric_logger.acc1.global_avg
 
 
 def distill(teacher_model, student_model, dataset_dict, device, device_ids, distributed, start_epoch, config, args):
-    print('Start knowledge distillation')
+    logger.info('Start knowledge distillation')
     train_config = config['train']
     distillation_box =\
         get_distillation_box(teacher_model, student_model, dataset_dict, train_config, device, device_ids, distributed)
@@ -141,8 +145,8 @@ def distill(teacher_model, student_model, dataset_dict, device, device_ids, dist
         val_top1_accuracy = evaluate(student_model, distillation_box.val_data_loader, device, device_ids, distributed,
                                      log_freq=log_freq, header='Validation:')
         if val_top1_accuracy > best_val_top1_accuracy and main_util.is_main_process():
-            print('Updating ckpt (Best top1 accuracy: {:.4f} -> {:.4f})'.format(best_val_top1_accuracy,
-                                                                                val_top1_accuracy))
+            logger.info('Updating ckpt (Best top1 accuracy: '
+                        '{:.4f} -> {:.4f})'.format(best_val_top1_accuracy, val_top1_accuracy))
             best_val_top1_accuracy = val_top1_accuracy
             save_ckpt(student_model_without_ddp, optimizer, lr_scheduler,
                       best_val_top1_accuracy, config, args, ckpt_file_path)
@@ -153,13 +157,17 @@ def distill(teacher_model, student_model, dataset_dict, device, device_ids, dist
 
     total_time = time.time() - start_time
     total_time_str = str(datetime.timedelta(seconds=int(total_time)))
-    print('Training time {}'.format(total_time_str))
+    logger.info('Training time {}'.format(total_time_str))
     distillation_box.clean_modules()
 
 
 def main(args):
+    log_file_path = args.log
+    if main_util.is_main_process() and log_file_path is not None:
+        setup_log_file(log_file_path)
+
     distributed, device_ids = main_util.init_distributed_mode(args.world_size, args.dist_url)
-    print(args)
+    logger.info(args)
     cudnn.benchmark = True
     config = yaml_util.load_yaml_file(args.config)
     device = torch.device(args.device)

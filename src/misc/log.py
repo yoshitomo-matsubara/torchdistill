@@ -1,11 +1,23 @@
 import datetime
 import time
 from collections import defaultdict, deque
+from logging import FileHandler, Formatter
 
 import torch
 import torch.distributed as dist
 
-from utils import main_util
+from myutils.common.file_util import make_parent_dirs
+from utils.constant import def_logger, LOGGING_FORMAT
+from utils.main_util import is_dist_avail_and_initialized
+
+logger = def_logger.getChild(__name__)
+
+
+def setup_log_file(log_file_path):
+    make_parent_dirs(log_file_path)
+    fh = FileHandler(filename=log_file_path, mode='w')
+    fh.setFormatter(Formatter(LOGGING_FORMAT))
+    def_logger.addHandler(fh)
 
 
 class SmoothedValue(object):
@@ -30,7 +42,7 @@ class SmoothedValue(object):
         """
         Warning: does not synchronize the deque!
         """
-        if not main_util.is_dist_avail_and_initialized():
+        if not is_dist_avail_and_initialized():
             return
 
         t = torch.tensor([self.count, self.total], dtype=torch.float64, device='cuda')
@@ -107,7 +119,7 @@ class MetricLogger(object):
     def add_meter(self, name, meter):
         self.meters[name] = meter
 
-    def log_every(self, iterable, print_freq, header=None):
+    def log_every(self, iterable, log_freq, header=None):
         i = 0
         if not header:
             header = ''
@@ -142,17 +154,17 @@ class MetricLogger(object):
             data_time.update(time.time() - end)
             yield obj
             iter_time.update(time.time() - end)
-            if i % print_freq == 0:
+            if i % log_freq == 0:
                 eta_seconds = iter_time.global_avg * (len(iterable) - i)
                 eta_string = str(datetime.timedelta(seconds=int(eta_seconds)))
                 if torch.cuda.is_available():
-                    print(log_msg.format(
+                    logger.info(log_msg.format(
                         i, len(iterable), eta=eta_string,
                         meters=str(self),
                         time=str(iter_time), data=str(data_time),
                         memory=torch.cuda.max_memory_allocated() / MB))
                 else:
-                    print(log_msg.format(
+                    logger.info(log_msg.format(
                         i, len(iterable), eta=eta_string,
                         meters=str(self),
                         time=str(iter_time), data=str(data_time)))
@@ -162,4 +174,4 @@ class MetricLogger(object):
 
         total_time = time.time() - start_time
         total_time_str = str(datetime.timedelta(seconds=int(total_time)))
-        print('{} Total time: {}'.format(header, total_time_str))
+        logger.info('{} Total time: {}'.format(header, total_time_str))
