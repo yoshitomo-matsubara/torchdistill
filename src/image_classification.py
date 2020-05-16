@@ -165,7 +165,7 @@ def main(args):
     log_file_path = args.log
     if main_util.is_main_process() and log_file_path is not None:
         file_util.make_parent_dirs(log_file_path)
-        logger.addHandler(FileHandler(filename=log_file_path))
+        def_logger.addHandler(FileHandler(filename=log_file_path))
 
     distributed, device_ids = main_util.init_distributed_mode(args.world_size, args.dist_url)
     logger.info(args)
