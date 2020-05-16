@@ -1,7 +1,6 @@
 import argparse
 import datetime
 import time
-from logging import FileHandler
 
 import torch
 from torch import distributed as dist
@@ -9,7 +8,7 @@ from torch.backends import cudnn
 from torch.nn import DataParallel
 from torch.nn.parallel import DistributedDataParallel
 
-from misc.log import SmoothedValue, MetricLogger
+from misc.log import setup_log_file, SmoothedValue, MetricLogger
 from models import MODEL_DICT
 from models.official import get_image_classification_model
 from myutils.common import file_util, yaml_util
@@ -165,8 +164,7 @@ def distill(teacher_model, student_model, dataset_dict, device, device_ids, dist
 def main(args):
     log_file_path = args.log
     if main_util.is_main_process() and log_file_path is not None:
-        file_util.make_parent_dirs(log_file_path)
-        def_logger.addHandler(FileHandler(filename=log_file_path))
+        setup_log_file(log_file_path)
 
     distributed, device_ids = main_util.init_distributed_mode(args.world_size, args.dist_url)
     logger.info(args)

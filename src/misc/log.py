@@ -1,14 +1,23 @@
 import datetime
 import time
 from collections import defaultdict, deque
+from logging import FileHandler, Formatter
 
 import torch
 import torch.distributed as dist
 
-from utils.constant import def_logger
+from myutils.common.file_util import make_parent_dirs
+from utils.constant import def_logger, LOGGING_FORMAT
 from utils.main_util import is_dist_avail_and_initialized
 
 logger = def_logger.getChild(__name__)
+
+
+def setup_log_file(log_file_path):
+    make_parent_dirs(log_file_path)
+    fh = FileHandler(filename=log_file_path)
+    fh.setFormatter(Formatter(LOGGING_FORMAT))
+    def_logger.addHandler(fh)
 
 
 class SmoothedValue(object):
