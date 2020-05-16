@@ -5,9 +5,9 @@ import torch
 from torch.nn import Sequential, DataParallel
 from torch.nn.parallel import DistributedDataParallel
 
-from misc.log import def_logger
 from models.adaptation import get_adaptation_module
 from myutils.pytorch.module_util import get_module, freeze_module_params, check_if_wrapped
+from utils.constant import def_logger
 
 logger = def_logger.getChild(__name__)
 

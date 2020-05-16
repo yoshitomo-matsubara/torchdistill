@@ -1,19 +1,13 @@
 import datetime
-import logging
 import time
 from collections import defaultdict, deque
 
 import torch
 import torch.distributed as dist
 
-from utils import main_util
+from utils.constant import def_logger
+from utils.main_util import is_dist_avail_and_initialized
 
-logging.basicConfig(
-    format='%(asctime)s\t%(levelname)s\t%(name)s\t%(message)s',
-    datefmt='%Y/%m/%d %H:%M:%S',
-    level=logging.INFO,
-)
-def_logger = logging.getLogger('kdkit')
 logger = def_logger.getChild(__name__)
 
 
@@ -39,7 +33,7 @@ class SmoothedValue(object):
         """
         Warning: does not synchronize the deque!
         """
-        if not main_util.is_dist_avail_and_initialized():
+        if not is_dist_avail_and_initialized():
             return
 
         t = torch.tensor([self.count, self.total], dtype=torch.float64, device='cuda')

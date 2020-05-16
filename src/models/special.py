@@ -3,10 +3,10 @@ import os
 import torch
 from torch import nn
 
-from misc.log import def_logger
 from models.official import get_vision_model
 from myutils.common import file_util
 from utils import main_util
+from utils.constant import def_logger
 
 logger = def_logger.getChild(__name__)
 SPECIAL_CLASS_DICT = dict()

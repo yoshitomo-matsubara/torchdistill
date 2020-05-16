@@ -9,13 +9,14 @@ from torch.backends import cudnn
 from torch.nn import DataParallel
 from torch.nn.parallel import DistributedDataParallel
 
-from misc.log import def_logger, SmoothedValue, MetricLogger
+from misc.log import SmoothedValue, MetricLogger
 from models import MODEL_DICT
 from models.official import get_image_classification_model
 from myutils.common import file_util, yaml_util
 from myutils.pytorch import module_util
 from tools.distillation import get_distillation_box
 from utils import dataset_util, main_util
+from utils.constant import def_logger
 from utils.eval_util import compute_accuracy
 
 logger = def_logger.getChild(__name__)
