@@ -15,7 +15,7 @@ logger = def_logger.getChild(__name__)
 
 def setup_log_file(log_file_path):
     make_parent_dirs(log_file_path)
-    fh = FileHandler(filename=log_file_path)
+    fh = FileHandler(filename=log_file_path, mode='w')
     fh.setFormatter(Formatter(LOGGING_FORMAT))
     def_logger.addHandler(fh)
 
