@@ -9,8 +9,8 @@ def compute_accuracy(outputs, targets, topk=(1,)):
         _, preds = outputs.topk(maxk, 1, True, True)
         preds = preds.t()
         corrects = preds.eq(targets[None])
-        ressult_list = []
+        result_list = []
         for k in topk:
             correct_k = corrects[:k].flatten().sum(dtype=torch.float32)
-            ressult_list.append(correct_k * (100.0 / batch_size))
-        return ressult_list
+            result_list.append(correct_k * (100.0 / batch_size))
+        return result_list
