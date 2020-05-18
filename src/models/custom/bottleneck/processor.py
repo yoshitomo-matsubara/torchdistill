@@ -6,9 +6,9 @@ import torch
 from PIL import Image
 from torchvision.transforms import functional
 
+from common.constant import def_logger
 from myutils.common import file_util
 from myutils.pytorch import tensor_util
-from utils.constant import def_logger
 
 logger = def_logger.getChild(__name__)
 JpegCompressedTensor = namedtuple('JpegCompressedTensor', ['tensor_buffer', 'scale', 'zero_point'])

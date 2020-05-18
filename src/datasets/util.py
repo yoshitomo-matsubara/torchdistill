@@ -5,8 +5,8 @@ from torch.utils.data.distributed import DistributedSampler
 from torchvision import transforms
 from torchvision.datasets import ImageFolder
 
-from utils.constant import def_logger
-from wrappers.dataset import default_idx2subpath, BaseDatasetWrapper, CacheableDataset
+from common.constant import def_logger
+from datasets.wrapper import default_idx2subpath, BaseDatasetWrapper, CacheableDataset
 
 logger = def_logger.getChild(__name__)
 

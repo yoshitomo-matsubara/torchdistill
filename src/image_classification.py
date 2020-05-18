@@ -8,15 +8,16 @@ from torch.backends import cudnn
 from torch.nn import DataParallel
 from torch.nn.parallel import DistributedDataParallel
 
+from common import main_util
+from common.constant import def_logger
+from common.eval_util import compute_accuracy
+from datasets import util
 from misc.log import setup_log_file, SmoothedValue, MetricLogger
 from models import MODEL_DICT
 from models.official import get_image_classification_model
 from myutils.common import file_util, yaml_util
 from myutils.pytorch import module_util
 from tools.distillation import get_distillation_box
-from utils import dataset_util, main_util
-from utils.constant import def_logger
-from utils.eval_util import compute_accuracy
 
 logger = def_logger.getChild(__name__)
 
@@ -171,7 +172,7 @@ def main(args):
     cudnn.benchmark = True
     config = yaml_util.load_yaml_file(args.config)
     device = torch.device(args.device)
-    dataset_dict = dataset_util.get_all_dataset(config['datasets'])
+    dataset_dict = util.get_all_dataset(config['datasets'])
     models_config = config['models']
     teacher_model_config = models_config['teacher_model']
     teacher_model = get_model(teacher_model_config, device, distributed, False)
@@ -186,8 +187,8 @@ def main(args):
 
     test_config = config['test']
     test_data_loader_config = test_config['test_data_loader']
-    test_data_loader = dataset_util.build_data_loader(dataset_dict[test_data_loader_config['dataset_id']],
-                                                      test_data_loader_config, distributed)
+    test_data_loader = util.build_data_loader(dataset_dict[test_data_loader_config['dataset_id']],
+                                              test_data_loader_config, distributed)
     if not args.student_only:
         evaluate(teacher_model, test_data_loader, device, device_ids, distributed,
                  title='[Teacher: {}]'.format(teacher_model_config['name']))

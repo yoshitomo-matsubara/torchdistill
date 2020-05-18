@@ -3,14 +3,14 @@ import sys
 import torch
 from torch import nn
 
+from common.constant import def_logger
+from datasets.util import build_data_loaders
 from models.special import SpecialModule, get_special_module
 from myutils.common.file_util import make_parent_dirs
 from myutils.pytorch.func_util import get_optimizer, get_scheduler
 from myutils.pytorch.module_util import check_if_wrapped, freeze_module_params, unfreeze_module_params
 from tools.loss import KDLoss, get_single_loss, get_custom_loss, get_func2extract_org_output
 from tools.util import redesign_model, set_hooks, wrap_model, change_device, extract_outputs
-from utils.constant import def_logger
-from utils.dataset_util import build_data_loaders
 
 logger = def_logger.getChild(__name__)
 try:

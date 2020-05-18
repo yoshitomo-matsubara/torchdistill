@@ -4,7 +4,7 @@ import os
 import torch
 import torch.distributed as dist
 
-from utils.constant import def_logger
+from common.constant import def_logger
 
 logger = def_logger.getChild(__name__)
 
