@@ -13,6 +13,7 @@ pyyaml = "*"
 scipy = "*"
 cython = "*"
 pycocotools = "*"
+matplotlib = "*"
 
 [requires]
 python_version = "3.6"
