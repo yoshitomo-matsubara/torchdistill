@@ -2,9 +2,11 @@ import os
 
 import torch
 from torch import nn
+from torch.jit.annotations import Tuple, List
 
 from common import main_util
 from common.constant import def_logger
+from models.util import redesign_model
 from models.official import get_vision_model
 from myutils.common import file_util
 
@@ -152,6 +154,28 @@ class Student4FactorTransfer(SpecialModule):
 
     def post_forward(self, info_dict):
         self.translator(info_dict[self.input_module_path]['output'])
+
+
+@register_special_module
+class HeadRCNN(SpecialModule):
+    """
+    Student for factor transfer proposed in "Paraphrasing Complex Network: Network Compression via Factor Transfer"
+    """
+
+    def __init__(self, ref_model, head_rcnn, **kwargs):
+        super().__init__()
+        self.transform = ref_model.transform
+        self.seq = redesign_model(ref_model, head_rcnn, 'R-CNN')
+
+    def forward(self, images, targets=None):
+        original_image_sizes = torch.jit.annotate(List[Tuple[int, int]], [])
+        for img in images:
+            val = img.shape[-2:]
+            assert len(val) == 2
+            original_image_sizes.append((val[0], val[1]))
+
+        images, targets = self.transform(images, targets)
+        return self.seq(images.tensors)
 
 
 def get_special_module(class_name, *args, **kwargs):

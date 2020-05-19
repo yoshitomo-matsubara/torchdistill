@@ -6,6 +6,7 @@ from torchvision import transforms
 from torchvision.datasets import ImageFolder
 
 from common.constant import def_logger
+from datasets.coco import ImageToTensor, Compose, CocoRandomHorizontalFlip, get_coco
 from datasets.wrapper import default_idx2subpath, BaseDatasetWrapper, CacheableDataset
 
 logger = def_logger.getChild(__name__)
@@ -41,19 +42,34 @@ def load_image_folder_dataset(dir_path, data_aug, rough_size, input_size, normal
     return eval_dataset
 
 
+def load_coco_dataset(img_dir_path, ann_file_path, annotated_only, random_horizontal_flip=None):
+    transform_list = [ImageToTensor()]
+    if random_horizontal_flip is not None:
+        transform_list.append(CocoRandomHorizontalFlip(random_horizontal_flip))
+    return get_coco(img_dir_path=img_dir_path, ann_file_path=ann_file_path,
+                    transforms=Compose(transform_list), annotated_only=annotated_only)
+
+
 def get_dataset_dict(dataset_config):
     dataset_type = dataset_config['type']
-    rough_size = dataset_config['rough_size']
-    input_size = dataset_config['input_size']
-    normalizer = transforms.Normalize(**dataset_config['normalizer'])
     dataset_dict = dict()
     if dataset_type == 'imagefolder':
+        rough_size = dataset_config['rough_size']
+        input_size = dataset_config['input_size']
+        normalizer = transforms.Normalize(**dataset_config['normalizer'])
         dataset_splits_config = dataset_config['splits']
         for split_name in dataset_splits_config.keys():
             split_config = dataset_splits_config[split_name]
             dataset_dict[split_config['dataset_id']] =\
                 load_image_folder_dataset(split_config['images'], split_config['data_aug'], rough_size,
                                           input_size, normalizer, split_name)
+    elif dataset_type == 'cocodetect':
+        dataset_splits_config = dataset_config['splits']
+        for split_name in dataset_splits_config.keys():
+            split_config = dataset_splits_config[split_name]
+            dataset_dict[split_config['dataset_id']] =\
+                load_coco_dataset(split_config['images'], split_config['annotations'],
+                                  split_config['annotated_only'], split_config['random_horizontal_flip'])
     else:
         raise ValueError('dataset_type `{}` is not expected'.format(dataset_type))
     return dataset_dict
