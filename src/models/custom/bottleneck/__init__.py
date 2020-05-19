@@ -1,1 +1,1 @@
-from models.custom.bottleneck import densenet, inception, resnet
+from models.custom.bottleneck import classification
