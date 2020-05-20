@@ -162,8 +162,9 @@ class HeadRCNN(SpecialModule):
     Student for factor transfer proposed in "Paraphrasing Complex Network: Network Compression via Factor Transfer"
     """
 
-    def __init__(self, ref_model, head_rcnn, **kwargs):
+    def __init__(self, head_rcnn, **kwargs):
         super().__init__()
+        ref_model = kwargs.get('student_model', kwargs['teacher_model'])
         self.transform = ref_model.transform
         self.seq = redesign_model(ref_model, head_rcnn, 'R-CNN')
 

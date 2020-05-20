@@ -65,21 +65,31 @@ train:
         num_workers: 16
     teacher:
         forward_proc: 'forward_batch'
-        sequential: ['conv1', 'bn1', 'relu', 'maxpool', 'layer1', 'layer2', 'layer3', 'layer4']
-        frozen_modules: []
+        sequential: []
+        special:
+            type: 'HeadRCNN'
+            params:
+                head_rcnn:
+                    sequential: ['backbone.body.conv1', 'backbone.body.bn1', 'backbone.body.relu', 'backbone.body.maxpool', 'backbone.body.layer1', 'backbone.body.layer2', 'backbone.body.layer3', 'backbone.body.layer4']
+        frozen_modules: ['seq.layer2', 'seq.layer3', 'seq.layer4']
         forward_hook:
             input: []
-            output: ['backbone.body.layer1', 'backbone.body.layer2', 'backbone.body.layer3', 'backbone.body.layer4']
+            output: ['seq.layer1', 'seq.layer2', 'seq.layer3', 'seq.layer4']
         wrapper:
         requires_grad: False
     student:
-        forward_proc: 'forward_batch_target'
+        forward_proc: 'forward_batch'
         adaptations:
-        sequential: ['bottleneck', 'layer3', 'layer4']
-        frozen_modules: ['layer3', 'layer4']
+        sequential: []
+        special:
+            type: 'HeadRCNN'
+            params:
+                head_rcnn:
+                    sequential: ['backbone.body.conv1', 'backbone.body.bn1', 'backbone.body.relu', 'backbone.body.maxpool', 'backbone.body.layer1', 'backbone.body.layer2', 'backbone.body.layer3', 'backbone.body.layer4']
+        frozen_modules: ['seq.layer2', 'seq.layer3', 'seq.layer4']
         forward_hook:
             input: []
-            output: ['backbone.body.layer1', 'backbone.body.layer2', 'backbone.body.layer3', 'backbone.body.layer4']
+            output: ['seq.layer1', 'seq.layer2', 'seq.layer3', 'seq.layer4']
         wrapper:
         requires_grad: True
     apex:
