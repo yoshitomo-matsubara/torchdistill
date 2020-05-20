@@ -18,6 +18,7 @@ datasets:
 models:
     teacher_model:
         name: &teacher_model_name 'fasterrcnn_resnet50_fpn'
+        forward_proc: 'forward_batch'
         params:
             pretrained: True
             progress: True
@@ -28,6 +29,7 @@ models:
         ckpt: !join ['./resource/ckpt/teacher/', *teacher_experiment, '.pt']
     student_model:
         name: &student_model_name 'custom_fasterrcnn_resnet_fpn'
+        forward_proc: 'forward_batch_target'
         params:
             pretrained: True
             progress: True
@@ -62,6 +64,7 @@ train:
         batch_size: 32
         num_workers: 16
     teacher:
+        forward_proc: 'forward_batch'
         sequential: ['conv1', 'bn1', 'relu', 'maxpool', 'layer1', 'layer2', 'layer3', 'layer4']
         frozen_modules: []
         forward_hook:
@@ -70,6 +73,7 @@ train:
         wrapper:
         requires_grad: False
     student:
+        forward_proc: 'forward_batch_target'
         adaptations:
         sequential: ['bottleneck', 'layer3', 'layer4']
         frozen_modules: ['layer3', 'layer4']

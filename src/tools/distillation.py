@@ -10,6 +10,7 @@ from models.util import redesign_model
 from myutils.common.file_util import make_parent_dirs
 from myutils.pytorch.func_util import get_optimizer, get_scheduler
 from myutils.pytorch.module_util import check_if_wrapped, freeze_module_params, unfreeze_module_params
+from tools.foward_proc import get_forward_proc_func
 from tools.loss import KDLoss, get_single_loss, get_custom_loss, get_func2extract_org_output
 from tools.util import set_hooks, wrap_model, change_device, extract_outputs
 
@@ -57,6 +58,8 @@ class DistillationBox(nn.Module):
                                                    teacher_config, self.teacher_info_dict))
         self.target_student_pairs.extend(set_hooks(self.student_model, student_ref_model,
                                                    student_config, self.student_info_dict))
+        self.teacher_forward_proc = get_forward_proc_func(teacher_config.get('forward_proc', None))
+        self.student_forward_proc = get_forward_proc_func(student_config.get('forward_proc', None))
 
     def setup_loss(self, train_config):
         criterion_config = train_config['criterion']
@@ -129,6 +132,7 @@ class DistillationBox(nn.Module):
         self.distributed = distributed
         self.teacher_model = None
         self.student_model = None
+        self.teacher_forward_proc, self.student_forward_proc = None, None
         self.target_teacher_pairs, self.target_student_pairs = list(), list()
         self.teacher_info_dict, self.student_info_dict = dict(), dict()
         self.train_data_loader, self.val_data_loader, self.optimizer, self.lr_scheduler = None, None, None, None
@@ -146,7 +150,7 @@ class DistillationBox(nn.Module):
     def check_if_org_loss_required(self):
         return self.org_criterion is not None
 
-    def get_teacher_output(self, sample_batch, supp_dict):
+    def get_teacher_output(self, sample_batch, targets, supp_dict):
         cached_data = supp_dict.get('cached_data', None)
         cache_file_paths = supp_dict.get('cache_file_path', None)
         # Use cached data if available
@@ -159,7 +163,7 @@ class DistillationBox(nn.Module):
                 extracted_teacher_output_dict = change_device(extracted_teacher_output_dict, device)
             return teacher_outputs, extracted_teacher_output_dict
 
-        teacher_outputs = self.teacher_model(sample_batch)
+        teacher_outputs = self.teacher_forward_proc(self.teacher_model, sample_batch, targets, supp_dict)
         if isinstance(self.teacher_model, SpecialModule):
             self.teacher_model.post_forward(self.teacher_info_dict)
 
@@ -183,8 +187,8 @@ class DistillationBox(nn.Module):
 
     def forward(self, sample_batch, targets, supp_dict):
         teacher_outputs, extracted_teacher_output_dict =\
-            self.get_teacher_output(sample_batch, supp_dict=supp_dict)
-        student_outputs = self.student_model(sample_batch)
+            self.get_teacher_output(sample_batch, targets, supp_dict=supp_dict)
+        student_outputs = self.student_forward_proc(self.student_model, sample_batch, targets, supp_dict)
         if isinstance(self.student_model, SpecialModule):
             self.student_model.post_forward(self.student_info_dict)
 
