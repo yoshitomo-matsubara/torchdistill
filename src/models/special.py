@@ -6,8 +6,8 @@ from torch.jit.annotations import Tuple, List
 
 from common import main_util
 from common.constant import def_logger
-from models.util import redesign_model
 from models.official import get_vision_model
+from models.util import redesign_model
 from myutils.common import file_util
 
 logger = def_logger.getChild(__name__)
@@ -185,3 +185,14 @@ def get_special_module(class_name, *args, **kwargs):
 
     instance = SPECIAL_CLASS_DICT[class_name](*args, **kwargs)
     return instance
+
+
+def build_special_module(model_config, **kwargs):
+    special_model_config = model_config.get('special', dict())
+    special_model_type = special_model_config.get('type', None)
+    if special_model_type is not None:
+        special_model_params_config = special_model_config.get('params', None)
+        if special_model_params_config is None:
+            special_model_params_config = dict()
+        return get_special_module(special_model_type, **kwargs, **special_model_params_config)
+    return None

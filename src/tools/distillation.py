@@ -5,7 +5,7 @@ from torch import nn
 
 from common.constant import def_logger
 from datasets.util import build_data_loaders
-from models.special import SpecialModule, get_special_module
+from models.special import SpecialModule, build_special_module
 from models.util import redesign_model
 from myutils.common.file_util import make_parent_dirs
 from myutils.pytorch.func_util import get_optimizer, get_scheduler
@@ -42,31 +42,15 @@ class DistillationBox(nn.Module):
         teacher_ref_model = unwrapped_org_teacher_model
         student_ref_model = unwrapped_org_student_model
         if len(teacher_config) > 0 or (len(teacher_config) == 0 and self.teacher_model is None):
-            special_teacher_model_config = teacher_config.get('special', dict())
-            special_teacher_model_type = special_teacher_model_config.get('type', None)
-            if special_teacher_model_type is not None:
-                special_teacher_model_params_config = special_teacher_model_config.get('params', None)
-                if special_teacher_model_params_config is None:
-                    special_teacher_model_params_config = dict()
-                special_teacher_model = get_special_module(special_teacher_model_type,
-                                                           teacher_model=unwrapped_org_teacher_model,
-                                                           **special_teacher_model_params_config)
-                if special_teacher_model is not None:
-                    teacher_ref_model = special_teacher_model
+            special_teacher_model = build_special_module(teacher_config, teacher_model=unwrapped_org_teacher_model)
+            if special_teacher_model is not None:
+                teacher_ref_model = special_teacher_model
             self.teacher_model = redesign_model(teacher_ref_model, teacher_config, 'teacher')
 
         if len(student_config) > 0 or (len(student_config) == 0 and self.student_model is None):
-            special_student_model_config = student_config.get('special', dict())
-            special_student_model_type = special_student_model_config.get('type', None)
-            if special_student_model_type is not None:
-                special_student_model_params_config = special_student_model_config.get('params', None)
-                if special_student_model_params_config is None:
-                    special_student_model_params_config = dict()
-                special_student_model = get_special_module(special_student_model_type,
-                                                           student_model=unwrapped_org_student_model,
-                                                           **special_student_model_params_config)
-                if special_student_model is not None:
-                    student_ref_model = special_student_model
+            special_student_model = build_special_module(student_config, student_model=unwrapped_org_student_model)
+            if special_student_model is not None:
+                student_ref_model = special_student_model
             self.student_model = redesign_model(student_ref_model, student_config, 'student')
 
         self.target_teacher_pairs.extend(set_hooks(self.teacher_model, teacher_ref_model,
