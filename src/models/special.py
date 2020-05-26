@@ -158,10 +158,6 @@ class Student4FactorTransfer(SpecialModule):
 
 @register_special_module
 class HeadRCNN(SpecialModule):
-    """
-    Student for factor transfer proposed in "Paraphrasing Complex Network: Network Compression via Factor Transfer"
-    """
-
     def __init__(self, head_rcnn, **kwargs):
         super().__init__()
         ref_model = kwargs.get('student_model', kwargs['teacher_model'])
