@@ -60,6 +60,7 @@ train:
             params:
                 aspect_ratio_group_factor: 3
                 batch_size: 32
+                collate_fn: 'coco_collate_fn'
         cache_output:
     val_data_loader:
         dataset_id: *coco_val

@@ -98,7 +98,7 @@ def build_data_loader(dataset, data_loader_config, distributed):
     batch_sampler = None if batch_sampler_config is None \
         else get_batch_sampler(dataset, batch_sampler_config['name'], sampler, **batch_sampler_config['params'])
     if batch_sampler is not None:
-        collate_fn = coco_collate_fn if batch_sampler.get('collate_fn', None) == 'coco_collate_fn' else None
+        collate_fn = coco_collate_fn if batch_sampler_config.get('collate_fn', None) == 'coco_collate_fn' else None
         return DataLoader(dataset, batch_sampler=batch_sampler, num_workers=num_workers, collate_fn=collate_fn)
     return DataLoader(dataset, batch_size=batch_size, sampler=sampler, num_workers=num_workers, pin_memory=True)
 
