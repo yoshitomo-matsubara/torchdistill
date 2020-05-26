@@ -70,7 +70,7 @@ def get_dataset_dict(dataset_config):
             split_config = dataset_splits_config[split_name]
             dataset_dict[split_config['dataset_id']] =\
                 load_coco_dataset(split_config['images'], split_config['annotations'],
-                                  split_config['annotated_only'], split_config['random_horizontal_flip'])
+                                  split_config['annotated_only'], split_config.get('random_horizontal_flip', None))
     else:
         raise ValueError('dataset_type `{}` is not expected'.format(dataset_type))
     return dataset_dict

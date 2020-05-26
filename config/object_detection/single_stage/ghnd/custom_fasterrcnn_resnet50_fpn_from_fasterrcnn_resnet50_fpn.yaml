@@ -9,6 +9,7 @@ datasets:
                 images: !join [*root_dir, '/train2017']
                 annotations: !join [*root_dir, '/annotations/instances_train2017.json']
                 annotated_only: True
+                random_horizontal_flip: 0.5
             val:
                 dataset_id: &coco_val !join [*dataset_name, '/val']
                 images: !join [*root_dir, '/val2017']
