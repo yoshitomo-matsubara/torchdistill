@@ -7,6 +7,7 @@ import torchvision
 from pycocotools import mask as coco_mask
 from pycocotools.coco import COCO
 from torchvision.transforms import functional
+import os
 
 
 def _flip_coco_person_keypoints(kps, width):
@@ -252,7 +253,7 @@ def get_coco_api_from_dataset(dataset):
 
 class CustomCocoDetection(torchvision.datasets.CocoDetection):
     def __init__(self, img_folder, ann_file, transforms=None):
-        super().__init__(img_folder, ann_file)
+        super().__init__(os.path.expanduser(img_folder), os.path.expanduser(ann_file))
         self.additional_transforms = transforms
 
     def __getitem__(self, index):
