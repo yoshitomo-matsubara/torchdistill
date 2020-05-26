@@ -20,7 +20,7 @@ def get_image_classification_model(model_config, distributed=False, sync_bn=Fals
 
 def get_object_detection_model(model_config):
     model_name = model_config['name']
-    if model_name not in models.__dict__:
+    if model_name not in models.detection.__dict__:
         return None
     return models.detection.__dict__[model_name](**model_config['params'])
 
