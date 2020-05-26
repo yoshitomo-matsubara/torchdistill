@@ -118,7 +118,8 @@ def evaluate(model, data_loader, device, device_ids, distributed, log_freq=1000,
 
     # gather the stats from all processes
     metric_logger.synchronize_between_processes()
-    logger.info('Averaged stats:', metric_logger)
+    avg_stats_str = 'Averaged stats: {}'.format(metric_logger)
+    logger.info(avg_stats_str)
     coco_evaluator.synchronize_between_processes()
 
     # accumulate predictions from all images
