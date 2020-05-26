@@ -81,7 +81,7 @@ def custom_resnet_fpn_backbone(backbone_name, backbone_params_config,
             else get_bottleneck_processor(decompressor_config['name'], **decompressor_config['params'])
 
         layer1_type = layer1_config['type']
-        if layer1_type == 'Bottleneck4SmallResNet' and backbone_name in {'resnet18', 'custom_resnet34'}:
+        if layer1_type == 'Bottleneck4SmallResNet' and backbone_name in {'custom_resnet18', 'custom_resnet34'}:
             layer1 = Bottleneck4SmallResNet(layer1_config['bottleneck_channel'], compressor, decompressor)
         elif layer1_type == 'Bottleneck4LargeResNet'\
                 and backbone_name in {'custom_resnet50', 'custom_resnet101', 'custom_resnet152'}:
