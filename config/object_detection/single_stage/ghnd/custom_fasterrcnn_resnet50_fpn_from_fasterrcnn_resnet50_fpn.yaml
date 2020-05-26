@@ -25,7 +25,6 @@ models:
             progress: True
             num_classes: 91
             pretrained_backbone: True
-            trainable_backbone_layers: 3
         experiment: &teacher_experiment !join [*dataset_name, '-', *teacher_model_name]
         ckpt: !join ['./resource/ckpt/teacher/', *teacher_experiment, '.pt']
     student_model:
