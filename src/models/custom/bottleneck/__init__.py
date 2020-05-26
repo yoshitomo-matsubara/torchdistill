@@ -1,1 +1,1 @@
-from models.custom.bottleneck import classification
+from models.custom.bottleneck import classification, detection
