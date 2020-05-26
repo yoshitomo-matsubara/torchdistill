@@ -8,7 +8,7 @@ verify_ssl = true
 [packages]
 torch = "==1.5.0"
 torchvision = "==0.6.0"
-numpy = "*"
+numpy = "==1.17.4"
 pyyaml = "*"
 scipy = "*"
 cython = "*"
