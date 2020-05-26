@@ -35,7 +35,6 @@ models:
             progress: True
             num_classes: 91
             pretrained_backbone: True
-            trainable_backbone_layers: 3
             backbone:
                 name: 'resnet50'
                 params:
