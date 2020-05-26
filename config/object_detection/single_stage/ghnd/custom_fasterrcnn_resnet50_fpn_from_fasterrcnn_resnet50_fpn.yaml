@@ -55,8 +55,12 @@ train:
     train_data_loader:
         dataset_id: *coco_train
         random_sample: True
-        batch_size: 32
         num_workers: 16
+        batch_sampler:
+            name: 'GroupedBatchSampler'
+            params:
+                aspect_ratio_group_factor: 3
+                batch_size: 32
         cache_output:
     val_data_loader:
         dataset_id: *coco_val

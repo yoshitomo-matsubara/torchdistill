@@ -10,7 +10,18 @@ from PIL import Image
 from torch.utils.data.sampler import BatchSampler, Sampler
 from torch.utils.model_zoo import tqdm
 
+from common.constant import def_logger
 
+logger = def_logger.getChild(__name__)
+BATCH_SAMPLER_CLASS_DICT = dict()
+
+
+def register_batch_sampler_class(cls):
+    BATCH_SAMPLER_CLASS_DICT[cls.__name__] = cls
+    return cls
+
+
+@register_batch_sampler_class
 class GroupedBatchSampler(BatchSampler):
     """
     Wraps another sampler to yield a mini-batch of indices.
@@ -87,10 +98,10 @@ class _SubsetSampler(Sampler):
 
 
 def _compute_aspect_ratios_slow(dataset, indices=None):
-    print('Your dataset doesn\'t support the fast path for '
-          'computing the aspect ratios, so will iterate over '
-          'the full dataset and load every image instead. '
-          'This might take some time...')
+    logger.info('Your dataset doesn\'t support the fast path for '
+                'computing the aspect ratios, so will iterate over '
+                'the full dataset and load every image instead. '
+                'This might take some time...')
     if indices is None:
         indices = range(len(dataset))
 
@@ -182,6 +193,18 @@ def create_aspect_ratio_groups(dataset, k=0):
     # count number of elements per group
     counts = np.unique(groups, return_counts=True)[1]
     fbins = [0] + bins + [np.inf]
-    print('Using {} as bins for aspect ratio quantization'.format(fbins))
-    print('Count of instances per bin: {}'.format(counts))
+    logger.info('Using {} as bins for aspect ratio quantization'.format(fbins))
+    logger.info('Count of instances per bin: {}'.format(counts))
     return groups
+
+
+def get_batch_sampler(dataset, class_name, *args, **kwargs):
+    if class_name not in BATCH_SAMPLER_CLASS_DICT or class_name != 'BatchSampler':
+        logger.info('No batch sampler called `{}` is registered.'.format(class_name))
+        return None
+
+    batch_sampler_cls = BatchSampler if class_name != 'BatchSampler' else BATCH_SAMPLER_CLASS_DICT[class_name]
+    if batch_sampler_cls == GroupedBatchSampler:
+        group_ids = create_aspect_ratio_groups(dataset, k=kwargs.pop('aspect_ratio_group_factor'))
+        return batch_sampler_cls(*args, group_ids, **kwargs)
+    return batch_sampler_cls(*args, **kwargs)

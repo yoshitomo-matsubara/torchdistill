@@ -6,7 +6,8 @@ from torchvision import transforms
 from torchvision.datasets import ImageFolder
 
 from common.constant import def_logger
-from datasets.coco import ImageToTensor, Compose, CocoRandomHorizontalFlip, get_coco
+from datasets.coco import ImageToTensor, Compose, CocoRandomHorizontalFlip, get_coco, coco_collate_fn
+from datasets.sampler import get_batch_sampler
 from datasets.wrapper import default_idx2subpath, BaseDatasetWrapper, CacheableDataset
 
 logger = def_logger.getChild(__name__)
@@ -93,6 +94,12 @@ def build_data_loader(dataset, data_loader_config, distributed):
 
     sampler = DistributedSampler(dataset) if distributed \
         else RandomSampler(dataset) if data_loader_config.get('random_sample', False) else SequentialSampler(dataset)
+    batch_sampler_config = data_loader_config.get('batch_sampler', None)
+    batch_sampler = None if batch_sampler_config is None \
+        else get_batch_sampler(dataset, batch_sampler_config['name'], sampler, **batch_sampler_config['params'])
+    if batch_sampler is not None:
+        collate_fn = coco_collate_fn if batch_sampler.get('collate_fn', None) == 'coco_collate_fn' else None
+        return DataLoader(dataset, batch_sampler=batch_sampler, num_workers=num_workers, collate_fn=collate_fn)
     return DataLoader(dataset, batch_size=batch_size, sampler=sampler, num_workers=num_workers, pin_memory=True)
 
 

@@ -276,3 +276,5 @@ def get_coco(img_dir_path, ann_file_path, transforms, annotated_only):
     return dataset
 
 
+def coco_collate_fn(batch):
+    return tuple(zip(*batch))
