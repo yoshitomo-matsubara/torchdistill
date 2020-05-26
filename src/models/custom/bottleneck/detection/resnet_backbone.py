@@ -87,7 +87,10 @@ def custom_resnet_fpn_backbone(backbone_name, backbone_params_config,
                 and backbone_name in {'custom_resnet50', 'custom_resnet101', 'custom_resnet152'}:
             layer1 = Bottleneck4LargeResNet(layer1_config['bottleneck_channel'], compressor, decompressor)
 
-    backbone = resnet.__dict__[backbone_name](
+    prefix = 'custom_'
+    start_idx = backbone_name.find(prefix) + len(prefix)
+    org_backbone_name = backbone_name[start_idx:] if backbone_name.startswith(prefix) else backbone_name
+    backbone = resnet.__dict__[org_backbone_name](
         pretrained=backbone_params_config.get('pretrained', False),
         norm_layer=norm_layer
     )
