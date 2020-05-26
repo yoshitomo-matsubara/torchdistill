@@ -186,3 +186,4 @@ test:
         random_sample: False
         batch_size: 1
         num_workers: 16
+        collate_fn: 'coco_collate_fn'
