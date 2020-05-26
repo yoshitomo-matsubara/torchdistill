@@ -85,7 +85,7 @@ def get_all_dataset(datasets_config):
 
 
 def build_data_loader(dataset, data_loader_config, distributed):
-    batch_size, num_workers = data_loader_config['batch_size'], data_loader_config['num_workers']
+    num_workers = data_loader_config['num_workers']
     cache_dir_path = data_loader_config.get('cache_output', None)
     if cache_dir_path is not None:
         dataset = CacheableDataset(dataset, cache_dir_path, idx2subpath_func=default_idx2subpath)
@@ -100,6 +100,8 @@ def build_data_loader(dataset, data_loader_config, distributed):
     collate_fn = coco_collate_fn if data_loader_config.get('collate_fn', None) == 'coco_collate_fn' else None
     if batch_sampler is not None:
         return DataLoader(dataset, batch_sampler=batch_sampler, num_workers=num_workers, collate_fn=collate_fn)
+
+    batch_size = data_loader_config['batch_size']
     return DataLoader(dataset, batch_size=batch_size, sampler=sampler,
                       num_workers=num_workers, collate_fn=collate_fn, pin_memory=True)
 
