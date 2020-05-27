@@ -9,7 +9,7 @@ import torchvision
 from PIL import Image
 from torch.utils.data.sampler import BatchSampler, Sampler
 from torch.utils.model_zoo import tqdm
-
+from datasets.wrapper import BaseDatasetWrapper
 from common.constant import def_logger
 
 logger = def_logger.getChild(__name__)
@@ -164,20 +164,21 @@ def _compute_aspect_ratios_subset_dataset(dataset, indices=None):
 
 
 def compute_aspect_ratios(dataset, indices=None):
-    if hasattr(dataset, 'get_height_and_width'):
-        return _compute_aspect_ratios_custom_dataset(dataset, indices)
+    target_dataset = dataset.org_dataset if isinstance(dataset, BaseDatasetWrapper) else dataset
+    if hasattr(target_dataset, 'get_height_and_width'):
+        return _compute_aspect_ratios_custom_dataset(target_dataset, indices)
 
-    if isinstance(dataset, torchvision.datasets.CocoDetection):
-        return _compute_aspect_ratios_coco_dataset(dataset, indices)
+    if isinstance(target_dataset, torchvision.datasets.CocoDetection):
+        return _compute_aspect_ratios_coco_dataset(target_dataset, indices)
 
-    if isinstance(dataset, torchvision.datasets.VOCDetection):
-        return _compute_aspect_ratios_voc_dataset(dataset, indices)
+    if isinstance(target_dataset, torchvision.datasets.VOCDetection):
+        return _compute_aspect_ratios_voc_dataset(target_dataset, indices)
 
-    if isinstance(dataset, torch.utils.data.Subset):
-        return _compute_aspect_ratios_subset_dataset(dataset, indices)
+    if isinstance(target_dataset, torch.utils.data.Subset):
+        return _compute_aspect_ratios_subset_dataset(target_dataset, indices)
 
     # slow path
-    return _compute_aspect_ratios_slow(dataset, indices)
+    return _compute_aspect_ratios_slow(target_dataset, indices)
 
 
 def _quantize(x, bins):
