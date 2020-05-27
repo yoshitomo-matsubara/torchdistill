@@ -97,7 +97,7 @@ def custom_resnet_fpn_backbone(backbone_name, backbone_params_config,
     if layer1 is not None:
         backbone.layer1 = layer1
 
-    trainable_layers = backbone_params_config.get('trainable_layers', 3)
+    trainable_layers = backbone_params_config.get('trainable_backbone_layers', 3)
     """
     Arguments:
         backbone_name (string): resnet architecture. Possible values are 'ResNet', 'resnet18', 'resnet34', 'resnet50',
