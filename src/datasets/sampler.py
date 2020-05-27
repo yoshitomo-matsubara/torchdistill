@@ -203,7 +203,7 @@ def get_batch_sampler(dataset, class_name, *args, **kwargs):
         logger.info('No batch sampler called `{}` is registered.'.format(class_name))
         return None
 
-    batch_sampler_cls = BatchSampler if class_name != 'BatchSampler' else BATCH_SAMPLER_CLASS_DICT[class_name]
+    batch_sampler_cls = BatchSampler if class_name == 'BatchSampler' else BATCH_SAMPLER_CLASS_DICT[class_name]
     if batch_sampler_cls == GroupedBatchSampler:
         group_ids = create_aspect_ratio_groups(dataset, k=kwargs.pop('aspect_ratio_group_factor'))
         return batch_sampler_cls(*args, group_ids, **kwargs)
