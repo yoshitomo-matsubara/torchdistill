@@ -60,13 +60,13 @@ train:
             name: 'GroupedBatchSampler'
             params:
                 aspect_ratio_group_factor: 3
-                batch_size: 32
+                batch_size: 4
         collate_fn: 'coco_collate_fn'
         cache_output:
     val_data_loader:
         dataset_id: *coco_val
         random_sample: False
-        batch_size: 32
+        batch_size: 1
         num_workers: 16
         collate_fn: 'coco_collate_fn'
     teacher:
