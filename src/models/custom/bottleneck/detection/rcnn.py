@@ -20,8 +20,7 @@ def custom_fasterrcnn_resnet_fpn(backbone, pretrained=True, progress=True,
 
     backbone_model = custom_resnet_fpn_backbone(backbone_name, backbone_params_config)
     model = FasterRCNN(backbone_model, num_classes, **kwargs)
-    if pretrained and backbone_name == 'resnet50':
-        state_dict = load_state_dict_from_url(model_urls['fasterrcnn_resnet50_fpn_coco'],
-                                              progress=progress)
+    if pretrained and backbone_name.endswith('resnet50'):
+        state_dict = load_state_dict_from_url(model_urls['fasterrcnn_resnet50_fpn_coco'], progress=progress)
         model.load_state_dict(state_dict, strict=False)
     return model
