@@ -147,9 +147,11 @@ def distill(teacher_model, student_model, dataset_dict, device, device_ids, dist
     for epoch in range(start_epoch, distillation_box.num_epochs):
         distillation_box.pre_process(epoch=epoch)
         distill_one_epoch(distillation_box, device, epoch, log_freq)
+        val_coco_evaluator =\
+            evaluate(student_model, distillation_box.val_data_loader, device, device_ids, distributed,
+                     log_freq=log_freq, header='Validation:')
         # Average Precision  (AP) @[ IoU=0.50:0.95 | area=   all | maxDets=100 ]
-        val_map = evaluate(student_model, distillation_box.val_data_loader, device, device_ids, distributed,
-                           log_freq=log_freq, header='Validation:')
+        val_map = val_coco_evaluator.coco_eval['bbox'].stats[0]
         if val_map > best_val_map and is_main_process():
             logger.info('Updating ckpt (Best BBox mAP: {:.4f} -> {:.4f})'.format(best_val_map, val_map))
             best_val_map = val_map
