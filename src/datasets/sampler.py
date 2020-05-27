@@ -199,7 +199,7 @@ def create_aspect_ratio_groups(dataset, k=0):
 
 
 def get_batch_sampler(dataset, class_name, *args, **kwargs):
-    if class_name not in BATCH_SAMPLER_CLASS_DICT or class_name != 'BatchSampler':
+    if class_name not in BATCH_SAMPLER_CLASS_DICT and class_name != 'BatchSampler':
         logger.info('No batch sampler called `{}` is registered.'.format(class_name))
         return None
 

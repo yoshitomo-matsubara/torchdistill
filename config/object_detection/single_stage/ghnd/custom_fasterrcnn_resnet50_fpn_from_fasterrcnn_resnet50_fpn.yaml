@@ -67,11 +67,6 @@ train:
         random_sample: False
         batch_size: 32
         num_workers: 16
-        batch_sampler:
-            name: 'GroupedBatchSampler'
-            params:
-                aspect_ratio_group_factor: 3
-                batch_size: 32
         collate_fn: 'coco_collate_fn'
     teacher:
         forward_proc: 'forward_batch'
