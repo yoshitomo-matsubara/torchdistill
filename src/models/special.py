@@ -160,7 +160,11 @@ class Student4FactorTransfer(SpecialModule):
 class HeadRCNN(SpecialModule):
     def __init__(self, head_rcnn, **kwargs):
         super().__init__()
-        ref_model = kwargs.get('student_model', kwargs['teacher_model'])
+        tmp_ref_model = kwargs.get('teacher_model', None)
+        ref_model = kwargs.get('student_model', tmp_ref_model)
+        if ref_model is None:
+            raise ValueError('Either student_model or teacher_model has to be given.')
+
         self.transform = ref_model.transform
         self.seq = redesign_model(ref_model, head_rcnn, 'R-CNN')
 

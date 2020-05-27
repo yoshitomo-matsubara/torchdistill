@@ -76,10 +76,10 @@ train:
             params:
                 head_rcnn:
                     sequential: ['backbone.body.conv1', 'backbone.body.bn1', 'backbone.body.relu', 'backbone.body.maxpool', 'backbone.body.layer1', 'backbone.body.layer2', 'backbone.body.layer3', 'backbone.body.layer4']
-        frozen_modules: ['seq.layer2', 'seq.layer3', 'seq.layer4']
+        frozen_modules: ['seq.backbone__attr__body__attr__layer2', 'seq.backbone__attr__body__attr__layer3', 'seq.backbone__attr__body__attr__layer4']
         forward_hook:
             input: []
-            output: ['seq.layer1', 'seq.layer2', 'seq.layer3', 'seq.layer4']
+            output: ['seq.backbone__attr__body__attr__layer1', 'seq.backbone__attr__body__attr__layer2', 'seq.backbone__attr__body__attr__layer3', 'seq.backbone__attr__body__attr__layer4']
         wrapper:
         requires_grad: False
     student:
@@ -91,10 +91,10 @@ train:
             params:
                 head_rcnn:
                     sequential: ['backbone.body.conv1', 'backbone.body.bn1', 'backbone.body.relu', 'backbone.body.maxpool', 'backbone.body.layer1', 'backbone.body.layer2', 'backbone.body.layer3', 'backbone.body.layer4']
-        frozen_modules: ['seq.layer2', 'seq.layer3', 'seq.layer4']
+        frozen_modules: ['seq.backbone__attr__body__attr__layer2', 'seq.backbone__attr__body__attr__layer3', 'seq.backbone__attr__body__attr__layer4']
         forward_hook:
             input: []
-            output: ['seq.layer1', 'seq.layer2', 'seq.layer3', 'seq.layer4']
+            output: ['seq.backbone__attr__body__attr__layer1', 'seq.backbone__attr__body__attr__layer2', 'seq.backbone__attr__body__attr__layer3', 'seq.backbone__attr__body__attr__layer4']
         wrapper:
         requires_grad: True
     apex:
@@ -122,11 +122,11 @@ train:
                 params:
                     input:
                         is_from_teacher: False
-                        module_path: 'backbone.body.layer1'
+                        module_path: 'seq.backbone__attr__body__attr__layer1'
                         io: 'output'
                     target:
                         is_from_teacher: True
-                        module_path: 'backbone.body.layer1'
+                        module_path: 'seq.backbone__attr__body__attr__layer1'
                         io: 'output'
                 factor: 1.0
             layer2:
@@ -137,11 +137,11 @@ train:
                 params:
                     input:
                         is_from_teacher: False
-                        module_path: 'backbone.body.layer2'
+                        module_path: 'seq.backbone__attr__body__attr__layer2'
                         io: 'output'
                     target:
                         is_from_teacher: True
-                        module_path: 'backbone.body.layer2'
+                        module_path: 'seq.backbone__attr__body__attr__layer2'
                         io: 'output'
                 factor: 1.0
             layer3:
@@ -152,11 +152,11 @@ train:
                 params:
                     input:
                         is_from_teacher: False
-                        module_path: 'backbone.body.layer3'
+                        module_path: 'seq.backbone__attr__body__attr__layer3'
                         io: 'output'
                     target:
                         is_from_teacher: True
-                        module_path: 'backbone.body.layer3'
+                        module_path: 'seq.backbone__attr__body__attr__layer3'
                         io: 'output'
                 factor: 1.0
             layer4:
@@ -167,11 +167,11 @@ train:
                 params:
                     input:
                         is_from_teacher: False
-                        module_path: 'backbone.body.layer4'
+                        module_path: 'seq.backbone__attr__body__attr__layer4'
                         io: 'output'
                     target:
                         is_from_teacher: True
-                        module_path: 'backbone.body.layer4'
+                        module_path: 'seq.backbone__attr__body__attr__layer4'
                         io: 'output'
                 factor: 1.0
 
