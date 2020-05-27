@@ -6,6 +6,7 @@ import torch
 from torch import distributed as dist
 from torch.backends import cudnn
 from torch.nn import DataParallel
+from torch.utils.data._utils.collate import default_collate
 from torch.nn.parallel import DistributedDataParallel
 from torchvision.models.detection.keypoint_rcnn import KeypointRCNN
 from torchvision.models.detection.mask_rcnn import MaskRCNN
@@ -59,6 +60,7 @@ def distill_one_epoch(distillation_box, device, epoch, log_freq):
         start_time = time.time()
         sample_batch = list(image.to(device) for image in sample_batch)
         targets = [{k: v.to(device) for k, v in t.items()} for t in targets]
+        supp_dict = default_collate(supp_dict)
         loss = distillation_box(sample_batch, targets, supp_dict)
         distillation_box.update_params(loss)
         batch_size = len(sample_batch)
@@ -102,7 +104,6 @@ def evaluate(model, data_loader, device, device_ids, distributed, log_freq=1000,
     for sample_batch, targets in metric_logger.log_every(data_loader, log_freq, header):
         sample_batch = list(image.to(device) for image in sample_batch)
         targets = [{k: v.to(device) for k, v in t.items()} for t in targets]
-
         torch.cuda.synchronize()
         model_time = time.time()
         outputs = model(sample_batch)
