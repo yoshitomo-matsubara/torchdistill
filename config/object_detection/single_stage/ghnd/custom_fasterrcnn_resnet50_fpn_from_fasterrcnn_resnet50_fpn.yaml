@@ -40,6 +40,7 @@ models:
                 params:
                     num_classes: 1000
                     pretrained: True
+                    trainable_backbone_layers: 5
                     layer1:
                         type: 'Bottleneck4LargeResNet'
                         bottleneck_channel: 3
@@ -76,7 +77,7 @@ train:
             params:
                 head_rcnn:
                     sequential: ['backbone.body.conv1', 'backbone.body.bn1', 'backbone.body.relu', 'backbone.body.maxpool', 'backbone.body.layer1', 'backbone.body.layer2', 'backbone.body.layer3', 'backbone.body.layer4']
-        frozen_modules: ['seq.backbone__attr__body__attr__layer2', 'seq.backbone__attr__body__attr__layer3', 'seq.backbone__attr__body__attr__layer4']
+        frozen_modules: []
         forward_hook:
             input: []
             output: ['seq.backbone__attr__body__attr__layer1', 'seq.backbone__attr__body__attr__layer2', 'seq.backbone__attr__body__attr__layer3', 'seq.backbone__attr__body__attr__layer4']
