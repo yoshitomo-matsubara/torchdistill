@@ -20,12 +20,11 @@ def add_submodule(module, module_path, module_dict):
         return
 
     next_module_path = '.'.join(module_names)
+    sub_module_dict = module_dict.get(module_name, None)
     if module_name not in module_dict:
         sub_module_dict = OrderedDict()
         module_dict[module_name] = sub_module_dict
-        add_submodule(module, next_module_path, sub_module_dict)
-    else:
-        add_submodule(module, next_module_path, module_dict[module_name])
+    add_submodule(module, next_module_path, sub_module_dict)
 
 
 def build_sequential_container(module_dict):
