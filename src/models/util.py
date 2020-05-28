@@ -1,12 +1,42 @@
 from collections import OrderedDict
 
-from torch.nn import Sequential
+from torch.nn import Module, Sequential
 
 from common.constant import def_logger
 from models.adaptation import get_adaptation_module
 from myutils.pytorch.module_util import get_module, freeze_module_params
 
 logger = def_logger.getChild(__name__)
+
+
+def add_submodule(module, module_path, module_dict):
+    module_names = module_path.split('.')
+    module_name = module_names.pop(0)
+    if len(module_names) == 0:
+        if module_name in module_dict:
+            raise KeyError('module_name `{}` is already used.'.format(module_name))
+
+        module_dict[module_name] = module
+        return
+
+    next_module_path = '.'.join(module_names)
+    if module_name not in module_dict:
+        sub_module_dict = OrderedDict()
+        module_dict[module_name] = sub_module_dict
+        add_submodule(module, next_module_path, sub_module_dict)
+    else:
+        add_submodule(module, next_module_path, module_dict[module_name])
+
+
+def build_sequential_container(module_dict):
+    for key in module_dict.keys():
+        value = module_dict[key]
+        if isinstance(value, OrderedDict):
+            value = build_sequential_container(value)
+            module_dict[key] = value
+        elif not isinstance(value, Module):
+            raise ValueError('module type `{}` is not expected'.format(type(value)))
+    return Sequential(module_dict)
 
 
 def redesign_model(org_model, model_config, model_label):
@@ -38,7 +68,5 @@ def redesign_model(org_model, model_config, model_label):
             module = get_module(org_model, module_path)
         if module_path in frozen_module_path_set:
             freeze_module_params(module)
-        module_dict[module_path.replace('.', '__attr__')] = module
-
-    model = Sequential(module_dict)
-    return model
+        add_submodule(module, module_path, module_dict)
+    return build_sequential_container(module_dict)
