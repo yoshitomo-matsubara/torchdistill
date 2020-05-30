@@ -1,6 +1,5 @@
 import logging
 
-PROJECT_NAME = 'kdkit'
 LOGGING_FORMAT = '%(asctime)s\t%(levelname)s\t%(name)s\t%(message)s'
 
 logging.basicConfig(
@@ -8,4 +7,4 @@ logging.basicConfig(
     datefmt='%Y/%m/%d %H:%M:%S',
     level=logging.INFO,
 )
-def_logger = logging.getLogger(PROJECT_NAME)
+def_logger = logging.getLogger()
