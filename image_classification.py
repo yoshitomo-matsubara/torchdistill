@@ -8,17 +8,17 @@ from torch.backends import cudnn
 from torch.nn import DataParallel
 from torch.nn.parallel import DistributedDataParallel
 
-from common import main_util
-from common.constant import def_logger
-from common.main_util import load_ckpt, save_ckpt
-from datasets import util
-from eval.classification import compute_accuracy
-from misc.log import setup_log_file, SmoothedValue, MetricLogger
-from models import MODEL_DICT
-from models.official import get_image_classification_model
+from kdkit.common import main_util
+from kdkit.common.constant import def_logger
+from kdkit.common.main_util import load_ckpt, save_ckpt
+from kdkit.datasets import util
+from kdkit.eval.classification import compute_accuracy
+from kdkit.misc.log import setup_log_file, SmoothedValue, MetricLogger
+from kdkit.models import MODEL_DICT
+from kdkit.models.official import get_image_classification_model
+from kdkit.tools.distillation import get_distillation_box
 from myutils.common import file_util, yaml_util
 from myutils.pytorch import module_util
-from tools.distillation import get_distillation_box
 
 logger = def_logger.getChild(__name__)
 

@@ -11,17 +11,17 @@ from torch.utils.data._utils.collate import default_collate
 from torchvision.models.detection.keypoint_rcnn import KeypointRCNN
 from torchvision.models.detection.mask_rcnn import MaskRCNN
 
-from common.constant import def_logger
-from common.main_util import is_main_process, init_distributed_mode, load_ckpt, save_ckpt
-from datasets import util
-from datasets.coco import get_coco_api_from_dataset
-from eval.coco import CocoEvaluator
-from misc.log import setup_log_file, SmoothedValue, MetricLogger
-from models import MODEL_DICT
-from models.official import get_object_detection_model
+from kdkit.common.constant import def_logger
+from kdkit.common.main_util import is_main_process, init_distributed_mode, load_ckpt, save_ckpt
+from kdkit.datasets import util
+from kdkit.datasets.coco import get_coco_api_from_dataset
+from kdkit.eval.coco import CocoEvaluator
+from kdkit.misc.log import setup_log_file, SmoothedValue, MetricLogger
+from kdkit.models import MODEL_DICT
+from kdkit.models.official import get_object_detection_model
+from kdkit.tools.distillation import get_distillation_box
 from myutils.common import file_util, yaml_util
 from myutils.pytorch import module_util
-from tools.distillation import get_distillation_box
 
 logger = def_logger.getChild(__name__)
 
