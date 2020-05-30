@@ -7,8 +7,8 @@ import torch
 import torch.distributed as dist
 
 from myutils.common.file_util import make_parent_dirs
-from utils.constant import def_logger, LOGGING_FORMAT
-from utils.main_util import is_dist_avail_and_initialized
+from common.constant import def_logger, LOGGING_FORMAT
+from common.main_util import is_dist_avail_and_initialized
 
 logger = def_logger.getChild(__name__)
 

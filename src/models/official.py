@@ -18,6 +18,13 @@ def get_image_classification_model(model_config, distributed=False, sync_bn=Fals
     return model
 
 
+def get_object_detection_model(model_config):
+    model_name = model_config['name']
+    if model_name not in models.detection.__dict__:
+        return None
+    return models.detection.__dict__[model_name](**model_config['params'])
+
+
 def get_vision_model(model_config):
     model_name = model_config['name']
     return OFFICIAL_MODEL_DICT[model_name](**model_config['params'])

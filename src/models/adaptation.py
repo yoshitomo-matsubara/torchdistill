@@ -2,7 +2,7 @@ from collections import OrderedDict
 
 from torch import nn
 
-from utils.constant import def_logger
+from common.constant import def_logger
 
 logger = def_logger.getChild(__name__)
 ADAPTATION_CLASS_DICT = dict()

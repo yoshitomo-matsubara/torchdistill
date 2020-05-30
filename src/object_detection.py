@@ -6,16 +6,19 @@ import torch
 from torch import distributed as dist
 from torch.backends import cudnn
 from torch.nn import DataParallel
+from torch.utils.data._utils.collate import default_collate
 from torch.nn.parallel import DistributedDataParallel
+from torchvision.models.detection.keypoint_rcnn import KeypointRCNN
+from torchvision.models.detection.mask_rcnn import MaskRCNN
 
-from common import main_util
 from common.constant import def_logger
-from common.main_util import load_ckpt, save_ckpt
+from common.main_util import is_main_process, init_distributed_mode, load_ckpt, save_ckpt
 from datasets import util
-from eval.classification import compute_accuracy
+from datasets.coco import get_coco_api_from_dataset
+from eval.coco import CocoEvaluator
 from misc.log import setup_log_file, SmoothedValue, MetricLogger
 from models import MODEL_DICT
-from models.official import get_image_classification_model
+from models.official import get_object_detection_model
 from myutils.common import file_util, yaml_util
 from myutils.pytorch import module_util
 from tools.distillation import get_distillation_box
@@ -24,12 +27,11 @@ logger = def_logger.getChild(__name__)
 
 
 def get_argparser():
-    parser = argparse.ArgumentParser(description='Knowledge distillation for image classification models')
+    parser = argparse.ArgumentParser(description='Knowledge distillation for object detection models')
     parser.add_argument('--config', required=True, help='yaml file path')
     parser.add_argument('--device', default='cuda', help='device')
     parser.add_argument('--log', help='log file path')
     parser.add_argument('--start_epoch', default=0, type=int, metavar='N', help='start epoch')
-    parser.add_argument('-sync_bn', action='store_true', help='Use sync batch norm')
     parser.add_argument('-test_only', action='store_true', help='Only test the models')
     parser.add_argument('-student_only', action='store_true', help='Test the student model only')
     # distributed training parameters
@@ -38,8 +40,8 @@ def get_argparser():
     return parser
 
 
-def get_model(model_config, device, distributed, sync_bn):
-    model = get_image_classification_model(model_config, distributed, sync_bn)
+def get_model(model_config, device):
+    model = get_object_detection_model(model_config)
     if model is None:
         model = MODEL_DICT[model_config['name']](**model_config['params'])
 
@@ -56,12 +58,27 @@ def distill_one_epoch(distillation_box, device, epoch, log_freq):
     for sample_batch, targets, supp_dict in \
             metric_logger.log_every(distillation_box.train_data_loader, log_freq, header):
         start_time = time.time()
-        sample_batch, targets = sample_batch.to(device), targets.to(device)
+        sample_batch = list(image.to(device) for image in sample_batch)
+        targets = [{k: v.to(device) for k, v in t.items()} for t in targets]
+        supp_dict = default_collate(supp_dict)
         loss = distillation_box(sample_batch, targets, supp_dict)
         distillation_box.update_params(loss)
-        batch_size = sample_batch.shape[0]
+        batch_size = len(sample_batch)
         metric_logger.update(loss=loss.item(), lr=distillation_box.optimizer.param_groups[0]['lr'])
         metric_logger.meters['img/s'].update(batch_size / (time.time() - start_time))
+
+
+def get_iou_types(model):
+    model_without_ddp = model
+    if isinstance(model, (DataParallel, DistributedDataParallel)):
+        model_without_ddp = model.module
+
+    iou_type_list = ['bbox']
+    if isinstance(model_without_ddp, MaskRCNN):
+        iou_type_list.append('segm')
+    if isinstance(model_without_ddp, KeypointRCNN):
+        iou_type_list.append('keypoints')
+    return iou_type_list
 
 
 @torch.no_grad()
@@ -75,28 +92,42 @@ def evaluate(model, data_loader, device, device_ids, distributed, log_freq=1000,
     if title is not None:
         logger.info(title)
 
-    num_threads = torch.get_num_threads()
+    n_threads = torch.get_num_threads()
+    # FIXME remove this and make paste_masks_in_image run on the GPU
     torch.set_num_threads(1)
+    cpu_device = torch.device('cpu')
     model.eval()
     metric_logger = MetricLogger(delimiter='  ')
-    for image, target in metric_logger.log_every(data_loader, log_freq, header):
-        image = image.to(device, non_blocking=True)
-        target = target.to(device, non_blocking=True)
-        output = model(image)
-        acc1, acc5 = compute_accuracy(output, target, topk=(1, 5))
-        # FIXME need to take into account that the datasets
-        # could have been padded in distributed setup
-        batch_size = image.shape[0]
-        metric_logger.meters['acc1'].update(acc1.item(), n=batch_size)
-        metric_logger.meters['acc5'].update(acc5.item(), n=batch_size)
+    coco = get_coco_api_from_dataset(data_loader.dataset)
+    iou_types = get_iou_types(model)
+    coco_evaluator = CocoEvaluator(coco, iou_types)
+    for sample_batch, targets in metric_logger.log_every(data_loader, log_freq, header):
+        sample_batch = list(image.to(device) for image in sample_batch)
+        targets = [{k: v.to(device) for k, v in t.items()} for t in targets]
+        torch.cuda.synchronize()
+        model_time = time.time()
+        outputs = model(sample_batch)
+
+        outputs = [{k: v.to(cpu_device) for k, v in t.items()} for t in outputs]
+        model_time = time.time() - model_time
+
+        res = {target['image_id'].item(): output for target, output in zip(targets, outputs)}
+        evaluator_time = time.time()
+        coco_evaluator.update(res)
+        evaluator_time = time.time() - evaluator_time
+        metric_logger.update(model_time=model_time, evaluator_time=evaluator_time)
 
     # gather the stats from all processes
     metric_logger.synchronize_between_processes()
-    top1_accuracy = metric_logger.acc1.global_avg
-    top5_accuracy = metric_logger.acc5.global_avg
-    logger.info(' * Acc@1 {:.4f}\tAcc@5 {:.4f}\n'.format(top1_accuracy, top5_accuracy))
-    torch.set_num_threads(num_threads)
-    return metric_logger.acc1.global_avg
+    avg_stats_str = 'Averaged stats: {}'.format(metric_logger)
+    logger.info(avg_stats_str)
+    coco_evaluator.synchronize_between_processes()
+
+    # accumulate predictions from all images
+    coco_evaluator.accumulate()
+    coco_evaluator.summarize()
+    torch.set_num_threads(n_threads)
+    return coco_evaluator
 
 
 def distill(teacher_model, student_model, dataset_dict, device, device_ids, distributed, start_epoch, config, args):
@@ -105,10 +136,10 @@ def distill(teacher_model, student_model, dataset_dict, device, device_ids, dist
     distillation_box =\
         get_distillation_box(teacher_model, student_model, dataset_dict, train_config, device, device_ids, distributed)
     ckpt_file_path = config['models']['student_model']['ckpt']
-    best_val_top1_accuracy = 0.0
+    best_val_map = 0.0
     optimizer, lr_scheduler = distillation_box.optimizer, distillation_box.lr_scheduler
     if file_util.check_if_exists(ckpt_file_path):
-        best_val_top1_accuracy, _, _ = load_ckpt(ckpt_file_path, optimizer=optimizer, lr_scheduler=lr_scheduler)
+        best_val_map, _, _ = load_ckpt(ckpt_file_path, optimizer=optimizer, lr_scheduler=lr_scheduler)
 
     log_freq = train_config['log_freq']
     student_model_without_ddp = student_model.module if module_util.check_if_wrapped(student_model) else student_model
@@ -116,14 +147,16 @@ def distill(teacher_model, student_model, dataset_dict, device, device_ids, dist
     for epoch in range(start_epoch, distillation_box.num_epochs):
         distillation_box.pre_process(epoch=epoch)
         distill_one_epoch(distillation_box, device, epoch, log_freq)
-        val_top1_accuracy = evaluate(student_model, distillation_box.val_data_loader, device, device_ids, distributed,
-                                     log_freq=log_freq, header='Validation:')
-        if val_top1_accuracy > best_val_top1_accuracy and main_util.is_main_process():
-            logger.info('Updating ckpt (Best top1 accuracy: '
-                        '{:.4f} -> {:.4f})'.format(best_val_top1_accuracy, val_top1_accuracy))
-            best_val_top1_accuracy = val_top1_accuracy
+        val_coco_evaluator =\
+            evaluate(student_model, distillation_box.val_data_loader, device, device_ids, distributed,
+                     log_freq=log_freq, header='Validation:')
+        # Average Precision  (AP) @[ IoU=0.50:0.95 | area=   all | maxDets=100 ]
+        val_map = val_coco_evaluator.coco_eval['bbox'].stats[0]
+        if val_map > best_val_map and is_main_process():
+            logger.info('Updating ckpt (Best BBox mAP: {:.4f} -> {:.4f})'.format(best_val_map, val_map))
+            best_val_map = val_map
             save_ckpt(student_model_without_ddp, optimizer, lr_scheduler,
-                      best_val_top1_accuracy, config, args, ckpt_file_path)
+                      best_val_map, config, args, ckpt_file_path)
         distillation_box.post_process()
 
     if distributed:
@@ -137,10 +170,10 @@ def distill(teacher_model, student_model, dataset_dict, device, device_ids, dist
 
 def main(args):
     log_file_path = args.log
-    if main_util.is_main_process() and log_file_path is not None:
+    if is_main_process() and log_file_path is not None:
         setup_log_file(log_file_path)
 
-    distributed, device_ids = main_util.init_distributed_mode(args.world_size, args.dist_url)
+    distributed, device_ids = init_distributed_mode(args.world_size, args.dist_url)
     logger.info(args)
     cudnn.benchmark = True
     config = yaml_util.load_yaml_file(args.config)
@@ -148,9 +181,9 @@ def main(args):
     dataset_dict = util.get_all_dataset(config['datasets'])
     models_config = config['models']
     teacher_model_config = models_config['teacher_model']
-    teacher_model = get_model(teacher_model_config, device, distributed, False)
+    teacher_model = get_model(teacher_model_config, device)
     student_model_config = models_config['student_model']
-    student_model = get_model(student_model_config, device, distributed, args.sync_bn)
+    student_model = get_model(student_model_config, device)
     start_epoch = args.start_epoch
     if not args.test_only:
         distill(teacher_model, student_model, dataset_dict, device, device_ids, distributed, start_epoch, config, args)

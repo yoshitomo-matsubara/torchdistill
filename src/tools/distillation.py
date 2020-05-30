@@ -3,14 +3,16 @@ import sys
 import torch
 from torch import nn
 
-from models.special import SpecialModule, get_special_module
+from common.constant import def_logger
+from datasets.util import build_data_loaders
+from models.special import SpecialModule, build_special_module
+from models.util import redesign_model
 from myutils.common.file_util import make_parent_dirs
 from myutils.pytorch.func_util import get_optimizer, get_scheduler
 from myutils.pytorch.module_util import check_if_wrapped, freeze_module_params, unfreeze_module_params
+from tools.foward_proc import get_forward_proc_func
 from tools.loss import KDLoss, get_single_loss, get_custom_loss, get_func2extract_org_output
-from tools.util import redesign_model, set_hooks, wrap_model, change_device, extract_outputs
-from utils.constant import def_logger
-from utils.dataset_util import build_data_loaders
+from tools.util import set_hooks, wrap_model, change_device, extract_outputs
 
 logger = def_logger.getChild(__name__)
 try:
@@ -41,37 +43,23 @@ class DistillationBox(nn.Module):
         teacher_ref_model = unwrapped_org_teacher_model
         student_ref_model = unwrapped_org_student_model
         if len(teacher_config) > 0 or (len(teacher_config) == 0 and self.teacher_model is None):
-            special_teacher_model_config = teacher_config.get('special', dict())
-            special_teacher_model_type = special_teacher_model_config.get('type', None)
-            if special_teacher_model_type is not None:
-                special_teacher_model_params_config = special_teacher_model_config.get('params', None)
-                if special_teacher_model_params_config is None:
-                    special_teacher_model_params_config = dict()
-                special_teacher_model = get_special_module(special_teacher_model_type,
-                                                           teacher_model=unwrapped_org_teacher_model,
-                                                           **special_teacher_model_params_config)
-                if special_teacher_model is not None:
-                    teacher_ref_model = special_teacher_model
+            special_teacher_model = build_special_module(teacher_config, teacher_model=unwrapped_org_teacher_model)
+            if special_teacher_model is not None:
+                teacher_ref_model = special_teacher_model
             self.teacher_model = redesign_model(teacher_ref_model, teacher_config, 'teacher')
 
         if len(student_config) > 0 or (len(student_config) == 0 and self.student_model is None):
-            special_student_model_config = student_config.get('special', dict())
-            special_student_model_type = special_student_model_config.get('type', None)
-            if special_student_model_type is not None:
-                special_student_model_params_config = special_student_model_config.get('params', None)
-                if special_student_model_params_config is None:
-                    special_student_model_params_config = dict()
-                special_student_model = get_special_module(special_student_model_type,
-                                                           student_model=unwrapped_org_student_model,
-                                                           **special_student_model_params_config)
-                if special_student_model is not None:
-                    student_ref_model = special_student_model
+            special_student_model = build_special_module(student_config, student_model=unwrapped_org_student_model)
+            if special_student_model is not None:
+                student_ref_model = special_student_model
             self.student_model = redesign_model(student_ref_model, student_config, 'student')
 
         self.target_teacher_pairs.extend(set_hooks(self.teacher_model, teacher_ref_model,
                                                    teacher_config, self.teacher_info_dict))
         self.target_student_pairs.extend(set_hooks(self.student_model, student_ref_model,
                                                    student_config, self.student_info_dict))
+        self.teacher_forward_proc = get_forward_proc_func(teacher_config.get('forward_proc', None))
+        self.student_forward_proc = get_forward_proc_func(student_config.get('forward_proc', None))
 
     def setup_loss(self, train_config):
         criterion_config = train_config['criterion']
@@ -144,6 +132,7 @@ class DistillationBox(nn.Module):
         self.distributed = distributed
         self.teacher_model = None
         self.student_model = None
+        self.teacher_forward_proc, self.student_forward_proc = None, None
         self.target_teacher_pairs, self.target_student_pairs = list(), list()
         self.teacher_info_dict, self.student_info_dict = dict(), dict()
         self.train_data_loader, self.val_data_loader, self.optimizer, self.lr_scheduler = None, None, None, None
@@ -161,7 +150,7 @@ class DistillationBox(nn.Module):
     def check_if_org_loss_required(self):
         return self.org_criterion is not None
 
-    def get_teacher_output(self, sample_batch, supp_dict):
+    def get_teacher_output(self, sample_batch, targets, supp_dict):
         cached_data = supp_dict.get('cached_data', None)
         cache_file_paths = supp_dict.get('cache_file_path', None)
         # Use cached data if available
@@ -174,7 +163,7 @@ class DistillationBox(nn.Module):
                 extracted_teacher_output_dict = change_device(extracted_teacher_output_dict, device)
             return teacher_outputs, extracted_teacher_output_dict
 
-        teacher_outputs = self.teacher_model(sample_batch)
+        teacher_outputs = self.teacher_forward_proc(self.teacher_model, sample_batch, targets, supp_dict)
         if isinstance(self.teacher_model, SpecialModule):
             self.teacher_model.post_forward(self.teacher_info_dict)
 
@@ -198,8 +187,8 @@ class DistillationBox(nn.Module):
 
     def forward(self, sample_batch, targets, supp_dict):
         teacher_outputs, extracted_teacher_output_dict =\
-            self.get_teacher_output(sample_batch, supp_dict=supp_dict)
-        student_outputs = self.student_model(sample_batch)
+            self.get_teacher_output(sample_batch, targets, supp_dict=supp_dict)
+        student_outputs = self.student_forward_proc(self.student_model, sample_batch, targets, supp_dict)
         if isinstance(self.student_model, SpecialModule):
             self.student_model.post_forward(self.student_info_dict)
 

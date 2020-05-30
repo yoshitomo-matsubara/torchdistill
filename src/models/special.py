@@ -2,11 +2,13 @@ import os
 
 import torch
 from torch import nn
+from torch.jit.annotations import Tuple, List
 
+from common import main_util
+from common.constant import def_logger
 from models.official import get_vision_model
+from models.util import redesign_model
 from myutils.common import file_util
-from utils import main_util
-from utils.constant import def_logger
 
 logger = def_logger.getChild(__name__)
 SPECIAL_CLASS_DICT = dict()
@@ -154,6 +156,29 @@ class Student4FactorTransfer(SpecialModule):
         self.translator(info_dict[self.input_module_path]['output'])
 
 
+@register_special_module
+class HeadRCNN(SpecialModule):
+    def __init__(self, head_rcnn, **kwargs):
+        super().__init__()
+        tmp_ref_model = kwargs.get('teacher_model', None)
+        ref_model = kwargs.get('student_model', tmp_ref_model)
+        if ref_model is None:
+            raise ValueError('Either student_model or teacher_model has to be given.')
+
+        self.transform = ref_model.transform
+        self.seq = redesign_model(ref_model, head_rcnn, 'R-CNN')
+
+    def forward(self, images, targets=None):
+        original_image_sizes = torch.jit.annotate(List[Tuple[int, int]], [])
+        for img in images:
+            val = img.shape[-2:]
+            assert len(val) == 2
+            original_image_sizes.append((val[0], val[1]))
+
+        images, targets = self.transform(images, targets)
+        return self.seq(images.tensors)
+
+
 def get_special_module(class_name, *args, **kwargs):
     if class_name not in SPECIAL_CLASS_DICT:
         logger.info('No special module called `{}` is registered.'.format(class_name))
@@ -161,3 +186,14 @@ def get_special_module(class_name, *args, **kwargs):
 
     instance = SPECIAL_CLASS_DICT[class_name](*args, **kwargs)
     return instance
+
+
+def build_special_module(model_config, **kwargs):
+    special_model_config = model_config.get('special', dict())
+    special_model_type = special_model_config.get('type', None)
+    if special_model_type is not None:
+        special_model_params_config = special_model_config.get('params', None)
+        if special_model_params_config is None:
+            special_model_params_config = dict()
+        return get_special_module(special_model_type, **kwargs, **special_model_params_config)
+    return None
