@@ -35,15 +35,15 @@ sh valpre.sh
 e.g., Teacher: ResNet-152, Student: AlexNet  
 a) Use GPU(s) for single training process
 ```
-pipenv run python src/image_classification.py --config config/image_classification/single_stage/kd/alexnet_from_resnet152.yaml
+pipenv run python image_classification.py --config config/image_classification/single_stage/kd/alexnet_from_resnet152.yaml
 ```  
 b) Use GPUs for multiple distributed training processes
 ```
-pipenv run python -m torch.distributed.launch --nproc_per_node=${NUM_GPUS} --use_env src/image_classification.py --world_size ${NUM_GPUS} --config config/image_classification/single_stage/kd/alexnet_from_resnet152.yaml
+pipenv run python -m torch.distributed.launch --nproc_per_node=${NUM_GPUS} --use_env image_classification.py --world_size ${NUM_GPUS} --config config/image_classification/single_stage/kd/alexnet_from_resnet152.yaml
 ```
 c) Use CPU
 ```
-pipenv run python src/image_classification.py --device cpu --config config/image_classification/single_stage/kd/alexnet_from_resnet152.yaml
+pipenv run python image_classification.py --device cpu --config config/image_classification/single_stage/kd/alexnet_from_resnet152.yaml
 ```  
 #### 1.4 Top 1 accuracy of student models
 | Teacher \\ Student    | AlexNet   | ResNet-18 |  
@@ -53,8 +53,8 @@ pipenv run python src/image_classification.py --device cpu --config config/image
 
 
 ## References
-- [:mag:](src/image_classification.py) [pytorch/vision/references/classification/](https://github.com/pytorch/vision/blob/master/references/classification/)
-- [:mag:](src/object_detection.py) [pytorch/vision/references/detection/](https://github.com/pytorch/vision/tree/master/references/detection/)
+- [:mag:](image_classification.py) [pytorch/vision/references/classification/](https://github.com/pytorch/vision/blob/master/references/classification/)
+- [:mag:](object_detection.py) [pytorch/vision/references/detection/](https://github.com/pytorch/vision/tree/master/references/detection/)
 - [:mag:](config/image_classification/single_stage/kd) Hinton, Geoffrey, Oriol Vinyals, and Jeff Dean. ["Distilling the Knowledge in a Neural Network"](https://fb56552f-a-62cb3a1a-s-sites.googlegroups.com/site/deeplearningworkshopnips2014/65.pdf?attachauth=ANoY7co8sQACDsEYLkP11zqEAxPgYHLwkdkDP9NHfEB6pzQOUPmfWf3cVrL3WE7PNyed-lrRsF7CY6Tcme5OEQ92CTSN4f8nDfJcgt71fPtAvcTvH5BpzF-2xPvLkPAvU9Ub8XvbySAPOsMKMWmGsXG2FS1_X1LJsUfuwKdQKYVVTtRfG5LHovLHIwv6kXd3mOkDKEH7YdoyYQqjSv6ku2KDjOpVQBt0lKGVPXeRdwUcD0mxDqCe4u8%3D&attredirects=1)
 - [:mag:](config/image_classification/multi_stage/fitnet) Adriana Romero, Nicolas Ballas, Samira Ebrahimi Kahou, Antoine Chassang, Carlo Gatta, and Yoshua Bengio. ["FitNets: Hints for Thin Deep Nets"](https://arxiv.org/abs/1412.6550)
 - [:mag:](config/image_classification/multi_stage/fsp) Junho Yim, Donggyu Joo, Jihoon Bae, and Junmo Kim. ["A Gift From Knowledge Distillation: Fast Optimization, Network Minimization and Transfer Learning"](http://openaccess.thecvf.com/content_cvpr_2017/html/Yim_A_Gift_From_CVPR_2017_paper.html)

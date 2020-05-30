@@ -1,3 +1,3 @@
-[submodule "src/myutils"]
-	path = src/myutils
+[submodule "myutils"]
+	path = myutils
 	url = https://github.com/yoshitomo-matsubara/myutils.git
