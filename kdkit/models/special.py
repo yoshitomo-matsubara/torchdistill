@@ -163,9 +163,9 @@ class Linear4CCKD(SpecialModule):
     "Correlation Congruence for Knowledge Distillation"
     """
 
-    def __init__(self, model, input_module_path, linear_params_config, **kwargs):
+    def __init__(self, input_module_path, linear_params_config, teacher_model=None, student_model=None, **kwargs):
         super().__init__()
-        self.model = model
+        self.model = teacher_model if teacher_model is not None else student_model
         self.input_module_path = input_module_path
         self.linear = nn.Linear(**linear_params_config)
 
