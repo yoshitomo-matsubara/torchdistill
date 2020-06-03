@@ -173,7 +173,8 @@ class Linear4CCKD(SpecialModule):
         return self.model(x)
 
     def post_forward(self, info_dict):
-        self.linear(info_dict[self.input_module_path]['output'])
+        flat_outputs = torch.flatten(info_dict[self.input_module_path]['output'], 1)
+        self.linear(flat_outputs)
 
 
 @register_special_module

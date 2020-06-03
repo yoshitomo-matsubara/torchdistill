@@ -111,8 +111,8 @@ train:
                 criterion:
                     type: 'CCKDLoss'
                     params:
-                        teacher_linear_path: 'model.layer4'
-                        student_linear_path: 'model.layer4'
+                        teacher_linear_path: 'model.avgpool'
+                        student_linear_path: 'model.avgpool'
                         reduction: 'batchmean'
                 factor: 0.003
 
