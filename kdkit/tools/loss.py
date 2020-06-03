@@ -183,6 +183,28 @@ class PKTLoss(nn.Module):
         return self.cosine_similarity_loss(student_penultimate_outputs, teacher_penultimate_outputs)
 
 
+@register_single_loss
+class CCKDLoss(nn.Module):
+    """
+    "Correlation Congruence for Knowledge Distillation"
+    Configure KDLoss in a yaml file to meet eq. (7), using GeneralizedCustomLoss
+    """
+    def __init__(self, student_linear_path, teacher_linear_path, reduction, **kwargs):
+        super().__init__()
+        self.student_linear_path = student_linear_path
+        self.teacher_linear_path = teacher_linear_path
+        self.reduction = reduction
+
+    def forward(self, student_io_dict, teacher_io_dict):
+        teacher_linear_outputs = teacher_io_dict[self.teacher_linear_path]['output']
+        student_linear_outputs = student_io_dict[self.student_linear_path]['output']
+        batch_size = teacher_linear_outputs.shape[0]
+        teacher_cc = torch.matmul(teacher_linear_outputs, torch.t(teacher_linear_outputs))
+        student_cc = torch.matmul(student_linear_outputs, torch.t(student_linear_outputs))
+        cc_loss = torch.dist(student_cc, teacher_cc, 2)
+        return cc_loss / (batch_size ** 2) if self.reduction == 'batchmean' else cc_loss
+
+
 def get_single_loss(single_criterion_config, params_config=None):
     loss_type = single_criterion_config['type']
     single_loss = SINGLE_LOSS_CLASS_DICT[loss_type](**single_criterion_config['params']) \
