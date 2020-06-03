@@ -51,12 +51,18 @@ train:
         num_workers: 16
     teacher:
         sequential: []
-        wrapper: 'DistributedDataParallel'
+        forward_hook:
+            input: []
+            output: ['layer4']
+        wrapper:
         requires_grad: False
     student:
         adaptations:
         sequential: []
-        wrapper: 'DistributedDataParallel'
+        forward_hook:
+            input: []
+            output: ['layer4']
+        wrapper:
         requires_grad: True
         frozen_modules: []
     apex:
