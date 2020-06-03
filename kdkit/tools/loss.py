@@ -1,6 +1,6 @@
 import torch
 from torch import nn
-from torch.nn.functional import adaptive_max_pool2d
+from torch.nn.functional import adaptive_max_pool2d, normalize
 
 from myutils.pytorch import func_util
 
@@ -203,6 +203,37 @@ class CCKDLoss(nn.Module):
         student_cc = torch.matmul(student_linear_outputs, torch.t(student_linear_outputs))
         cc_loss = torch.dist(student_cc, teacher_cc, 2)
         return cc_loss / (batch_size ** 2) if self.reduction == 'batchmean' else cc_loss
+
+
+@register_single_loss
+class SPKDLoss(nn.Module):
+    """
+    "Similarity-Preserving Knowledge Distillation"
+    """
+    def __init__(self, student_output_path, teacher_output_path, reduction, **kwargs):
+        super().__init__()
+        self.student_output_path = student_output_path
+        self.teacher_output_path = teacher_output_path
+        self.reduction = reduction
+
+    def matmul_and_normalize(self, z):
+        z = torch.flatten(z, 1)
+        mat = normalize(torch.matmul(z, torch.t(z)), 2)
+        return normalize(mat)
+
+    def compute_spkd_loss(self, teacher_output, student_output):
+        g_t = self.matmul_and_normalize(teacher_output)
+        g_s = self.matmul_and_normalize(student_output)
+        return torch.norm(g_t - g_s) ** 2
+
+    def forward(self, student_io_dict, teacher_io_dict):
+        teacher_outputs = teacher_io_dict[self.teacher_output_path]['output']
+        student_outputs = student_io_dict[self.student_output_path]['output']
+        batch_size = teacher_outputs.shape[0]
+        spkd_losses = [self.compute_spkd_loss(teacher_output, student_output)
+                       for teacher_output, student_output in zip(teacher_outputs, student_outputs)]
+        spkd_loss = sum(spkd_losses)
+        return spkd_loss / (batch_size ** 2) if self.reduction == 'batchmean' else spkd_loss
 
 
 def get_single_loss(single_criterion_config, params_config=None):
