@@ -157,6 +157,26 @@ class Student4FactorTransfer(SpecialModule):
 
 
 @register_special_module
+class Linear4CCKD(SpecialModule):
+    """
+    Fully-connected layer to cope with a mismatch of feature representations of teacher and student network for
+    "Correlation Congruence for Knowledge Distillation"
+    """
+
+    def __init__(self, model, input_module_path, linear_params_config, **kwargs):
+        super().__init__()
+        self.model = model
+        self.input_module_path = input_module_path
+        self.linear = nn.Linear(**linear_params_config)
+
+    def forward(self, x):
+        return self.student_model(x)
+
+    def post_forward(self, info_dict):
+        self.linear(info_dict[self.input_module_path]['output'])
+
+
+@register_special_module
 class HeadRCNN(SpecialModule):
     def __init__(self, head_rcnn, **kwargs):
         super().__init__()

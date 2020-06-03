@@ -46,6 +46,9 @@ class SimpleLossWrapper(nn.Module):
 
 @register_single_loss
 class KDLoss(nn.KLDivLoss):
+    """
+    "Distilling the Knowledge in a Neural Network"
+    """
     def __init__(self, temperature, alpha=None, reduction='batchmean', **kwargs):
         super().__init__(reduction=reduction)
         self.kldiv_loss = nn.KLDivLoss(reduction=reduction)
@@ -66,6 +69,9 @@ class KDLoss(nn.KLDivLoss):
 
 @register_single_loss
 class FSPLoss(nn.Module):
+    """
+    "A Gift From Knowledge Distillation: Fast Optimization, Network Minimization and Transfer Learning"
+    """
     def __init__(self, fsp_pairs, **kwargs):
         super().__init__()
         self.fsp_pairs = fsp_pairs
@@ -110,6 +116,9 @@ class FSPLoss(nn.Module):
 
 @register_single_loss
 class FTLoss(nn.Module):
+    """
+    "Paraphrasing Complex Network: Network Compression via Factor Transfer"
+    """
     def __init__(self, p=1, reduction='batchmean', paraphraser_path='paraphraser',
                  translator_path='translator', **kwargs):
         super().__init__()
@@ -130,6 +139,7 @@ class FTLoss(nn.Module):
 @register_single_loss
 class PKTLoss(nn.Module):
     """
+    "Paraphrasing Complex Network: Network Compression via Factor Transfer"
     Refactored https://github.com/passalis/probabilistic_kt/blob/master/nn/pkt.py
     """
 
