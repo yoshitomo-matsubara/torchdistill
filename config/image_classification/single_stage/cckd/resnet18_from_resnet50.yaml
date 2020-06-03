@@ -54,7 +54,7 @@ train:
         special:
             type: 'Linear4CCKD'
             params:
-                input_module_path: 'model.layer4'
+                input_module_path: 'model.avgpool'
                 linear_params_config:
                     in_features: 2048
                     out_features: 128
@@ -71,7 +71,7 @@ train:
         special:
             type: 'Linear4CCKD'
             params:
-                input_module_path: 'model.layer4'
+                input_module_path: 'model.avgpool'
                 linear_params_config:
                     in_features: 512
                     out_features: 128
