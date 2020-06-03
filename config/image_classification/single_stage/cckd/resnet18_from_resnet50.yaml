@@ -61,7 +61,7 @@ train:
                     bias: True
         forward_hook:
             input: []
-            output: ['model.avgpool']
+            output: ['model.avgpool', 'linear']
         wrapper:
         requires_grad: True
         frozen_modules: ['model']
@@ -78,7 +78,7 @@ train:
                     bias: True
         forward_hook:
             input: []
-            output: ['model.avgpool']
+            output: ['model.avgpool', 'linear']
         wrapper:
         requires_grad: True
         frozen_modules: []
@@ -111,8 +111,8 @@ train:
                 criterion:
                     type: 'CCKDLoss'
                     params:
-                        teacher_linear_path: 'model.avgpool'
-                        student_linear_path: 'model.avgpool'
+                        teacher_linear_path: 'linear'
+                        student_linear_path: 'linear'
                         reduction: 'batchmean'
                 factor: 0.003
 
