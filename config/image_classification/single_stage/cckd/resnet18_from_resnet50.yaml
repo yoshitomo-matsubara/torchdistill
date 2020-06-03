@@ -61,7 +61,7 @@ train:
                     bias: True
         forward_hook:
             input: []
-            output: ['model.layer4']
+            output: ['model.avgpool']
         wrapper:
         requires_grad: True
         frozen_modules: ['model']
@@ -78,7 +78,7 @@ train:
                     bias: True
         forward_hook:
             input: []
-            output: ['model.layer4']
+            output: ['model.avgpool']
         wrapper:
         requires_grad: True
         frozen_modules: []
