@@ -170,7 +170,7 @@ class Linear4CCKD(SpecialModule):
         self.linear = nn.Linear(**linear_params_config)
 
     def forward(self, x):
-        return self.student_model(x)
+        return self.model(x)
 
     def post_forward(self, info_dict):
         self.linear(info_dict[self.input_module_path]['output'])
