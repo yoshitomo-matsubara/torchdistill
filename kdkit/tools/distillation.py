@@ -88,9 +88,11 @@ class DistillationBox(nn.Module):
             wrap_model(self.teacher_model, teacher_config, self.device, self.device_ids, self.distributed)
         self.student_model =\
             wrap_model(self.student_model, student_config, self.device, self.device_ids, self.distributed)
+        teacher_updatable = True
         if not teacher_config.get('requires_grad', True):
             logger.info('Freezing the whole teacher model')
             freeze_module_params(self.teacher_model)
+            teacher_updatable = False
 
         if not student_config.get('requires_grad', True):
             logger.info('Freezing the whole student model')
@@ -99,8 +101,13 @@ class DistillationBox(nn.Module):
         # Set up optimizer and scheduler
         optim_config = train_config.get('optimizer', dict())
         optimizer_reset = False
+        trainable_module_list = nn.ModuleList([self.student_model])
+        if teacher_updatable:
+            logger.info('Note that you are training some/all of the modules in the teacher model')
+            trainable_module_list.append(self.teacher_model)
+
         if len(optim_config) > 0:
-            self.optimizer = get_optimizer(self.student_model, optim_config['type'], optim_config['params'])
+            self.optimizer = get_optimizer(trainable_module_list, optim_config['type'], optim_config['params'])
             optimizer_reset = True
 
         scheduler_config = train_config.get('scheduler', None)
