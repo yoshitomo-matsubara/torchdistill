@@ -280,21 +280,19 @@ class SPKDLoss(nn.Module):
 
     def matmul_and_normalize(self, z):
         z = torch.flatten(z, 1)
-        mat = normalize(torch.matmul(z, torch.t(z)), 2)
-        return normalize(mat)
+        return normalize(torch.matmul(z, torch.t(z)), 1)
 
-    def compute_spkd_loss(self, teacher_output, student_output):
-        g_t = self.matmul_and_normalize(teacher_output)
-        g_s = self.matmul_and_normalize(student_output)
+    def compute_spkd_loss(self, teacher_outputs, student_outputs):
+        g_t = self.matmul_and_normalize(teacher_outputs)
+        g_s = self.matmul_and_normalize(student_outputs)
         return torch.norm(g_t - g_s) ** 2
 
     def forward(self, student_io_dict, teacher_io_dict):
         teacher_outputs = teacher_io_dict[self.teacher_output_path]['output']
         student_outputs = student_io_dict[self.student_output_path]['output']
         batch_size = teacher_outputs.shape[0]
-        spkd_losses = [self.compute_spkd_loss(teacher_output, student_output)
-                       for teacher_output, student_output in zip(teacher_outputs, student_outputs)]
-        spkd_loss = sum(spkd_losses)
+        spkd_losses = self.compute_spkd_loss(teacher_outputs, student_outputs)
+        spkd_loss = spkd_losses.sum()
         return spkd_loss / (batch_size ** 2) if self.reduction == 'batchmean' else spkd_loss
 
 
