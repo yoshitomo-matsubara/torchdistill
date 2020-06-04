@@ -88,11 +88,11 @@ class DistillationBox(nn.Module):
             wrap_model(self.teacher_model, teacher_config, self.device, self.device_ids, self.distributed)
         self.student_model =\
             wrap_model(self.student_model, student_config, self.device, self.device_ids, self.distributed)
-        teacher_updatable = True
+        self.teacher_updatable = True
         if not teacher_config.get('requires_grad', True):
             logger.info('Freezing the whole teacher model')
             freeze_module_params(self.teacher_model)
-            teacher_updatable = False
+            self.teacher_updatable = False
 
         if not student_config.get('requires_grad', True):
             logger.info('Freezing the whole student model')
@@ -102,7 +102,7 @@ class DistillationBox(nn.Module):
         optim_config = train_config.get('optimizer', dict())
         optimizer_reset = False
         trainable_module_list = nn.ModuleList([self.student_model])
-        if teacher_updatable:
+        if self.teacher_updatable:
             logger.info('Note that you are training some/all of the modules in the teacher model')
             trainable_module_list.append(self.teacher_model)
 
@@ -144,6 +144,7 @@ class DistillationBox(nn.Module):
         self.teacher_info_dict, self.student_info_dict = dict(), dict()
         self.train_data_loader, self.val_data_loader, self.optimizer, self.lr_scheduler = None, None, None, None
         self.org_criterion, self.criterion, self.uses_teacher_output, self.extract_org_loss = None, None, None, None
+        self.teacher_updatable = None
         self.apex = None
         self.setup(train_config)
         self.num_epochs = train_config['num_epochs']
@@ -170,7 +171,12 @@ class DistillationBox(nn.Module):
                 extracted_teacher_output_dict = change_device(extracted_teacher_output_dict, device)
             return teacher_outputs, extracted_teacher_output_dict
 
-        teacher_outputs = self.teacher_forward_proc(self.teacher_model, sample_batch, targets, supp_dict)
+        if self.teacher_updatable:
+            teacher_outputs = self.teacher_forward_proc(self.teacher_model, sample_batch, targets, supp_dict)
+        else:
+            with torch.no_grad():
+                teacher_outputs = self.teacher_forward_proc(self.teacher_model, sample_batch, targets, supp_dict)
+
         if isinstance(self.teacher_model, SpecialModule):
             self.teacher_model.post_forward(self.teacher_info_dict)
 
