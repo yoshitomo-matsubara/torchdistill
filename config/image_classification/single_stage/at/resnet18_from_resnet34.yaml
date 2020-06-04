@@ -33,7 +33,7 @@ models:
             num_classes: 1000
             pretrained: True
         experiment: &student_experiment !join [*dataset_name, '-', *student_model_name, '_from_', *teacher_model_name]
-        ckpt: !join ['./resource/ckpt/multi_stage/fsp/', *student_experiment, '.pt']
+        ckpt: !join ['./resource/ckpt/single_stage/at/', *student_experiment, '.pt']
 
 train:
     log_freq: 1000
@@ -50,7 +50,7 @@ train:
         batch_size: 32
         num_workers: 16
     teacher:
-        sequential: ['conv1', 'relu', 'maxpool', 'layer1', 'layer2', 'layer3', 'layer4']
+        sequential: []
         forward_hook:
             input: []
             output: ['layer1', 'layer2', 'layer3', 'layer4']
@@ -58,7 +58,7 @@ train:
         requires_grad: False
     student:
         adaptations:
-        sequential: ['conv1', 'relu', 'maxpool', 'layer1', 'layer2', 'layer3', 'layer4']
+        sequential: []
         frozen_modules: []
         forward_hook:
             input: []
