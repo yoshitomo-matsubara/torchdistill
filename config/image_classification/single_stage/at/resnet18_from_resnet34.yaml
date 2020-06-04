@@ -118,7 +118,7 @@ train:
                                     output: 'layer4'
                                 factor: 1
                         reduction: 'mean'
-                factor: 1.0
+                factor: 1000.0
 
 test:
     test_data_loader:
