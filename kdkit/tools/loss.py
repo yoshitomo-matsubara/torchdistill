@@ -115,28 +115,6 @@ class FSPLoss(nn.Module):
 
 
 @register_single_loss
-class FTLoss(nn.Module):
-    """
-    "Paraphrasing Complex Network: Network Compression via Factor Transfer"
-    """
-    def __init__(self, p=1, reduction='batchmean', paraphraser_path='paraphraser',
-                 translator_path='translator', **kwargs):
-        super().__init__()
-        self.norm_loss = nn.L1Loss() if p == 1 else nn.MSELoss()
-        self.paraphraser_path = paraphraser_path
-        self.translator_path = translator_path
-        self.reduction = reduction
-
-    def forward(self, student_io_dict, teacher_io_dict):
-        paraphraser_flat_outputs = teacher_io_dict[self.paraphraser_path]['output'].flatten(1)
-        translator_flat_outputs = student_io_dict[self.translator_path]['output'].flatten(1)
-        batch_size = paraphraser_flat_outputs.shape[0]
-        ft_loss = self.norm_loss(paraphraser_flat_outputs / paraphraser_flat_outputs.norm(dim=1).unsqueeze(1),
-                                 translator_flat_outputs / translator_flat_outputs.norm(dim=1).unsqueeze(1))
-        return ft_loss / batch_size if self.reduction == 'batchmean' else ft_loss
-
-
-@register_single_loss
 class PKTLoss(nn.Module):
     """
     "Paraphrasing Complex Network: Network Compression via Factor Transfer"
@@ -181,6 +159,90 @@ class PKTLoss(nn.Module):
         student_penultimate_outputs = teacher_io_dict[self.student_module_path][self.student_module_io]
         teacher_penultimate_outputs = student_io_dict[self.teacher_module_path][self.teacher_module_io]
         return self.cosine_similarity_loss(student_penultimate_outputs, teacher_penultimate_outputs)
+
+
+@register_single_loss
+class FTLoss(nn.Module):
+    """
+    "Paraphrasing Complex Network: Network Compression via Factor Transfer"
+    """
+    def __init__(self, p=1, reduction='batchmean', paraphraser_path='paraphraser',
+                 translator_path='translator', **kwargs):
+        super().__init__()
+        self.norm_loss = nn.L1Loss() if p == 1 else nn.MSELoss()
+        self.paraphraser_path = paraphraser_path
+        self.translator_path = translator_path
+        self.reduction = reduction
+
+    def forward(self, student_io_dict, teacher_io_dict):
+        paraphraser_flat_outputs = teacher_io_dict[self.paraphraser_path]['output'].flatten(1)
+        translator_flat_outputs = student_io_dict[self.translator_path]['output'].flatten(1)
+        batch_size = paraphraser_flat_outputs.shape[0]
+        ft_loss = self.norm_loss(paraphraser_flat_outputs / paraphraser_flat_outputs.norm(dim=1).unsqueeze(1),
+                                 translator_flat_outputs / translator_flat_outputs.norm(dim=1).unsqueeze(1))
+        return ft_loss / batch_size if self.reduction == 'batchmean' else ft_loss
+
+
+@register_single_loss
+class RKDLoss(nn.Module):
+    """
+    "Relational Knowledge Distillation"
+    Refactored https://github.com/lenscloth/RKD/blob/master/metric/loss.py
+    """
+    def __init__(self, student_output_path, teacher_output_path, dist_factor, angle_factor, reduction, **kwargs):
+        super().__init__()
+        self.student_output_path = student_output_path
+        self.teacher_output_path = teacher_output_path
+        self.dist_factor = dist_factor
+        self.angle_factor = angle_factor
+        self.smooth_l1_loss = nn.SmoothL1Loss(reduction=reduction)
+
+    @staticmethod
+    def pdist(e, squared=False, eps=1e-12):
+        e_square = e.pow(2).sum(dim=1)
+        prod = e @ e.t()
+        res = (e_square.unsqueeze(1) + e_square.unsqueeze(0) - 2 * prod).clamp(min=eps)
+        if not squared:
+            res = res.sqrt()
+
+        res = res.clone()
+        res[range(len(e)), range(len(e))] = 0
+        return res
+
+    def compute_rkd_distance_loss(self, teacher_flat_outputs, student_flat_outputs):
+        if self.dist_factor is None or self.dist_factor == 0:
+            return 0
+
+        with torch.no_grad():
+            t_d = self.pdist(teacher_flat_outputs, squared=False)
+            mean_td = t_d[t_d > 0].mean()
+            t_d = t_d / mean_td
+
+        d = self.pdist(student_flat_outputs, squared=False)
+        mean_d = d[d > 0].mean()
+        d = d / mean_d
+        return self.smooth_l1_loss(d, t_d)
+
+    def compute_rkd_angle_loss(self, teacher_flat_outputs, student_flat_outputs):
+        if self.angle_factor is None or self.angle_factor == 0:
+            return 0
+
+        with torch.no_grad():
+            td = (teacher_flat_outputs.unsqueeze(0) - teacher_flat_outputs.unsqueeze(1))
+            norm_td = normalize(td, p=2, dim=2)
+            t_angle = torch.bmm(norm_td, norm_td.transpose(1, 2)).view(-1)
+
+        sd = (student_flat_outputs.unsqueeze(0) - student_flat_outputs.unsqueeze(1))
+        norm_sd = normalize(sd, p=2, dim=2)
+        s_angle = torch.bmm(norm_sd, norm_sd.transpose(1, 2)).view(-1)
+        return self.smooth_l1_loss(s_angle, t_angle)
+
+    def forward(self, student_io_dict, teacher_io_dict):
+        teacher_flat_outputs = teacher_io_dict[self.teacher_output_path]['output'].flatten(1)
+        student_flat_outputs = student_io_dict[self.student_output_path]['output'].flatten(1)
+        rkd_distance_loss = self.compute_rkd_distance_loss(teacher_flat_outputs, student_flat_outputs)
+        rkd_angle_loss = self.compute_rkd_angle_loss(teacher_flat_outputs, student_flat_outputs)
+        return self.dist_factor * rkd_distance_loss + self.angle_factor * rkd_angle_loss
 
 
 @register_single_loss
