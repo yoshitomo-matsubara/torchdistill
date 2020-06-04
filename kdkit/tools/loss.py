@@ -115,6 +115,45 @@ class FSPLoss(nn.Module):
 
 
 @register_single_loss
+class ATLoss(nn.Module):
+    """
+    "Paying More Attention to Attention: Improving the Performance of
+     Convolutional Neural Networks via Attention Transfer"
+    Refactored https://github.com/szagoruyko/attention-transfer/blob/master/utils.py
+    """
+    def __init__(self, at_pairs, reduction, **kwargs):
+        super().__init__()
+        self.at_pairs = at_pairs
+        self.reduction = reduction
+
+    @staticmethod
+    def extract_feature_map(io_dict, feature_map_config):
+        key = list(feature_map_config.keys())[0]
+        return io_dict[feature_map_config[key]][key]
+
+    @staticmethod
+    def attention_transfer(feature_map):
+        return normalize(feature_map.pow(2).mean(1).flatten(1))
+
+    def compute_at_loss(self, student_feature_map, teacher_feature_map):
+        at_teacher = self.attention_transfer(student_feature_map)
+        at_student = self.attention_transfer(teacher_feature_map)
+        return (at_teacher - at_student).pow(2).sum()
+
+    def forward(self, student_io_dict, teacher_io_dict):
+        at_loss = 0
+        batch_size = None
+        for pair_name, pair_config in self.at_pairs.items():
+            student_feature_map = self.extract_feature_map(student_io_dict, pair_config['student'])
+            teacher_feature_map = self.extract_feature_map(teacher_io_dict, pair_config['teacher'])
+            factor = pair_config.get('factor', 1)
+            at_loss += factor * self.compute_at_loss(student_feature_map, teacher_feature_map)
+            if batch_size is None:
+                batch_size = student_feature_map.shape[0]
+        return at_loss / batch_size if self.reduction == 'mean' else at_loss
+
+
+@register_single_loss
 class PKTLoss(nn.Module):
     """
     "Paraphrasing Complex Network: Network Compression via Factor Transfer"
