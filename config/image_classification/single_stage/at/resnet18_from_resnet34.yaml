@@ -69,9 +69,11 @@ train:
         requires: False
         opt_level: '01'
     optimizer:
-        type: 'Adam'
+        type: 'SGD'
         params:
             lr: 0.0001
+            momentum: 0.9
+            weight_decay: 0.0001
     scheduler:
         type: 'MultiStepLR'
         params:
