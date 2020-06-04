@@ -136,9 +136,9 @@ class ATLoss(nn.Module):
         return normalize(feature_map.pow(2).mean(1).flatten(1))
 
     def compute_at_loss(self, student_feature_map, teacher_feature_map):
-        at_teacher = self.attention_transfer(student_feature_map)
-        at_student = self.attention_transfer(teacher_feature_map)
-        return (at_teacher - at_student).pow(2).sum()
+        at_student = self.attention_transfer(student_feature_map)
+        at_teacher = self.attention_transfer(teacher_feature_map)
+        return (at_student - at_teacher).pow(2).sum()
 
     def forward(self, student_io_dict, teacher_io_dict):
         at_loss = 0
