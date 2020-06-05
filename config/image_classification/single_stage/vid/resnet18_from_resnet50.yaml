@@ -50,7 +50,7 @@ train:
         batch_size: 32
         num_workers: 16
     teacher:
-        sequential: ['conv1', 'relu', 'maxpool', 'layer1', 'layer2', 'layer3', 'layer4']
+        sequential: []
         forward_hook:
             input: []
             output: ['layer1', 'layer2', 'layer3', 'layer4']
