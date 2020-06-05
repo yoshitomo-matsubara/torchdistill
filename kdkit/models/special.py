@@ -190,17 +190,17 @@ class Connector4DAB(SpecialModule):
 
 
 class Regressor4VID(nn.Module):
-    def __init__(self, num_input_channels, num_middle_channels, num_output_channels, eps, init_pred_var, **kwargs):
+    def __init__(self, in_channels, middle_channels, out_channels, eps, init_pred_var, **kwargs):
         super().__init__()
         self.regressor = nn.Sequential(
-            nn.Conv2d(num_input_channels, num_middle_channels, kernel_size=1, stride=1, padding=0, bias=False),
+            nn.Conv2d(in_channels, middle_channels, kernel_size=1, stride=1, padding=0, bias=False),
             nn.ReLU(inplace=True),
-            nn.Conv2d(num_middle_channels, num_middle_channels, kernel_size=1, stride=1, padding=0, bias=False),
+            nn.Conv2d(middle_channels, middle_channels, kernel_size=1, stride=1, padding=0, bias=False),
             nn.ReLU(inplace=True),
-            nn.Conv2d(num_middle_channels, num_output_channels, kernel_size=1, stride=1, padding=0, bias=False),
+            nn.Conv2d(middle_channels, out_channels, kernel_size=1, stride=1, padding=0, bias=False),
         )
         self.soft_plus_param = \
-            nn.Parameter(torch.log(torch.exp(init_pred_var - eps) - 1.0) * torch.ones(num_output_channels))
+            nn.Parameter(torch.log(torch.exp(init_pred_var - eps) - 1.0) * torch.ones(out_channels))
         self.eps = eps
         self.init_pred_var = init_pred_var
 
