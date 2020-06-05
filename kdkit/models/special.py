@@ -200,13 +200,13 @@ class Regressor4VID(nn.Module):
             nn.Conv2d(middle_channels, out_channels, kernel_size=1, stride=1, padding=0, bias=False),
         )
         self.soft_plus_param = \
-            nn.Parameter(torch.log(torch.exp(init_pred_var - eps) - 1.0) * torch.ones(out_channels))
+            nn.Parameter(np.log(np.exp(init_pred_var - eps) - 1.0) * torch.ones(out_channels))
         self.eps = eps
         self.init_pred_var = init_pred_var
 
     def forward(self, student_feature_map):
         pred_mean = self.regressor(student_feature_map)
-        pred_var = np.log(1.0 + np.exp(self.soft_plus_param)) + self.eps
+        pred_var = torch.log(1.0 + torch.exp(self.soft_plus_param)) + self.eps
         pred_var = pred_var.view(1, -1, 1, 1)
         return pred_mean, pred_var
 
