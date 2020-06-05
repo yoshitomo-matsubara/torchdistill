@@ -185,7 +185,7 @@ class Connector4DAB(SpecialModule):
 
     def post_forward(self, info_dict):
         for connector_key, io_type, module_path in self.io_path_pairs:
-            self.connector_dict(info_dict[module_path][io_type])
+            self.connector_dict[connector_key](info_dict[module_path][io_type])
 
 
 @register_special_module
