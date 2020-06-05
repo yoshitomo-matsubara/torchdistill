@@ -100,7 +100,7 @@ def evaluate(model, data_loader, device, device_ids, distributed, log_freq=1000,
 
 
 def distill(teacher_model, student_model, dataset_dict, device, device_ids, distributed, start_epoch, config, args):
-    logger.info('Start knowledge distillation')
+    logger.info('Start distillation')
     train_config = config['train']
     distillation_box =\
         get_distillation_box(teacher_model, student_model, dataset_dict, train_config, device, device_ids, distributed)
