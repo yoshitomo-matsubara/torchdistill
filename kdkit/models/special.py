@@ -3,6 +3,7 @@ import os
 import torch
 from torch import nn
 from torch.jit.annotations import Tuple, List
+import numpy as np
 
 from kdkit.common import main_util
 from kdkit.common.constant import def_logger
@@ -186,6 +187,52 @@ class Connector4DAB(SpecialModule):
     def post_forward(self, info_dict):
         for connector_key, io_type, module_path in self.io_path_pairs:
             self.connector_dict[connector_key](info_dict[module_path][io_type])
+
+
+class Regressor4VID(nn.Module):
+    def __init__(self, num_input_channels, num_middle_channels, num_output_channels, eps, init_pred_var, **kwargs):
+        super().__init__()
+        self.regressor = nn.Sequential(
+            nn.Conv2d(num_input_channels, num_middle_channels, kernel_size=1, stride=1, padding=0, bias=False),
+            nn.ReLU(inplace=True),
+            nn.Conv2d(num_middle_channels, num_middle_channels, kernel_size=1, stride=1, padding=0, bias=False),
+            nn.ReLU(inplace=True),
+            nn.Conv2d(num_middle_channels, num_output_channels, kernel_size=1, stride=1, padding=0, bias=False),
+        )
+        self.soft_plus_param = \
+            nn.Parameter(torch.log(torch.exp(init_pred_var - eps) - 1.0) * torch.ones(num_output_channels))
+        self.eps = eps
+        self.init_pred_var = init_pred_var
+
+    def forward(self, student_feature_map):
+        pred_mean = self.regressor(student_feature_map)
+        pred_var = np.log(1.0 + np.exp(self.soft_plus_param)) + self.eps
+        pred_var = pred_var.view(1, -1, 1, 1)
+        return pred_mean, pred_var
+
+
+@register_special_module
+class VariationalDistributor4VID(SpecialModule):
+    """
+    "Variational Information Distillation for Knowledge Transfer"
+    """
+
+    def __init__(self, student_model, regressors, **kwargs):
+        super().__init__()
+        self.student_model = student_model
+        io_path_pairs = list()
+        self.regressor_dict = nn.ModuleDict()
+        for regressor_key, regressor_params in regressors.items():
+            self.regressor_dict[regressor_key] = Regressor4VID(**regressor_params)
+            io_path_pairs.append((regressor_key, regressor_params['io'], regressor_params['path']))
+        self.io_path_pairs = io_path_pairs
+
+    def forward(self, x):
+        return self.student_model(x)
+
+    def post_forward(self, info_dict):
+        for regressor_key, io_type, module_path in self.io_path_pairs:
+            self.regressor_dict[regressor_key](info_dict[module_path][io_type])
 
 
 @register_special_module

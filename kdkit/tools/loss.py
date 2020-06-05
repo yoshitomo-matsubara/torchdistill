@@ -313,6 +313,28 @@ class RKDLoss(nn.Module):
 
 
 @register_single_loss
+class VIDLoss(nn.Module):
+    """
+    "Variational Information Distillation for Knowledge Transfer"
+    Referred to https://github.com/HobbitLong/RepDistiller/blob/master/distiller_zoo/VID.py
+    """
+    def __init__(self, feature_pairs, reduction, **kwargs):
+        super().__init__()
+        self.feature_pairs = feature_pairs
+        self.reduction = reduction
+
+    def forward(self, student_io_dict, teacher_io_dict):
+        vid_loss = 0
+        for pair_name, pair_config in self.feature_pairs.items():
+            pred_mean, pred_var = extract_feature_map(student_io_dict, pair_config['student'])
+            teacher_feature_map = extract_feature_map(teacher_io_dict, pair_config['teacher'])
+            factor = pair_config.get('factor', 1)
+            neg_log_prob = 0.5 * ((pred_mean - teacher_feature_map) ** 2 / pred_var + torch.log(pred_var))
+            vid_loss += factor * neg_log_prob.mean()
+        return vid_loss
+
+
+@register_single_loss
 class CCKDLoss(nn.Module):
     """
     "Correlation Congruence for Knowledge Distillation"
