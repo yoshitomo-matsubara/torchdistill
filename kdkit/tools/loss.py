@@ -318,10 +318,9 @@ class VIDLoss(nn.Module):
     "Variational Information Distillation for Knowledge Transfer"
     Referred to https://github.com/HobbitLong/RepDistiller/blob/master/distiller_zoo/VID.py
     """
-    def __init__(self, feature_pairs, reduction, **kwargs):
+    def __init__(self, feature_pairs, **kwargs):
         super().__init__()
         self.feature_pairs = feature_pairs
-        self.reduction = reduction
 
     def forward(self, student_io_dict, teacher_io_dict):
         vid_loss = 0
