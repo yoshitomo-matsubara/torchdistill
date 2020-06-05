@@ -68,8 +68,8 @@ train:
                             io: 'output'
                             path: 'student_model.layer1'
                             conv_params:
-                                in_channels: 256
-                                out_channels: &och1 64
+                                in_channels: 64
+                                out_channels: &och1 256
                                 kernel_size: 1
                                 stride: 1
                                 padding: 0
@@ -80,8 +80,8 @@ train:
                             io: 'output'
                             path: 'student_model.layer2'
                             conv_params:
-                                in_channels: 512
-                                out_channels: &och2 128
+                                in_channels: 128
+                                out_channels: &och2 512
                                 kernel_size: 1
                                 stride: 1
                                 padding: 0
@@ -92,8 +92,8 @@ train:
                             io: 'output'
                             path: 'student_model.layer3'
                             conv_params:
-                                in_channels: 1024
-                                out_channels: &och3 256
+                                in_channels: 256
+                                out_channels: &och3 1024
                                 kernel_size: 1
                                 stride: 1
                                 padding: 0
@@ -104,8 +104,8 @@ train:
                             io: 'output'
                             path: 'student_model.layer4'
                             conv_params:
-                                in_channels: 2048
-                                out_channels: &och4 512
+                                in_channels: 512
+                                out_channels: &och4 2048
                                 kernel_size: 1
                                 stride: 1
                                 padding: 0
