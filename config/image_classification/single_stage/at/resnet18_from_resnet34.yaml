@@ -97,27 +97,35 @@ train:
                         at_pairs:
                             pair1:
                                 teacher:
-                                    output: 'layer1'
+                                    io: 'output'
+                                    path: 'layer1'
                                 student:
-                                    output: 'layer1'
+                                    io: 'output'
+                                    path: 'layer1'
                                 factor: 1
                             pair2:
                                 teacher:
-                                    output: 'layer2'
+                                    io: 'output'
+                                    path: 'layer2'
                                 student:
-                                    output: 'layer2'
+                                    io: 'output'
+                                    path: 'layer2'
                                 factor: 1
                             pair3:
                                 teacher:
-                                    output: 'layer3'
+                                    io: 'output'
+                                    path: 'layer3'
                                 student:
-                                    output: 'layer3'
+                                    io: 'output'
+                                    path: 'layer3'
                                 factor: 1
                             pair4:
                                 teacher:
-                                    output: 'layer4'
+                                    io: 'output'
+                                    path: 'layer4'
                                 student:
-                                    output: 'layer4'
+                                    io: 'output'
+                                    path: 'layer4'
                                 factor: 1
                         reduction: 'mean'
                 factor: 1000.0

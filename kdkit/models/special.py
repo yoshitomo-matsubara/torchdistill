@@ -157,6 +157,38 @@ class Student4FactorTransfer(SpecialModule):
 
 
 @register_special_module
+class Connector4DAB(SpecialModule):
+    """
+    Connector proposed in "Knowledge Transfer via Distillation of Activation Boundaries Formed by Hidden Neurons"
+    """
+
+    @staticmethod
+    def build_connector(conv_params_config, bn_params_config=None):
+        module_list = [nn.Conv2d(**conv_params_config)]
+        if bn_params_config is not None and len(bn_params_config) > 0:
+            module_list.append(nn.BatchNorm2d(**bn_params_config))
+        return nn.Sequential(*module_list)
+
+    def __init__(self, student_model, connectors, **kwargs):
+        super().__init__()
+        self.student_model = student_model
+        io_path_pairs = list()
+        self.connector_dict = nn.ModuleDict()
+        for connector_key, connector_params in connectors.items():
+            self.connector_dict[connector_key] = \
+                self.build_connector(connector_params['conv_params'], connector_params.get('bn_params', None))
+            io_path_pairs.append((connector_key, connector_params['io'], connector_params['path']))
+        self.io_path_pairs = io_path_pairs
+
+    def forward(self, x):
+        return self.student_model(x)
+
+    def post_forward(self, info_dict):
+        for connector_key, io_type, module_path in self.io_path_pairs:
+            self.connector_dict(info_dict[module_path][io_type])
+
+
+@register_special_module
 class Linear4CCKD(SpecialModule):
     """
     Fully-connected layer to cope with a mismatch of feature representations of teacher and student network for

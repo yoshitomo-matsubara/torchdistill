@@ -19,6 +19,12 @@ def register_custom_loss(cls):
     return cls
 
 
+def extract_feature_map(io_dict, feature_map_config):
+    io_type = feature_map_config['io']
+    module_path = feature_map_config['path']
+    return io_dict[module_path][io_type]
+
+
 class SimpleLossWrapper(nn.Module):
     def __init__(self, single_loss, params_config):
         super().__init__()
@@ -77,11 +83,6 @@ class FSPLoss(nn.Module):
         self.fsp_pairs = fsp_pairs
 
     @staticmethod
-    def extract_feature_map(io_dict, feature_map_config):
-        key = list(feature_map_config.keys())[0]
-        return io_dict[feature_map_config[key]][key]
-
-    @staticmethod
     def compute_fsp_matrix(first_feature_map, second_feature_map):
         first_h, first_w = first_feature_map.shape[2:4]
         second_h, second_w = second_feature_map.shape[2:4]
@@ -101,11 +102,11 @@ class FSPLoss(nn.Module):
         fsp_loss = 0
         batch_size = None
         for pair_name, pair_config in self.fsp_pairs.items():
-            student_first_feature_map = self.extract_feature_map(student_io_dict, pair_config['student_first'])
-            student_second_feature_map = self.extract_feature_map(student_io_dict, pair_config['student_second'])
+            student_first_feature_map = extract_feature_map(student_io_dict, pair_config['student_first'])
+            student_second_feature_map = extract_feature_map(student_io_dict, pair_config['student_second'])
             student_fsp_matrices = self.compute_fsp_matrix(student_first_feature_map, student_second_feature_map)
-            teacher_first_feature_map = self.extract_feature_map(teacher_io_dict, pair_config['teacher_first'])
-            teacher_second_feature_map = self.extract_feature_map(teacher_io_dict, pair_config['teacher_second'])
+            teacher_first_feature_map = extract_feature_map(teacher_io_dict, pair_config['teacher_first'])
+            teacher_second_feature_map = extract_feature_map(teacher_io_dict, pair_config['teacher_second'])
             teacher_fsp_matrices = self.compute_fsp_matrix(teacher_first_feature_map, teacher_second_feature_map)
             factor = pair_config.get('factor', 1)
             fsp_loss += factor * (student_fsp_matrices - teacher_fsp_matrices).norm(dim=1).sum()
@@ -127,11 +128,6 @@ class ATLoss(nn.Module):
         self.reduction = reduction
 
     @staticmethod
-    def extract_feature_map(io_dict, feature_map_config):
-        key = list(feature_map_config.keys())[0]
-        return io_dict[feature_map_config[key]][key]
-
-    @staticmethod
     def attention_transfer(feature_map):
         return normalize(feature_map.pow(2).sum(1).flatten(1))
 
@@ -144,8 +140,8 @@ class ATLoss(nn.Module):
         at_loss = 0
         batch_size = None
         for pair_name, pair_config in self.at_pairs.items():
-            student_feature_map = self.extract_feature_map(student_io_dict, pair_config['student'])
-            teacher_feature_map = self.extract_feature_map(teacher_io_dict, pair_config['teacher'])
+            student_feature_map = extract_feature_map(student_io_dict, pair_config['student'])
+            teacher_feature_map = extract_feature_map(teacher_io_dict, pair_config['teacher'])
             factor = pair_config.get('factor', 1)
             at_loss += factor * self.compute_at_loss(student_feature_map, teacher_feature_map)
             if batch_size is None:
@@ -220,6 +216,38 @@ class FTLoss(nn.Module):
         ft_loss = self.norm_loss(paraphraser_flat_outputs / paraphraser_flat_outputs.norm(dim=1).unsqueeze(1),
                                  translator_flat_outputs / translator_flat_outputs.norm(dim=1).unsqueeze(1))
         return ft_loss / batch_size if self.reduction == 'batchmean' else ft_loss
+
+
+@register_single_loss
+class AltActTransferLoss(nn.Module):
+    """
+    "Knowledge Transfer via Distillation of Activation Boundaries Formed by Hidden Neurons"
+    Refactored https://github.com/bhheo/AB_distillation/blob/master/cifar10_AB_distillation.py
+    """
+    def __init__(self, feature_pairs, margin, reduction, **kwargs):
+        super().__init__()
+        self.feature_pairs = feature_pairs
+        self.margin = margin
+        self.reduction = reduction
+
+    @staticmethod
+    def compute_alt_act_transfer_loss(source, target, margin):
+        loss = ((source + margin) ** 2 * ((source > -margin) & (target <= 0)).float() +
+                (source - margin) ** 2 * ((source <= margin) & (target > 0)).float())
+        return torch.abs(loss).sum()
+
+    def forward(self, student_io_dict, teacher_io_dict):
+        dab_loss = 0
+        batch_size = None
+        for pair_name, pair_config in self.feature_pairs.items():
+            student_feature_map = extract_feature_map(student_io_dict, pair_config['student'])
+            teacher_feature_map = extract_feature_map(teacher_io_dict, pair_config['teacher'])
+            factor = pair_config.get('factor', 1)
+            dab_loss += \
+                factor * self.compute_alt_act_transfer_loss(student_feature_map, teacher_feature_map, self.margin)
+            if batch_size is None:
+                batch_size = student_feature_map.shape[0]
+        return dab_loss / batch_size if self.reduction == 'mean' else dab_loss
 
 
 @register_single_loss

@@ -20,7 +20,7 @@ datasets:
 
 models:
     teacher_model:
-        name: &teacher_model_name 'resnet34'
+        name: &teacher_model_name 'resnet50'
         params:
             num_classes: 1000
             pretrained: True
@@ -33,12 +33,12 @@ models:
             num_classes: 1000
             pretrained: True
         experiment: &student_experiment !join [*dataset_name, '-', *student_model_name, '_from_', *teacher_model_name]
-        ckpt: !join ['./resource/ckpt/multi_stage/fsp/', *student_experiment, '.pt']
+        ckpt: !join ['./resource/ckpt/multi_stage/dab/', *student_experiment, '.pt']
 
 train:
     log_freq: 1000
     stage1:
-        num_epochs: 5
+        num_epochs: 1
         train_data_loader:
             dataset_id: *imagenet_train
             random_sample: True
@@ -53,100 +53,127 @@ train:
         teacher:
             sequential: ['conv1', 'relu', 'maxpool', 'layer1', 'layer2', 'layer3', 'layer4']
             forward_hook:
-                input: ['layer1', 'layer2.1', 'layer3.1', 'layer4.1']
+                input: []
                 output: ['layer1', 'layer2', 'layer3', 'layer4']
             wrapper:
             requires_grad: False
         student:
             adaptations:
-            sequential: ['conv1', 'relu', 'maxpool', 'layer1', 'layer2', 'layer3', 'layer4']
+            sequential: []
+            special:
+                type: 'Connector4DAB'
+                params:
+                    connectors:
+                        connector1:
+                            io: 'output'
+                            path: 'student_model.layer1'
+                            conv_params:
+                                in_channels: 256
+                                out_channels: &och1 64
+                                kernel_size: 1
+                                stride: 1
+                                padding: 0
+                                bias: False
+                            bn_params:
+                                num_features: *och1
+                        connector2:
+                            io: 'output'
+                            path: 'student_model.layer2'
+                            conv_params:
+                                in_channels: 512
+                                out_channels: &och2 128
+                                kernel_size: 1
+                                stride: 1
+                                padding: 0
+                                bias: False
+                            bn_params:
+                                num_features: *och2
+                        connector3:
+                            io: 'output'
+                            path: 'student_model.layer3'
+                            conv_params:
+                                in_channels: 1024
+                                out_channels: &och3 256
+                                kernel_size: 1
+                                stride: 1
+                                padding: 0
+                                bias: False
+                            bn_params:
+                                num_features: *och3
+                        connector4:
+                            io: 'output'
+                            path: 'student_model.layer4'
+                            conv_params:
+                                in_channels: 2048
+                                out_channels: &och4 512
+                                kernel_size: 1
+                                stride: 1
+                                padding: 0
+                                bias: False
+                            bn_params:
+                                num_features: *och4
             frozen_modules: []
             forward_hook:
-                input: ['layer1', 'layer2.1', 'layer3.1', 'layer4.1']
-                output: ['layer1', 'layer2', 'layer3', 'layer4']
+                input: []
+                output: ['student_model.layer1', 'student_model.layer2', 'student_model.layer3', 'student_model.layer4', 'connector_dict.connector1', 'connector_dict.connector2', 'connector_dict.connector3', 'connector_dict.connector4']
             wrapper:
             requires_grad: True
         apex:
             requires: False
             opt_level: '01'
         optimizer:
-            type: 'Adam'
+            type: 'SGD'
             params:
                 lr: 0.0001
-        scheduler:
-            type: 'MultiStepLR'
-            params:
-                milestones: [3]
-                gamma: 0.1
+                momentum: 0.9
+                weight_decay: 0.0001
         criterion:
             type: 'GeneralizedCustomLoss'
             org_term:
                 factor: 0.0
             sub_terms:
-                fsp:
+                dab:
                     criterion:
-                        type: 'FSPLoss'
+                        type: 'AltActTransferLoss'
                         params:
-                            fsp_pairs:
+                            feature_pairs:
                                 pair1:
-                                    teacher_first:
-                                        io: 'input'
-                                        path: 'layer1'
-                                    teacher_second:
+                                    teacher:
                                         io: 'output'
                                         path: 'layer1'
-                                    student_first:
-                                        io: 'input'
-                                        path: 'layer1'
-                                    student_second:
+                                    student:
                                         io: 'output'
-                                        path: 'layer1'
+                                        path: 'connector_dict.connector1'
                                     factor: 1
                                 pair2:
-                                    teacher_first:
-                                        io: 'input'
-                                        path: 'layer2.1'
-                                    teacher_second:
+                                    teacher:
                                         io: 'output'
                                         path: 'layer2'
-                                    student_first:
-                                        io: 'input'
-                                        path: 'layer2.1'
-                                    student_second:
+                                    student:
                                         io: 'output'
-                                        path: 'layer2'
+                                        path: 'connector_dict.connector2'
                                     factor: 1
                                 pair3:
-                                    teacher_first:
-                                        io: 'input'
-                                        path: 'layer3.1'
-                                    teacher_second:
+                                    teacher:
                                         io: 'output'
                                         path: 'layer3'
-                                    student_first:
-                                        io: 'input'
-                                        path: 'layer3.1'
-                                    student_second:
+                                    student:
                                         io: 'output'
-                                        path: 'layer3'
+                                        path: 'connector_dict.connector3'
                                     factor: 1
                                 pair4:
-                                    teacher_first:
-                                        io: 'input'
-                                        path: 'layer4.1'
-                                    teacher_second:
+                                    teacher:
                                         io: 'output'
                                         path: 'layer4'
-                                    student_first:
-                                        io: 'input'
-                                        path: 'layer4.1'
-                                    student_second:
+                                    student:
                                         io: 'output'
-                                        path: 'layer4'
+                                        path: 'connector_dict.connector4'
                                     factor: 1
+                            margin: 1.0
+                            reduction: 'mean'
                     factor: 1.0
     stage2:
-        num_epochs: 15
+        num_epochs: 19
         teacher:
             sequential: []
             wrapper: 'DistributedDataParallel'
