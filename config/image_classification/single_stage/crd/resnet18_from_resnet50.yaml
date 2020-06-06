@@ -33,7 +33,7 @@ models:
             num_classes: 1000
             pretrained: True
         experiment: &student_experiment !join [*dataset_name, '-', *student_model_name, '_from_', *teacher_model_name]
-        ckpt: !join ['./resource/ckpt/single_stage/cckd/', *student_experiment, '.pt']
+        ckpt: !join ['./resource/ckpt/single_stage/crd/', *student_experiment, '.pt']
 
 train:
     log_freq: 1000
@@ -52,16 +52,17 @@ train:
     teacher:
         sequential: []
         special:
-            type: 'Linear4CCKD'
+            type: 'Linear4CRD'
             params:
                 input_module_path: 'model.avgpool'
                 linear_params:
                     in_features: 2048
                     out_features: 128
                     bias: True
+                power: 2
         forward_hook:
             input: []
-            output: ['model.avgpool', 'linear']
+            output: ['model.avgpool', 'normalizer']
         wrapper:
         requires_grad: True
         frozen_modules: ['model']
@@ -69,16 +70,17 @@ train:
         adaptations:
         sequential: []
         special:
-            type: 'Linear4CCKD'
+            type: 'Linear4CRD'
             params:
                 input_module_path: 'model.avgpool'
                 linear_params:
                     in_features: 512
-                    out_features: 128
+                    out_features: &feature_dim 128
                     bias: True
+                power: 2
         forward_hook:
-            input: []
-            output: ['model.avgpool', 'linear']
+            input: ['empty']
+            output: ['model.avgpool', 'normalizer']
         wrapper:
         requires_grad: True
         frozen_modules: []
@@ -102,19 +104,26 @@ train:
             criterion:
                 type: 'KDLoss'
                 params:
-                    temperature: 1.0
-                    alpha: 0
+                    temperature: 4.0
+                    alpha: 0.5
                     reduction: 'batchmean'
-            factor: 1.0
+            factor: 2.0
         sub_terms:
             cckd:
                 criterion:
-                    type: 'CCKDLoss'
+                    type: 'CRDLoss'
                     params:
-                        teacher_linear_path: 'linear'
-                        student_linear_path: 'linear'
-                        reduction: 'batchmean'
-                factor: 0.003
+                        teacher_norm_module_path: 'normalizer'
+                        student_norm_module_path: 'normalizer'
+                        student_empty_module_path: 'empty'
+                        input_size: *feature_dim
+                        output_size: &num_samples 1281167
+                        num_negatives: 4096
+                        num_samples: *num_samples
+                        temperature: 0.07
+                        momentum: 0.5
+                        eps: 1e-7
+                factor: 0.8
 
 test:
     test_data_loader:

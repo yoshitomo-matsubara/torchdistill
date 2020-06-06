@@ -1,9 +1,9 @@
 import os
 
+import numpy as np
 import torch
 from torch import nn
 from torch.jit.annotations import Tuple, List
-import numpy as np
 
 from kdkit.common import main_util
 from kdkit.common.constant import def_logger
@@ -242,11 +242,11 @@ class Linear4CCKD(SpecialModule):
     "Correlation Congruence for Knowledge Distillation"
     """
 
-    def __init__(self, input_module_path, linear_params_config, teacher_model=None, student_model=None, **kwargs):
+    def __init__(self, input_module_path, linear_params, teacher_model=None, student_model=None, **kwargs):
         super().__init__()
         self.model = teacher_model if teacher_model is not None else student_model
         self.input_module_path = input_module_path
-        self.linear = nn.Linear(**linear_params_config)
+        self.linear = nn.Linear(**linear_params)
 
     def forward(self, x):
         return self.model(x)
@@ -254,6 +254,44 @@ class Linear4CCKD(SpecialModule):
     def post_forward(self, info_dict):
         flat_outputs = torch.flatten(info_dict[self.input_module_path]['output'], 1)
         self.linear(flat_outputs)
+
+
+class Normalizer4CRD(nn.Module):
+    def __init__(self, power=2):
+        super().__init__()
+        self.power = power
+
+    def forward(self, x):
+        norm = x.pow(self.power).sum(1, keepdim=True).pow(1. / self.power)
+        out = x.div(norm)
+        return out
+
+
+@register_special_module
+class Linear4CRD(SpecialModule):
+    """
+    "Contrastive Representation Distillation"
+    Refactored https://github.com/HobbitLong/RepDistiller/blob/master/crd/memory.py
+    """
+
+    def __init__(self, input_module_path, linear_params, power=2,
+                 teacher_model=None, student_model=None, **kwargs):
+        super().__init__()
+        self.model = teacher_model if teacher_model is not None else student_model
+        self.empty = nn.Sequential()
+        self.input_module_path = input_module_path
+        self.linear = nn.Linear(**linear_params)
+        self.normalizer = Normalizer4CRD(power=power)
+
+    def forward(self, x, supp_dict):
+        # supp_dict is given to be hooked and stored in info_dict
+        self.empty(supp_dict)
+        return self.model(x)
+
+    def post_forward(self, info_dict):
+        flat_outputs = torch.flatten(info_dict[self.input_module_path]['output'], 1)
+        z = self.linear(flat_outputs)
+        self.normalizer(z)
 
 
 @register_special_module
