@@ -395,18 +395,6 @@ class CRDLoss(nn.Module):
     """
     "Contrastive Representation Distillation"
     Refactored https://github.com/HobbitLong/RepDistiller/blob/master/crd/criterion.py
-
-    includes two symmetric parts:
-    (a) using teacher as anchor, choose positive and negatives over the student side
-    (b) using student as anchor, choose positive and negatives over the teacher side
-    Args:
-        opt.s_dim: the dimension of student's feature
-        opt.t_dim: the dimension of teacher's feature
-        opt.feat_dim: the dimension of the projection space
-        opt.nce_k: number of negatives paired with each positive
-        opt.nce_t: the temperature
-        opt.nce_m: the momentum for updating the memory buffer
-        opt.n_data: the number of samples in the training set, therefor the memory buffer is: opt.n_data x opt.feat_dim
     """
 
     def init_prob_alias(self, probs):
