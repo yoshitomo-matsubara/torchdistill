@@ -16,6 +16,11 @@ def forward_batch_target(model, sample_batch, targets, supp_dict=None):
     return model(sample_batch, targets)
 
 
+@register_func
+def forward_batch_supp_dict(model, sample_batch, targets, supp_dict=None):
+    return model(sample_batch, supp_dict)
+
+
 def get_forward_proc_func(func_name):
     if func_name not in PROC_FUNC_DICT:
         return forward_batch_only

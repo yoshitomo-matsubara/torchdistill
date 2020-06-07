@@ -435,16 +435,16 @@ class CRDLoss(nn.Module):
             self.probs[last_one] = 1
 
     def __init__(self, student_norm_module_path, student_empty_module_path, teacher_norm_module_path,
-                 input_size, output_size, num_negatives, num_samples, temperature=0.07, momentum=0.5, eps=1e-7):
+                 input_size, output_size, num_negative_samples, num_samples, temperature=0.07, momentum=0.5, eps=1e-7):
         super().__init__()
         self.student_norm_module_path = student_norm_module_path
         self.student_empty_module_path = student_empty_module_path
         self.teacher_norm_module_path = teacher_norm_module_path
         self.eps = eps
         self.unigrams = torch.ones(output_size)
-        self.num_negatives = num_negatives
+        self.num_negative_samples = num_negative_samples
         self.num_samples = num_samples
-        self.register_buffer('params', torch.tensor([num_negatives, temperature, -1, -1, momentum]))
+        self.register_buffer('params', torch.tensor([num_negative_samples, temperature, -1, -1, momentum]))
         stdv = 1.0 / math.sqrt(input_size / 3)
         self.register_buffer('memory_v1', torch.rand(output_size, input_size).mul_(2 * stdv).add_(-stdv))
         self.register_buffer('memory_v2', torch.rand(output_size, input_size).mul_(2 * stdv).add_(-stdv))
@@ -476,7 +476,7 @@ class CRDLoss(nn.Module):
 
         # original score computation
         if contrast_idx is None:
-            contrast_idx = self.draw(batch_size * (self.num_negatives + 1)).view(batch_size, -1)
+            contrast_idx = self.draw(batch_size * (self.num_negative_samples + 1)).view(batch_size, -1)
             contrast_idx.select(1, 0).copy_(pos_indices.data)
 
         # sample

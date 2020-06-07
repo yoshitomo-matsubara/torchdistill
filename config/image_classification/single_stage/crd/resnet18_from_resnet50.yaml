@@ -43,7 +43,12 @@ train:
         random_sample: True
         batch_size: 32
         num_workers: 16
-        cache_output:
+        dataset_wrapper:
+            name: 'ContrastiveDataset'
+            params:
+                num_negative_samples: &num_negative_samples 4096
+                mode: 'exact'
+                ratio: 1.0
     val_data_loader:
         dataset_id: *imagenet_val
         random_sample: False
@@ -67,6 +72,7 @@ train:
         requires_grad: True
         frozen_modules: ['model']
     student:
+        forward_proc: 'forward_batch_supp_dict'
         adaptations:
         sequential: []
         special:
@@ -118,7 +124,7 @@ train:
                         student_empty_module_path: 'empty'
                         input_size: *feature_dim
                         output_size: &num_samples 1281167
-                        num_negatives: 4096
+                        num_negative_samples: *num_negative_samples
                         num_samples: *num_samples
                         temperature: 0.07
                         momentum: 0.5
