@@ -124,12 +124,8 @@ train:
                 criterion:
                     type: 'MSELoss'
                     params:
-                        reduction: 'sum'
+                        reduction: 'mean'
                 params:
-                    wrapper:
-                        type: 'DictLossWrapper'
-                        params:
-                            reduction: 'mean'
                     input:
                         is_from_teacher: False
                         module_path: 'roi_heads.keypoint_roi_pool'
