@@ -57,7 +57,7 @@ train:
         random_sample: True
         num_workers: 16
         batch_sampler:
-            name: 'GroupedBatchSampler'
+            type: 'GroupedBatchSampler'
             params:
                 aspect_ratio_group_factor: 3
                 batch_size: 4
