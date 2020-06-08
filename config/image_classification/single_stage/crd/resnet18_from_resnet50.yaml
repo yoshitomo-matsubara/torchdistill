@@ -55,6 +55,7 @@ train:
         batch_size: 32
         num_workers: 16
     teacher:
+        forward_proc: 'forward_batch_supp_dict'
         sequential: []
         special:
             type: 'Linear4CRD'
