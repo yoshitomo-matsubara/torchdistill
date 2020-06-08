@@ -546,7 +546,7 @@ class CRDLoss(nn.Module):
         """
         teacher_linear_outputs = teacher_io_dict[self.teacher_norm_module_path]['output']
         student_linear_outputs = student_io_dict[self.student_norm_module_path]['output']
-        supp_dict = student_io_dict[self.student_empty_module_path]['input'][1]
+        supp_dict = student_io_dict[self.student_empty_module_path]['input']
         pos_idx, contrast_idx = supp_dict['pos_idx'], supp_dict.get('contrast_idx', None)
         device = student_linear_outputs.device
         if device != self.probs.device:
