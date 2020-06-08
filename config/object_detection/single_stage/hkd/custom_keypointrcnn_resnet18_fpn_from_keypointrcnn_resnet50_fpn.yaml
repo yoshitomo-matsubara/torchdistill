@@ -69,7 +69,6 @@ train:
     teacher:
         forward_proc: 'forward_batch'
         sequential: []
-        special:
         frozen_modules: []
         forward_hook:
             input: []
@@ -80,7 +79,6 @@ train:
         forward_proc: 'forward_batch'
         adaptations:
         sequential: []
-        special:
         frozen_modules: []
         forward_hook:
             input: []
