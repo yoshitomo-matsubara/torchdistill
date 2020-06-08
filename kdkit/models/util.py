@@ -38,12 +38,12 @@ def build_sequential_container(module_dict):
     return Sequential(module_dict)
 
 
-def redesign_model(org_model, model_config, model_label):
+def redesign_model(org_model, model_config, model_label, model_type='original'):
     logger.info('[{} model]'.format(model_label))
     frozen_module_path_set = set(model_config.get('frozen_modules', list()))
     module_paths = model_config.get('sequential', list())
     if not isinstance(module_paths, list) or len(module_paths) == 0:
-        logger.info('Using the original {} model'.format(model_label))
+        logger.info('Using the {} {} model'.format(model_type, model_label))
         if len(frozen_module_path_set) > 0:
             logger.info('Frozen module(s): {}'.format(frozen_module_path_set))
 

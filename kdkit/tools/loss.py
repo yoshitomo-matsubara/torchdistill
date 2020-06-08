@@ -553,7 +553,7 @@ class CRDLoss(nn.Module):
             self.probs.to(device)
             self.alias.to(device)
 
-        out_s, out_t = self.contrast(student_linear_outputs, teacher_linear_outputs, pos_idx, contrast_idx)
+        out_s, out_t = self.contrast_memory(student_linear_outputs, teacher_linear_outputs, pos_idx, contrast_idx)
         student_contrast_loss = self.compute_contrast_loss(out_s)
         teacher_contrast_loss = self.compute_contrast_loss(out_t)
         loss = student_contrast_loss + teacher_contrast_loss

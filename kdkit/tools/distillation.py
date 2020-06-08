@@ -43,16 +43,20 @@ class DistillationBox(nn.Module):
         teacher_ref_model = unwrapped_org_teacher_model
         student_ref_model = unwrapped_org_student_model
         if len(teacher_config) > 0 or (len(teacher_config) == 0 and self.teacher_model is None):
+            model_type = 'original'
             special_teacher_model = build_special_module(teacher_config, teacher_model=unwrapped_org_teacher_model)
             if special_teacher_model is not None:
                 teacher_ref_model = special_teacher_model
-            self.teacher_model = redesign_model(teacher_ref_model, teacher_config, 'teacher')
+                model_type = type(teacher_ref_model).__name__
+            self.teacher_model = redesign_model(teacher_ref_model, teacher_config, 'teacher', model_type)
 
         if len(student_config) > 0 or (len(student_config) == 0 and self.student_model is None):
+            model_type = 'original'
             special_student_model = build_special_module(student_config, student_model=unwrapped_org_student_model)
             if special_student_model is not None:
                 student_ref_model = special_student_model
-            self.student_model = redesign_model(student_ref_model, student_config, 'student')
+                model_type = type(teacher_ref_model).__name__
+            self.student_model = redesign_model(student_ref_model, student_config, 'student', model_type)
 
         self.target_teacher_pairs.extend(set_hooks(self.teacher_model, teacher_ref_model,
                                                    teacher_config, self.teacher_info_dict))

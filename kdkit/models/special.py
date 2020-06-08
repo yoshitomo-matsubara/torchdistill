@@ -304,7 +304,7 @@ class HeadRCNN(SpecialModule):
             raise ValueError('Either student_model or teacher_model has to be given.')
 
         self.transform = ref_model.transform
-        self.seq = redesign_model(ref_model, head_rcnn, 'R-CNN')
+        self.seq = redesign_model(ref_model, head_rcnn, 'R-CNN', 'HeadRCNN')
 
     def forward(self, images, targets=None):
         original_image_sizes = torch.jit.annotate(List[Tuple[int, int]], [])
