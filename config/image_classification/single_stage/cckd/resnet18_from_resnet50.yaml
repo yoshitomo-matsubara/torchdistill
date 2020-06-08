@@ -20,7 +20,7 @@ datasets:
 
 models:
     teacher_model:
-        name: &teacher_model_name 'resnet152'
+        name: &teacher_model_name 'resnet50'
         params:
             num_classes: 1000
             pretrained: True
@@ -33,7 +33,7 @@ models:
             num_classes: 1000
             pretrained: True
         experiment: &student_experiment !join [*dataset_name, '-', *student_model_name, '_from_', *teacher_model_name]
-        ckpt: !join ['./resource/ckpt/single_stage/pkt/', *student_experiment, '.pt']
+        ckpt: !join ['./resource/ckpt/single_stage/cckd/', *student_experiment, '.pt']
 
 train:
     log_freq: 1000
@@ -51,17 +51,34 @@ train:
         num_workers: 16
     teacher:
         sequential: []
+        special:
+            type: 'Linear4CCKD'
+            params:
+                input_module_path: 'model.avgpool'
+                linear_params:
+                    in_features: 2048
+                    out_features: 128
+                    bias: True
         forward_hook:
-            input: ['fc']
-            output: []
+            input: []
+            output: ['model.avgpool', 'linear']
         wrapper:
-        requires_grad: False
+        requires_grad: True
+        frozen_modules: ['model']
     student:
         adaptations:
         sequential: []
+        special:
+            type: 'Linear4CCKD'
+            params:
+                input_module_path: 'model.avgpool'
+                linear_params:
+                    in_features: 512
+                    out_features: 128
+                    bias: True
         forward_hook:
-            input: ['fc']
-            output: []
+            input: []
+            output: ['model.avgpool', 'linear']
         wrapper:
         requires_grad: True
         frozen_modules: []
@@ -69,9 +86,11 @@ train:
         requires: False
         opt_level: '01'
     optimizer:
-        type: 'Adam'
+        type: 'SGD'
         params:
             lr: 0.0001
+            momentum: 0.9
+            weight_decay: 0.0005
     scheduler:
         type: 'MultiStepLR'
         params:
@@ -80,18 +99,22 @@ train:
     criterion:
         type: 'GeneralizedCustomLoss'
         org_term:
-            factor: 0.0
+            criterion:
+                type: 'KDLoss'
+                params:
+                    temperature: 1.0
+                    alpha: 0
+                    reduction: 'batchmean'
+            factor: 1.0
         sub_terms:
-            pkt:
+            cckd:
                 criterion:
-                    type: 'PKTLoss'
+                    type: 'CCKDLoss'
                     params:
-                        student_module_path: 'fc'
-                        student_module_io: 'input'
-                        teacher_module_path: 'fc'
-                        teacher_module_io: 'input'
-                        eps: 0.0000001
-                factor: 30000.0
+                        teacher_linear_path: 'linear'
+                        student_linear_path: 'linear'
+                        reduction: 'batchmean'
+                factor: 0.003
 
 test:
     test_data_loader:

@@ -1,5 +1,6 @@
 import os
 
+import numpy as np
 import torch
 from torch import nn
 from torch.jit.annotations import Tuple, List
@@ -157,6 +158,143 @@ class Student4FactorTransfer(SpecialModule):
 
 
 @register_special_module
+class Connector4DAB(SpecialModule):
+    """
+    Connector proposed in "Knowledge Transfer via Distillation of Activation Boundaries Formed by Hidden Neurons"
+    """
+
+    @staticmethod
+    def build_connector(conv_params_config, bn_params_config=None):
+        module_list = [nn.Conv2d(**conv_params_config)]
+        if bn_params_config is not None and len(bn_params_config) > 0:
+            module_list.append(nn.BatchNorm2d(**bn_params_config))
+        return nn.Sequential(*module_list)
+
+    def __init__(self, student_model, connectors, **kwargs):
+        super().__init__()
+        self.student_model = student_model
+        io_path_pairs = list()
+        self.connector_dict = nn.ModuleDict()
+        for connector_key, connector_params in connectors.items():
+            self.connector_dict[connector_key] = \
+                self.build_connector(connector_params['conv_params'], connector_params.get('bn_params', None))
+            io_path_pairs.append((connector_key, connector_params['io'], connector_params['path']))
+        self.io_path_pairs = io_path_pairs
+
+    def forward(self, x):
+        return self.student_model(x)
+
+    def post_forward(self, info_dict):
+        for connector_key, io_type, module_path in self.io_path_pairs:
+            self.connector_dict[connector_key](info_dict[module_path][io_type])
+
+
+class Regressor4VID(nn.Module):
+    def __init__(self, in_channels, middle_channels, out_channels, eps, init_pred_var, **kwargs):
+        super().__init__()
+        self.regressor = nn.Sequential(
+            nn.Conv2d(in_channels, middle_channels, kernel_size=1, stride=1, padding=0, bias=False),
+            nn.ReLU(inplace=True),
+            nn.Conv2d(middle_channels, middle_channels, kernel_size=1, stride=1, padding=0, bias=False),
+            nn.ReLU(inplace=True),
+            nn.Conv2d(middle_channels, out_channels, kernel_size=1, stride=1, padding=0, bias=False),
+        )
+        self.soft_plus_param = \
+            nn.Parameter(np.log(np.exp(init_pred_var - eps) - 1.0) * torch.ones(out_channels))
+        self.eps = eps
+        self.init_pred_var = init_pred_var
+
+    def forward(self, student_feature_map):
+        pred_mean = self.regressor(student_feature_map)
+        pred_var = torch.log(1.0 + torch.exp(self.soft_plus_param)) + self.eps
+        pred_var = pred_var.view(1, -1, 1, 1)
+        return pred_mean, pred_var
+
+
+@register_special_module
+class VariationalDistributor4VID(SpecialModule):
+    """
+    "Variational Information Distillation for Knowledge Transfer"
+    """
+
+    def __init__(self, student_model, regressors, **kwargs):
+        super().__init__()
+        self.student_model = student_model
+        io_path_pairs = list()
+        self.regressor_dict = nn.ModuleDict()
+        for regressor_key, regressor_params in regressors.items():
+            self.regressor_dict[regressor_key] = Regressor4VID(**regressor_params)
+            io_path_pairs.append((regressor_key, regressor_params['io'], regressor_params['path']))
+        self.io_path_pairs = io_path_pairs
+
+    def forward(self, x):
+        return self.student_model(x)
+
+    def post_forward(self, info_dict):
+        for regressor_key, io_type, module_path in self.io_path_pairs:
+            self.regressor_dict[regressor_key](info_dict[module_path][io_type])
+
+
+@register_special_module
+class Linear4CCKD(SpecialModule):
+    """
+    Fully-connected layer to cope with a mismatch of feature representations of teacher and student network for
+    "Correlation Congruence for Knowledge Distillation"
+    """
+
+    def __init__(self, input_module_path, linear_params, teacher_model=None, student_model=None, **kwargs):
+        super().__init__()
+        self.model = teacher_model if teacher_model is not None else student_model
+        self.input_module_path = input_module_path
+        self.linear = nn.Linear(**linear_params)
+
+    def forward(self, x):
+        return self.model(x)
+
+    def post_forward(self, info_dict):
+        flat_outputs = torch.flatten(info_dict[self.input_module_path]['output'], 1)
+        self.linear(flat_outputs)
+
+
+class Normalizer4CRD(nn.Module):
+    def __init__(self, power=2):
+        super().__init__()
+        self.power = power
+
+    def forward(self, x):
+        norm = x.pow(self.power).sum(1, keepdim=True).pow(1. / self.power)
+        out = x.div(norm)
+        return out
+
+
+@register_special_module
+class Linear4CRD(SpecialModule):
+    """
+    "Contrastive Representation Distillation"
+    Refactored https://github.com/HobbitLong/RepDistiller/blob/master/crd/memory.py
+    """
+
+    def __init__(self, input_module_path, linear_params, power=2,
+                 teacher_model=None, student_model=None, **kwargs):
+        super().__init__()
+        self.model = teacher_model if teacher_model is not None else student_model
+        self.empty = nn.Sequential()
+        self.input_module_path = input_module_path
+        self.linear = nn.Linear(**linear_params)
+        self.normalizer = Normalizer4CRD(power=power)
+
+    def forward(self, x, supp_dict):
+        # supp_dict is given to be hooked and stored in info_dict
+        self.empty(supp_dict)
+        return self.model(x)
+
+    def post_forward(self, info_dict):
+        flat_outputs = torch.flatten(info_dict[self.input_module_path]['output'], 1)
+        z = self.linear(flat_outputs)
+        self.normalizer(z)
+
+
+@register_special_module
 class HeadRCNN(SpecialModule):
     def __init__(self, head_rcnn, **kwargs):
         super().__init__()
@@ -166,7 +304,7 @@ class HeadRCNN(SpecialModule):
             raise ValueError('Either student_model or teacher_model has to be given.')
 
         self.transform = ref_model.transform
-        self.seq = redesign_model(ref_model, head_rcnn, 'R-CNN')
+        self.seq = redesign_model(ref_model, head_rcnn, 'R-CNN', 'HeadRCNN')
 
     def forward(self, images, targets=None):
         original_image_sizes = torch.jit.annotate(List[Tuple[int, int]], [])

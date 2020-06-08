@@ -20,7 +20,7 @@ datasets:
 
 models:
     teacher_model:
-        name: &teacher_model_name 'resnet152'
+        name: &teacher_model_name 'resnet34'
         params:
             num_classes: 1000
             pretrained: True
@@ -33,7 +33,7 @@ models:
             num_classes: 1000
             pretrained: True
         experiment: &student_experiment !join [*dataset_name, '-', *student_model_name, '_from_', *teacher_model_name]
-        ckpt: !join ['./resource/ckpt/single_stage/pkt/', *student_experiment, '.pt']
+        ckpt: !join ['./resource/ckpt/single_stage/at/', *student_experiment, '.pt']
 
 train:
     log_freq: 1000
@@ -52,26 +52,28 @@ train:
     teacher:
         sequential: []
         forward_hook:
-            input: ['fc']
-            output: []
+            input: []
+            output: ['layer1', 'layer2', 'layer3', 'layer4']
         wrapper:
         requires_grad: False
     student:
         adaptations:
         sequential: []
+        frozen_modules: []
         forward_hook:
-            input: ['fc']
-            output: []
+            input: []
+            output: ['layer1', 'layer2', 'layer3', 'layer4']
         wrapper:
         requires_grad: True
-        frozen_modules: []
     apex:
         requires: False
         opt_level: '01'
     optimizer:
-        type: 'Adam'
+        type: 'SGD'
         params:
             lr: 0.0001
+            momentum: 0.9
+            weight_decay: 0.0001
     scheduler:
         type: 'MultiStepLR'
         params:
@@ -80,18 +82,53 @@ train:
     criterion:
         type: 'GeneralizedCustomLoss'
         org_term:
-            factor: 0.0
+            criterion:
+                type: 'KDLoss'
+                params:
+                    temperature: 1.0
+                    alpha: 1.0
+                    reduction: 'batchmean'
+            factor: 1.0
         sub_terms:
-            pkt:
+            at_loss:
                 criterion:
-                    type: 'PKTLoss'
+                    type: 'ATLoss'
                     params:
-                        student_module_path: 'fc'
-                        student_module_io: 'input'
-                        teacher_module_path: 'fc'
-                        teacher_module_io: 'input'
-                        eps: 0.0000001
-                factor: 30000.0
+                        at_pairs:
+                            pair1:
+                                teacher:
+                                    io: 'output'
+                                    path: 'layer1'
+                                student:
+                                    io: 'output'
+                                    path: 'layer1'
+                                factor: 1
+                            pair2:
+                                teacher:
+                                    io: 'output'
+                                    path: 'layer2'
+                                student:
+                                    io: 'output'
+                                    path: 'layer2'
+                                factor: 1
+                            pair3:
+                                teacher:
+                                    io: 'output'
+                                    path: 'layer3'
+                                student:
+                                    io: 'output'
+                                    path: 'layer3'
+                                factor: 1
+                            pair4:
+                                teacher:
+                                    io: 'output'
+                                    path: 'layer4'
+                                student:
+                                    io: 'output'
+                                    path: 'layer4'
+                                factor: 1
+                        reduction: 'mean'
+                factor: 1000.0
 
 test:
     test_data_loader:

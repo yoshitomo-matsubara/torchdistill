@@ -43,16 +43,20 @@ class DistillationBox(nn.Module):
         teacher_ref_model = unwrapped_org_teacher_model
         student_ref_model = unwrapped_org_student_model
         if len(teacher_config) > 0 or (len(teacher_config) == 0 and self.teacher_model is None):
+            model_type = 'original'
             special_teacher_model = build_special_module(teacher_config, teacher_model=unwrapped_org_teacher_model)
             if special_teacher_model is not None:
                 teacher_ref_model = special_teacher_model
-            self.teacher_model = redesign_model(teacher_ref_model, teacher_config, 'teacher')
+                model_type = type(teacher_ref_model).__name__
+            self.teacher_model = redesign_model(teacher_ref_model, teacher_config, 'teacher', model_type)
 
         if len(student_config) > 0 or (len(student_config) == 0 and self.student_model is None):
+            model_type = 'original'
             special_student_model = build_special_module(student_config, student_model=unwrapped_org_student_model)
             if special_student_model is not None:
                 student_ref_model = special_student_model
-            self.student_model = redesign_model(student_ref_model, student_config, 'student')
+                model_type = type(teacher_ref_model).__name__
+            self.student_model = redesign_model(student_ref_model, student_config, 'student', model_type)
 
         self.target_teacher_pairs.extend(set_hooks(self.teacher_model, teacher_ref_model,
                                                    teacher_config, self.teacher_info_dict))
@@ -88,9 +92,11 @@ class DistillationBox(nn.Module):
             wrap_model(self.teacher_model, teacher_config, self.device, self.device_ids, self.distributed)
         self.student_model =\
             wrap_model(self.student_model, student_config, self.device, self.device_ids, self.distributed)
+        self.teacher_updatable = True
         if not teacher_config.get('requires_grad', True):
             logger.info('Freezing the whole teacher model')
             freeze_module_params(self.teacher_model)
+            self.teacher_updatable = False
 
         if not student_config.get('requires_grad', True):
             logger.info('Freezing the whole student model')
@@ -99,8 +105,13 @@ class DistillationBox(nn.Module):
         # Set up optimizer and scheduler
         optim_config = train_config.get('optimizer', dict())
         optimizer_reset = False
+        trainable_module_list = nn.ModuleList([self.student_model])
+        if self.teacher_updatable:
+            logger.info('Note that you are training some/all of the modules in the teacher model')
+            trainable_module_list.append(self.teacher_model)
+
         if len(optim_config) > 0:
-            self.optimizer = get_optimizer(self.student_model, optim_config['type'], optim_config['params'])
+            self.optimizer = get_optimizer(trainable_module_list, optim_config['type'], optim_config['params'])
             optimizer_reset = True
 
         scheduler_config = train_config.get('scheduler', None)
@@ -137,6 +148,7 @@ class DistillationBox(nn.Module):
         self.teacher_info_dict, self.student_info_dict = dict(), dict()
         self.train_data_loader, self.val_data_loader, self.optimizer, self.lr_scheduler = None, None, None, None
         self.org_criterion, self.criterion, self.uses_teacher_output, self.extract_org_loss = None, None, None, None
+        self.teacher_updatable = None
         self.apex = None
         self.setup(train_config)
         self.num_epochs = train_config['num_epochs']
@@ -163,7 +175,12 @@ class DistillationBox(nn.Module):
                 extracted_teacher_output_dict = change_device(extracted_teacher_output_dict, device)
             return teacher_outputs, extracted_teacher_output_dict
 
-        teacher_outputs = self.teacher_forward_proc(self.teacher_model, sample_batch, targets, supp_dict)
+        if self.teacher_updatable:
+            teacher_outputs = self.teacher_forward_proc(self.teacher_model, sample_batch, targets, supp_dict)
+        else:
+            with torch.no_grad():
+                teacher_outputs = self.teacher_forward_proc(self.teacher_model, sample_batch, targets, supp_dict)
+
         if isinstance(self.teacher_model, SpecialModule):
             self.teacher_model.post_forward(self.teacher_info_dict)
 

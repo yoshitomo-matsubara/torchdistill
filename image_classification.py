@@ -1,5 +1,6 @@
 import argparse
 import datetime
+import os
 import time
 
 import torch
@@ -100,7 +101,7 @@ def evaluate(model, data_loader, device, device_ids, distributed, log_freq=1000,
 
 
 def distill(teacher_model, student_model, dataset_dict, device, device_ids, distributed, start_epoch, config, args):
-    logger.info('Start knowledge distillation')
+    logger.info('Start distillation')
     train_config = config['train']
     distillation_box =\
         get_distillation_box(teacher_model, student_model, dataset_dict, train_config, device, device_ids, distributed)
@@ -138,12 +139,12 @@ def distill(teacher_model, student_model, dataset_dict, device, device_ids, dist
 def main(args):
     log_file_path = args.log
     if main_util.is_main_process() and log_file_path is not None:
-        setup_log_file(log_file_path)
+        setup_log_file(os.path.expanduser(log_file_path))
 
     distributed, device_ids = main_util.init_distributed_mode(args.world_size, args.dist_url)
     logger.info(args)
     cudnn.benchmark = True
-    config = yaml_util.load_yaml_file(args.config)
+    config = yaml_util.load_yaml_file(os.path.expanduser(args.config))
     device = torch.device(args.device)
     dataset_dict = util.get_all_dataset(config['datasets'])
     models_config = config['models']

@@ -15,7 +15,7 @@ def setup_for_distributed(is_master):
     """
     This function disables logging when not in master process
     """
-    logger.setLevel(logging.INFO if is_master else logging.WARN)
+    def_logger.setLevel(logging.INFO if is_master else logging.WARN)
 
 
 def is_dist_avail_and_initialized():
@@ -61,7 +61,7 @@ def init_distributed_mode(world_size=1, dist_url='env://'):
 
     torch.cuda.set_device(device_id)
     dist_backend = 'nccl'
-    logger.info('| distributed init (rank {}): {}'.format(rank, dist_url), flush=True)
+    logger.info('| distributed init (rank {}): {}'.format(rank, dist_url))
     torch.distributed.init_process_group(backend=dist_backend, init_method=dist_url,
                                          world_size=world_size, rank=rank)
     torch.distributed.barrier()

@@ -20,7 +20,7 @@ datasets:
 
 models:
     teacher_model:
-        name: &teacher_model_name 'resnet152'
+        name: &teacher_model_name 'resnet50'
         params:
             num_classes: 1000
             pretrained: True
@@ -33,7 +33,7 @@ models:
             num_classes: 1000
             pretrained: True
         experiment: &student_experiment !join [*dataset_name, '-', *student_model_name, '_from_', *teacher_model_name]
-        ckpt: !join ['./resource/ckpt/single_stage/pkt/', *student_experiment, '.pt']
+        ckpt: !join ['./resource/ckpt/single_stage/crd/', *student_experiment, '.pt']
 
 train:
     log_freq: 1000
@@ -43,25 +43,51 @@ train:
         random_sample: True
         batch_size: 32
         num_workers: 16
-        cache_output:
+        dataset_wrapper:
+            name: 'ContrastiveDataset'
+            params:
+                num_negative_samples: &num_negative_samples 4096
+                mode: 'exact'
+                ratio: 1.0
     val_data_loader:
         dataset_id: *imagenet_val
         random_sample: False
         batch_size: 32
         num_workers: 16
     teacher:
+        forward_proc: 'forward_batch_supp_dict'
         sequential: []
+        special:
+            type: 'Linear4CRD'
+            params:
+                input_module_path: 'model.avgpool'
+                linear_params:
+                    in_features: 2048
+                    out_features: 128
+                    bias: True
+                power: 2
         forward_hook:
-            input: ['fc']
-            output: []
+            input: []
+            output: ['model.avgpool', 'normalizer']
         wrapper:
-        requires_grad: False
+        requires_grad: True
+        frozen_modules: ['model']
     student:
+        forward_proc: 'forward_batch_supp_dict'
         adaptations:
         sequential: []
+        special:
+            type: 'Linear4CRD'
+            params:
+                input_module_path: 'model.avgpool'
+                linear_params:
+                    in_features: 512
+                    out_features: &feature_dim 128
+                    bias: True
+                power: 2
         forward_hook:
-            input: ['fc']
-            output: []
+            input: ['empty']
+            output: ['model.avgpool', 'normalizer']
         wrapper:
         requires_grad: True
         frozen_modules: []
@@ -69,9 +95,11 @@ train:
         requires: False
         opt_level: '01'
     optimizer:
-        type: 'Adam'
+        type: 'SGD'
         params:
             lr: 0.0001
+            momentum: 0.9
+            weight_decay: 0.0005
     scheduler:
         type: 'MultiStepLR'
         params:
@@ -80,18 +108,29 @@ train:
     criterion:
         type: 'GeneralizedCustomLoss'
         org_term:
-            factor: 0.0
+            criterion:
+                type: 'KDLoss'
+                params:
+                    temperature: 4.0
+                    alpha: 0.5
+                    reduction: 'batchmean'
+            factor: 2.0
         sub_terms:
-            pkt:
+            cckd:
                 criterion:
-                    type: 'PKTLoss'
+                    type: 'CRDLoss'
                     params:
-                        student_module_path: 'fc'
-                        student_module_io: 'input'
-                        teacher_module_path: 'fc'
-                        teacher_module_io: 'input'
+                        teacher_norm_module_path: 'normalizer'
+                        student_norm_module_path: 'normalizer'
+                        student_empty_module_path: 'empty'
+                        input_size: *feature_dim
+                        output_size: &num_samples 1281167
+                        num_negative_samples: *num_negative_samples
+                        num_samples: *num_samples
+                        temperature: 0.07
+                        momentum: 0.5
                         eps: 0.0000001
-                factor: 30000.0
+                factor: 0.8
 
 test:
     test_data_loader:

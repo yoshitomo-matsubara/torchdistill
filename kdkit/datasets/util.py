@@ -8,7 +8,7 @@ from torchvision.datasets import ImageFolder
 from kdkit.common.constant import def_logger
 from kdkit.datasets.coco import ImageToTensor, Compose, CocoRandomHorizontalFlip, get_coco, coco_collate_fn
 from kdkit.datasets.sampler import get_batch_sampler
-from kdkit.datasets.wrapper import default_idx2subpath, BaseDatasetWrapper, CacheableDataset
+from kdkit.datasets.wrapper import default_idx2subpath, BaseDatasetWrapper, CacheableDataset, get_dataset_wrapper
 
 logger = def_logger.getChild(__name__)
 
@@ -87,7 +87,10 @@ def get_all_dataset(datasets_config):
 def build_data_loader(dataset, data_loader_config, distributed):
     num_workers = data_loader_config['num_workers']
     cache_dir_path = data_loader_config.get('cache_output', None)
-    if cache_dir_path is not None:
+    dataset_wrapper_config = data_loader_config.get('dataset_wrapper', None)
+    if isinstance(dataset_wrapper_config, dict) and len(dataset_wrapper_config) > 0:
+        dataset = get_dataset_wrapper(dataset_wrapper_config['name'], dataset, **dataset_wrapper_config['params'])
+    elif cache_dir_path is not None:
         dataset = CacheableDataset(dataset, cache_dir_path, idx2subpath_func=default_idx2subpath)
     elif data_loader_config.get('requires_supp', False):
         dataset = BaseDatasetWrapper(dataset)
