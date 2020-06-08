@@ -7,12 +7,18 @@ from torch.nn.functional import adaptive_max_pool2d, normalize
 from kdkit.common.constant import def_logger
 from myutils.pytorch import func_util
 
+LOSS_WRAPPER_CLASS_DICT = dict()
 SINGLE_LOSS_CLASS_DICT = dict()
 CUSTOM_LOSS_CLASS_DICT = dict()
 FUNC2EXTRACT_ORG_OUTPUT_DICT = dict()
 
 logger = def_logger.getChild(__name__)
 SPECIAL_CLASS_DICT = dict()
+
+
+def register_loss_wrapper(cls):
+    LOSS_WRAPPER_CLASS_DICT[cls.__name__] = cls
+    return cls
 
 
 def register_single_loss(cls):
@@ -31,6 +37,7 @@ def extract_feature_map(io_dict, feature_map_config):
     return io_dict[module_path][io_type]
 
 
+@register_loss_wrapper
 class SimpleLossWrapper(nn.Module):
     def __init__(self, single_loss, params_config):
         super().__init__()
@@ -54,6 +61,28 @@ class SimpleLossWrapper(nn.Module):
         target_batch = self.extract_value(teacher_io_dict if self.is_target_from_teacher else student_io_dict,
                                           self.target_module_path, self.target_key)
         return self.single_loss(input_batch, target_batch, *args, **kwargs)
+
+
+@register_loss_wrapper
+class DictLossWrapper(SimpleLossWrapper):
+    def __init__(self, single_loss, params_config, reduction='mean'):
+        super().__init__(single_loss, params_config)
+        self.factor_dict = params_config.get('factors', dict())
+        self.reduction = reduction
+
+    def forward(self, student_io_dict, teacher_io_dict, *args, **kwargs):
+        input_batch_dict = self.extract_value(teacher_io_dict if self.is_input_from_teacher else student_io_dict,
+                                              self.input_module_path, self.input_key)
+        target_batch_dict = self.extract_value(teacher_io_dict if self.is_target_from_teacher else student_io_dict,
+                                               self.target_module_path, self.target_key)
+        loss = 0
+        count = 0
+        for key, input_batch in input_batch_dict.items():
+            target_batch = target_batch_dict[key]
+            count += target_batch.nelement()
+            factor = self.factor_dict.get(key, 1)
+            loss += factor * self.single_loss(input_batch, target_batch, *args, **kwargs)
+        return loss / count if self.reduction == 'mean' else loss
 
 
 @register_single_loss
@@ -565,11 +594,20 @@ class CRDLoss(nn.Module):
         return loss
 
 
+def get_loss_wrapper(single_loss, params_config, wrapper_config):
+    wrapper_type = wrapper_config.get('type', None)
+    if wrapper_type in LOSS_WRAPPER_CLASS_DICT:
+        return LOSS_WRAPPER_CLASS_DICT[wrapper_type](**wrapper_config.get('params', dict()))
+    return SimpleLossWrapper(single_loss, params_config)
+
+
 def get_single_loss(single_criterion_config, params_config=None):
     loss_type = single_criterion_config['type']
     single_loss = SINGLE_LOSS_CLASS_DICT[loss_type](**single_criterion_config['params']) \
         if loss_type in SINGLE_LOSS_CLASS_DICT else func_util.get_loss(loss_type, single_criterion_config['params'])
-    return single_loss if params_config is None else SimpleLossWrapper(single_loss, params_config)
+    if params_config is None:
+        return single_loss
+    return get_loss_wrapper(single_loss, params_config, params_config.get('wrapper', dict()))
 
 
 class CustomLoss(nn.Module):
@@ -635,6 +673,14 @@ def extract_simple_org_loss(org_criterion, student_outputs, teacher_outputs, tar
             org_loss = org_criterion(student_outputs, teacher_outputs, targets) if uses_teacher_output \
                 else org_criterion(student_outputs, targets)
             org_loss_dict = {0: org_loss}
+    return org_loss_dict
+
+
+@register_func2extract_org_output
+def extract_rcnn_org_loss(org_criterion, student_outputs, teacher_outputs, targets, uses_teacher_output, **kwargs):
+    org_loss_dict = dict()
+    if isinstance(student_outputs, dict):
+        org_loss_dict = org_loss_dict.update(student_outputs)
     return org_loss_dict
 
 

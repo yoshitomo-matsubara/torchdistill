@@ -1,0 +1,191 @@
+datasets:
+    coco2017:
+        name: &dataset_name 'coco2017'
+        type: 'cocodetect'
+        root: &root_dir !join ['./resource/dataset/', *dataset_name]
+        splits:
+            train:
+                dataset_id: &coco_train !join [*dataset_name, '/train']
+                images: !join [*root_dir, '/train2017']
+                annotations: !join [*root_dir, '/annotations/instances_train2017.json']
+                annotated_only: True
+                random_horizontal_flip: 0.5
+            val:
+                dataset_id: &coco_val !join [*dataset_name, '/val']
+                images: !join [*root_dir, '/val2017']
+                annotations: !join [*root_dir, '/annotations/instances_val2017.json']
+                annotated_only: False
+
+models:
+    teacher_model:
+        name: &teacher_model_name 'keypointrcnn_resnet50_fpn'
+        forward_proc: 'forward_batch'
+        params:
+            pretrained: True
+            progress: True
+            num_classes: 2
+            num_keypoints: 17
+            pretrained_backbone: True
+        experiment: &teacher_experiment !join [*dataset_name, '-', *teacher_model_name]
+        ckpt: !join ['./resource/ckpt/teacher/', *teacher_experiment, '.pt']
+    student_model:
+        name: &student_model_name 'custom_keypointrcnn_resnet_fpn'
+        forward_proc: 'forward_batch_target'
+        params:
+            pretrained: True
+            progress: True
+            num_classes: 2
+            num_keypoints: 17
+            pretrained_backbone: True
+            backbone:
+                name: 'resnet18'
+                params:
+                    num_classes: 1000
+                    pretrained: True
+                    trainable_backbone_layers: 3
+        experiment: &student_experiment !join [*dataset_name, '-', *student_model_name, '_from_', *teacher_model_name]
+        ckpt: !join ['./resource/ckpt/single_stage/hkd/', *student_experiment, '.pt']
+
+train:
+    log_freq: 1000
+    num_epochs: 20
+    train_data_loader:
+        dataset_id: *coco_train
+        random_sample: True
+        num_workers: 16
+        batch_sampler:
+            type: 'GroupedBatchSampler'
+            params:
+                aspect_ratio_group_factor: 3
+                batch_size: 4
+        collate_fn: 'coco_collate_fn'
+        cache_output:
+    val_data_loader:
+        dataset_id: *coco_val
+        random_sample: False
+        batch_size: 1
+        num_workers: 16
+        collate_fn: 'coco_collate_fn'
+    teacher:
+        forward_proc: 'forward_batch'
+        sequential: []
+        special:
+        frozen_modules: []
+        forward_hook:
+            input: []
+            output: ['backbone.fpn', 'roi_heads.keypoint_roi_pool', 'roi_heads.box_predictor.cls_score', 'roi_heads.box_predictor.bbox_pred']
+        wrapper:
+        requires_grad: False
+    student:
+        forward_proc: 'forward_batch'
+        adaptations:
+        sequential: []
+        special:
+        frozen_modules: []
+        forward_hook:
+            input: []
+            output: ['backbone.fpn', 'roi_heads.keypoint_roi_pool', 'roi_heads.box_predictor.cls_score', 'roi_heads.box_predictor.bbox_pred']
+        wrapper:
+        requires_grad: True
+    apex:
+        requires: False
+        opt_level: '01'
+    optimizer:
+        type: 'Adam'
+        params:
+            lr: 0.001
+    scheduler:
+        type: 'MultiStepLR'
+        params:
+            milestones: [5, 10, 15]
+            gamma: 0.1
+    criterion:
+        type: 'GeneralizedCustomLoss'
+        func2extract_org_loss: 'extract_rcnn_org_loss'
+        org_term:
+            factor: 1.0
+        sub_terms:
+            fpn:
+                criterion:
+                    type: 'MSELoss'
+                    params:
+                        reduction: 'sum'
+                params:
+                    wrapper:
+                        type: 'DictLossWrapper'
+                        params:
+                            reduction: 'mean'
+                    input:
+                        is_from_teacher: False
+                        module_path: 'backbone.fpn'
+                        io: 'output'
+                    target:
+                        is_from_teacher: True
+                        module_path: 'backbone.fpn'
+                        io: 'output'
+                factor: 1.0
+            roi_align:
+                criterion:
+                    type: 'MSELoss'
+                    params:
+                        reduction: 'sum'
+                params:
+                    wrapper:
+                        type: 'DictLossWrapper'
+                        params:
+                            reduction: 'mean'
+                    input:
+                        is_from_teacher: False
+                        module_path: 'roi_heads.keypoint_roi_pool'
+                        io: 'output'
+                    target:
+                        is_from_teacher: True
+                        module_path: 'roi_heads.keypoint_roi_pool'
+                        io: 'output'
+                factor: 1.0
+            cls_logit:
+                criterion:
+                    type: 'MSELoss'
+                    params:
+                        reduction: 'sum'
+                params:
+                    wrapper:
+                        type: 'DictLossWrapper'
+                        params:
+                            reduction: 'mean'
+                    input:
+                        is_from_teacher: False
+                        module_path: 'roi_heads.box_predictor.cls_score'
+                        io: 'output'
+                    target:
+                        is_from_teacher: True
+                        module_path: 'roi_heads.box_predictor.cls_score'
+                        io: 'output'
+                factor: 1.0
+            bbox_logit:
+                wrapper:
+                    type: 'DictLossWrapper'
+                    params:
+                        reduction: 'mean'
+                criterion:
+                    type: 'MSELoss'
+                    params:
+                        reduction: 'sum'
+                params:
+                    input:
+                        is_from_teacher: False
+                        module_path: 'roi_heads.box_predictor.bbox_pred'
+                        io: 'output'
+                    target:
+                        is_from_teacher: True
+                        module_path: 'roi_heads.box_predictor.bbox_pred'
+                        io: 'output'
+                factor: 1.0
+
+test:
+    test_data_loader:
+        dataset_id: *coco_val
+        random_sample: False
+        batch_size: 1
+        num_workers: 16
+        collate_fn: 'coco_collate_fn'
