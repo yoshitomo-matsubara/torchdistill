@@ -549,9 +549,14 @@ class CRDLoss(nn.Module):
         supp_dict = student_io_dict[self.student_empty_module_path]['input']
         pos_idx, contrast_idx = supp_dict['pos_idx'], supp_dict.get('contrast_idx', None)
         device = student_linear_outputs.device
+        pos_idx = pos_idx.to(device)
+        if contrast_idx is not None:
+            contrast_idx = contrast_idx.to(device)
+
         if device != self.probs.device:
             self.probs.to(device)
             self.alias.to(device)
+            self.to(device)
 
         out_s, out_t = self.contrast_memory(student_linear_outputs, teacher_linear_outputs, pos_idx, contrast_idx)
         student_contrast_loss = self.compute_contrast_loss(out_s)
