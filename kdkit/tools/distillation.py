@@ -159,9 +159,6 @@ class DistillationBox(nn.Module):
         if self.distributed and self.train_data_loader.sampler is not None:
             self.train_data_loader.sampler.set_epoch(epoch)
 
-    def check_if_org_loss_required(self):
-        return self.org_criterion is not None
-
     def get_teacher_output(self, sample_batch, targets, supp_dict):
         cached_data = supp_dict.get('cached_data', None)
         cache_file_paths = supp_dict.get('cache_file_path', None)

@@ -70,7 +70,7 @@ train:
         frozen_modules: []
         forward_hook:
             input: []
-            output: ['backbone.fpn', 'roi_heads.keypoint_roi_pool', 'roi_heads.box_predictor.cls_score', 'roi_heads.box_predictor.bbox_pred']
+            output: ['backbone.fpn', 'roi_heads.keypoint_roi_pool', 'roi_heads.box_predictor.cls_score', 'roi_heads.box_predictor.bbox_pred', 'roi_heads.keypoint_predictor']
         wrapper:
         requires_grad: False
     student:
@@ -80,7 +80,7 @@ train:
         frozen_modules: []
         forward_hook:
             input: []
-            output: ['backbone.fpn', 'roi_heads.keypoint_roi_pool', 'roi_heads.box_predictor.cls_score', 'roi_heads.box_predictor.bbox_pred']
+            output: ['backbone.fpn', 'roi_heads.keypoint_roi_pool', 'roi_heads.box_predictor.cls_score', 'roi_heads.box_predictor.bbox_pred', 'roi_heads.keypoint_predictor']
         wrapper:
         requires_grad: True
     apex:
@@ -155,6 +155,25 @@ train:
                         io: 'output'
                 factor: 1.0
             bbox_logit:
+                wrapper:
+                    type: 'DictLossWrapper'
+                    params:
+                        reduction: 'mean'
+                criterion:
+                    type: 'MSELoss'
+                    params:
+                        reduction: 'sum'
+                params:
+                    input:
+                        is_from_teacher: False
+                        module_path: 'roi_heads.box_predictor.bbox_pred'
+                        io: 'output'
+                    target:
+                        is_from_teacher: True
+                        module_path: 'roi_heads.box_predictor.bbox_pred'
+                        io: 'output'
+                factor: 1.0
+            keypoint_logit:
                 wrapper:
                     type: 'DictLossWrapper'
                     params:
