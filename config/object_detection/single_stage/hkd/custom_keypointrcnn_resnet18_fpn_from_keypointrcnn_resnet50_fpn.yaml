@@ -7,13 +7,13 @@ datasets:
             train:
                 dataset_id: &coco_train !join [*dataset_name, '/train']
                 images: !join [*root_dir, '/train2017']
-                annotations: !join [*root_dir, '/annotations/instances_train2017.json']
+                annotations: !join [*root_dir, '/annotations/person_keypoints_train2017.json']
                 annotated_only: True
                 random_horizontal_flip: 0.5
             val:
                 dataset_id: &coco_val !join [*dataset_name, '/val']
                 images: !join [*root_dir, '/val2017']
-                annotations: !join [*root_dir, '/annotations/instances_val2017.json']
+                annotations: !join [*root_dir, '/annotations/person_keypoints_val2017.json']
                 annotated_only: False
 
 models:
