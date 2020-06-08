@@ -60,7 +60,7 @@ class ContrastiveDataset(BaseDatasetWrapper):
         super().__init__(org_dataset)
         self.num_negative_samples = num_negative_samples
         self.mode = mode
-        num_classes = len(org_dataset.targets)
+        num_classes = len(org_dataset.classes)
         num_samples = len(org_dataset)
         labels = org_dataset.targets
         self.cls_positives = [[] for i in range(num_classes)]
