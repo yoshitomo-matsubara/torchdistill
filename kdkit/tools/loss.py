@@ -65,7 +65,7 @@ class SimpleLossWrapper(nn.Module):
 
 @register_loss_wrapper
 class DictLossWrapper(SimpleLossWrapper):
-    def __init__(self, single_loss, params_config, reduction='mean'):
+    def __init__(self, single_loss, params_config, reduction='mean', **kwargs):
         super().__init__(single_loss, params_config)
         self.factor_dict = params_config.get('factors', dict())
         self.reduction = reduction
@@ -597,7 +597,7 @@ class CRDLoss(nn.Module):
 def get_loss_wrapper(single_loss, params_config, wrapper_config):
     wrapper_type = wrapper_config.get('type', None)
     if wrapper_type in LOSS_WRAPPER_CLASS_DICT:
-        return LOSS_WRAPPER_CLASS_DICT[wrapper_type](**wrapper_config.get('params', dict()))
+        return LOSS_WRAPPER_CLASS_DICT[wrapper_type](single_loss, params_config, **wrapper_config.get('params', dict()))
     return SimpleLossWrapper(single_loss, params_config)
 
 
