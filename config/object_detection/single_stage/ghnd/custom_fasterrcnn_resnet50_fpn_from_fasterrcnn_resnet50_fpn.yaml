@@ -74,7 +74,7 @@ train:
             type: 'HeadRCNN'
             params:
                 head_rcnn:
-                    sequential: ['backbone.body.conv1', 'backbone.body.bn1', 'backbone.body.relu', 'backbone.body.maxpool', 'backbone.body.layer1', 'backbone.body.layer2', 'backbone.body.layer3', 'backbone.body.layer4']
+                    sequential: ['backbone.body']
         frozen_modules: []
         forward_hook:
             input: []
@@ -89,7 +89,7 @@ train:
             type: 'HeadRCNN'
             params:
                 head_rcnn:
-                    sequential: ['backbone.body.conv1', 'backbone.body.bn1', 'backbone.body.relu', 'backbone.body.maxpool', 'backbone.body.layer1', 'backbone.body.layer2', 'backbone.body.layer3', 'backbone.body.layer4']
+                    sequential: ['backbone.body']
         frozen_modules: ['seq.backbone.body.layer2', 'seq.backbone.body.layer3', 'seq.backbone.body.layer4']
         forward_hook:
             input: []
