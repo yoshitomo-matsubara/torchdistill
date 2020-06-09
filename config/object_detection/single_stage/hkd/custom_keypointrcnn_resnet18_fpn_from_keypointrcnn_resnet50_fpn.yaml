@@ -141,10 +141,6 @@ train:
                     params:
                         reduction: 'sum'
                 params:
-                    wrapper:
-                        type: 'DictLossWrapper'
-                        params:
-                            reduction: 'mean'
                     input:
                         is_from_teacher: False
                         module_path: 'roi_heads.box_predictor.cls_score'
@@ -155,10 +151,6 @@ train:
                         io: 'output'
                 factor: 1.0
             bbox_logit:
-                wrapper:
-                    type: 'DictLossWrapper'
-                    params:
-                        reduction: 'mean'
                 criterion:
                     type: 'MSELoss'
                     params:
@@ -174,10 +166,6 @@ train:
                         io: 'output'
                 factor: 1.0
             keypoint_logit:
-                wrapper:
-                    type: 'DictLossWrapper'
-                    params:
-                        reduction: 'mean'
                 criterion:
                     type: 'MSELoss'
                     params:
