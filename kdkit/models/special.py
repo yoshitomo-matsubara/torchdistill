@@ -117,9 +117,9 @@ class Teacher4FactorTransfer(SpecialModule):
     Teacher for factor transfer proposed in "Paraphrasing Complex Network: Network Compression via Factor Transfer"
     """
 
-    def __init__(self, base_model_config, input_module_path, paraphraser_params_config, paraphraser_ckpt, **kwargs):
+    def __init__(self, teacher_model, input_module_path, paraphraser_params_config, paraphraser_ckpt, **kwargs):
         super().__init__()
-        self.teacher_model = get_vision_model(base_model_config)
+        self.teacher_model = teacher_model
         self.input_module_path = input_module_path
         self.paraphraser = Paraphraser4FactorTransfer(**paraphraser_params_config)
         self.ckpt_file_path = paraphraser_ckpt

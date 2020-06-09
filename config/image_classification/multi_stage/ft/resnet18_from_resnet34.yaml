@@ -19,7 +19,7 @@ datasets:
             std: [0.229, 0.224, 0.225]
 
 models:
-    teacher_model: &teacher_model
+    teacher_model:
         name: &teacher_model_name 'resnet34'
         params:
             num_classes: 1000
@@ -51,22 +51,10 @@ train:
             batch_size: 32
             num_workers: 16
         teacher:
-            special:
-                type: 'EmptyModule'
-                params:
-            sequential: []
-            forward_hook:
-                input: []
-                output: []
-            wrapper:
-            requires_grad: False
-        student:
-            adaptations:
             sequential: []
             special: &teacher4ft
                 type: 'Teacher4FactorTransfer'
                 params:
-                    base_model_config: *teacher_model
                     input_module_path: 'teacher_model.layer4'
                     paraphraser_params_config:
                         k: 0.5
@@ -82,6 +70,17 @@ train:
             wrapper:
             requires_grad: True
             frozen_modules: ['teacher_model.conv1', 'teacher_model.relu', 'teacher_model.maxpool', 'teacher_model.layer1', 'teacher_model.layer2', 'teacher_model.layer3', 'teacher_model.layer4', 'teacher_model.fc']
+        student:
+            adaptations:
+            special:
+                type: 'EmptyModule'
+                params:
+            sequential: []
+            forward_hook:
+                input: []
+                output: []
+            wrapper:
+            requires_grad: False
         apex:
             requires: False
             opt_level: '01'
@@ -103,11 +102,11 @@ train:
                             reduction: 'sum'
                     params:
                         input:
-                            is_from_teacher: False
+                            is_from_teacher: True
                             module_path: 'paraphraser'
                             io: 'output'
                         target:
-                            is_from_teacher: False
+                            is_from_teacher: True
                             module_path: 'teacher_model.layer4'
                             io: 'output'
                     factor: 1.0
