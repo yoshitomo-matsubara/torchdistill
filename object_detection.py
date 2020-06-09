@@ -12,8 +12,8 @@ from torch.utils.data._utils.collate import default_collate
 from torchvision.models.detection.keypoint_rcnn import KeypointRCNN
 from torchvision.models.detection.mask_rcnn import MaskRCNN
 
-from kdkit.common import main_util
 from kdkit.common.constant import def_logger
+from kdkit.common.main_util import is_main_process, init_distributed_mode, load_ckpt, save_ckpt
 from kdkit.datasets import util
 from kdkit.datasets.coco import get_coco_api_from_dataset
 from kdkit.eval.coco import CocoEvaluator
@@ -47,7 +47,7 @@ def get_model(model_config, device):
         model = MODEL_DICT[model_config['name']](**model_config['params'])
 
     ckpt_file_path = model_config['ckpt']
-    main_util.load_ckpt(ckpt_file_path, model=model, strict=True)
+    load_ckpt(ckpt_file_path, model=model, strict=True)
     return model.to(device)
 
 
@@ -140,7 +140,7 @@ def distill(teacher_model, student_model, dataset_dict, device, device_ids, dist
     best_val_map = 0.0
     optimizer, lr_scheduler = distillation_box.optimizer, distillation_box.lr_scheduler
     if file_util.check_if_exists(ckpt_file_path):
-        best_val_map, _, _ = main_util.load_ckpt(ckpt_file_path, optimizer=optimizer, lr_scheduler=lr_scheduler)
+        best_val_map, _, _ = load_ckpt(ckpt_file_path, optimizer=optimizer, lr_scheduler=lr_scheduler)
 
     log_freq = train_config['log_freq']
     student_model_without_ddp = student_model.module if module_util.check_if_wrapped(student_model) else student_model
@@ -153,11 +153,11 @@ def distill(teacher_model, student_model, dataset_dict, device, device_ids, dist
                      log_freq=log_freq, header='Validation:')
         # Average Precision  (AP) @[ IoU=0.50:0.95 | area=   all | maxDets=100 ]
         val_map = val_coco_evaluator.coco_eval['bbox'].stats[0]
-        if val_map > best_val_map and main_util.is_main_process():
+        if val_map > best_val_map and is_main_process():
             logger.info('Updating ckpt (Best BBox mAP: {:.4f} -> {:.4f})'.format(best_val_map, val_map))
             best_val_map = val_map
-            main_util.save_ckpt(student_model_without_ddp, optimizer, lr_scheduler,
-                                best_val_map, config, args, ckpt_file_path)
+            save_ckpt(student_model_without_ddp, optimizer, lr_scheduler,
+                      best_val_map, config, args, ckpt_file_path)
         distillation_box.post_process()
 
     if distributed:
@@ -171,10 +171,10 @@ def distill(teacher_model, student_model, dataset_dict, device, device_ids, dist
 
 def main(args):
     log_file_path = args.log
-    if main_util.is_main_process() and log_file_path is not None:
+    if is_main_process() and log_file_path is not None:
         setup_log_file(os.path.expanduser(log_file_path))
 
-    distributed, device_ids = main_util.init_distributed_mode(args.world_size, args.dist_url)
+    distributed, device_ids = init_distributed_mode(args.world_size, args.dist_url)
     logger.info(args)
     cudnn.benchmark = True
     config = yaml_util.load_yaml_file(os.path.expanduser(args.config))
@@ -190,7 +190,7 @@ def main(args):
         distill(teacher_model, student_model, dataset_dict, device, device_ids, distributed, start_epoch, config, args)
         student_model_without_ddp =\
             student_model.module if module_util.check_if_wrapped(student_model) else student_model
-        main_util.load_ckpt(student_model_config['ckpt'], model=student_model_without_ddp, strict=True)
+        load_ckpt(student_model_config['ckpt'], model=student_model_without_ddp, strict=True)
 
     test_config = config['test']
     test_data_loader_config = test_config['test_data_loader']
