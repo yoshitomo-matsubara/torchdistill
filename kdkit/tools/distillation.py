@@ -2,6 +2,7 @@ import sys
 
 import torch
 from torch import nn
+from torch.utils.data import BatchSampler
 
 from kdkit.common.constant import def_logger
 from kdkit.datasets.util import build_data_loaders
@@ -157,7 +158,10 @@ class DistillationBox(nn.Module):
         self.teacher_model.eval()
         self.student_model.train()
         if self.distributed and self.train_data_loader.sampler is not None:
-            self.train_data_loader.sampler.set_epoch(epoch)
+            if isinstance(self.train_data_loader.sampler, BatchSampler):
+                self.train_data_loader.sampler.sampler.set_epoch(epoch)
+            else:
+                self.train_data_loader.sampler.set_epoch(epoch)
 
     def get_teacher_output(self, sample_batch, targets, supp_dict):
         cached_data = supp_dict.get('cached_data', None)
