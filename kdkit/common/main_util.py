@@ -1,3 +1,4 @@
+import builtins as __builtin__
 import logging
 import os
 
@@ -16,6 +17,14 @@ def setup_for_distributed(is_master):
     This function disables logging when not in master process
     """
     def_logger.setLevel(logging.INFO if is_master else logging.WARN)
+    builtin_print = __builtin__.print
+
+    def print(*args, **kwargs):
+        force = kwargs.pop('force', False)
+        if is_master or force:
+            builtin_print(*args, **kwargs)
+
+    __builtin__.print = print
 
 
 def is_dist_avail_and_initialized():
