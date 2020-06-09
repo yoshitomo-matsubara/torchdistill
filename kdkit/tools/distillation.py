@@ -158,8 +158,8 @@ class DistillationBox(nn.Module):
         self.teacher_model.eval()
         self.student_model.train()
         if self.distributed and self.train_data_loader.sampler is not None:
-            if isinstance(self.train_data_loader.sampler, BatchSampler):
-                self.train_data_loader.sampler.sampler.set_epoch(epoch)
+            if isinstance(self.train_data_loader.batch_sampler, BatchSampler):
+                self.train_data_loader.batch_sampler.sampler.set_epoch(epoch)
             else:
                 self.train_data_loader.sampler.set_epoch(epoch)
 
