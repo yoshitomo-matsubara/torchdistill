@@ -114,7 +114,7 @@ train:
                             io: 'output'
                     factor: 1.0
     stage2:
-        num_epochs: 15
+        num_epochs: 19
         teacher:
             sequential: []
             special:
