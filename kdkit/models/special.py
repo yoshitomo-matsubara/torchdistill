@@ -120,7 +120,7 @@ class Teacher4FactorTransfer(SpecialModule):
                  paraphraser_params, paraphraser_ckpt, uses_decoder, **kwargs):
         super().__init__()
         special_teacher_model = build_special_module(minimal, teacher_model=teacher_model)
-        model_type = 'minimal'
+        model_type = 'original'
         teacher_ref_model = teacher_model
         if special_teacher_model is not None:
             teacher_ref_model = special_teacher_model
