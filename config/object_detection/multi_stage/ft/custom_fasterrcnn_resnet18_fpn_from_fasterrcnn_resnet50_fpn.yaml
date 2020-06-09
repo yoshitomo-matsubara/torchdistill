@@ -81,7 +81,7 @@ train:
                 params:
                     base_model_config: *teacher_model
                     input_module_path: 'teacher_model.backbone.body.layer4'
-                    paraphraser_params_config:
+                    paraphraser_params:
                         k: 0.5
                         num_input_channels: 2048
                         kernel_size: 3
@@ -141,7 +141,7 @@ train:
                 type: 'Student4FactorTransfer'
                 params:
                     input_module_path: 'student_model.backbone.body.layer4'
-                    translator_params_config:
+                    translator_params:
                         num_input_channels: 512
                         num_output_channels: 512
                         kernel_size: 3

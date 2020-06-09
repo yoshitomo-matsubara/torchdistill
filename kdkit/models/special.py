@@ -7,7 +7,6 @@ from torch.jit.annotations import Tuple, List
 
 from kdkit.common import main_util
 from kdkit.common.constant import def_logger
-from kdkit.models.official import get_vision_model
 from kdkit.models.util import redesign_model
 from myutils.common import file_util
 
@@ -117,19 +116,22 @@ class Teacher4FactorTransfer(SpecialModule):
     Teacher for factor transfer proposed in "Paraphrasing Complex Network: Network Compression via Factor Transfer"
     """
 
-    def __init__(self, teacher_model, input_module_path, paraphraser_params_config, paraphraser_ckpt, **kwargs):
+    def __init__(self, teacher_model, input_module_path, paraphraser_params, paraphraser_ckpt, uses_decoder, **kwargs):
         super().__init__()
         self.teacher_model = teacher_model
         self.input_module_path = input_module_path
-        self.paraphraser = Paraphraser4FactorTransfer(**paraphraser_params_config)
+        self.paraphraser = Paraphraser4FactorTransfer(**paraphraser_params)
         self.ckpt_file_path = paraphraser_ckpt
         if os.path.isfile(self.ckpt_file_path):
             self.paraphraser.load_state_dict(torch.load(self.ckpt_file_path, map_location='cpu'))
+        self.uses_decoder = uses_decoder
 
     def forward(self, x):
         return self.teacher_model(x)
 
     def post_forward(self, info_dict):
+        if self.uses_decoder and not self.paraphraser.training:
+            self.paraphraser.train()
         self.paraphraser(info_dict[self.input_module_path]['output'])
 
     def post_process(self, *args, **kwargs):
@@ -144,11 +146,11 @@ class Student4FactorTransfer(SpecialModule):
     Student for factor transfer proposed in "Paraphrasing Complex Network: Network Compression via Factor Transfer"
     """
 
-    def __init__(self, student_model, input_module_path, translator_params_config, **kwargs):
+    def __init__(self, student_model, input_module_path, translator_params, **kwargs):
         super().__init__()
         self.student_model = student_model
         self.input_module_path = input_module_path
-        self.translator = Translator4FactorTransfer(**translator_params_config)
+        self.translator = Translator4FactorTransfer(**translator_params)
 
     def forward(self, x):
         return self.student_model(x)
