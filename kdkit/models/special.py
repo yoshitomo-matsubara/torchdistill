@@ -137,8 +137,8 @@ class Teacher4FactorTransfer(SpecialModule):
             self.paraphraser.load_state_dict(torch.load(self.ckpt_file_path, map_location='cpu'))
         self.uses_decoder = uses_decoder
 
-    def forward(self, x):
-        return self.teacher_model(x)
+    def forward(self, *args):
+        return self.teacher_model(*args)
 
     def post_forward(self, info_dict):
         if self.uses_decoder and not self.paraphraser.training:
