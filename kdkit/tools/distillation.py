@@ -145,6 +145,7 @@ class DistillationBox(nn.Module):
         self.device = device
         self.device_ids = device_ids
         self.distributed = distributed
+        self.lr_factor = lr_factor
         self.teacher_model = None
         self.student_model = None
         self.teacher_forward_proc, self.student_forward_proc = None, None
@@ -156,7 +157,6 @@ class DistillationBox(nn.Module):
         self.apex = None
         self.setup(train_config)
         self.num_epochs = train_config['num_epochs']
-        self.lr_factor = lr_factor
 
     def pre_process(self, epoch=None, **kwargs):
         self.teacher_model.eval()

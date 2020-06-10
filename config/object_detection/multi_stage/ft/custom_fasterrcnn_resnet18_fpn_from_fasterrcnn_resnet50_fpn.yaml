@@ -133,6 +133,7 @@ train:
     stage2:
         num_epochs: 19
         teacher:
+            forward_proc: 'forward_batch_target'
             sequential: []
             special:
                 type: *teacher4ft
@@ -148,6 +149,7 @@ train:
             wrapper:
             requires_grad: False
         student:
+            forward_proc: 'forward_batch_target'
             adaptations:
             sequential: []
             special:
