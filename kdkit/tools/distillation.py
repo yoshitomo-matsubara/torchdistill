@@ -112,7 +112,9 @@ class DistillationBox(nn.Module):
             trainable_module_list.append(self.teacher_model)
 
         if len(optim_config) > 0:
-            self.optimizer = get_optimizer(trainable_module_list, optim_config['type'], optim_config['params'])
+            optim_params_config = optim_config['params']
+            optim_params_config['lr'] *= self.lr_factor
+            self.optimizer = get_optimizer(trainable_module_list, optim_config['type'], optim_params_config)
             optimizer_reset = True
 
         scheduler_config = train_config.get('scheduler', None)
@@ -134,7 +136,8 @@ class DistillationBox(nn.Module):
                 amp.initialize(self.student_model, self.optimizer, opt_level=apex_config['opt_level'])
             self.apex = True
 
-    def __init__(self, teacher_model, student_model, dataset_dict, train_config, device, device_ids, distributed):
+    def __init__(self, teacher_model, student_model, dataset_dict,
+                 train_config, device, device_ids, distributed, lr_factor):
         super().__init__()
         self.org_teacher_model = teacher_model
         self.org_student_model = student_model
@@ -153,15 +156,13 @@ class DistillationBox(nn.Module):
         self.apex = None
         self.setup(train_config)
         self.num_epochs = train_config['num_epochs']
+        self.lr_factor = lr_factor
 
     def pre_process(self, epoch=None, **kwargs):
         self.teacher_model.eval()
         self.student_model.train()
-        if self.distributed and self.train_data_loader.sampler is not None:
-            if isinstance(self.train_data_loader.batch_sampler, BatchSampler):
-                self.train_data_loader.batch_sampler.sampler.set_epoch(epoch)
-            else:
-                self.train_data_loader.sampler.set_epoch(epoch)
+        if self.distributed:
+            self.train_data_loader.batch_sampler.sampler.set_epoch(epoch)
 
     def get_teacher_output(self, sample_batch, targets, supp_dict):
         cached_data = supp_dict.get('cached_data', None)
@@ -244,9 +245,11 @@ class DistillationBox(nn.Module):
 
 
 class MultiStagesDistillationBox(DistillationBox):
-    def __init__(self, teacher_model, student_model, data_loader_dict, train_config, device, device_ids, distributed):
+    def __init__(self, teacher_model, student_model, data_loader_dict,
+                 train_config, device, device_ids, distributed, lr_factor):
         stage1_config = train_config['stage1']
-        super().__init__(teacher_model, student_model, data_loader_dict, stage1_config, device, device_ids, distributed)
+        super().__init__(teacher_model, student_model, data_loader_dict,
+                         stage1_config, device, device_ids, distributed, lr_factor)
         self.train_config = train_config
         self.stage_number = 1
         self.stage_end_epoch = stage1_config['num_epochs']
@@ -269,9 +272,10 @@ class MultiStagesDistillationBox(DistillationBox):
             self.advance_to_next_stage()
 
 
-def get_distillation_box(teacher_model, student_model, data_loader_dict, train_config, device, device_ids, distributed):
+def get_distillation_box(teacher_model, student_model, data_loader_dict,
+                         train_config, device, device_ids, distributed, lr_factor):
     if 'stage1' in train_config:
         return MultiStagesDistillationBox(teacher_model, student_model, data_loader_dict,
-                                          train_config, device, device_ids, distributed)
+                                          train_config, device, device_ids, distributed, lr_factor)
     return DistillationBox(teacher_model, student_model, data_loader_dict, train_config,
-                           device, device_ids, distributed)
+                           device, device_ids, distributed, lr_factor)

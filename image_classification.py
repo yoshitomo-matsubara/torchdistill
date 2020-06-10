@@ -36,6 +36,8 @@ def get_argparser():
     # distributed training parameters
     parser.add_argument('--world_size', default=1, type=int, help='number of distributed processes')
     parser.add_argument('--dist_url', default='env://', help='url used to set up distributed training')
+    parser.add_argument('-adjust_lr', action='store_true',
+                        help='multiply learning rate by number of distributed processes (world_size)')
     return parser
 
 
@@ -100,11 +102,13 @@ def evaluate(model, data_loader, device, device_ids, distributed, log_freq=1000,
     return metric_logger.acc1.global_avg
 
 
-def distill(teacher_model, student_model, dataset_dict, device, device_ids, distributed, start_epoch, config, args):
+def distill(teacher_model, student_model, dataset_dict, device, device_ids, distributed, config, args):
     logger.info('Start distillation')
     train_config = config['train']
+    lr_factor = args.world_size if distributed and args.adjust_lr else 1
     distillation_box =\
-        get_distillation_box(teacher_model, student_model, dataset_dict, train_config, device, device_ids, distributed)
+        get_distillation_box(teacher_model, student_model, dataset_dict,
+                             train_config, device, device_ids, distributed, lr_factor)
     ckpt_file_path = config['models']['student_model']['ckpt']
     best_val_top1_accuracy = 0.0
     optimizer, lr_scheduler = distillation_box.optimizer, distillation_box.lr_scheduler
@@ -114,7 +118,7 @@ def distill(teacher_model, student_model, dataset_dict, device, device_ids, dist
     log_freq = train_config['log_freq']
     student_model_without_ddp = student_model.module if module_util.check_if_wrapped(student_model) else student_model
     start_time = time.time()
-    for epoch in range(start_epoch, distillation_box.num_epochs):
+    for epoch in range(args.start_epoch, distillation_box.num_epochs):
         distillation_box.pre_process(epoch=epoch)
         distill_one_epoch(distillation_box, device, epoch, log_freq)
         val_top1_accuracy = evaluate(student_model, distillation_box.val_data_loader, device, device_ids, distributed,
@@ -152,9 +156,8 @@ def main(args):
     teacher_model = get_model(teacher_model_config, device, distributed, False)
     student_model_config = models_config['student_model']
     student_model = get_model(student_model_config, device, distributed, args.sync_bn)
-    start_epoch = args.start_epoch
     if not args.test_only:
-        distill(teacher_model, student_model, dataset_dict, device, device_ids, distributed, start_epoch, config, args)
+        distill(teacher_model, student_model, dataset_dict, device, device_ids, distributed, config, args)
         student_model_without_ddp =\
             student_model.module if module_util.check_if_wrapped(student_model) else student_model
         load_ckpt(student_model_config['ckpt'], model=student_model_without_ddp, strict=True)
