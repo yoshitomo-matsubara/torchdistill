@@ -74,7 +74,7 @@ train:
                             params:
                                 head_rcnn:
                                     sequential: ['backbone.body']
-                    input_module_path: &teacher4ft_in_module 'teacher_model.backbone.body.layer4'
+                    input_module_path: &teacher4ft_in_module 'teacher_model.seq.backbone.body.layer4'
                     paraphraser_params: &teacher4ft_paraphraser_params
                         k: 0.25
                         num_input_channels: 2048
@@ -86,7 +86,7 @@ train:
                     uses_decoder: True
             forward_hook:
                 input: []
-                output: ['teacher_model.backbone.body.layer4', 'paraphraser']
+                output: ['teacher_model.seq.backbone.body.layer4', 'paraphraser']
             wrapper:
             requires_grad: True
             frozen_modules: ['teacher_model']
@@ -122,12 +122,12 @@ train:
                             reduction: 'sum'
                     params:
                         input:
-                            is_from_teacher: False
+                            is_from_teacher: True
                             module_path: 'paraphraser'
                             io: 'output'
                         target:
-                            is_from_teacher: False
-                            module_path: 'teacher_model.backbone.body.layer4'
+                            is_from_teacher: True
+                            module_path: 'teacher_model.seq.backbone.body.layer4'
                             io: 'output'
                     factor: 1.0
     stage2:
