@@ -55,7 +55,7 @@ train:
             special:
                 type: &teacher4ft 'Teacher4FactorTransfer'
                 params:
-                    minimal: &minimal_teacher
+                    minimal:
                         sequential: ['conv1', 'relu', 'maxpool', 'layer1', 'layer2', 'layer3', 'layer4']
                     input_module_path: &teacher4ft_in_module 'teacher_model.layer4'
                     paraphraser_params: &teacher4ft_paraphraser_params
@@ -120,7 +120,7 @@ train:
             special:
                 type: *teacher4ft
                 params:
-                    minimal: *minimal_teacher
+                    minimal:
                     input_module_path: *teacher4ft_in_module
                     paraphraser_params: *teacher4ft_paraphraser_params
                     paraphraser_ckpt: *teacher4ft_paraphraser_ckpt
