@@ -163,8 +163,8 @@ class Student4FactorTransfer(SpecialModule):
         self.input_module_path = input_module_path
         self.translator = Translator4FactorTransfer(**translator_params)
 
-    def forward(self, x):
-        return self.student_model(x)
+    def forward(self, *args):
+        return self.student_model(*args)
 
     def post_forward(self, info_dict):
         self.translator(info_dict[self.input_module_path]['output'])
