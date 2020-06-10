@@ -119,6 +119,9 @@ class Teacher4FactorTransfer(SpecialModule):
     def __init__(self, teacher_model, minimal, input_module_path,
                  paraphraser_params, paraphraser_ckpt, uses_decoder, **kwargs):
         super().__init__()
+        if minimal is None:
+            minimal = dict()
+        
         special_teacher_model = build_special_module(minimal, teacher_model=teacher_model)
         model_type = 'original'
         teacher_ref_model = teacher_model
