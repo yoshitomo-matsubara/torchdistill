@@ -74,7 +74,7 @@ train:
                             params:
                                 head_rcnn:
                                     sequential: ['backbone.body']
-                    input_module_path: &teacher4ft_in_module 'teacher_model.seq.backbone.body.layer4'
+                    input_module_path: 'teacher_model.seq.backbone.body.layer4'
                     paraphraser_params: &teacher4ft_paraphraser_params
                         k: 0.25
                         num_input_channels: 2048
@@ -138,7 +138,7 @@ train:
                 type: *teacher4ft
                 params:
                     minimal:
-                    input_module_path: *teacher4ft_in_module
+                    input_module_path: 'teacher_model.backbone.body.layer4'
                     paraphraser_params: *teacher4ft_paraphraser_params
                     paraphraser_ckpt: *teacher4ft_paraphraser_ckpt
                     uses_decoder: False
