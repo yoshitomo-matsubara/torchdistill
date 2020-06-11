@@ -56,7 +56,7 @@ class DistillationBox(nn.Module):
             special_student_model = build_special_module(student_config, student_model=unwrapped_org_student_model)
             if special_student_model is not None:
                 student_ref_model = special_student_model
-                model_type = type(teacher_ref_model).__name__
+                model_type = type(student_ref_model).__name__
             self.student_model = redesign_model(student_ref_model, student_config, 'student', model_type)
 
         self.target_teacher_pairs.extend(set_hooks(self.teacher_model, teacher_ref_model,
