@@ -2,7 +2,6 @@ import sys
 
 import torch
 from torch import nn
-from torch.utils.data import BatchSampler
 
 from kdkit.common.constant import def_logger
 from kdkit.datasets.util import build_data_loaders
