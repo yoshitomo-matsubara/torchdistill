@@ -168,7 +168,7 @@ train:
                 output: ['student_model.backbone.body.layer4', 'translator']
             wrapper:
             requires_grad: True
-            frozen_modules: ['teacher_model.backbone.body.conv1', 'teacher_model.backbone.body.bn1', 'teacher_model.backbone.body.relu', 'teacher_model.backbone.body.maxpool']
+            frozen_modules: ['backbone.body.conv1', 'backbone.body.bn1', 'backbone.body.relu', 'backbone.body.maxpool']
         apex:
             requires: False
             opt_level: '01'
