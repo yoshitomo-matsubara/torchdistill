@@ -185,6 +185,7 @@ train:
                 gamma: 0.1
         criterion:
             type: 'GeneralizedCustomLoss'
+            func2extract_org_loss: 'extract_rcnn_org_loss'
             org_term:
                 factor: 1.0
             sub_terms:
