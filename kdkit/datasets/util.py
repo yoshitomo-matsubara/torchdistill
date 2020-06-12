@@ -1,9 +1,10 @@
 import time
 
+import torchvision
 from torch.utils.data import DataLoader, RandomSampler, SequentialSampler
 from torch.utils.data.distributed import DistributedSampler
 from torchvision import transforms
-from torchvision.datasets import ImageFolder
+from torchvision.datasets import ImageFolder, PhotoTour, VOCDetection, Kinetics400, HMDB51, UCF101
 
 from kdkit.common.constant import def_logger
 from kdkit.datasets.coco import ImageToTensor, Compose, CocoRandomHorizontalFlip, get_coco, coco_collate_fn
@@ -11,6 +12,9 @@ from kdkit.datasets.sampler import get_batch_sampler
 from kdkit.datasets.wrapper import default_idx2subpath, BaseDatasetWrapper, CacheableDataset, get_dataset_wrapper
 
 logger = def_logger.getChild(__name__)
+
+DATASET_DICT = torchvision.datasets.__dict__
+TRANSFORMS_DICT = torchvision.transforms.__dict__
 
 
 def load_image_folder_dataset(dir_path, data_aug, rough_size, input_size, normalizer, split_name):
@@ -51,6 +55,28 @@ def load_coco_dataset(img_dir_path, ann_file_path, annotated_only, random_horizo
                     transforms=Compose(transform_list), annotated_only=annotated_only)
 
 
+def build_transform(transform_params_config):
+    if not isinstance(transform_params_config, dict) or len(transform_params_config) == 0:
+        return None
+
+    component_list = list()
+    for component_key in sorted(transform_params_config.keys()):
+        component_config = transform_params_config[component_key]
+        component = TRANSFORMS_DICT[component_config['type']](**component_config['params'])
+        component_list.append(component)
+    return transforms.Compose(component_list)
+
+
+def get_official_dataset(dataset_cls, dataset_params_config):
+    params_config = dataset_params_config.copy()
+    transform = build_transform(dataset_params_config.pop('transform_params', None))
+    target_transform = build_transform(dataset_params_config.pop('transform_params', None))
+    # For datasets without target_transform
+    if dataset_cls in (PhotoTour, VOCDetection, Kinetics400, HMDB51, UCF101):
+        return dataset_cls(transform=transform, **params_config)
+    return dataset_cls(transform=transform, target_transform=target_transform, **params_config)
+
+
 def get_dataset_dict(dataset_config):
     dataset_type = dataset_config['type']
     dataset_dict = dict()
@@ -71,6 +97,15 @@ def get_dataset_dict(dataset_config):
             dataset_dict[split_config['dataset_id']] =\
                 load_coco_dataset(split_config['images'], split_config['annotations'],
                                   split_config['annotated_only'], split_config.get('random_horizontal_flip', None))
+    elif dataset_type in DATASET_DICT:
+        dataset_cls = DATASET_DICT[dataset_type]
+        dataset_splits_config = dataset_config['splits']
+        for split_name in dataset_splits_config.keys():
+            st = time.time()
+            logger.info('Loading {} data'.format(split_name))
+            split_config = dataset_splits_config[split_name]
+            dataset_dict[split_config['dataset_id']] = get_official_dataset(dataset_cls, split_config['params'])
+            logger.info('{} sec'.format(time.time() - st))
     else:
         raise ValueError('dataset_type `{}` is not expected'.format(dataset_type))
     return dataset_dict
