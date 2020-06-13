@@ -62,7 +62,7 @@ def build_transform(transform_params_config):
     component_list = list()
     for component_key in sorted(transform_params_config.keys()):
         component_config = transform_params_config[component_key]
-        component = TRANSFORMS_DICT[component_config['type']](**component_config('params', dict()))
+        component = TRANSFORMS_DICT[component_config['type']](**component_config.get('params', dict()))
         component_list.append(component)
     return transforms.Compose(component_list)
 
