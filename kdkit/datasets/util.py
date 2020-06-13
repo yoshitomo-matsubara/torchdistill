@@ -17,36 +17,6 @@ DATASET_DICT = torchvision.datasets.__dict__
 TRANSFORMS_DICT = torchvision.transforms.__dict__
 
 
-def load_image_folder_dataset(dir_path, data_aug, rough_size, input_size, normalizer, split_name):
-    input_size = tuple(input_size)
-    # Data loading
-    st = time.time()
-    if data_aug:
-        logger.info('Loading {} data'.format(split_name))
-        train_dataset = ImageFolder(
-            dir_path,
-            transforms.Compose([
-                transforms.RandomResizedCrop(input_size),
-                transforms.RandomHorizontalFlip(),
-                transforms.ToTensor(),
-                normalizer,
-            ]))
-        logger.info('{} sec'.format(time.time() - st))
-        return train_dataset
-
-    logger.info('Loading {} data'.format(split_name))
-    eval_dataset = ImageFolder(
-        dir_path,
-        transforms.Compose([
-            transforms.Resize(rough_size),
-            transforms.CenterCrop(input_size),
-            transforms.ToTensor(),
-            normalizer,
-        ]))
-    logger.info('{} sec'.format(time.time() - st))
-    return eval_dataset
-
-
 def load_coco_dataset(img_dir_path, ann_file_path, annotated_only, random_horizontal_flip=None):
     transform_list = [ImageToTensor()]
     if random_horizontal_flip is not None:
@@ -84,17 +54,7 @@ def get_official_dataset(dataset_cls, dataset_params_config):
 def get_dataset_dict(dataset_config):
     dataset_type = dataset_config['type']
     dataset_dict = dict()
-    if dataset_type == 'imagefolder':
-        rough_size = dataset_config['rough_size']
-        input_size = dataset_config['input_size']
-        normalizer = transforms.Normalize(**dataset_config['normalizer'])
-        dataset_splits_config = dataset_config['splits']
-        for split_name in dataset_splits_config.keys():
-            split_config = dataset_splits_config[split_name]
-            dataset_dict[split_config['dataset_id']] =\
-                load_image_folder_dataset(split_config['images'], split_config['data_aug'], rough_size,
-                                          input_size, normalizer, split_name)
-    elif dataset_type == 'cocodetect':
+    if dataset_type == 'cocodetect':
         dataset_splits_config = dataset_config['splits']
         for split_name in dataset_splits_config.keys():
             split_config = dataset_splits_config[split_name]
