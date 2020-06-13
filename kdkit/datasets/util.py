@@ -69,8 +69,8 @@ def build_transform(transform_params_config):
 
 def get_official_dataset(dataset_cls, dataset_params_config):
     params_config = dataset_params_config.copy()
-    transform = build_transform(dataset_params_config.pop('transform_params', None))
-    target_transform = build_transform(dataset_params_config.pop('transform_params', None))
+    transform = build_transform(params_config.pop('transform_params', None))
+    target_transform = build_transform(params_config.pop('transform_params', None))
     # For datasets without target_transform
     if dataset_cls in (PhotoTour, VOCDetection, Kinetics400, HMDB51, UCF101):
         return dataset_cls(transform=transform, **params_config)
