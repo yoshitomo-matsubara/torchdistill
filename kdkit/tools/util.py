@@ -90,6 +90,22 @@ def change_device(data, device):
     return data
 
 
+def tensor2numpy2tensor(data, device):
+    elem_type = type(data)
+    if isinstance(data, torch.Tensor):
+        return torch.Tensor(data.to(device).data.numpy())
+    elif isinstance(data, tuple) and hasattr(data, '_fields'):  # namedtuple
+        return elem_type(*(tensor2numpy2tensor(samples, device) for samples in zip(*data)))
+    elif isinstance(data, (list, tuple)):
+        return elem_type(*(tensor2numpy2tensor(d, device) for d in data))
+    elif isinstance(data, abc.Mapping):
+        return {key: tensor2numpy2tensor(data[key], device) for key in data}
+    elif isinstance(data, abc.Sequence):
+        transposed = zip(*data)
+        return [tensor2numpy2tensor(samples, device) for samples in transposed]
+    return data
+
+
 def extract_outputs(model_info_dict):
     model_output_dict = dict()
     for module_path, model_io_dict in model_info_dict.items():
