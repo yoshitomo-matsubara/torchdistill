@@ -1,22 +1,45 @@
 datasets:
     ilsvrc2012:
         name: &dataset_name 'ilsvrc2012'
-        type: 'imagefolder'
+        type: 'ImageFolder'
         root: &root_dir !join ['./resource/dataset/', *dataset_name]
-        rough_size: 256
-        input_size: [224, 224]
         splits:
             train:
                 dataset_id: &imagenet_train !join [*dataset_name, '/train']
-                images: !join [*root_dir, '/train']
-                data_aug: True
+                params:
+                    root: !join [*root_dir, '/train']
+                    transform_params:
+                        0:
+                            type: 'RandomResizedCrop'
+                            params:
+                                size: &input_size [224, 224]
+                        1:
+                            type: 'RandomHorizontalFlip'
+                            params:
+                                p: 0.5
+                        2: &totensor
+                            type: 'ToTensor'
+                            params:
+                        3: &normalize
+                            type: 'Normalize'
+                            params:
+                                mean: [0.485, 0.456, 0.406]
+                                std: [0.229, 0.224, 0.225]
             val:
                 dataset_id: &imagenet_val !join [*dataset_name, '/val']
-                images: !join [*root_dir, '/val']
-                data_aug: False
-        normalizer:
-            mean: [0.485, 0.456, 0.406]
-            std: [0.229, 0.224, 0.225]
+                params:
+                    root: !join [*root_dir, '/val']
+                    transform_params:
+                        0:
+                            type: 'Resize'
+                            params:
+                                size: 256
+                        1:
+                            type: 'CenterCrop'
+                            params:
+                                size: *input_size
+                        2: *totensor
+                        3: *normalize
 
 models:
     teacher_model:
@@ -25,7 +48,7 @@ models:
             num_classes: 1000
             pretrained: True
         experiment: &teacher_experiment !join [*dataset_name, '-', *teacher_model_name]
-        ckpt: !join ['./resource/ckpt/teacher/', *teacher_experiment, '.pt']
+        ckpt: !join ['./resource/ckpt/image_classification/teacher/', *teacher_experiment, '.pt']
 
     student_model:
         name: &student_model_name 'alexnet'
@@ -33,7 +56,7 @@ models:
             num_classes: 1000
             pretrained: True
         experiment: &student_experiment !join [*dataset_name, '-', *student_model_name, '_from_', *teacher_model_name]
-        ckpt: !join ['./resource/ckpt/single_stage/kd/', *student_experiment, '.pt']
+        ckpt: !join ['./resource/ckpt/image_classification/single_stage/kd/', *student_experiment, '.pt']
 
 train:
     log_freq: 1000

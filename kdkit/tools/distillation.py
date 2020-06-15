@@ -9,7 +9,7 @@ from kdkit.models.special import SpecialModule, build_special_module
 from kdkit.models.util import redesign_model
 from kdkit.tools.foward_proc import get_forward_proc_func
 from kdkit.tools.loss import KDLoss, get_single_loss, get_custom_loss, get_func2extract_org_output
-from kdkit.tools.util import set_hooks, wrap_model, change_device, extract_outputs
+from kdkit.tools.util import set_hooks, wrap_model, change_device, tensor2numpy2tensor, extract_outputs
 from myutils.common.file_util import make_parent_dirs
 from myutils.pytorch.func_util import get_optimizer, get_scheduler
 from myutils.pytorch.module_util import check_if_wrapped, freeze_module_params, unfreeze_module_params
@@ -55,7 +55,7 @@ class DistillationBox(nn.Module):
             special_student_model = build_special_module(student_config, student_model=unwrapped_org_student_model)
             if special_student_model is not None:
                 student_ref_model = special_student_model
-                model_type = type(teacher_ref_model).__name__
+                model_type = type(student_ref_model).__name__
             self.student_model = redesign_model(student_ref_model, student_config, 'student', model_type)
 
         self.target_teacher_pairs.extend(set_hooks(self.teacher_model, teacher_ref_model,
@@ -111,7 +111,9 @@ class DistillationBox(nn.Module):
             trainable_module_list.append(self.teacher_model)
 
         if len(optim_config) > 0:
-            self.optimizer = get_optimizer(trainable_module_list, optim_config['type'], optim_config['params'])
+            optim_params_config = optim_config['params']
+            optim_params_config['lr'] *= self.lr_factor
+            self.optimizer = get_optimizer(trainable_module_list, optim_config['type'], optim_params_config)
             optimizer_reset = True
 
         scheduler_config = train_config.get('scheduler', None)
@@ -133,7 +135,8 @@ class DistillationBox(nn.Module):
                 amp.initialize(self.student_model, self.optimizer, opt_level=apex_config['opt_level'])
             self.apex = True
 
-    def __init__(self, teacher_model, student_model, dataset_dict, train_config, device, device_ids, distributed):
+    def __init__(self, teacher_model, student_model, dataset_dict,
+                 train_config, device, device_ids, distributed, lr_factor):
         super().__init__()
         self.org_teacher_model = teacher_model
         self.org_student_model = student_model
@@ -141,6 +144,7 @@ class DistillationBox(nn.Module):
         self.device = device
         self.device_ids = device_ids
         self.distributed = distributed
+        self.lr_factor = lr_factor
         self.teacher_model = None
         self.student_model = None
         self.teacher_forward_proc, self.student_forward_proc = None, None
@@ -156,11 +160,8 @@ class DistillationBox(nn.Module):
     def pre_process(self, epoch=None, **kwargs):
         self.teacher_model.eval()
         self.student_model.train()
-        if self.distributed and self.train_data_loader.sampler is not None:
-            self.train_data_loader.sampler.set_epoch(epoch)
-
-    def check_if_org_loss_required(self):
-        return self.org_criterion is not None
+        if self.distributed:
+            self.train_data_loader.batch_sampler.sampler.set_epoch(epoch)
 
     def get_teacher_output(self, sample_batch, targets, supp_dict):
         cached_data = supp_dict.get('cached_data', None)
@@ -187,17 +188,14 @@ class DistillationBox(nn.Module):
         extracted_teacher_output_dict = extract_outputs(self.teacher_info_dict)
         # Write cache files if output file paths (cache_file_paths) are given
         if cache_file_paths is not None and isinstance(cache_file_paths, (list, tuple)):
-            device = sample_batch.device
             cpu_device = torch.device('cpu')
-            for i, (teacher_output, cache_file_path) in enumerate(zip(teacher_outputs.cpu(), cache_file_paths)):
+            for i, (teacher_output, cache_file_path) in enumerate(zip(teacher_outputs.cpu().numpy(), cache_file_paths)):
                 sub_dict = dict()
                 for key, value in extracted_teacher_output_dict.items():
                     sub_dict[key] = value[i]
 
-                if device.type != 'cpu':
-                    sub_dict = change_device(sub_dict, cpu_device)
-
-                cache_dict = {'teacher_outputs': teacher_output, 'extracted_outputs': sub_dict}
+                sub_dict = tensor2numpy2tensor(sub_dict, cpu_device)
+                cache_dict = {'teacher_outputs': torch.Tensor(teacher_output), 'extracted_outputs': sub_dict}
                 make_parent_dirs(cache_file_path)
                 torch.save(cache_dict, cache_file_path)
         return teacher_outputs, extracted_teacher_output_dict
@@ -243,9 +241,11 @@ class DistillationBox(nn.Module):
 
 
 class MultiStagesDistillationBox(DistillationBox):
-    def __init__(self, teacher_model, student_model, data_loader_dict, train_config, device, device_ids, distributed):
+    def __init__(self, teacher_model, student_model, data_loader_dict,
+                 train_config, device, device_ids, distributed, lr_factor):
         stage1_config = train_config['stage1']
-        super().__init__(teacher_model, student_model, data_loader_dict, stage1_config, device, device_ids, distributed)
+        super().__init__(teacher_model, student_model, data_loader_dict,
+                         stage1_config, device, device_ids, distributed, lr_factor)
         self.train_config = train_config
         self.stage_number = 1
         self.stage_end_epoch = stage1_config['num_epochs']
@@ -268,9 +268,10 @@ class MultiStagesDistillationBox(DistillationBox):
             self.advance_to_next_stage()
 
 
-def get_distillation_box(teacher_model, student_model, data_loader_dict, train_config, device, device_ids, distributed):
+def get_distillation_box(teacher_model, student_model, data_loader_dict,
+                         train_config, device, device_ids, distributed, lr_factor):
     if 'stage1' in train_config:
         return MultiStagesDistillationBox(teacher_model, student_model, data_loader_dict,
-                                          train_config, device, device_ids, distributed)
+                                          train_config, device, device_ids, distributed, lr_factor)
     return DistillationBox(teacher_model, student_model, data_loader_dict, train_config,
-                           device, device_ids, distributed)
+                           device, device_ids, distributed, lr_factor)
