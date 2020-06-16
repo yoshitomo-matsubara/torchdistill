@@ -373,7 +373,6 @@ class CCKDLoss(nn.Module):
     """
     "Correlation Congruence for Knowledge Distillation"
     Configure KDLoss in a yaml file to meet eq. (7), using GeneralizedCustomLoss
-    Refactored https://github.com/HobbitLong/RepDistiller/blob/master/distiller_zoo/CC.py
     """
     def __init__(self, student_linear_path, teacher_linear_path, reduction, **kwargs):
         super().__init__()
@@ -385,8 +384,9 @@ class CCKDLoss(nn.Module):
         teacher_linear_outputs = teacher_io_dict[self.teacher_linear_path]['output']
         student_linear_outputs = student_io_dict[self.student_linear_path]['output']
         batch_size = teacher_linear_outputs.shape[0]
-        delta = torch.abs(student_linear_outputs - teacher_linear_outputs)
-        cc_loss = torch.sum((delta[:-1] * delta[1:]).sum(1))
+        teacher_cc = torch.matmul(teacher_linear_outputs, torch.t(teacher_linear_outputs))
+        student_cc = torch.matmul(student_linear_outputs, torch.t(student_linear_outputs))
+        cc_loss = torch.dist(student_cc, teacher_cc, 2)
         return cc_loss / (batch_size ** 2) if self.reduction == 'batchmean' else cc_loss
 
 
