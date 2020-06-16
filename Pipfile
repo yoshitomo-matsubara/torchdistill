@@ -8,11 +8,11 @@ verify_ssl = true
 [packages]
 torch = "==1.5.0"
 torchvision = "==0.6.0"
-numpy = "==1.17.4"
+numpy = "*"
 pyyaml = "*"
 scipy = "*"
 cython = "*"
-pycocotools = "*"
+pycocotools = ">=2.0.1"
 matplotlib = "*"
 
 [requires]
