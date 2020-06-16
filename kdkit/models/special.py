@@ -255,17 +255,18 @@ class Linear4CCKD(SpecialModule):
     "Correlation Congruence for Knowledge Distillation"
     """
 
-    def __init__(self, input_module_path, linear_params, teacher_model=None, student_model=None, **kwargs):
+    def __init__(self, input_module, linear_params, teacher_model=None, student_model=None, **kwargs):
         super().__init__()
         self.model = teacher_model if teacher_model is not None else student_model
-        self.input_module_path = input_module_path
+        self.input_module_path = input_module['path']
+        self.input_module_io = input_module['io']
         self.linear = nn.Linear(**linear_params)
 
     def forward(self, x):
         return self.model(x)
 
     def post_forward(self, info_dict):
-        flat_outputs = torch.flatten(info_dict[self.input_module_path]['output'], 1)
+        flat_outputs = torch.flatten(info_dict[self.input_module_path][self.input_module_io], 1)
         self.linear(flat_outputs)
 
 
