@@ -2,7 +2,7 @@
 
 ## Requirements
 - Python 3.6
-- pipenv
+- [pipenv](https://pypi.org/project/pipenv/)
 - [myutils](https://github.com/yoshitomo-matsubara/myutils)
 
 
@@ -14,9 +14,10 @@ git submodule init
 git submodule update --recursive --remote
 pipenv install
 ```
+If you do not wish to use pipenv (a virtual environment), install the packages listed in [Pipfile](Pipfile).
 
 ## Examples
-### 1. ImageNet (ILSVRC 2012)
+### 1. ImageNet (ILSVRC 2012): Image Classification
 #### 1.1 Download the datasets
 As the terms of use do not allow to distribute the URLs, you will have to create an account [here](http://image-net.org/download) to get the URLs, and replace `${TRAIN_DATASET_URL}` and `${VAL_DATASET_URL}` with them.
 ```
@@ -43,28 +44,66 @@ wget https://raw.githubusercontent.com/soumith/imagenetloader.torch/master/valpr
 mv valpre.sh ./resource/dataset/ilsvrc2012/val/
 cd ./resource/dataset/ilsvrc2012/val/
 sh valpre.sh
-cd ../../../../../
+cd ../../../../
 ```
-#### 1.3 Distill knowledge of ResNet-152
+
+#### 1.3 Run an experiment
 e.g., Teacher: ResNet-152, Student: AlexNet  
-a) Use GPU(s) for single training process
-```
-pipenv run python image_classification.py --config config/image_classification/single_stage/kd/alexnet_from_resnet152.yaml --log log/kd/alexnet_from_resnet152.txt
-```  
-b) Use GPUs for multiple distributed training processes
+a) Use GPUs for multiple distributed training processes
 ```
 pipenv run python -m torch.distributed.launch --nproc_per_node=${NUM_GPUS} --use_env image_classification.py --world_size ${NUM_GPUS} --config config/image_classification/single_stage/kd/alexnet_from_resnet152.yaml --log log/kd/alexnet_from_resnet152.txt
 ```
+b) Use GPU(s) for single training process
+```
+pipenv run python image_classification.py --config config/image_classification/single_stage/kd/alexnet_from_resnet152.yaml --log log/kd/alexnet_from_resnet152.txt
+```  
 c) Use CPU
 ```
 pipenv run python image_classification.py --device cpu --config config/image_classification/single_stage/kd/alexnet_from_resnet152.yaml --log log/kd/alexnet_from_resnet152.txt
 ```  
+
 #### 1.4 Top 1 accuracy of student models
 | Teacher \\ Student    | AlexNet   | ResNet-18 |  
 | :---                  | ---:      | ---:      |  
 | Pretrained (no *KD*)  | 56.52     | 69.76     |  
 | ResNet-152            | 57.22     | 70.34     |
 
+### 2. COCO 2017: Object Detection
+#### 2.1 Download the datasets
+```
+wget http://images.cocodataset.org/zips/train2017.zip ./
+wget http://images.cocodataset.org/zips/val2017.zip ./
+wget http://images.cocodataset.org/annotations/annotations_trainval2017.zip ./
+```
+
+#### 2.2 Unzip and extract files
+```
+# Go to the root of this repository
+mkdir ./resource/dataset/coco2017/ -p
+mv train2017.zip ./resource/dataset/coco2017/
+mv val2017.zip ./resource/dataset/coco2017/
+mv annotations_trainval2017.zip ./resource/dataset/coco2017/
+cd ./resource/dataset/coco2017/
+unzip train2017.zip
+unzip val2017.zip
+unzip annotations_trainval2017.zip
+cd ../../../
+```
+
+#### 2.3 Run an experiment
+e.g., Teacher: Faster R-CNN with ResNet-50-FPN backbone, Student: Faster R-CNN with ResNet-18-FPN backbone  
+a) Use GPUs for multiple distributed training processes
+```
+pipenv run python -m torch.distributed.launch --nproc_per_node=${NUM_GPUS} --use_env object_detection.py --world_size ${NUM_GPUS} --config config/object_detection/multi_stage/ft/custom_fasterrcnn_resnet18_fpn_from_fasterrcnn_resnet50_fpn.yaml --log log/ft/custom_fasterrcnn_resnet18_fpn_from_fasterrcnn_resnet50_fpn.txt
+```
+b) Use GPU(s) for single training process
+```
+pipenv run python object_detection.py --config config/object_detection/multi_stage/ft/custom_fasterrcnn_resnet18_fpn_from_fasterrcnn_resnet50_fpn.yaml --log log/ft/custom_fasterrcnn_resnet18_fpn_from_fasterrcnn_resnet50_fpn.txt
+```  
+c) Use CPU
+```
+pipenv run python object_detection.py --device cpu --config config/object_detection/multi_stage/ft/custom_fasterrcnn_resnet18_fpn_from_fasterrcnn_resnet50_fpn.yaml --log log/ft/custom_fasterrcnn_resnet18_fpn_from_fasterrcnn_resnet50_fpn.txt
+```  
 
 ## References
 - [:mag:](image_classification.py) [pytorch/vision/references/classification/](https://github.com/pytorch/vision/blob/master/references/classification/)
