@@ -191,11 +191,9 @@ train:
             type: 'GeneralizedCustomLoss'
             org_term:
                 criterion:
-                    type: 'KDLoss'
+                    type: 'CrossEntropyLoss'
                     params:
-                        temperature: 1.0
-                        alpha: 1.0
-                        reduction: 'batchmean'
+                        reduction: 'mean'
                 factor: 1.0
             sub_terms:
                 factor_transfer:
