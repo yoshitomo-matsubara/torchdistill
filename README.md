@@ -18,7 +18,7 @@ pipenv install
 ## Examples
 ### 1. ImageNet (ILSVRC2012)
 #### 1.1 Download the datasets
-As the terms of use do not allow to distribute the URLs, you will have to create an account [here](http://image-net.org/download) to get the URLs, and replace ***${TRAIN_DATASET_URL}*** and ***${VAL_DATASET_URL}*** with them.
+As the terms of use do not allow to distribute the URLs, you will have to create an account [here](http://image-net.org/download) to get the URLs, and replace `${TRAIN_DATASET_URL}` and `${VAL_DATASET_URL}` with them.
 ```
 wget ${TRAIN_DATASET_URL} ./
 wget ${VAL_DATASET_URL} ./
