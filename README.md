@@ -16,7 +16,7 @@ pipenv install
 ```
 
 ## Examples
-### 1. ImageNet (ILSVRC2012)
+### 1. ImageNet (ILSVRC 2012)
 #### 1.1 Download the datasets
 As the terms of use do not allow to distribute the URLs, you will have to create an account [here](http://image-net.org/download) to get the URLs, and replace `${TRAIN_DATASET_URL}` and `${VAL_DATASET_URL}` with them.
 ```
@@ -49,15 +49,15 @@ cd ../../../../../
 e.g., Teacher: ResNet-152, Student: AlexNet  
 a) Use GPU(s) for single training process
 ```
-pipenv run python image_classification.py --config config/image_classification/single_stage/kd/alexnet_from_resnet152.yaml
+pipenv run python image_classification.py --config config/image_classification/single_stage/kd/alexnet_from_resnet152.yaml --log log/kd/alexnet_from_resnet152.txt
 ```  
 b) Use GPUs for multiple distributed training processes
 ```
-pipenv run python -m torch.distributed.launch --nproc_per_node=${NUM_GPUS} --use_env image_classification.py --world_size ${NUM_GPUS} --config config/image_classification/single_stage/kd/alexnet_from_resnet152.yaml
+pipenv run python -m torch.distributed.launch --nproc_per_node=${NUM_GPUS} --use_env image_classification.py --world_size ${NUM_GPUS} --config config/image_classification/single_stage/kd/alexnet_from_resnet152.yaml --log log/kd/alexnet_from_resnet152.txt
 ```
 c) Use CPU
 ```
-pipenv run python image_classification.py --device cpu --config config/image_classification/single_stage/kd/alexnet_from_resnet152.yaml
+pipenv run python image_classification.py --device cpu --config config/image_classification/single_stage/kd/alexnet_from_resnet152.yaml --log log/kd/alexnet_from_resnet152.txt
 ```  
 #### 1.4 Top 1 accuracy of student models
 | Teacher \\ Student    | AlexNet   | ResNet-18 |  
