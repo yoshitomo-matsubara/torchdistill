@@ -16,20 +16,34 @@ pipenv install
 ```
 
 ## Examples
-### 1. ImageNet
-#### 1.1 Download and unzip ImageNet datasets (ILSVRC2012 in this example)
-#### 1.2 Execute the following commands
+### 1. ImageNet (ILSVRC2012)
+#### 1.1 Download the datasets
+As the terms of use do not allow to distribute the URLs, you will have to create an account [here](http://image-net.org/download) to get the URLs, and replace ***${TRAIN_DATASET_URL}*** and ***${VAL_DATASET_URL}*** with them.
 ```
-cd kdkit/
+wget ${TRAIN_DATASET_URL} ./
+wget ${VAL_DATASET_URL} ./
+```
+
+#### 1.2 Untar and extract files
+```
+# Go to the root of this repository
 mkdir ./resource/dataset/ilsvrc2012/{train,val} -p
+mv ILSVRC2012_img_train.tar ./resource/dataset/ilsvrc2012/train/
+cd ./resource/dataset/ilsvrc2012/train/
+tar -xvf ILSVRC2012_img_train.tar
+for f in *.tar; do
+  d=`basename $f .tar`
+  mkdir $d
+  (cd $d && tar xf ../$f)
+done
+rm -r *.tar
 
-# Download the training and validation datasets from ImageNet website
-# Untar them under train and val dirs respectively
-
+mv ILSVRC2012_img_val.tar ./resource/dataset/ilsvrc2012/val/
 wget https://raw.githubusercontent.com/soumith/imagenetloader.torch/master/valprep.sh
 mv valpre.sh ./resource/dataset/ilsvrc2012/val/
 cd ./resource/dataset/ilsvrc2012/val/
 sh valpre.sh
+cd ../../../../../
 ```
 #### 1.3 Distill knowledge of ResNet-152
 e.g., Teacher: ResNet-152, Student: AlexNet  
