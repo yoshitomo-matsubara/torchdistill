@@ -6,12 +6,9 @@ import seaborn as sns
 
 
 def get_argparser():
-    parser = argparse.ArgumentParser(description='Knowledge distillation for image classification models')
+    parser = argparse.ArgumentParser(description='Log visualizer')
     parser.add_argument('--logs', required=True, metavar='N', nargs='+', help='list of log file paths to visualize')
     parser.add_argument('--task', default='classification', help='type of tasks defined in the log files')
-    parser.add_argument('-sync_bn', action='store_true', help='Use sync batch norm')
-    parser.add_argument('-test_only', action='store_true', help='Only test the models')
-    parser.add_argument('-student_only', action='store_true', help='Test the student model only')
     return parser
 
 
