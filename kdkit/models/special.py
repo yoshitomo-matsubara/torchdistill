@@ -138,7 +138,8 @@ class Teacher4FactorTransfer(SpecialModule):
         self.uses_decoder = uses_decoder
 
     def forward(self, *args):
-        return self.teacher_model(*args)
+        with torch.no_grad():
+            return self.teacher_model(*args)
 
     def post_forward(self, info_dict):
         if self.uses_decoder and not self.paraphraser.training:
@@ -257,12 +258,17 @@ class Linear4CCKD(SpecialModule):
 
     def __init__(self, input_module, linear_params, teacher_model=None, student_model=None, **kwargs):
         super().__init__()
-        self.model = teacher_model if teacher_model is not None else student_model
+        is_teacher = teacher_model is not None
+        self.model = teacher_model if is_teacher else student_model
+        self.is_teacher = is_teacher
         self.input_module_path = input_module['path']
         self.input_module_io = input_module['io']
         self.linear = nn.Linear(**linear_params)
 
     def forward(self, x):
+        if self.is_teacher:
+            with torch.no_grad():
+                return self.model(x)
         return self.model(x)
 
     def post_forward(self, info_dict):
@@ -291,7 +297,9 @@ class Linear4CRD(SpecialModule):
     def __init__(self, input_module_path, linear_params, power=2,
                  teacher_model=None, student_model=None, **kwargs):
         super().__init__()
-        self.model = teacher_model if teacher_model is not None else student_model
+        is_teacher = teacher_model is not None
+        self.model = teacher_model if is_teacher else student_model
+        self.is_teacher = is_teacher
         self.empty = nn.Sequential()
         self.input_module_path = input_module_path
         self.linear = nn.Linear(**linear_params)
@@ -300,6 +308,9 @@ class Linear4CRD(SpecialModule):
     def forward(self, x, supp_dict):
         # supp_dict is given to be hooked and stored in info_dict
         self.empty(supp_dict)
+        if self.is_teacher:
+            with torch.no_grad():
+                return self.model(x)
         return self.model(x)
 
     def post_forward(self, info_dict):
