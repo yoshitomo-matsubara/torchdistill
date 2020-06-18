@@ -76,7 +76,7 @@ train:
         sequential: []
         forward_hook:
             input: []
-            output: ['layer1', 'layer2', 'layer3', 'layer4']
+            output: ['layer3', 'layer4']
         wrapper:
         requires_grad: False
     student:
@@ -85,7 +85,7 @@ train:
         frozen_modules: []
         forward_hook:
             input: []
-            output: ['layer1', 'layer2', 'layer3', 'layer4']
+            output: ['layer3', 'layer4']
         wrapper:
         requires_grad: True
     apex:
@@ -119,28 +119,12 @@ train:
                             pair1:
                                 teacher:
                                     io: 'output'
-                                    path: 'layer1'
+                                    path: 'layer3'
                                 student:
                                     io: 'output'
-                                    path: 'layer1'
+                                    path: 'layer3'
                                 factor: 1
                             pair2:
-                                teacher:
-                                    io: 'output'
-                                    path: 'layer2'
-                                student:
-                                    io: 'output'
-                                    path: 'layer2'
-                                factor: 1
-                            pair3:
-                                teacher:
-                                    io: 'output'
-                                    path: 'layer3'
-                                student:
-                                    io: 'output'
-                                    path: 'layer3'
-                                factor: 1
-                            pair4:
                                 teacher:
                                     io: 'output'
                                     path: 'layer4'
