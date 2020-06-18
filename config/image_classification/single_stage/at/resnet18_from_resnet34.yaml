@@ -132,7 +132,7 @@ train:
                                     io: 'output'
                                     path: 'layer4'
                                 factor: 1
-                        reduction: 'mean'
+                        mode: 'code'
                 factor: 1000.0
 
 test:

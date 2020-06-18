@@ -155,33 +155,48 @@ class ATLoss(nn.Module):
     """
     "Paying More Attention to Attention: Improving the Performance of
      Convolutional Neural Networks via Attention Transfer"
-    Refactored https://github.com/szagoruyko/attention-transfer/blob/master/utils.py
+    Referred to https://github.com/szagoruyko/attention-transfer/blob/master/utils.py
+    Discrepancy between Eq. (2) in the paper and the author's implementation
+    https://github.com/szagoruyko/attention-transfer/blob/893df5488f93691799f082a70e2521a9dc2ddf2d/utils.py#L18-L23
+    as partly pointed out at https://github.com/szagoruyko/attention-transfer/issues/34
+    To follow the equations in the paper, use mode='paper' in place of 'code'
     """
-    def __init__(self, at_pairs, reduction, **kwargs):
+    def __init__(self, at_pairs, mode='code', **kwargs):
         super().__init__()
         self.at_pairs = at_pairs
-        self.reduction = reduction
+        self.mode = mode
+        if mode not in ('code', 'paper'):
+            raise ValueError('mode `{}` is not expected'.format(mode))
+
+    @staticmethod
+    def attention_transfer_paper(feature_map):
+        return normalize(feature_map.pow(2).sum(1).flatten(1))
+
+    def compute_at_loss_paper(self, student_feature_map, teacher_feature_map):
+        at_student = self.attention_transfer_paper(student_feature_map)
+        at_teacher = self.attention_transfer_paper(teacher_feature_map)
+        return torch.norm(at_student - at_teacher, dim=1).sum()
 
     @staticmethod
     def attention_transfer(feature_map):
-        return normalize(feature_map.pow(2).sum(1).flatten(1))
+        return normalize(feature_map.pow(2).mean(1).flatten(1))
 
     def compute_at_loss(self, student_feature_map, teacher_feature_map):
         at_student = self.attention_transfer(student_feature_map)
         at_teacher = self.attention_transfer(teacher_feature_map)
-        return torch.norm(at_student - at_teacher, dim=1).sum()
+        return (at_student - at_teacher).pow(2).mean()
 
     def forward(self, student_io_dict, teacher_io_dict):
         at_loss = 0
-        batch_size = None
         for pair_name, pair_config in self.at_pairs.items():
             student_feature_map = extract_feature_map(student_io_dict, pair_config['student'])
             teacher_feature_map = extract_feature_map(teacher_io_dict, pair_config['teacher'])
             factor = pair_config.get('factor', 1)
-            at_loss += factor * self.compute_at_loss(student_feature_map, teacher_feature_map)
-            if batch_size is None:
-                batch_size = student_feature_map.shape[0]
-        return at_loss / batch_size if self.reduction == 'mean' else at_loss
+            if self.mode == 'paper':
+                at_loss += factor * self.compute_at_loss_paper(student_feature_map, teacher_feature_map)
+            else:
+                at_loss += factor * self.compute_at_loss(student_feature_map, teacher_feature_map)
+        return at_loss
 
 
 @register_single_loss
