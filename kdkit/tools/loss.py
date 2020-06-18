@@ -170,12 +170,12 @@ class ATLoss(nn.Module):
 
     @staticmethod
     def attention_transfer_paper(feature_map):
-        return normalize(feature_map.pow(2).mean(1).flatten(1))
+        return normalize(feature_map.pow(2).sum(1).flatten(1))
 
     def compute_at_loss_paper(self, student_feature_map, teacher_feature_map):
         at_student = self.attention_transfer_paper(student_feature_map)
         at_teacher = self.attention_transfer_paper(teacher_feature_map)
-        return torch.norm(at_student - at_teacher, dim=1).mean()
+        return torch.norm(at_student - at_teacher, dim=1).sum()
 
     @staticmethod
     def attention_transfer(feature_map):
