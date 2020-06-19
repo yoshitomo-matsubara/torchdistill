@@ -188,6 +188,7 @@ class ATLoss(nn.Module):
 
     def forward(self, student_io_dict, teacher_io_dict):
         at_loss = 0
+        batch_size = None
         for pair_name, pair_config in self.at_pairs.items():
             student_feature_map = extract_feature_map(student_io_dict, pair_config['student'])
             teacher_feature_map = extract_feature_map(teacher_io_dict, pair_config['teacher'])
@@ -196,7 +197,9 @@ class ATLoss(nn.Module):
                 at_loss += factor * self.compute_at_loss_paper(student_feature_map, teacher_feature_map)
             else:
                 at_loss += factor * self.compute_at_loss(student_feature_map, teacher_feature_map)
-        return at_loss
+            if batch_size is None:
+                batch_size = len(student_feature_map)
+        return at_loss / batch_size if self.mode == 'paper' else at_loss
 
 
 @register_single_loss
