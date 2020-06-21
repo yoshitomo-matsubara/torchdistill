@@ -140,6 +140,8 @@ train:
                     params:
                         teacher_linear_path: 'linear'
                         student_linear_path: 'linear'
+                        kernel_params:
+                            type: 'bilinear'
                         reduction: 'batchmean'
                 factor: 0.003
 

@@ -392,18 +392,48 @@ class CCKDLoss(nn.Module):
     "Correlation Congruence for Knowledge Distillation"
     Configure KDLoss in a yaml file to meet eq. (7), using GeneralizedCustomLoss
     """
-    def __init__(self, student_linear_path, teacher_linear_path, reduction, **kwargs):
+    def __init__(self, student_linear_path, teacher_linear_path, kernel_params, reduction, **kwargs):
         super().__init__()
         self.student_linear_path = student_linear_path
         self.teacher_linear_path = teacher_linear_path
+        self.kernel_type = kernel_params['type']
+        if self.kernel_type == 'gaussian':
+            self.gamma = kernel_params['gamma']
+            self.max_p = kernel_params['max_p']
+        elif self.kernel_type not in ('bilinear', 'gaussian'):
+            raise ValueError('self.kernel_type `{}` is not expected'.format(self.kernel_type))
         self.reduction = reduction
+
+    @staticmethod
+    def compute_cc_mat_by_bilinear_pool(linear_outputs):
+        return torch.matmul(linear_outputs, torch.t(linear_outputs))
+
+    def compute_cc_mat_by_gaussian_rbf(self, linear_outputs):
+        row_list = list()
+        for index, linear_output in enumerate(linear_outputs):
+            row = 1
+            right_term = torch.matmul(linear_output, torch.t(linear_outputs))
+            for p in range(1, self.max_p):
+                left_term = ((2 * self.gamma) ** p) / (math.factorial(p))
+                row += left_term * (right_term ** p)
+
+            row *= torch.exp(-2 * self.gamma)
+            row_list.append(row.squeeze(0))
+        return torch.stack(row_list)
 
     def forward(self, student_io_dict, teacher_io_dict):
         teacher_linear_outputs = teacher_io_dict[self.teacher_linear_path]['output']
         student_linear_outputs = student_io_dict[self.student_linear_path]['output']
         batch_size = teacher_linear_outputs.shape[0]
-        teacher_cc = torch.matmul(teacher_linear_outputs, torch.t(teacher_linear_outputs))
-        student_cc = torch.matmul(student_linear_outputs, torch.t(student_linear_outputs))
+        if self.kernel_type == 'bilinear':
+            teacher_cc = self.compute_cc_mat_by_bilinear_pool(teacher_linear_outputs)
+            student_cc = self.compute_cc_mat_by_bilinear_pool(student_linear_outputs)
+        elif self.kernel_type == 'gaussian':
+            teacher_cc = self.compute_cc_mat_by_gaussian_rbf(teacher_linear_outputs)
+            student_cc = self.compute_cc_mat_by_gaussian_rbf(student_linear_outputs)
+        else:
+            raise ValueError('self.kernel_type `{}` is not expected'.format(self.kernel_type))
+
         cc_loss = torch.dist(student_cc, teacher_cc, 2)
         return cc_loss / (batch_size ** 2) if self.reduction == 'batchmean' else cc_loss
 
