@@ -417,7 +417,7 @@ class CCKDLoss(nn.Module):
                 left_term = ((2 * self.gamma) ** p) / (math.factorial(p))
                 row += left_term * (right_term ** p)
 
-            row *= torch.exp(-2 * self.gamma)
+            row *= math.exp(-2 * self.gamma)
             row_list.append(row.squeeze(0))
         return torch.stack(row_list)
 
