@@ -413,7 +413,7 @@ class CCKDLoss(nn.Module):
         for index, linear_output in enumerate(linear_outputs):
             row = 1
             right_term = torch.matmul(linear_output, torch.t(linear_outputs))
-            for p in range(1, self.max_p):
+            for p in range(1, self.max_p + 1):
                 left_term = ((2 * self.gamma) ** p) / (math.factorial(p))
                 row += left_term * (right_term ** p)
 

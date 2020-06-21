@@ -141,7 +141,9 @@ train:
                         teacher_linear_path: 'linear'
                         student_linear_path: 'linear'
                         kernel_params:
-                            type: 'bilinear'
+                            type: 'gaussian'
+                            gamma: 0.4
+                            max_p: 2
                         reduction: 'batchmean'
                 factor: 0.003
 
