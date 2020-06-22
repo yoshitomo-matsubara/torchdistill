@@ -69,7 +69,7 @@ train:
         dataset_wrapper:
             name: 'ContrastiveDataset'
             params:
-                num_negative_samples: &num_negative_samples 4096
+                num_negative_samples: &num_negative_samples 16384
                 mode: 'exact'
                 ratio: 1.0
     val_data_loader:
