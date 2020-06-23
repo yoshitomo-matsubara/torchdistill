@@ -84,6 +84,7 @@ def visualize_val_performance(log_dict):
     plt.legend()
     plt.xlabel('Training time [sec]')
     plt.ylabel('Top-1 Validation Accuracy [%]')
+    plt.tight_layout()
     plt.show()
 
 
