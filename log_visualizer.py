@@ -75,6 +75,7 @@ def visualize_val_performance(log_dict):
     plt.legend()
     plt.xlabel('Epoch')
     plt.ylabel('Top-1 Validation Accuracy [%]')
+    plt.tight_layout()
     plt.show()
 
     for file_path, (train_times, val_acc1s) in val_performance_dict.items():
