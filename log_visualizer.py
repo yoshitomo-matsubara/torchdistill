@@ -8,15 +8,19 @@ import seaborn as sns
 def get_argparser():
     parser = argparse.ArgumentParser(description='Log visualizer')
     parser.add_argument('--logs', required=True, metavar='N', nargs='+', help='list of log file paths to visualize')
+    parser.add_argument('--labels', metavar='N', nargs='+', help='list of labels used in plots')
     parser.add_argument('--task', default='classification', help='type of tasks defined in the log files')
     return parser
 
 
-def read_files(file_paths):
+def read_files(file_paths, labels):
+    if labels is None or len(labels) != len(file_paths):
+        labels = [os.path.basename(file_path) for file_path in file_paths]
+
     log_dict = dict()
-    for file_path in file_paths:
+    for file_path, label in zip(file_paths, labels):
         with open(os.path.expanduser(file_path), 'r') as fp:
-            log_dict[file_path] = [line.strip() for line in fp]
+            log_dict[file_path] = ([line.strip() for line in fp], label)
     return log_dict
 
 
@@ -66,11 +70,11 @@ def extract_val_performance(log_lines):
 def visualize_val_performance(log_dict):
     sns.set()
     val_performance_dict = dict()
-    for file_path, log_lines in log_dict.items():
+    for file_path, (log_lines, label) in log_dict.items():
         train_times, val_acc1s = extract_val_performance(log_lines)
-        val_performance_dict[file_path] = (train_times, val_acc1s)
+        val_performance_dict[file_path] = (train_times, val_acc1s, label)
         xs = list(range(len(val_acc1s)))
-        plt.plot(xs, val_acc1s, label=os.path.basename(file_path))
+        plt.plot(xs, val_acc1s, label=r'${}$'.format(label))
 
     plt.legend()
     plt.xlabel('Epoch')
@@ -78,9 +82,9 @@ def visualize_val_performance(log_dict):
     plt.tight_layout()
     plt.show()
 
-    for file_path, (train_times, val_acc1s) in val_performance_dict.items():
+    for file_path, (train_times, val_acc1s, label) in val_performance_dict.items():
         accum_train_times = [sum(train_times[:i + 1]) for i in range(len(train_times))]
-        plt.plot(accum_train_times, val_acc1s, '-o', label=os.path.basename(file_path))
+        plt.plot(accum_train_times, val_acc1s, '-o', label=r'${}$'.format(label))
 
     plt.legend()
     plt.xlabel('Training time [sec]')
@@ -90,7 +94,7 @@ def visualize_val_performance(log_dict):
 
 
 def main(args):
-    log_dict = read_files(args.logs)
+    log_dict = read_files(args.logs, args.labels)
     task = args.task
     if task == 'classification':
         visualize_val_performance(log_dict)
