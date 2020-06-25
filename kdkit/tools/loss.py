@@ -257,7 +257,7 @@ class FTLoss(nn.Module):
     def __init__(self, p=1, reduction='batchmean', paraphraser_path='paraphraser',
                  translator_path='translator', **kwargs):
         super().__init__()
-        self.norm_loss = nn.L1Loss() if p == 1 else nn.MSELoss()
+        self.norm_p = p
         self.paraphraser_path = paraphraser_path
         self.translator_path = translator_path
         self.reduction = reduction
@@ -266,8 +266,9 @@ class FTLoss(nn.Module):
         paraphraser_flat_outputs = teacher_io_dict[self.paraphraser_path]['output'].flatten(1)
         translator_flat_outputs = student_io_dict[self.translator_path]['output'].flatten(1)
         batch_size = paraphraser_flat_outputs.shape[0]
-        ft_loss = self.norm_loss(paraphraser_flat_outputs / paraphraser_flat_outputs.norm(dim=1).unsqueeze(1),
-                                 translator_flat_outputs / translator_flat_outputs.norm(dim=1).unsqueeze(1))
+        ft_loss = torch.norm(paraphraser_flat_outputs / paraphraser_flat_outputs.norm(dim=1).unsqueeze(1)
+                             - translator_flat_outputs / translator_flat_outputs.norm(dim=1).unsqueeze(1),
+                             self.norm_p, dim=1).sum()
         return ft_loss / batch_size if self.reduction == 'batchmean' else ft_loss
 
 
