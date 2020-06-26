@@ -155,21 +155,36 @@ class ATLoss(nn.Module):
     """
     "Paying More Attention to Attention: Improving the Performance of
      Convolutional Neural Networks via Attention Transfer"
-    Refactored https://github.com/szagoruyko/attention-transfer/blob/master/utils.py
+    Referred to https://github.com/szagoruyko/attention-transfer/blob/master/utils.py
+    Discrepancy between Eq. (2) in the paper and the author's implementation
+    https://github.com/szagoruyko/attention-transfer/blob/893df5488f93691799f082a70e2521a9dc2ddf2d/utils.py#L18-L23
+    as partly pointed out at https://github.com/szagoruyko/attention-transfer/issues/34
+    To follow the equations in the paper, use mode='paper' in place of 'code'
     """
-    def __init__(self, at_pairs, reduction, **kwargs):
+    def __init__(self, at_pairs, mode='code', **kwargs):
         super().__init__()
         self.at_pairs = at_pairs
-        self.reduction = reduction
+        self.mode = mode
+        if mode not in ('code', 'paper'):
+            raise ValueError('mode `{}` is not expected'.format(mode))
+
+    @staticmethod
+    def attention_transfer_paper(feature_map):
+        return normalize(feature_map.pow(2).sum(1).flatten(1))
+
+    def compute_at_loss_paper(self, student_feature_map, teacher_feature_map):
+        at_student = self.attention_transfer_paper(student_feature_map)
+        at_teacher = self.attention_transfer_paper(teacher_feature_map)
+        return torch.norm(at_student - at_teacher, dim=1).sum()
 
     @staticmethod
     def attention_transfer(feature_map):
-        return normalize(feature_map.pow(2).sum(1).flatten(1))
+        return normalize(feature_map.pow(2).mean(1).flatten(1))
 
     def compute_at_loss(self, student_feature_map, teacher_feature_map):
         at_student = self.attention_transfer(student_feature_map)
         at_teacher = self.attention_transfer(teacher_feature_map)
-        return torch.norm(at_student - at_teacher, dim=1).sum()
+        return (at_student - at_teacher).pow(2).mean()
 
     def forward(self, student_io_dict, teacher_io_dict):
         at_loss = 0
@@ -178,10 +193,13 @@ class ATLoss(nn.Module):
             student_feature_map = extract_feature_map(student_io_dict, pair_config['student'])
             teacher_feature_map = extract_feature_map(teacher_io_dict, pair_config['teacher'])
             factor = pair_config.get('factor', 1)
-            at_loss += factor * self.compute_at_loss(student_feature_map, teacher_feature_map)
+            if self.mode == 'paper':
+                at_loss += factor * self.compute_at_loss_paper(student_feature_map, teacher_feature_map)
+            else:
+                at_loss += factor * self.compute_at_loss(student_feature_map, teacher_feature_map)
             if batch_size is None:
-                batch_size = student_feature_map.shape[0]
-        return at_loss / batch_size if self.reduction == 'mean' else at_loss
+                batch_size = len(student_feature_map)
+        return at_loss / batch_size if self.mode == 'paper' else at_loss
 
 
 @register_single_loss
@@ -239,7 +257,7 @@ class FTLoss(nn.Module):
     def __init__(self, p=1, reduction='batchmean', paraphraser_path='paraphraser',
                  translator_path='translator', **kwargs):
         super().__init__()
-        self.norm_loss = nn.L1Loss() if p == 1 else nn.MSELoss()
+        self.norm_p = p
         self.paraphraser_path = paraphraser_path
         self.translator_path = translator_path
         self.reduction = reduction
@@ -248,8 +266,9 @@ class FTLoss(nn.Module):
         paraphraser_flat_outputs = teacher_io_dict[self.paraphraser_path]['output'].flatten(1)
         translator_flat_outputs = student_io_dict[self.translator_path]['output'].flatten(1)
         batch_size = paraphraser_flat_outputs.shape[0]
-        ft_loss = self.norm_loss(paraphraser_flat_outputs / paraphraser_flat_outputs.norm(dim=1).unsqueeze(1),
-                                 translator_flat_outputs / translator_flat_outputs.norm(dim=1).unsqueeze(1))
+        ft_loss = torch.norm(paraphraser_flat_outputs / paraphraser_flat_outputs.norm(dim=1).unsqueeze(1)
+                             - translator_flat_outputs / translator_flat_outputs.norm(dim=1).unsqueeze(1),
+                             self.norm_p, dim=1).sum()
         return ft_loss / batch_size if self.reduction == 'batchmean' else ft_loss
 
 
@@ -374,18 +393,48 @@ class CCKDLoss(nn.Module):
     "Correlation Congruence for Knowledge Distillation"
     Configure KDLoss in a yaml file to meet eq. (7), using GeneralizedCustomLoss
     """
-    def __init__(self, student_linear_path, teacher_linear_path, reduction, **kwargs):
+    def __init__(self, student_linear_path, teacher_linear_path, kernel_params, reduction, **kwargs):
         super().__init__()
         self.student_linear_path = student_linear_path
         self.teacher_linear_path = teacher_linear_path
+        self.kernel_type = kernel_params['type']
+        if self.kernel_type == 'gaussian':
+            self.gamma = kernel_params['gamma']
+            self.max_p = kernel_params['max_p']
+        elif self.kernel_type not in ('bilinear', 'gaussian'):
+            raise ValueError('self.kernel_type `{}` is not expected'.format(self.kernel_type))
         self.reduction = reduction
+
+    @staticmethod
+    def compute_cc_mat_by_bilinear_pool(linear_outputs):
+        return torch.matmul(linear_outputs, torch.t(linear_outputs))
+
+    def compute_cc_mat_by_gaussian_rbf(self, linear_outputs):
+        row_list = list()
+        for index, linear_output in enumerate(linear_outputs):
+            row = 1
+            right_term = torch.matmul(linear_output, torch.t(linear_outputs))
+            for p in range(1, self.max_p + 1):
+                left_term = ((2 * self.gamma) ** p) / (math.factorial(p))
+                row += left_term * (right_term ** p)
+
+            row *= math.exp(-2 * self.gamma)
+            row_list.append(row.squeeze(0))
+        return torch.stack(row_list)
 
     def forward(self, student_io_dict, teacher_io_dict):
         teacher_linear_outputs = teacher_io_dict[self.teacher_linear_path]['output']
         student_linear_outputs = student_io_dict[self.student_linear_path]['output']
         batch_size = teacher_linear_outputs.shape[0]
-        teacher_cc = torch.matmul(teacher_linear_outputs, torch.t(teacher_linear_outputs))
-        student_cc = torch.matmul(student_linear_outputs, torch.t(student_linear_outputs))
+        if self.kernel_type == 'bilinear':
+            teacher_cc = self.compute_cc_mat_by_bilinear_pool(teacher_linear_outputs)
+            student_cc = self.compute_cc_mat_by_bilinear_pool(student_linear_outputs)
+        elif self.kernel_type == 'gaussian':
+            teacher_cc = self.compute_cc_mat_by_gaussian_rbf(teacher_linear_outputs)
+            student_cc = self.compute_cc_mat_by_gaussian_rbf(student_linear_outputs)
+        else:
+            raise ValueError('self.kernel_type `{}` is not expected'.format(self.kernel_type))
+
         cc_loss = torch.dist(student_cc, teacher_cc, 2)
         return cc_loss / (batch_size ** 2) if self.reduction == 'batchmean' else cc_loss
 

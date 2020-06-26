@@ -114,3 +114,13 @@ def extract_outputs(model_info_dict):
             sub_model_io_dict[key] = model_io_dict.pop(key)
         model_output_dict[module_path] = sub_model_io_dict
     return model_output_dict
+
+
+def extract_sub_model_output_dict(model_output_dict, index):
+    sub_model_output_dict = dict()
+    for module_path, sub_model_io_dict in model_output_dict.items():
+        tmp_dict = dict()
+        for key, value in sub_model_io_dict.items():
+            tmp_dict[key] = value[index]
+        sub_model_output_dict[module_path] = tmp_dict
+    return sub_model_output_dict

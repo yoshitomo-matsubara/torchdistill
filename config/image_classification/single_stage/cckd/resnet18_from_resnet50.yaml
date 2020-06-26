@@ -77,7 +77,9 @@ train:
         special:
             type: 'Linear4CCKD'
             params:
-                input_module_path: 'model.avgpool'
+                input_module:
+                    path: 'model.avgpool'
+                    io: 'output'
                 linear_params:
                     in_features: 2048
                     out_features: 128
@@ -94,7 +96,9 @@ train:
         special:
             type: 'Linear4CCKD'
             params:
-                input_module_path: 'model.avgpool'
+                input_module:
+                    path: 'model.avgpool'
+                    io: 'output'
                 linear_params:
                     in_features: 512
                     out_features: 128
@@ -136,6 +140,10 @@ train:
                     params:
                         teacher_linear_path: 'linear'
                         student_linear_path: 'linear'
+                        kernel_params:
+                            type: 'gaussian'
+                            gamma: 0.4
+                            max_p: 2
                         reduction: 'batchmean'
                 factor: 0.003
 

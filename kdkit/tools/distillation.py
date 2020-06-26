@@ -9,7 +9,8 @@ from kdkit.models.special import SpecialModule, build_special_module
 from kdkit.models.util import redesign_model
 from kdkit.tools.foward_proc import get_forward_proc_func
 from kdkit.tools.loss import KDLoss, get_single_loss, get_custom_loss, get_func2extract_org_output
-from kdkit.tools.util import set_hooks, wrap_model, change_device, tensor2numpy2tensor, extract_outputs
+from kdkit.tools.util import set_hooks, wrap_model, change_device, tensor2numpy2tensor, extract_outputs, \
+    extract_sub_model_output_dict
 from myutils.common.file_util import make_parent_dirs
 from myutils.pytorch.func_util import get_optimizer, get_scheduler
 from myutils.pytorch.module_util import check_if_wrapped, freeze_module_params, unfreeze_module_params
@@ -190,10 +191,7 @@ class DistillationBox(nn.Module):
         if cache_file_paths is not None and isinstance(cache_file_paths, (list, tuple)):
             cpu_device = torch.device('cpu')
             for i, (teacher_output, cache_file_path) in enumerate(zip(teacher_outputs.cpu().numpy(), cache_file_paths)):
-                sub_dict = dict()
-                for key, value in extracted_teacher_output_dict.items():
-                    sub_dict[key] = value[i]
-
+                sub_dict = extract_sub_model_output_dict(extracted_teacher_output_dict, i)
                 sub_dict = tensor2numpy2tensor(sub_dict, cpu_device)
                 cache_dict = {'teacher_outputs': torch.Tensor(teacher_output), 'extracted_outputs': sub_dict}
                 make_parent_dirs(cache_file_path)
