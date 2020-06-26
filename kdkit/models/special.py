@@ -50,7 +50,7 @@ class Paraphraser4FactorTransfer(nn.Module):
         leaky_relu = nn.LeakyReLU(0.1)
         if uses_bn:
             return [nn.BatchNorm2d(num_output_channels), leaky_relu]
-        return leaky_relu
+        return [leaky_relu]
 
     @classmethod
     def make_enc_modules(cls, num_input_channels, num_output_channels, kernel_size, stride, padding, uses_bn):
