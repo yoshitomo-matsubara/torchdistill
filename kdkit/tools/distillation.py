@@ -167,21 +167,33 @@ class DistillationBox(nn.Module):
     def get_teacher_output(self, sample_batch, targets, supp_dict):
         cached_data = supp_dict.get('cached_data', None)
         cache_file_paths = supp_dict.get('cache_file_path', None)
+        teacher_outputs = None
+        cached_extracted_teacher_output_dict = None
         # Use cached data if available
         if cached_data is not None and isinstance(cached_data, dict):
             device = sample_batch.device
-            teacher_outputs = cached_data.get('teacher_outputs', None)
-            extracted_teacher_output_dict = cached_data['extracted_outputs']
+            teacher_outputs = cached_data['teacher_outputs']
+            cached_extracted_teacher_output_dict = cached_data['extracted_outputs']
             if device.type != 'cpu':
                 teacher_outputs = change_device(teacher_outputs, device)
-                extracted_teacher_output_dict = change_device(extracted_teacher_output_dict, device)
-            return teacher_outputs, extracted_teacher_output_dict
+                cached_extracted_teacher_output_dict = change_device(cached_extracted_teacher_output_dict, device)
+            if not self.teacher_updatable:
+                return teacher_outputs, cached_extracted_teacher_output_dict
 
-        if self.teacher_updatable:
-            teacher_outputs = self.teacher_forward_proc(self.teacher_model, sample_batch, targets, supp_dict)
-        else:
-            with torch.no_grad():
+        if teacher_outputs is None:
+            if self.teacher_updatable:
                 teacher_outputs = self.teacher_forward_proc(self.teacher_model, sample_batch, targets, supp_dict)
+            else:
+                with torch.no_grad():
+                    teacher_outputs = self.teacher_forward_proc(self.teacher_model, sample_batch, targets, supp_dict)
+
+        if cached_extracted_teacher_output_dict is not None:
+            if isinstance(self.teacher_model, SpecialModule):
+                self.teacher_info_dict.update(cached_extracted_teacher_output_dict)
+                self.teacher_model.post_forward(self.teacher_info_dict)
+
+            extracted_teacher_output_dict = extract_outputs(self.teacher_info_dict)
+            return teacher_outputs, extracted_teacher_output_dict
 
         if isinstance(self.teacher_model, SpecialModule):
             self.teacher_model.post_forward(self.teacher_info_dict)
