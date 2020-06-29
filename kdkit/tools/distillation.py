@@ -1,5 +1,5 @@
 import sys
-
+import copy
 import torch
 from torch import nn
 
@@ -195,7 +195,7 @@ class DistillationBox(nn.Module):
             extracted_teacher_output_dict = extract_outputs(self.teacher_info_dict)
             return teacher_outputs, extracted_teacher_output_dict
 
-        teacher_info_dict4cache = self.teacher_info_dict.copy() if self.teacher_updatable else None
+        teacher_info_dict4cache = copy.deepcopy(self.teacher_info_dict) if self.teacher_updatable else None
         if isinstance(self.teacher_model, SpecialModule):
             self.teacher_model.post_forward(self.teacher_info_dict)
 
