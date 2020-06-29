@@ -195,13 +195,15 @@ class DistillationBox(nn.Module):
             extracted_teacher_output_dict = extract_outputs(self.teacher_info_dict)
             return teacher_outputs, extracted_teacher_output_dict
 
-        teacher_info_dict4cache = copy.deepcopy(self.teacher_info_dict) if self.teacher_updatable else None
+        # Deep copy of teacher info dict if teacher special module contains trainable module(s)
+        teacher_info_dict4cache = copy.deepcopy(self.teacher_info_dict) \
+            if self.teacher_updatable and isinstance(cache_file_paths, (list, tuple)) is not None else None
         if isinstance(self.teacher_model, SpecialModule):
             self.teacher_model.post_forward(self.teacher_info_dict)
 
         extracted_teacher_output_dict = extract_outputs(self.teacher_info_dict)
         # Write cache files if output file paths (cache_file_paths) are given
-        if cache_file_paths is not None and isinstance(cache_file_paths, (list, tuple)):
+        if isinstance(cache_file_paths, (list, tuple)):
             if teacher_info_dict4cache is None:
                 teacher_info_dict4cache = extracted_teacher_output_dict
 
