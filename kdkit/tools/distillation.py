@@ -195,15 +195,19 @@ class DistillationBox(nn.Module):
             extracted_teacher_output_dict = extract_outputs(self.teacher_info_dict)
             return teacher_outputs, extracted_teacher_output_dict
 
+        teacher_info_dict4cache = self.teacher_info_dict.copy() if self.teacher_updatable else None
         if isinstance(self.teacher_model, SpecialModule):
             self.teacher_model.post_forward(self.teacher_info_dict)
 
         extracted_teacher_output_dict = extract_outputs(self.teacher_info_dict)
         # Write cache files if output file paths (cache_file_paths) are given
         if cache_file_paths is not None and isinstance(cache_file_paths, (list, tuple)):
+            if teacher_info_dict4cache is None:
+                teacher_info_dict4cache = extracted_teacher_output_dict
+
             cpu_device = torch.device('cpu')
             for i, (teacher_output, cache_file_path) in enumerate(zip(teacher_outputs.cpu().numpy(), cache_file_paths)):
-                sub_dict = extract_sub_model_output_dict(extracted_teacher_output_dict, i)
+                sub_dict = extract_sub_model_output_dict(teacher_info_dict4cache, i)
                 sub_dict = tensor2numpy2tensor(sub_dict, cpu_device)
                 cache_dict = {'teacher_outputs': torch.Tensor(teacher_output), 'extracted_outputs': sub_dict}
                 make_parent_dirs(cache_file_path)
