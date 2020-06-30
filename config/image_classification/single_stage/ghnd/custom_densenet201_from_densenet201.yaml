@@ -81,7 +81,7 @@ train:
         forward_hook:
             input: []
             output: ['features.transition2', 'features.transition3', 'features.denseblock4']
-        wrapper:
+        wrapper: 'DistributedDataParallel'
         requires_grad: False
     student:
         adaptations:
@@ -90,7 +90,7 @@ train:
         forward_hook:
             input: []
             output: ['features.bottleneck', 'features.transition3', 'features.denseblock4']
-        wrapper:
+        wrapper: 'DistributedDataParallel'
         requires_grad: True
     apex:
         requires: False

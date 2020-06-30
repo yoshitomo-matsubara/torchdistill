@@ -93,7 +93,7 @@ train:
             forward_hook:
                 input: []
                 output: ['teacher_model.layer4', 'paraphraser']
-            wrapper:
+            wrapper: 'DistributedDataParallel'
             requires_grad: True
             frozen_modules: ['teacher_model']
         student:
@@ -105,7 +105,7 @@ train:
             forward_hook:
                 input: []
                 output: []
-            wrapper:
+            wrapper: 'DistributedDataParallel'
             requires_grad: False
         apex:
             requires: False
@@ -151,7 +151,7 @@ train:
             forward_hook:
                 input: []
                 output: ['teacher_model.layer4', 'paraphraser']
-            wrapper:
+            wrapper: 'DistributedDataParallel'
             requires_grad: False
         student:
             adaptations:
@@ -170,7 +170,7 @@ train:
             forward_hook:
                 input: []
                 output: ['student_model.layer4', 'translator']
-            wrapper:
+            wrapper: 'DistributedDataParallel'
             requires_grad: True
             frozen_modules: []
         apex:

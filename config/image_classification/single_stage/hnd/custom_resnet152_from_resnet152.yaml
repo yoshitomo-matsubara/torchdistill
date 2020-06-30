@@ -81,7 +81,7 @@ train:
         forward_hook:
             input: []
             output: ['layer2']
-        wrapper:
+        wrapper: 'DistributedDataParallel'
         requires_grad: False
     student:
         adaptations:
@@ -90,7 +90,7 @@ train:
         forward_hook:
             input: []
             output: ['bottleneck']
-        wrapper:
+        wrapper: 'DistributedDataParallel'
         requires_grad: True
     apex:
         requires: False
