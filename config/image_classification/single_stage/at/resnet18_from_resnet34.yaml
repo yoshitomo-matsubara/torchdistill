@@ -77,7 +77,7 @@ train:
         forward_hook:
             input: []
             output: ['layer3', 'layer4']
-        wrapper:
+        wrapper: 'DistributedDataParallel'
         requires_grad: False
     student:
         adaptations:
@@ -86,7 +86,7 @@ train:
         forward_hook:
             input: []
             output: ['layer3', 'layer4']
-        wrapper:
+        wrapper: 'DistributedDataParallel'
         requires_grad: True
     apex:
         requires: False

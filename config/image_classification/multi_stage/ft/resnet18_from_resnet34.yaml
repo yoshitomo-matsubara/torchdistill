@@ -87,13 +87,13 @@ train:
                         kernel_size: 3
                         stride: 1
                         padding: 1
-                        uses_bn: True
+                        uses_bn: False
                     paraphraser_ckpt: &teacher4ft_paraphraser_ckpt !join ['./resource/ckpt/image_classification/multi_stage/ft/', *student_experiment, '_paraphraser.pt']
                     uses_decoder: True
             forward_hook:
                 input: []
                 output: ['teacher_model.layer4', 'paraphraser']
-            wrapper:
+            wrapper: 'DistributedDataParallel'
             requires_grad: True
             frozen_modules: ['teacher_model']
         student:
@@ -151,7 +151,7 @@ train:
             forward_hook:
                 input: []
                 output: ['teacher_model.layer4', 'paraphraser']
-            wrapper:
+            wrapper: 'DistributedDataParallel'
             requires_grad: False
         student:
             adaptations:
@@ -166,11 +166,11 @@ train:
                         kernel_size: 3
                         stride: 1
                         padding: 1
-                        uses_bn: True
+                        uses_bn: False
             forward_hook:
                 input: []
                 output: ['student_model.layer4', 'translator']
-            wrapper:
+            wrapper: 'DistributedDataParallel'
             requires_grad: True
             frozen_modules: []
         apex:

@@ -254,7 +254,7 @@ class FTLoss(nn.Module):
     """
     "Paraphrasing Complex Network: Network Compression via Factor Transfer"
     """
-    def __init__(self, p=1, reduction='batchmean', paraphraser_path='paraphraser',
+    def __init__(self, p=1, reduction='mean', paraphraser_path='paraphraser',
                  translator_path='translator', **kwargs):
         super().__init__()
         self.norm_p = p
@@ -265,11 +265,13 @@ class FTLoss(nn.Module):
     def forward(self, student_io_dict, teacher_io_dict):
         paraphraser_flat_outputs = teacher_io_dict[self.paraphraser_path]['output'].flatten(1)
         translator_flat_outputs = student_io_dict[self.translator_path]['output'].flatten(1)
-        batch_size = paraphraser_flat_outputs.shape[0]
-        ft_loss = torch.norm(paraphraser_flat_outputs / paraphraser_flat_outputs.norm(dim=1).unsqueeze(1)
-                             - translator_flat_outputs / translator_flat_outputs.norm(dim=1).unsqueeze(1),
-                             self.norm_p, dim=1).sum()
-        return ft_loss / batch_size if self.reduction == 'batchmean' else ft_loss
+        norm_paraphraser_flat_outputs = paraphraser_flat_outputs / paraphraser_flat_outputs.norm(dim=1).unsqueeze(1)
+        norm_translator_flat_outputs = translator_flat_outputs / translator_flat_outputs.norm(dim=1).unsqueeze(1)
+        if self.norm_p == 1:
+            return nn.functional.l1_loss(norm_translator_flat_outputs, norm_paraphraser_flat_outputs,
+                                         reduction=self.reduction)
+        ft_loss = torch.norm(norm_translator_flat_outputs - norm_paraphraser_flat_outputs, self.norm_p, dim=1)
+        return ft_loss.mean() if self.reduction == 'mean' else ft_loss.sum()
 
 
 @register_single_loss

@@ -77,7 +77,7 @@ train:
         forward_hook:
             input: ['fc']
             output: []
-        wrapper:
+        wrapper: 'DistributedDataParallel'
         requires_grad: False
     student:
         adaptations:
@@ -85,7 +85,7 @@ train:
         forward_hook:
             input: ['fc']
             output: []
-        wrapper:
+        wrapper: 'DistributedDataParallel'
         requires_grad: True
         frozen_modules: []
     apex:

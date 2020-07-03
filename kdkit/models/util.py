@@ -1,5 +1,6 @@
 from collections import OrderedDict
 
+from torch import nn
 from torch.nn import Module, Sequential
 
 from kdkit.common.constant import def_logger
@@ -47,9 +48,16 @@ def redesign_model(org_model, model_config, model_label, model_type='original'):
         if len(frozen_module_path_set) > 0:
             logger.info('Frozen module(s): {}'.format(frozen_module_path_set))
 
+        isinstance_str = 'instance('
         for frozen_module_path in frozen_module_path_set:
-            module = get_module(org_model, frozen_module_path)
-            freeze_module_params(module)
+            if frozen_module_path.startswith(isinstance_str) and frozen_module_path.endswith(')'):
+                target_cls = nn.__dict__[frozen_module_path[len(isinstance_str):-1]]
+                for m in org_model.modules():
+                    if isinstance(m, target_cls):
+                        freeze_module_params(m)
+            else:
+                module = get_module(org_model, frozen_module_path)
+                freeze_module_params(module)
         return org_model
 
     logger.info('Redesigning the {} model with {}'.format(model_label, module_paths))
