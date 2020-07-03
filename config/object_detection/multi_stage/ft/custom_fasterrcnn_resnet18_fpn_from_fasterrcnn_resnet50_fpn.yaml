@@ -99,7 +99,7 @@ train:
             forward_hook:
                 input: []
                 output: []
-            wrapper: 'DistributedDataParallel'
+            wrapper:
             requires_grad: False
         apex:
             requires: False
