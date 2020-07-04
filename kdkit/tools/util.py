@@ -68,7 +68,7 @@ def wrap_model(model, model_config, device, device_ids=None, distributed=False, 
     model.to(device)
     if wrapper is not None and device.type.startswith('cuda') and not check_if_wrapped(model):
         if wrapper == 'DistributedDataParallel' and distributed:
-            model = DistributedDataParallel(model, device_ids=device_ids, find_unused_parameters=any_frozen)
+            model = DistributedDataParallel(model, device_ids=device_ids, find_unused_parameters=not any_frozen)
         elif wrapper in {'DataParallel', 'DistributedDataParallel'}:
             model = DataParallel(model, device_ids=device_ids)
     return model
