@@ -60,6 +60,8 @@ class DistillationBox(nn.Module):
                 model_type = type(student_ref_model).__name__
             self.student_model = redesign_model(student_ref_model, student_config, 'student', model_type)
 
+        self.teacher_any_frozen = len(teacher_config.get('frozen_modules', list())) > 0
+        self.student_any_frozen = len(student_config.get('frozen_modules', list())) > 0
         self.target_teacher_pairs.extend(set_hooks(self.teacher_model, teacher_ref_model,
                                                    teacher_config, self.teacher_info_dict))
         self.target_student_pairs.extend(set_hooks(self.student_model, student_ref_model,
@@ -91,9 +93,11 @@ class DistillationBox(nn.Module):
 
         # Wrap models if necessary
         self.teacher_model =\
-            wrap_model(self.teacher_model, teacher_config, self.device, self.device_ids, self.distributed)
+            wrap_model(self.teacher_model, teacher_config, self.device, self.device_ids, self.distributed,
+                       self.teacher_any_frozen)
         self.student_model =\
-            wrap_model(self.student_model, student_config, self.device, self.device_ids, self.distributed)
+            wrap_model(self.student_model, student_config, self.device, self.device_ids, self.distributed,
+                       self.student_any_frozen)
         self.teacher_updatable = True
         if not teacher_config.get('requires_grad', True):
             logger.info('Freezing the whole teacher model')
@@ -154,7 +158,7 @@ class DistillationBox(nn.Module):
         self.teacher_info_dict, self.student_info_dict = dict(), dict()
         self.train_data_loader, self.val_data_loader, self.optimizer, self.lr_scheduler = None, None, None, None
         self.org_criterion, self.criterion, self.uses_teacher_output, self.extract_org_loss = None, None, None, None
-        self.teacher_updatable = None
+        self.teacher_updatable, self.teacher_any_frozen, self.student_any_frozen = None, None, None
         self.apex = None
         self.setup(train_config)
         self.num_epochs = train_config['num_epochs']
