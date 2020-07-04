@@ -60,8 +60,10 @@ class DistillationBox(nn.Module):
                 model_type = type(student_ref_model).__name__
             self.student_model = redesign_model(student_ref_model, student_config, 'student', model_type)
 
-        self.teacher_any_frozen = len(teacher_config.get('frozen_modules', list())) > 0
-        self.student_any_frozen = len(student_config.get('frozen_modules', list())) > 0
+        self.teacher_any_frozen = \
+            len(teacher_config.get('frozen_modules', list())) > 0 or not teacher_config.get('requires_grad', True)
+        self.student_any_frozen = \
+            len(student_config.get('frozen_modules', list())) > 0 or not teacher_config.get('requires_grad', True)
         self.target_teacher_pairs.extend(set_hooks(self.teacher_model, teacher_ref_model,
                                                    teacher_config, self.teacher_info_dict))
         self.target_student_pairs.extend(set_hooks(self.student_model, student_ref_model,
