@@ -139,7 +139,7 @@ train:
             forward_hook:
                 input: []
                 output: ['student_model.layer1', 'student_model.layer2', 'student_model.layer3', 'student_model.layer4', 'connector_dict.connector1', 'connector_dict.connector2', 'connector_dict.connector3', 'connector_dict.connector4']
-            wrapper: 'DistributedDataParallel'
+            wrapper:
             requires_grad: True
         apex:
             requires: False

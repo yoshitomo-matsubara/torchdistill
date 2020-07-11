@@ -87,7 +87,7 @@ train:
             forward_hook:
                 input: []
                 output: ['teacher_model.seq.backbone.body.layer4', 'paraphraser']
-            wrapper: 'DistributedDataParallel'
+            wrapper:
             requires_grad: True
             frozen_modules: ['teacher_model']
         student:
@@ -146,7 +146,7 @@ train:
             forward_hook:
                 input: []
                 output: ['teacher_model.backbone.body.layer4', 'paraphraser']
-            wrapper: 'DistributedDataParallel'
+            wrapper:
             requires_grad: False
         student:
             forward_proc: 'forward_batch_target'
@@ -166,7 +166,7 @@ train:
             forward_hook:
                 input: []
                 output: ['student_model.backbone.body.layer4', 'translator']
-            wrapper: 'DistributedDataParallel'
+            wrapper:
             requires_grad: True
             frozen_modules: ['student_model.backbone.body.conv1', 'student_model.backbone.body.bn1', 'student_model.backbone.body.relu', 'student_model.backbone.body.maxpool']
         apex:
