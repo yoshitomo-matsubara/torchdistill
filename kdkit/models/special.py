@@ -8,9 +8,9 @@ from torch.jit.annotations import Tuple, List
 from kdkit.common import main_util
 from kdkit.common.constant import def_logger
 from kdkit.models.util import redesign_model
-from myutils.common import file_util
 from kdkit.models.util import wrap_if_distributed
-
+from myutils.common import file_util
+from myutils.pytorch.module_util import check_if_wrapped
 
 logger = def_logger.getChild(__name__)
 SPECIAL_CLASS_DICT = dict()
@@ -137,7 +137,11 @@ class Teacher4FactorTransfer(SpecialModule):
             wrap_if_distributed(Paraphraser4FactorTransfer(**paraphraser_params), device, device_ids, distributed)
         self.ckpt_file_path = paraphraser_ckpt
         if os.path.isfile(self.ckpt_file_path):
-            self.paraphraser.load_state_dict(torch.load(self.ckpt_file_path, map_location='cpu'))
+            state_dict = torch.load(self.ckpt_file_path, map_location=device)
+            if check_if_wrapped(self.paraphraser):
+                self.paraphraser.module.load_state_dict(state_dict)
+            else:
+                self.paraphraser.load_state_dict(state_dict)
         self.uses_decoder = uses_decoder
 
     def forward(self, *args):
@@ -152,7 +156,9 @@ class Teacher4FactorTransfer(SpecialModule):
     def post_process(self, *args, **kwargs):
         if main_util.is_main_process():
             file_util.make_parent_dirs(self.ckpt_file_path)
-        main_util.save_on_master(self.paraphraser.state_dict(), self.ckpt_file_path)
+        state_dict = self.paraphraser.module.state_dict() if check_if_wrapped(self.paraphraser) \
+            else self.paraphraser.state_dict()
+        main_util.save_on_master(state_dict, self.ckpt_file_path)
 
 
 @register_special_module
