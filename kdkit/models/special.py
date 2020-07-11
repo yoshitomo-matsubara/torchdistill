@@ -119,7 +119,7 @@ class Teacher4FactorTransfer(SpecialModule):
     """
 
     def __init__(self, teacher_model, minimal, input_module_path,
-                 paraphraser_params, paraphraser_ckpt, uses_decoder, device_ids, distributed, **kwargs):
+                 paraphraser_params, paraphraser_ckpt, uses_decoder, device, device_ids, distributed, **kwargs):
         super().__init__()
         if minimal is None:
             minimal = dict()
@@ -134,7 +134,7 @@ class Teacher4FactorTransfer(SpecialModule):
         self.teacher_model = redesign_model(teacher_ref_model, minimal, 'teacher', model_type)
         self.input_module_path = input_module_path
         self.paraphraser = \
-            wrap_if_distributed(Paraphraser4FactorTransfer(**paraphraser_params), device_ids, distributed)
+            wrap_if_distributed(Paraphraser4FactorTransfer(**paraphraser_params), device, device_ids, distributed)
         self.ckpt_file_path = paraphraser_ckpt
         if os.path.isfile(self.ckpt_file_path):
             self.paraphraser.load_state_dict(torch.load(self.ckpt_file_path, map_location='cpu'))

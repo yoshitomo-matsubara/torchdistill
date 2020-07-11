@@ -12,7 +12,8 @@ from myutils.pytorch.module_util import get_module, freeze_module_params
 logger = def_logger.getChild(__name__)
 
 
-def wrap_if_distributed(model, device_ids, distributed):
+def wrap_if_distributed(model, device, device_ids, distributed):
+    model.to(device)
     if distributed:
         any_frozen = len(get_frozen_param_names(model)) > 0
         return DistributedDataParallel(model, device_ids=device_ids, find_unused_parameters=any_frozen)
