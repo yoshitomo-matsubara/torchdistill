@@ -1,13 +1,15 @@
 from collections import OrderedDict
 
+import torch
 from torch import nn
 from torch.nn import Module, Sequential
 from torch.nn.parallel import DistributedDataParallel
 
 from kdkit.common.constant import def_logger
+from kdkit.common.main_util import is_main_process, save_on_master
 from kdkit.models.adaptation import get_adaptation_module
-from myutils.pytorch.module_util import get_frozen_param_names
-from myutils.pytorch.module_util import get_module, freeze_module_params
+from myutils.common.file_util import make_parent_dirs
+from myutils.pytorch.module_util import check_if_wrapped, get_module, get_frozen_param_names, freeze_module_params
 
 logger = def_logger.getChild(__name__)
 
@@ -18,6 +20,21 @@ def wrap_if_distributed(model, device, device_ids, distributed):
         any_frozen = len(get_frozen_param_names(model)) > 0
         return DistributedDataParallel(model, device_ids=device_ids, find_unused_parameters=any_frozen)
     return model
+
+
+def load_module_ckpt(module, device, ckpt_file_path):
+    state_dict = torch.load(ckpt_file_path, map_location=device)
+    if check_if_wrapped(module):
+        module.module.load_state_dict(state_dict)
+    else:
+        module.load_state_dict(state_dict)
+
+
+def save_module_ckpt(module, ckpt_file_path):
+    if is_main_process():
+        make_parent_dirs(ckpt_file_path)
+    state_dict = module.module.state_dict() if check_if_wrapped(module) else module.state_dict()
+    save_on_master(state_dict, ckpt_file_path)
 
 
 def add_submodule(module, module_path, module_dict):
