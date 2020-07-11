@@ -2,12 +2,21 @@ from collections import OrderedDict
 
 from torch import nn
 from torch.nn import Module, Sequential
+from torch.nn.parallel import DistributedDataParallel
 
 from kdkit.common.constant import def_logger
 from kdkit.models.adaptation import get_adaptation_module
+from myutils.pytorch.module_util import get_frozen_param_names
 from myutils.pytorch.module_util import get_module, freeze_module_params
 
 logger = def_logger.getChild(__name__)
+
+
+def wrap_if_distributed(model, device_ids, distributed):
+    if distributed:
+        any_frozen = len(get_frozen_param_names(model)) > 0
+        return DistributedDataParallel(model, device_ids=device_ids, find_unused_parameters=any_frozen)
+    return model
 
 
 def add_submodule(module, module_path, module_dict):

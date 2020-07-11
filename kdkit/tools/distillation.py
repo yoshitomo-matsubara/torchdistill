@@ -46,7 +46,8 @@ class DistillationBox(nn.Module):
         student_ref_model = unwrapped_org_student_model
         if len(teacher_config) > 0 or (len(teacher_config) == 0 and self.teacher_model is None):
             model_type = 'original'
-            special_teacher_model = build_special_module(teacher_config, teacher_model=unwrapped_org_teacher_model)
+            special_teacher_model = build_special_module(teacher_config, teacher_model=unwrapped_org_teacher_model,
+                                                         device_ids=self.device_ids, distributed=self.distributed)
             if special_teacher_model is not None:
                 teacher_ref_model = special_teacher_model
                 model_type = type(teacher_ref_model).__name__
@@ -54,7 +55,8 @@ class DistillationBox(nn.Module):
 
         if len(student_config) > 0 or (len(student_config) == 0 and self.student_model is None):
             model_type = 'original'
-            special_student_model = build_special_module(student_config, student_model=unwrapped_org_student_model)
+            special_student_model = build_special_module(student_config, student_model=unwrapped_org_student_model,
+                                                         device_ids=self.device_ids, distributed=self.distributed)
             if special_student_model is not None:
                 student_ref_model = special_student_model
                 model_type = type(student_ref_model).__name__

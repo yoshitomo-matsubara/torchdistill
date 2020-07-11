@@ -9,6 +9,8 @@ from kdkit.common import main_util
 from kdkit.common.constant import def_logger
 from kdkit.models.util import redesign_model
 from myutils.common import file_util
+from kdkit.models.util import wrap_if_distributed
+
 
 logger = def_logger.getChild(__name__)
 SPECIAL_CLASS_DICT = dict()
@@ -41,7 +43,7 @@ class EmptyModule(SpecialModule):
 
 class Paraphraser4FactorTransfer(nn.Module):
     """
-    Paraphraser for tactor transfer described in the supplementary material of
+    Paraphraser for factor transfer described in the supplementary material of
     "Paraphrasing Complex Network: Network Compression via Factor Transfer"
     """
 
@@ -117,7 +119,7 @@ class Teacher4FactorTransfer(SpecialModule):
     """
 
     def __init__(self, teacher_model, minimal, input_module_path,
-                 paraphraser_params, paraphraser_ckpt, uses_decoder, **kwargs):
+                 paraphraser_params, paraphraser_ckpt, uses_decoder, device_ids, distributed, **kwargs):
         super().__init__()
         if minimal is None:
             minimal = dict()
@@ -131,7 +133,8 @@ class Teacher4FactorTransfer(SpecialModule):
 
         self.teacher_model = redesign_model(teacher_ref_model, minimal, 'teacher', model_type)
         self.input_module_path = input_module_path
-        self.paraphraser = Paraphraser4FactorTransfer(**paraphraser_params)
+        self.paraphraser = \
+            wrap_if_distributed(Paraphraser4FactorTransfer(**paraphraser_params), device_ids, distributed)
         self.ckpt_file_path = paraphraser_ckpt
         if os.path.isfile(self.ckpt_file_path):
             self.paraphraser.load_state_dict(torch.load(self.ckpt_file_path, map_location='cpu'))
