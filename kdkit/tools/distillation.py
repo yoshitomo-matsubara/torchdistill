@@ -204,8 +204,6 @@ class DistillationBox(nn.Module):
                 self.teacher_info_dict.update(cached_extracted_teacher_output_dict)
                 if isinstance(self.teacher_model, SpecialModule):
                     self.teacher_model.post_forward(self.teacher_info_dict)
-                else:
-                    self.teacher_model.module.post_forward(self.teacher_info_dict)
 
             extracted_teacher_output_dict = extract_outputs(self.teacher_info_dict)
             return teacher_outputs, extracted_teacher_output_dict
@@ -215,8 +213,6 @@ class DistillationBox(nn.Module):
             if self.teacher_updatable and isinstance(cache_file_paths, (list, tuple)) is not None else None
         if isinstance(self.teacher_model, SpecialModule):
             self.teacher_model.post_forward(self.teacher_info_dict)
-        elif check_if_wrapped(self.teacher_model) and isinstance(self.teacher_model.module, SpecialModule):
-            self.teacher_model.module.post_forward(self.teacher_info_dict)
 
         extracted_teacher_output_dict = extract_outputs(self.teacher_info_dict)
         # Write cache files if output file paths (cache_file_paths) are given
@@ -239,8 +235,6 @@ class DistillationBox(nn.Module):
         student_outputs = self.student_forward_proc(self.student_model, sample_batch, targets, supp_dict)
         if isinstance(self.student_model, SpecialModule):
             self.student_model.post_forward(self.student_info_dict)
-        elif check_if_wrapped(self.student_model) and isinstance(self.student_model.module, SpecialModule):
-            self.student_model.module.post_forward(self.student_info_dict)
 
         org_loss_dict = self.extract_org_loss(self.org_criterion, student_outputs, teacher_outputs, targets,
                                               uses_teacher_output=self.uses_teacher_output, supp_dict=supp_dict)
@@ -263,12 +257,8 @@ class DistillationBox(nn.Module):
             self.lr_scheduler.step()
         if isinstance(self.teacher_model, SpecialModule):
             self.teacher_model.post_process()
-        elif check_if_wrapped(self.teacher_model) and isinstance(self.teacher_model.module, SpecialModule):
-            self.teacher_model.module.post_process()
         if isinstance(self.student_model, SpecialModule):
             self.student_model.post_process()
-        elif check_if_wrapped(self.student_model) and isinstance(self.student_model.module, SpecialModule):
-            self.student_model.module.post_process()
 
     def clean_modules(self):
         unfreeze_module_params(self.org_teacher_model)
