@@ -5,13 +5,13 @@ import torch
 from torch import nn
 
 from kdkit.common.constant import def_logger
+from kdkit.core.util import set_hooks, wrap_model, change_device, tensor2numpy2tensor, extract_outputs, \
+    extract_sub_model_output_dict
 from kdkit.datasets.util import build_data_loaders
 from kdkit.models.special import SpecialModule, build_special_module
 from kdkit.models.util import redesign_model
 from kdkit.tools.foward_proc import get_forward_proc_func
 from kdkit.tools.loss import KDLoss, get_single_loss, get_custom_loss, get_func2extract_org_output
-from kdkit.tools.util import set_hooks, wrap_model, change_device, tensor2numpy2tensor, extract_outputs, \
-    extract_sub_model_output_dict
 from myutils.common.file_util import make_parent_dirs
 from myutils.pytorch.func_util import get_optimizer, get_scheduler
 from myutils.pytorch.module_util import check_if_wrapped, freeze_module_params, unfreeze_module_params

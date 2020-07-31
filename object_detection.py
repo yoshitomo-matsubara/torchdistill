@@ -14,13 +14,13 @@ from torchvision.models.detection.mask_rcnn import MaskRCNN
 
 from kdkit.common.constant import def_logger
 from kdkit.common.main_util import is_main_process, init_distributed_mode, load_ckpt, save_ckpt
+from kdkit.core.distillation import get_distillation_box
 from kdkit.datasets import util
 from kdkit.datasets.coco import get_coco_api_from_dataset
 from kdkit.eval.coco import CocoEvaluator
 from kdkit.misc.log import setup_log_file, SmoothedValue, MetricLogger
 from kdkit.models import MODEL_DICT
 from kdkit.models.official import get_object_detection_model
-from kdkit.tools.distillation import get_distillation_box
 from myutils.common import file_util, yaml_util
 from myutils.pytorch import module_util
 
