@@ -5,10 +5,10 @@ from torchvision.models import inception_v3
 
 from kdkit.models.custom.bottleneck.base import BottleneckBase
 from kdkit.models.custom.bottleneck.processor import get_bottleneck_processor
-from kdkit.models.registry import register_class, register_func
+from kdkit.models.registry import register_model_class, register_model_func
 
 
-@register_class
+@register_model_class
 class Bottleneck4Inception3(BottleneckBase):
     def __init__(self, bottleneck_channel=12, bottleneck_idx=7, compressor=None, decompressor=None):
         modules = [
@@ -35,7 +35,7 @@ class Bottleneck4Inception3(BottleneckBase):
         super().__init__(encoder=encoder, decoder=decoder, compressor=compressor, decompressor=decompressor)
 
 
-@register_class
+@register_model_class
 class CustomInception3(nn.Sequential):
     def __init__(self, bottleneck, short_module_names, org_model):
         module_dict = OrderedDict()
@@ -62,7 +62,7 @@ class CustomInception3(nn.Sequential):
         super().__init__(module_dict)
 
 
-@register_func
+@register_model_func
 def custom_inception_v3(bottleneck_channel=12, bottleneck_idx=7, compressor=None, decompressor=None,
                         short_module_names=None, **kwargs):
     if short_module_names is None:
