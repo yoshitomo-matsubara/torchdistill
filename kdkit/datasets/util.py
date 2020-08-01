@@ -4,10 +4,11 @@ import torchvision
 from torch.utils.data import DataLoader, RandomSampler, SequentialSampler
 from torch.utils.data.distributed import DistributedSampler
 from torchvision import transforms
-from torchvision.datasets import ImageFolder, PhotoTour, VOCDetection, Kinetics400, HMDB51, UCF101
+from torchvision.datasets import PhotoTour, VOCDetection, Kinetics400, HMDB51, UCF101
 
 from kdkit.common.constant import def_logger
 from kdkit.datasets.coco import ImageToTensor, Compose, CocoRandomHorizontalFlip, get_coco, coco_collate_fn
+from kdkit.datasets.sample_loader import get_sample_loader
 from kdkit.datasets.sampler import get_batch_sampler
 from kdkit.datasets.wrapper import default_idx2subpath, BaseDatasetWrapper, CacheableDataset, get_dataset_wrapper
 
@@ -45,6 +46,14 @@ def get_official_dataset(dataset_cls, dataset_params_config):
     params_config = dataset_params_config.copy()
     transform = build_transform(params_config.pop('transform_params', None))
     target_transform = build_transform(params_config.pop('transform_params', None))
+    if 'loader' in params_config:
+        loader_config = params_config.pop('loader')
+        loader_type = loader_config['type']
+        loader_params_config = loader_config.get('params', None)
+        loader = get_sample_loader(loader_type) if loader_params_config is None \
+            else get_sample_loader(loader_type, **loader_params_config)
+        params_config['loader'] = loader
+
     # For datasets without target_transform
     if dataset_cls in (PhotoTour, VOCDetection, Kinetics400, HMDB51, UCF101):
         return dataset_cls(transform=transform, **params_config)
