@@ -5,10 +5,8 @@ import torch
 from torch import nn
 from torch.jit.annotations import Tuple, List
 
-from kdkit.common import main_util
 from kdkit.common.constant import def_logger
-from kdkit.models.util import redesign_model
-from myutils.common import file_util
+from kdkit.models.util import wrap_if_distributed, load_module_ckpt, save_module_ckpt, redesign_model
 
 logger = def_logger.getChild(__name__)
 SPECIAL_CLASS_DICT = dict()
@@ -41,7 +39,7 @@ class EmptyModule(SpecialModule):
 
 class Paraphraser4FactorTransfer(nn.Module):
     """
-    Paraphraser for tactor transfer described in the supplementary material of
+    Paraphraser for factor transfer described in the supplementary material of
     "Paraphrasing Complex Network: Network Compression via Factor Transfer"
     """
 
@@ -117,7 +115,7 @@ class Teacher4FactorTransfer(SpecialModule):
     """
 
     def __init__(self, teacher_model, minimal, input_module_path,
-                 paraphraser_params, paraphraser_ckpt, uses_decoder, **kwargs):
+                 paraphraser_params, paraphraser_ckpt, uses_decoder, device, device_ids, distributed, **kwargs):
         super().__init__()
         if minimal is None:
             minimal = dict()
@@ -131,10 +129,11 @@ class Teacher4FactorTransfer(SpecialModule):
 
         self.teacher_model = redesign_model(teacher_ref_model, minimal, 'teacher', model_type)
         self.input_module_path = input_module_path
-        self.paraphraser = Paraphraser4FactorTransfer(**paraphraser_params)
+        self.paraphraser = \
+            wrap_if_distributed(Paraphraser4FactorTransfer(**paraphraser_params), device, device_ids, distributed)
         self.ckpt_file_path = paraphraser_ckpt
         if os.path.isfile(self.ckpt_file_path):
-            self.paraphraser.load_state_dict(torch.load(self.ckpt_file_path, map_location='cpu'))
+            load_module_ckpt(self.paraphraser, device, self.ckpt_file_path)
         self.uses_decoder = uses_decoder
 
     def forward(self, *args):
@@ -147,9 +146,7 @@ class Teacher4FactorTransfer(SpecialModule):
         self.paraphraser(info_dict[self.input_module_path]['output'])
 
     def post_process(self, *args, **kwargs):
-        if main_util.is_main_process():
-            file_util.make_parent_dirs(self.ckpt_file_path)
-        main_util.save_on_master(self.paraphraser.state_dict(), self.ckpt_file_path)
+        save_module_ckpt(self.paraphraser, self.ckpt_file_path)
 
 
 @register_special_module
@@ -158,11 +155,12 @@ class Student4FactorTransfer(SpecialModule):
     Student for factor transfer proposed in "Paraphrasing Complex Network: Network Compression via Factor Transfer"
     """
 
-    def __init__(self, student_model, input_module_path, translator_params, **kwargs):
+    def __init__(self, student_model, input_module_path, translator_params, device, device_ids, distributed, **kwargs):
         super().__init__()
-        self.student_model = student_model
+        self.student_model = wrap_if_distributed(student_model, device, device_ids, distributed)
         self.input_module_path = input_module_path
-        self.translator = Translator4FactorTransfer(**translator_params)
+        self.translator = \
+            wrap_if_distributed(Translator4FactorTransfer(**translator_params), device, device_ids, distributed)
 
     def forward(self, *args):
         return self.student_model(*args)
@@ -184,14 +182,14 @@ class Connector4DAB(SpecialModule):
             module_list.append(nn.BatchNorm2d(**bn_params_config))
         return nn.Sequential(*module_list)
 
-    def __init__(self, student_model, connectors, **kwargs):
+    def __init__(self, student_model, connectors, device, device_ids, distributed, **kwargs):
         super().__init__()
-        self.student_model = student_model
+        self.student_model = wrap_if_distributed(student_model, device, device_ids, distributed)
         io_path_pairs = list()
         self.connector_dict = nn.ModuleDict()
         for connector_key, connector_params in connectors.items():
-            self.connector_dict[connector_key] = \
-                self.build_connector(connector_params['conv_params'], connector_params.get('bn_params', None))
+            connector = self.build_connector(connector_params['conv_params'], connector_params.get('bn_params', None))
+            self.connector_dict[connector_key] = wrap_if_distributed(connector, device, device_ids, distributed)
             io_path_pairs.append((connector_key, connector_params['io'], connector_params['path']))
         self.io_path_pairs = io_path_pairs
 
@@ -231,13 +229,14 @@ class VariationalDistributor4VID(SpecialModule):
     "Variational Information Distillation for Knowledge Transfer"
     """
 
-    def __init__(self, student_model, regressors, **kwargs):
+    def __init__(self, student_model, regressors, device, device_ids, distributed, **kwargs):
         super().__init__()
-        self.student_model = student_model
+        self.student_model = wrap_if_distributed(student_model, device, device_ids, distributed)
         io_path_pairs = list()
         self.regressor_dict = nn.ModuleDict()
         for regressor_key, regressor_params in regressors.items():
-            self.regressor_dict[regressor_key] = Regressor4VID(**regressor_params)
+            regressor = Regressor4VID(**regressor_params)
+            self.regressor_dict[regressor_key] = wrap_if_distributed(regressor, device, device_ids, distributed)
             io_path_pairs.append((regressor_key, regressor_params['io'], regressor_params['path']))
         self.io_path_pairs = io_path_pairs
 
@@ -256,14 +255,18 @@ class Linear4CCKD(SpecialModule):
     "Correlation Congruence for Knowledge Distillation"
     """
 
-    def __init__(self, input_module, linear_params, teacher_model=None, student_model=None, **kwargs):
+    def __init__(self, input_module, linear_params, device, device_ids, distributed,
+                 teacher_model=None, student_model=None, **kwargs):
         super().__init__()
         is_teacher = teacher_model is not None
+        if not is_teacher:
+            student_model = wrap_if_distributed(student_model, device, device_ids, distributed)
+
         self.model = teacher_model if is_teacher else student_model
         self.is_teacher = is_teacher
         self.input_module_path = input_module['path']
         self.input_module_io = input_module['io']
-        self.linear = nn.Linear(**linear_params)
+        self.linear = wrap_if_distributed(nn.Linear(**linear_params), device, device_ids, distributed)
 
     def forward(self, x):
         if self.is_teacher:
@@ -277,13 +280,15 @@ class Linear4CCKD(SpecialModule):
 
 
 class Normalizer4CRD(nn.Module):
-    def __init__(self, power=2):
+    def __init__(self, linear, power=2):
         super().__init__()
+        self.linear = linear
         self.power = power
 
     def forward(self, x):
-        norm = x.pow(self.power).sum(1, keepdim=True).pow(1. / self.power)
-        out = x.div(norm)
+        z = self.linear(x)
+        norm = z.pow(self.power).sum(1, keepdim=True).pow(1. / self.power)
+        out = z.div(norm)
         return out
 
 
@@ -294,7 +299,7 @@ class Linear4CRD(SpecialModule):
     Refactored https://github.com/HobbitLong/RepDistiller/blob/master/crd/memory.py
     """
 
-    def __init__(self, input_module_path, linear_params, power=2,
+    def __init__(self, input_module_path, linear_params, device, device_ids, distributed, power=2,
                  teacher_model=None, student_model=None, **kwargs):
         super().__init__()
         is_teacher = teacher_model is not None
@@ -302,8 +307,8 @@ class Linear4CRD(SpecialModule):
         self.is_teacher = is_teacher
         self.empty = nn.Sequential()
         self.input_module_path = input_module_path
-        self.linear = nn.Linear(**linear_params)
-        self.normalizer = Normalizer4CRD(power=power)
+        linear = nn.Linear(**linear_params)
+        self.normalizer = wrap_if_distributed(Normalizer4CRD(linear, power=power), device, device_ids, distributed)
 
     def forward(self, x, supp_dict):
         # supp_dict is given to be hooked and stored in info_dict
@@ -315,8 +320,7 @@ class Linear4CRD(SpecialModule):
 
     def post_forward(self, info_dict):
         flat_outputs = torch.flatten(info_dict[self.input_module_path]['output'], 1)
-        z = self.linear(flat_outputs)
-        self.normalizer(z)
+        self.normalizer(flat_outputs)
 
 
 @register_special_module

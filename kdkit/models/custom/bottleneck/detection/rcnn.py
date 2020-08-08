@@ -4,10 +4,10 @@ from torchvision.models.detection.mask_rcnn import MaskRCNN, model_urls as maskr
 from torchvision.models.utils import load_state_dict_from_url
 
 from kdkit.models.custom.bottleneck.detection.resnet_backbone import custom_resnet_fpn_backbone
-from kdkit.models.registry import register_func
+from kdkit.models.registry import register_model_func
 
 
-@register_func
+@register_model_func
 def custom_fasterrcnn_resnet_fpn(backbone, pretrained=True, progress=True,
                                  num_classes=91, pretrained_backbone=True, trainable_backbone_layers=3, **kwargs):
     backbone_name = backbone['name']
@@ -28,7 +28,7 @@ def custom_fasterrcnn_resnet_fpn(backbone, pretrained=True, progress=True,
     return model
 
 
-@register_func
+@register_model_func
 def custom_maskrcnn_resnet_fpn(backbone, pretrained=True, progress=True,
                                num_classes=91, pretrained_backbone=True, trainable_backbone_layers=3, **kwargs):
     backbone_name = backbone['name']
@@ -49,7 +49,7 @@ def custom_maskrcnn_resnet_fpn(backbone, pretrained=True, progress=True,
     return model
 
 
-@register_func
+@register_model_func
 def custom_keypointrcnn_resnet_fpn(backbone, pretrained=True, progress=True, num_classes=2, num_keypoints=17,
                                    pretrained_backbone=True, trainable_backbone_layers=3, **kwargs):
     backbone_name = backbone['name']

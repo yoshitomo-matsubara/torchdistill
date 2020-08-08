@@ -9,11 +9,8 @@ from myutils.pytorch import func_util
 
 LOSS_WRAPPER_CLASS_DICT = dict()
 SINGLE_LOSS_CLASS_DICT = dict()
-CUSTOM_LOSS_CLASS_DICT = dict()
-FUNC2EXTRACT_ORG_OUTPUT_DICT = dict()
 
 logger = def_logger.getChild(__name__)
-SPECIAL_CLASS_DICT = dict()
 
 
 def register_loss_wrapper(cls):
@@ -23,11 +20,6 @@ def register_loss_wrapper(cls):
 
 def register_single_loss(cls):
     SINGLE_LOSS_CLASS_DICT[cls.__name__] = cls
-    return cls
-
-
-def register_custom_loss(cls):
-    CUSTOM_LOSS_CLASS_DICT[cls.__name__] = cls
     return cls
 
 
@@ -659,83 +651,3 @@ def get_single_loss(single_criterion_config, params_config=None):
     if params_config is None:
         return single_loss
     return get_loss_wrapper(single_loss, params_config, params_config.get('wrapper', dict()))
-
-
-class CustomLoss(nn.Module):
-    def __init__(self, criterion_config):
-        super().__init__()
-        term_dict = dict()
-        sub_terms_config = criterion_config.get('sub_terms', None)
-        if sub_terms_config is not None:
-            for loss_name, loss_config in sub_terms_config.items():
-                sub_criterion_config = loss_config['criterion']
-                sub_criterion = get_single_loss(sub_criterion_config, loss_config.get('params', None))
-                term_dict[loss_name] = (sub_criterion, loss_config['factor'])
-        self.term_dict = term_dict
-
-    def forward(self, *args, **kwargs):
-        raise NotImplementedError('forward function is not implemented')
-
-
-@register_custom_loss
-class GeneralizedCustomLoss(CustomLoss):
-    def __init__(self, criterion_config):
-        super().__init__(criterion_config)
-        self.org_loss_factor = criterion_config['org_term'].get('factor', None)
-
-    def forward(self, output_dict, org_loss_dict):
-        loss_dict = dict()
-        student_output_dict = output_dict['student']
-        teacher_output_dict = output_dict['teacher']
-        for loss_name, (criterion, factor) in self.term_dict.items():
-            loss_dict[loss_name] = factor * criterion(student_output_dict, teacher_output_dict)
-
-        sub_total_loss = sum(loss for loss in loss_dict.values()) if len(loss_dict) > 0 else 0
-        if self.org_loss_factor is None or self.org_loss_factor == 0:
-            return sub_total_loss
-        return sub_total_loss + self.org_loss_factor * sum(org_loss_dict.values() if len(org_loss_dict) > 0 else [])
-
-
-def get_custom_loss(criterion_config):
-    criterion_type = criterion_config['type']
-    if criterion_type in CUSTOM_LOSS_CLASS_DICT:
-        return CUSTOM_LOSS_CLASS_DICT[criterion_type](criterion_config)
-    raise ValueError('criterion_type `{}` is not expected'.format(criterion_type))
-
-
-def register_func2extract_org_output(func):
-    FUNC2EXTRACT_ORG_OUTPUT_DICT[func.__name__] = func
-    return func
-
-
-@register_func2extract_org_output
-def extract_simple_org_loss(org_criterion, student_outputs, teacher_outputs, targets, uses_teacher_output, **kwargs):
-    org_loss_dict = dict()
-    if org_criterion is not None:
-        # Models with auxiliary classifier returns multiple outputs
-        if isinstance(student_outputs, (list, tuple)):
-            if uses_teacher_output:
-                for i, sub_student_outputs, sub_teacher_outputs in enumerate(zip(student_outputs, teacher_outputs)):
-                    org_loss_dict[i] = org_criterion(sub_student_outputs, sub_teacher_outputs, targets)
-            else:
-                for i, sub_outputs in enumerate(student_outputs):
-                    org_loss_dict[i] = org_criterion(sub_outputs, targets)
-        else:
-            org_loss = org_criterion(student_outputs, teacher_outputs, targets) if uses_teacher_output \
-                else org_criterion(student_outputs, targets)
-            org_loss_dict = {0: org_loss}
-    return org_loss_dict
-
-
-@register_func2extract_org_output
-def extract_rcnn_org_loss(org_criterion, student_outputs, teacher_outputs, targets, uses_teacher_output, **kwargs):
-    org_loss_dict = dict()
-    if isinstance(student_outputs, dict):
-        org_loss_dict.update(student_outputs)
-    return org_loss_dict
-
-
-def get_func2extract_org_output(func_name):
-    if func_name not in FUNC2EXTRACT_ORG_OUTPUT_DICT:
-        return extract_simple_org_loss
-    return FUNC2EXTRACT_ORG_OUTPUT_DICT[func_name]

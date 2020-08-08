@@ -92,7 +92,7 @@ train:
         forward_hook:
             input: []
             output: ['model.avgpool', 'normalizer']
-        wrapper: 'DistributedDataParallel'
+        wrapper:
         requires_grad: True
         frozen_modules: ['model']
     student:
@@ -111,7 +111,7 @@ train:
         forward_hook:
             input: ['empty']
             output: ['model.avgpool', 'normalizer']
-        wrapper: 'DistributedDataParallel'
+        wrapper:
         requires_grad: True
         frozen_modules: []
     apex:
