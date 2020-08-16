@@ -21,6 +21,24 @@ def register_bottleneck_processor(cls):
 
 
 @register_bottleneck_processor
+class Quantizer(object):
+    def __init__(self, num_bits):
+        self.num_bits = num_bits
+
+    def __call__(self, z):
+        return z.half() if self.num_bits == 16 else tensor_util.quantize_tensor(z, self.num_bits)
+
+
+@register_bottleneck_processor
+class Dequantizer(object):
+    def __init__(self, num_bits):
+        self.num_bits = num_bits
+
+    def __call__(self, z):
+        return z.float() if self.num_bits == 16 else tensor_util.dequantize_tensor(z)
+
+
+@register_bottleneck_processor
 class JpegCompressor(object):
     def __init__(self, jpeg_quality=95, tmp_dir_path=None):
         self.jpeg_quality = jpeg_quality
