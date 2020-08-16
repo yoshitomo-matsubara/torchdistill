@@ -106,7 +106,7 @@ train:
     scheduler:
         type: 'MultiStepLR'
         params:
-            milestones: [5, 10, 15]
+            milestones: [5, 15]
             gamma: 0.1
     criterion:
         type: 'GeneralizedCustomLoss'
