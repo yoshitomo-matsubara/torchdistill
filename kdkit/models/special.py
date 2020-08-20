@@ -287,7 +287,7 @@ class Normalizer4CRD(nn.Module):
 
     def forward(self, x):
         z = self.linear(x)
-        norm = z.pow(self.power).sum(1, keepdim=True).pow(1. / self.power)
+        norm = z.pow(self.power).sum(1, keepdim=True).pow(1.0 / self.power)
         out = z.div(norm)
         return out
 
@@ -303,6 +303,9 @@ class Linear4CRD(SpecialModule):
                  teacher_model=None, student_model=None, **kwargs):
         super().__init__()
         is_teacher = teacher_model is not None
+        if not is_teacher:
+            student_model = wrap_if_distributed(student_model, device, device_ids, distributed)
+
         self.model = teacher_model if is_teacher else student_model
         self.is_teacher = is_teacher
         self.empty = nn.Sequential()
