@@ -18,7 +18,7 @@ datasets:
 
 models:
     teacher_model:
-        name: &teacher_model_name 'fasterrcnn_resnet50_fpn'
+        name: &teacher_model_name 'maskrcnn_resnet50_fpn'
         params:
             pretrained: True
             progress: True
@@ -27,7 +27,7 @@ models:
         experiment: &teacher_experiment !join [*dataset_name, '-', *teacher_model_name]
         ckpt: !join ['./resource/ckpt/object_detection/teacher/', *teacher_experiment, '.pt']
     student_model:
-        name: &student_model_name 'custom_fasterrcnn_resnet_fpn'
+        name: &student_model_name 'custom_maskrcnn_resnet_fpn'
         params:
             pretrained: True
             progress: True

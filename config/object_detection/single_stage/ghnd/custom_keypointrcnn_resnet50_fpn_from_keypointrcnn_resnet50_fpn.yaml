@@ -18,20 +18,22 @@ datasets:
 
 models:
     teacher_model:
-        name: &teacher_model_name 'fasterrcnn_resnet50_fpn'
+        name: &teacher_model_name 'keypointrcnn_resnet50_fpn'
         params:
             pretrained: True
             progress: True
-            num_classes: 91
+            num_classes: 2
+            num_keypoints: 17
             pretrained_backbone: True
         experiment: &teacher_experiment !join [*dataset_name, '-', *teacher_model_name]
         ckpt: !join ['./resource/ckpt/object_detection/teacher/', *teacher_experiment, '.pt']
     student_model:
-        name: &student_model_name 'custom_fasterrcnn_resnet_fpn'
+        name: &student_model_name 'custom_keypointrcnn_resnet_fpn'
         params:
             pretrained: True
             progress: True
-            num_classes: 91
+            num_classes: 2
+            num_keypoints: 17
             pretrained_backbone: True
             backbone:
                 name: 'custom_resnet50'
@@ -49,7 +51,7 @@ models:
 
 train:
     log_freq: 1000
-    num_epochs: 20
+    num_epochs: 35
     train_data_loader:
         dataset_id: *coco_train
         random_sample: True
@@ -106,7 +108,7 @@ train:
     scheduler:
         type: 'MultiStepLR'
         params:
-            milestones: [5, 15]
+            milestones: [9, 27]
             gamma: 0.1
     criterion:
         type: 'GeneralizedCustomLoss'
