@@ -762,10 +762,10 @@ class SSKDLoss(nn.Module):
         ss_loss = self.kldiv_loss(torch.log_softmax(s_cos_similarities[distill_index_ss] / self.ss_temp, dim=1),
                                   torch.softmax(t_cos_similarities[distill_index_ss] / self.ss_temp, dim=1))
         ss_loss *= (self.ss_temp ** 2)
-        loss = 0
+        total_loss = 0
         for loss_weight, loss in zip(self.loss_weights, [ce_loss, kl_loss, tf_loss, ss_loss]):
-            loss += loss_weight * loss
-        return loss
+            total_loss += loss_weight * loss
+        return total_loss
 
 
 def get_loss_wrapper(single_loss, params_config, wrapper_config):
