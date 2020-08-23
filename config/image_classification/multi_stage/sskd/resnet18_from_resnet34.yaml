@@ -75,14 +75,15 @@ train:
             num_workers: 16
         teacher:
             sequential: []
-            special: &teacher4sskd
+            special:
                 type: 'SSWrapper4SSKD'
                 params:
-                    input_module:
+                    input_module: &teacher4sskd_in_module
                         path: 'model.avgpool'
                         io: 'output'
-                    feat_dim: 512
-                    ss_module_ckpt: !join ['./resource/ckpt/image_classification/multi_stage/sskd/', *student_experiment, '_teacher_ss_module.pt']
+                    feat_dim: &teacher4sskd_feat_dim 512
+                    freezes_ss_module: False
+                    ss_module_ckpt: &teacher4sskd_ckpt !join ['./resource/ckpt/image_classification/multi_stage/sskd/', *student_experiment, '_teacher_ss_module.pt']
             forward_hook:
                 input: []
                 output: ['model.avgpool', 'ss_module']
@@ -131,7 +132,13 @@ train:
         num_epochs: 100
         teacher:
             sequential: []
-            special: *teacher4sskd
+            special:
+                type: 'SSWrapper4SSKD'
+                params:
+                    input_module: *teacher4sskd_in_module
+                    feat_dim: *teacher4sskd_feat_dim
+                    freezes_ss_module: True
+                    ss_module_ckpt: *teacher4sskd_ckpt
             forward_hook:
                 input: []
                 output: ['model.avgpool', 'model.fc', 'ss_module']
@@ -147,6 +154,7 @@ train:
                         path: 'model.avgpool'
                         io: 'output'
                     feat_dim: 512
+                    freezes_ss_module: False
                     ss_module_ckpt: !join ['./resource/ckpt/image_classification/multi_stage/sskd/', *student_experiment, '_student_ss_module.pt']
             forward_hook:
                 input: []
