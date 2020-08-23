@@ -349,6 +349,47 @@ class HeadRCNN(SpecialModule):
         return self.seq(images.tensors)
 
 
+@register_special_module
+class SSWrapper4SSKD(SpecialModule):
+    """
+    Semi-supervision wrapper for "Knowledge Distillation Meets Self-Supervision"
+    """
+
+    def __init__(self, input_module, feat_dim, ss_module_ckpt, device, device_ids, distributed,
+                 teacher_model=None, student_model=None, **kwargs):
+        super().__init__()
+        is_teacher = teacher_model is not None
+        if not is_teacher:
+            student_model = wrap_if_distributed(student_model, device, device_ids, distributed)
+
+        self.model = teacher_model if is_teacher else student_model
+        self.is_teacher = is_teacher
+        self.input_module_path = input_module['path']
+        self.input_module_io = input_module['io']
+        ss_module = nn.Sequential(
+            nn.Linear(feat_dim, feat_dim),
+            nn.ReLU(inplace=True),
+            nn.Linear(feat_dim, feat_dim)
+        )
+        self.ckpt_file_path = ss_module_ckpt
+        self.ss_module = wrap_if_distributed(ss_module, device, device_ids, distributed)
+        if os.path.isfile(self.ckpt_file_path):
+            load_module_ckpt(self.ss_module, device, self.ckpt_file_path)
+
+    def forward(self, x):
+        if self.is_teacher:
+            with torch.no_grad():
+                return self.model(x)
+        return self.model(x)
+
+    def post_forward(self, info_dict):
+        flat_outputs = torch.flatten(info_dict[self.input_module_path][self.input_module_io], 1)
+        self.ss_module(flat_outputs)
+
+    def post_process(self, *args, **kwargs):
+        save_module_ckpt(self.ss_module, self.ckpt_file_path)
+
+
 def get_special_module(class_name, *args, **kwargs):
     if class_name not in SPECIAL_CLASS_DICT:
         logger.info('No special module called `{}` is registered.'.format(class_name))

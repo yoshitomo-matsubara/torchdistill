@@ -242,7 +242,7 @@ class DistillationBox(nn.Module):
                                               uses_teacher_output=self.uses_teacher_output, supp_dict=supp_dict)
         output_dict = {'teacher': extracted_teacher_output_dict,
                        'student': extract_outputs(self.student_info_dict)}
-        total_loss = self.criterion(output_dict, org_loss_dict)
+        total_loss = self.criterion(output_dict, org_loss_dict, targets)
         return total_loss
 
     def update_params(self, loss):
