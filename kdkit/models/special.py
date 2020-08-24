@@ -373,7 +373,8 @@ class SSWrapper4SSKD(SpecialModule):
         )
         self.ckpt_file_path = ss_module_ckpt
         if os.path.isfile(self.ckpt_file_path):
-            load_module_ckpt(ss_module, device, self.ckpt_file_path)
+            map_location = {'cuda:0': 'cuda:{}'.format(device.index)} if distributed else device
+            load_module_ckpt(ss_module, map_location, self.ckpt_file_path)
         self.ss_module = ss_module if is_teacher and freezes_ss_module \
             else wrap_if_distributed(ss_module, device, device_ids, distributed)
 

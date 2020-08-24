@@ -22,8 +22,8 @@ def wrap_if_distributed(model, device, device_ids, distributed):
     return model
 
 
-def load_module_ckpt(module, device, ckpt_file_path):
-    state_dict = torch.load(ckpt_file_path, map_location=device)
+def load_module_ckpt(module, map_location, ckpt_file_path):
+    state_dict = torch.load(ckpt_file_path, map_location=map_location)
     if check_if_wrapped(module):
         module.module.load_state_dict(state_dict)
     else:
