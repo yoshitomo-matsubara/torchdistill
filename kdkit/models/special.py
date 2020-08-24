@@ -372,10 +372,10 @@ class SSWrapper4SSKD(SpecialModule):
             nn.Linear(feat_dim, feat_dim)
         )
         self.ckpt_file_path = ss_module_ckpt
+        if os.path.isfile(self.ckpt_file_path):
+            load_module_ckpt(ss_module, device, self.ckpt_file_path)
         self.ss_module = ss_module if is_teacher and freezes_ss_module \
             else wrap_if_distributed(ss_module, device, device_ids, distributed)
-        if os.path.isfile(self.ckpt_file_path):
-            load_module_ckpt(self.ss_module, device, self.ckpt_file_path)
 
     def forward(self, x):
         if self.is_teacher:
