@@ -133,7 +133,8 @@ class Teacher4FactorTransfer(SpecialModule):
             wrap_if_distributed(Paraphraser4FactorTransfer(**paraphraser_params), device, device_ids, distributed)
         self.ckpt_file_path = paraphraser_ckpt
         if os.path.isfile(self.ckpt_file_path):
-            load_module_ckpt(self.paraphraser, device, self.ckpt_file_path)
+            map_location = {'cuda:0': 'cuda:{}'.format(device_ids[0])} if distributed else device
+            load_module_ckpt(self.paraphraser, map_location, self.ckpt_file_path)
         self.uses_decoder = uses_decoder
 
     def forward(self, *args):
