@@ -756,14 +756,14 @@ class SSKDLoss(nn.Module):
         indices = indices[:correct_num+wrong_keep]
         distill_index_ss = torch.sort(indices)[0]
 
-        log_aug_outputs = torch.log_softmax(student_linear_outputs[aug_indices] / self.tf_temp, dim=1)
-        tf_loss = self.kldiv_loss(log_aug_outputs[distill_index_tf], aug_knowledges[distill_index_tf])
-        tf_loss *= (self.tf_temp ** 2)
         ss_loss = self.kldiv_loss(torch.log_softmax(s_cos_similarities[distill_index_ss] / self.ss_temp, dim=1),
                                   torch.softmax(t_cos_similarities[distill_index_ss] / self.ss_temp, dim=1))
         ss_loss *= (self.ss_temp ** 2)
+        log_aug_outputs = torch.log_softmax(student_linear_outputs[aug_indices] / self.tf_temp, dim=1)
+        tf_loss = self.kldiv_loss(log_aug_outputs[distill_index_tf], aug_knowledges[distill_index_tf])
+        tf_loss *= (self.tf_temp ** 2)
         total_loss = 0
-        for loss_weight, loss in zip(self.loss_weights, [ce_loss, kl_loss, tf_loss, ss_loss]):
+        for loss_weight, loss in zip(self.loss_weights, [ce_loss, kl_loss, ss_loss, tf_loss]):
             total_loss += loss_weight * loss
         return total_loss
 
