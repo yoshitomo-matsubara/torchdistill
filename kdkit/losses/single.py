@@ -686,7 +686,7 @@ class SSKDLoss(nn.Module):
         self.ss_ratio = ss_ratio
         self.tf_ratio = tf_ratio
         cel_reduction = 'mean' if reduction == 'batchmean' else reduction
-        self.cross_entropy_loss = nn.CrossEntropyLoss(reduction=cel_reduction, **kwargs)
+        self.cross_entropy_loss = nn.CrossEntropyLoss(reduction=cel_reduction)
         self.kldiv_loss = nn.KLDivLoss(reduction=reduction)
         self.student_linear_module_path = student_linear_module_path
         self.student_linear_module_io = student_linear_module_io
