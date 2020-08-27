@@ -61,7 +61,7 @@ models:
 train:
     log_freq: 1000
     stage1:
-        num_epochs: 25
+        num_epochs: 30
         train_data_loader:
             dataset_id: *imagenet_train
             random_sample: True
@@ -113,7 +113,7 @@ train:
         scheduler:
             type: 'MultiStepLR'
             params:
-                milestones: [12, 18]
+                milestones: [10, 20]
                 gamma: 0.1
         criterion:
             type: 'GeneralizedCustomLoss'
@@ -194,7 +194,7 @@ train:
                             tf_temp: 4.0
                             ss_ratio: 0.75
                             tf_ratio: 1.0
-                            loss_weights: [1.0, 0.9, 2.7, 10.0]
+                            loss_weights: [1.0, 0.9, 10.0, 2.7]
                             reduction: 'batchmean'
                     factor: 1.0
 
