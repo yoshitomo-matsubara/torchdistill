@@ -715,7 +715,7 @@ class SSKDLoss(nn.Module):
         one_forth_batch_size = batch_size - three_forth_batch_size
         normal_indices = (torch.arange(batch_size) % 4 == 0)
         aug_indices = (torch.arange(batch_size) % 4 != 0)
-        ce_loss = self.cross_entropy_loss(student_linear_outputs[normal_indices], labels[normal_indices])
+        ce_loss = self.cross_entropy_loss(student_linear_outputs[normal_indices], labels)
         kl_loss = self.kldiv_loss(torch.log_softmax(student_linear_outputs[normal_indices] / self.kl_temp, dim=1),
                                   torch.softmax(teacher_linear_outputs[normal_indices] / self.kl_temp, dim=1))
         kl_loss *= (self.kl_temp ** 2)

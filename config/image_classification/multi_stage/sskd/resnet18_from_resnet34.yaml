@@ -75,6 +75,7 @@ train:
             num_workers: 16
         teacher:
             sequential: []
+            forward_proc: 'forward_batch4sskd'
             special:
                 type: 'SSWrapper4SSKD'
                 params:
@@ -132,6 +133,7 @@ train:
         num_epochs: 100
         teacher:
             sequential: []
+            forward_proc: 'forward_batch4sskd'
             special:
                 type: 'SSWrapper4SSKD'
                 params:
@@ -147,6 +149,7 @@ train:
         student:
             adaptations:
             sequential: []
+            forward_proc: 'forward_batch4sskd'
             special:
                 type: 'SSWrapper4SSKD'
                 params:
