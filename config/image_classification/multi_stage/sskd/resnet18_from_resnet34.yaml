@@ -67,7 +67,9 @@ train:
             random_sample: True
             batch_size: 32
             num_workers: 16
-            cache_output:
+            dataset_wrapper:
+                name: 'SSKDDatasetWrapper'
+                params: {}
         val_data_loader:
             dataset_id: *imagenet_val
             random_sample: False
@@ -75,7 +77,6 @@ train:
             num_workers: 16
         teacher:
             sequential: []
-            forward_proc: 'forward_batch4sskd'
             special:
                 type: 'SSWrapper4SSKD'
                 params:
@@ -133,7 +134,6 @@ train:
         num_epochs: 100
         teacher:
             sequential: []
-            forward_proc: 'forward_batch4sskd'
             special:
                 type: 'SSWrapper4SSKD'
                 params:
@@ -149,7 +149,6 @@ train:
         student:
             adaptations:
             sequential: []
-            forward_proc: 'forward_batch4sskd'
             special:
                 type: 'SSWrapper4SSKD'
                 params:

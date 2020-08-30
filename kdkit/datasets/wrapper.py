@@ -50,9 +50,6 @@ class CacheableDataset(BaseDatasetWrapper):
         supp_dict['cache_file_path'] = cache_file_path
         return sample, target, supp_dict
 
-    def __len__(self):
-        return len(self.org_dataset)
-
 
 @register_dataset_wrapper
 class ContrastiveDataset(BaseDatasetWrapper):
@@ -100,8 +97,19 @@ class ContrastiveDataset(BaseDatasetWrapper):
         supp_dict['contrast_idx'] = contrast_idx
         return sample, target, supp_dict
 
-    def __len__(self):
-        return len(self.org_dataset)
+
+@register_dataset_wrapper
+class SSKDDatasetWrapper(BaseDatasetWrapper):
+    def __init__(self, org_dataset):
+        super().__init__(org_dataset)
+
+    def __getitem__(self, index):
+        sample, target, supp_dict = super().__getitem__(index)
+        sample = torch.stack([torch.rot90(sample, k=0, dims=(1, 2)).clone(),
+                              torch.rot90(sample, k=1, dims=(1, 2)).clone(),
+                              torch.rot90(sample, k=2, dims=(1, 2)).clone(),
+                              torch.rot90(sample, k=3, dims=(1, 2)).clone()])
+        return sample, target, supp_dict
 
 
 def get_dataset_wrapper(class_name, *args, **kwargs):
