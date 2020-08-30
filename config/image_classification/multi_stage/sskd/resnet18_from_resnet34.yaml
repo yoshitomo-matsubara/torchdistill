@@ -76,6 +76,7 @@ train:
             batch_size: 128
             num_workers: 16
         teacher:
+            forward_proc: 'forward_batch4sskd'
             sequential: []
             special:
                 type: 'SSWrapper4SSKD'
@@ -133,6 +134,7 @@ train:
     stage2:
         num_epochs: 100
         teacher:
+            forward_proc: 'forward_batch4sskd'
             sequential: []
             special:
                 type: 'SSWrapper4SSKD'
@@ -147,6 +149,7 @@ train:
             wrapper:
             requires_grad: False
         student:
+            forward_proc: 'forward_batch4sskd'
             adaptations:
             sequential: []
             special:
