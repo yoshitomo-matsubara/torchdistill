@@ -784,15 +784,13 @@ class PADLoss(nn.Module):
         self.module_path = module_path
         self.module_io = module_io
         self.reduction = reduction
-        self.squared_criterion = nn.MSELoss(reduction='none')
 
     def forward(self, student_io_dict, teacher_io_dict, *args, **kwargs):
         squared_variances = student_io_dict[self.module_path][self.module_io].squeeze(1).pow(2)
         student_linear_outputs = student_io_dict[self.student_linear_module_path][self.student_linear_module_io]
         teacher_linear_outputs = teacher_io_dict[self.teacher_linear_module_path][self.teacher_linear_module_io]
-        squared_losses = self.squared_criterion(student_linear_outputs, teacher_linear_outputs)
-        squared_losses = squared_losses.sum(dim=1) if self.reduction == 'sum' else squared_losses.mean(dim=1)
-        pad_losses = squared_losses / squared_variances + torch.log(squared_variances)
+        l2_losses = torch.norm(student_linear_outputs - teacher_linear_outputs, p=2, dim=1)
+        pad_losses = l2_losses / squared_variances + torch.log(squared_variances)
         return pad_losses.sum() if self.reduction == 'sum' else pad_losses.mean()
 
 
