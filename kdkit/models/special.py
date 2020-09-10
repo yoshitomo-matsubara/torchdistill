@@ -393,6 +393,39 @@ class SSWrapper4SSKD(SpecialModule):
         save_module_ckpt(self.ss_module, self.ckpt_file_path)
 
 
+@register_special_module
+class VarianceBranch4PAD(SpecialModule):
+    """
+    Variance branch wrapper for "Prime-Aware Adaptive Distillation"
+    """
+
+    def __init__(self, student_model, input_module, feat_dim, var_estimator_ckpt,
+                 device, device_ids, distributed, **kwargs):
+        super().__init__()
+        self.student_model = wrap_if_distributed(student_model, device, device_ids, distributed)
+        self.input_module_path = input_module['path']
+        self.input_module_io = input_module['io']
+        var_estimator = nn.Sequential(
+            nn.Linear(feat_dim, 1),
+            nn.BatchNorm1d(1)
+        )
+        self.ckpt_file_path = var_estimator_ckpt
+        if os.path.isfile(self.ckpt_file_path):
+            map_location = {'cuda:0': 'cuda:{}'.format(device_ids[0])} if distributed else device
+            load_module_ckpt(var_estimator, map_location, self.ckpt_file_path)
+        self.var_estimator = wrap_if_distributed(var_estimator, device, device_ids, distributed)
+
+    def forward(self, x):
+        return self.student_model(x)
+
+    def post_forward(self, info_dict):
+        logits_outputs = info_dict[self.input_module_path][self.input_module_io]
+        self.var_estimator(logits_outputs)
+
+    def post_process(self, *args, **kwargs):
+        save_module_ckpt(self.var_estimator, self.ckpt_file_path)
+
+
 def get_special_module(class_name, *args, **kwargs):
     if class_name not in SPECIAL_CLASS_DICT:
         logger.info('No special module called `{}` is registered.'.format(class_name))

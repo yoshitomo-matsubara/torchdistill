@@ -768,6 +768,32 @@ class SSKDLoss(nn.Module):
         return total_loss
 
 
+@register_single_loss
+class PADLoss(nn.Module):
+    """
+    "Prime-Aware Adaptive Distillation"
+    """
+    def __init__(self, student_linear_module_path, teacher_linear_module_path,
+                 student_linear_module_io='output', teacher_linear_module_io='output',
+                 module_path='var_estimator', module_io='output', reduction='sum', **kwargs):
+        super().__init__()
+        self.student_linear_module_path = student_linear_module_path
+        self.teacher_linear_module_path = teacher_linear_module_path
+        self.student_linear_module_io = student_linear_module_io
+        self.teacher_linear_module_io = teacher_linear_module_io
+        self.module_path = module_path
+        self.module_io = module_io
+        self.reduction = reduction
+
+    def forward(self, student_io_dict, teacher_io_dict, *args, **kwargs):
+        var_estimator_outputs = student_io_dict[self.module_path][self.module_io].squeeze(1)
+        student_linear_outputs = student_io_dict[self.student_linear_module_path][self.student_linear_module_io]
+        teacher_linear_outputs = teacher_io_dict[self.teacher_linear_module_path][self.teacher_linear_module_io]
+        l2_losses = torch.norm(student_linear_outputs - teacher_linear_outputs, p=2, dim=1)
+        pad_losses = l2_losses / var_estimator_outputs + torch.log(var_estimator_outputs)
+        return pad_losses.sum() if self.reduction == 'sum' else pad_losses.mean()
+
+
 def get_loss_wrapper(single_loss, params_config, wrapper_config):
     wrapper_type = wrapper_config.get('type', None)
     if wrapper_type in LOSS_WRAPPER_CLASS_DICT:
