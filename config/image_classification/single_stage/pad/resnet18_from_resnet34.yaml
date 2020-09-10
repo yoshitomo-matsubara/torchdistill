@@ -94,7 +94,7 @@ train:
         forward_hook:
             input: []
             output: ['student_model.fc', 'var_estimator']
-        wrapper: 'DistributedDataParallel'
+        wrapper:
         requires_grad: True
     apex:
         requires: False

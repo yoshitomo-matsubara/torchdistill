@@ -786,11 +786,11 @@ class PADLoss(nn.Module):
         self.reduction = reduction
 
     def forward(self, student_io_dict, teacher_io_dict, *args, **kwargs):
-        var_estimator_outputs = student_io_dict[self.module_path][self.module_io].squeeze(1)
+        variances = student_io_dict[self.module_path][self.module_io].squeeze(1).pow(2)
         student_linear_outputs = student_io_dict[self.student_linear_module_path][self.student_linear_module_io]
         teacher_linear_outputs = teacher_io_dict[self.teacher_linear_module_path][self.teacher_linear_module_io]
         l2_losses = torch.norm(student_linear_outputs - teacher_linear_outputs, p=2, dim=1)
-        pad_losses = l2_losses / var_estimator_outputs + torch.log(var_estimator_outputs)
+        pad_losses = l2_losses / variances + torch.log(variances)
         return pad_losses.sum() if self.reduction == 'sum' else pad_losses.mean()
 
 
