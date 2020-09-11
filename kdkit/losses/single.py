@@ -773,23 +773,23 @@ class PADLoss(nn.Module):
     """
     "Prime-Aware Adaptive Distillation"
     """
-    def __init__(self, student_linear_module_path, teacher_linear_module_path,
-                 student_linear_module_io='output', teacher_linear_module_io='output',
+    def __init__(self, student_embed_module_path, teacher_embed_module_path,
+                 student_embed_module_io='output', teacher_embed_module_io='output',
                  module_path='var_estimator', module_io='output', reduction='sum', **kwargs):
         super().__init__()
-        self.student_linear_module_path = student_linear_module_path
-        self.teacher_linear_module_path = teacher_linear_module_path
-        self.student_linear_module_io = student_linear_module_io
-        self.teacher_linear_module_io = teacher_linear_module_io
+        self.student_embed_module_path = student_embed_module_path
+        self.teacher_embed_module_path = teacher_embed_module_path
+        self.student_embed_module_io = student_embed_module_io
+        self.teacher_embed_module_io = teacher_embed_module_io
         self.module_path = module_path
         self.module_io = module_io
         self.reduction = reduction
 
     def forward(self, student_io_dict, teacher_io_dict, *args, **kwargs):
         squared_variances = student_io_dict[self.module_path][self.module_io].squeeze(1).pow(2)
-        student_linear_outputs = student_io_dict[self.student_linear_module_path][self.student_linear_module_io]
-        teacher_linear_outputs = teacher_io_dict[self.teacher_linear_module_path][self.teacher_linear_module_io]
-        l2_losses = torch.norm(student_linear_outputs - teacher_linear_outputs, p=2, dim=1)
+        student_embed_outputs = student_io_dict[self.student_embed_module_path][self.student_embed_module_io].flatten(1)
+        teacher_embed_outputs = teacher_io_dict[self.teacher_embed_module_path][self.teacher_embed_module_io].flatten(1)
+        l2_losses = torch.norm(student_embed_outputs - teacher_embed_outputs, p=2, dim=1)
         pad_losses = l2_losses / squared_variances + torch.log(squared_variances)
         return pad_losses.sum() if self.reduction == 'sum' else pad_losses.mean()
 

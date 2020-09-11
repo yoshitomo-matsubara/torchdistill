@@ -86,9 +86,9 @@ train:
             type: 'VarianceBranch4PAD'
             params:
                 input_module:
-                    path: 'student_model.fc'
+                    path: 'student_model.layer4'
                     io: 'output'
-                feat_dim: 1000
+                feat_dim: 512
                 var_estimator_ckpt: !join ['./resource/ckpt/image_classification/single_stage/pad/', *student_experiment, '_var_estimator.pt']
         frozen_modules: []
         forward_hook:
@@ -113,19 +113,23 @@ train:
     criterion:
         type: 'GeneralizedCustomLoss'
         org_term:
-            factor: 0.0
+            criterion:
+                type: 'CrossEntropyLoss'
+                params:
+                    reduction: 'mean'
+            factor: 1.0
         sub_terms:
             pad:
                 criterion:
                     type: 'PADLoss'
                     params:
-                        student_linear_module_path: 'student_model.fc'
-                        student_linear_module_io: 'output'
-                        teacher_linear_module_path: 'fc'
-                        teacher_linear_module_io: 'output'
+                        student_embed_module_path: 'student_model.layer4'
+                        student_embed_module_io: 'output'
+                        teacher_embed_module_path: 'layer4'
+                        teacher_embed_module_io: 'output'
                         module_path: 'var_estimator'
                         module_io: 'output'
-                        reduction: 'sum'
+                        reduction: 'mean'
                 factor: 1.0
 
 test:
