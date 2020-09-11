@@ -76,7 +76,7 @@ train:
         sequential: []
         forward_hook:
             input: []
-            output: ['fc']
+            output: ['layer4']
         wrapper: 'DistributedDataParallel'
         requires_grad: False
     student:
@@ -93,7 +93,7 @@ train:
         frozen_modules: []
         forward_hook:
             input: []
-            output: ['student_model.fc', 'var_estimator']
+            output: ['student_model.layer4', 'var_estimator']
         wrapper:
         requires_grad: True
     apex:
