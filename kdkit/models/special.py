@@ -419,8 +419,8 @@ class VarianceBranch4PAD(SpecialModule):
         return self.student_model(x)
 
     def post_forward(self, info_dict):
-        logits_outputs = info_dict[self.input_module_path][self.input_module_io]
-        self.var_estimator(logits_outputs)
+        embed_outputs = info_dict[self.input_module_path][self.input_module_io].flatten(1)
+        self.var_estimator(embed_outputs)
 
     def post_process(self, *args, **kwargs):
         save_module_ckpt(self.var_estimator, self.ckpt_file_path)

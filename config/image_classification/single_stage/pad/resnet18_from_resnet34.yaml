@@ -76,7 +76,7 @@ train:
         sequential: []
         forward_hook:
             input: []
-            output: ['layer4']
+            output: ['avgpool']
         wrapper: 'DistributedDataParallel'
         requires_grad: False
     student:
@@ -86,14 +86,14 @@ train:
             type: 'VarianceBranch4PAD'
             params:
                 input_module:
-                    path: 'student_model.layer4'
+                    path: 'student_model.avgpool'
                     io: 'output'
                 feat_dim: 512
                 var_estimator_ckpt: !join ['./resource/ckpt/image_classification/single_stage/pad/', *student_experiment, '_var_estimator.pt']
         frozen_modules: []
         forward_hook:
             input: []
-            output: ['student_model.layer4', 'var_estimator']
+            output: ['student_model.avgpool', 'var_estimator']
         wrapper:
         requires_grad: True
     apex:
@@ -123,9 +123,9 @@ train:
                 criterion:
                     type: 'PADLoss'
                     params:
-                        student_embed_module_path: 'student_model.layer4'
+                        student_embed_module_path: 'student_model.avgpool'
                         student_embed_module_io: 'output'
-                        teacher_embed_module_path: 'layer4'
+                        teacher_embed_module_path: 'avgpool'
                         teacher_embed_module_io: 'output'
                         module_path: 'var_estimator'
                         module_io: 'output'
