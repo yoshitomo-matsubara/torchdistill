@@ -47,11 +47,14 @@ class SimpleLossWrapper(nn.Module):
     def extract_value(io_dict, path, key):
         return io_dict[path][key]
 
-    def forward(self, student_io_dict, teacher_io_dict, *args, **kwargs):
+    def forward(self, student_io_dict, teacher_io_dict, labels, *args, **kwargs):
         input_batch = self.extract_value(teacher_io_dict if self.is_input_from_teacher else student_io_dict,
                                          self.input_module_path, self.input_key)
-        target_batch = self.extract_value(teacher_io_dict if self.is_target_from_teacher else student_io_dict,
-                                          self.target_module_path, self.target_key)
+        if self.target_module_path is None and self.target_key is None:
+            target_batch = labels
+        else:
+            target_batch = self.extract_value(teacher_io_dict if self.is_target_from_teacher else student_io_dict,
+                                              self.target_module_path, self.target_key)
         return self.single_loss(input_batch, target_batch, *args, **kwargs)
 
 
@@ -769,13 +772,13 @@ class SSKDLoss(nn.Module):
 
 
 @register_single_loss
-class PADLoss(nn.Module):
+class PADL2Loss(nn.Module):
     """
     "Prime-Aware Adaptive Distillation"
     """
     def __init__(self, student_embed_module_path, teacher_embed_module_path,
                  student_embed_module_io='output', teacher_embed_module_io='output',
-                 module_path='var_estimator', module_io='output', reduction='sum', **kwargs):
+                 module_path='var_estimator', module_io='output', eps=1e-6, reduction='sum', **kwargs):
         super().__init__()
         self.student_embed_module_path = student_embed_module_path
         self.teacher_embed_module_path = teacher_embed_module_path
@@ -783,17 +786,19 @@ class PADLoss(nn.Module):
         self.teacher_embed_module_io = teacher_embed_module_io
         self.module_path = module_path
         self.module_io = module_io
+        self.eps = eps
         self.reduction = reduction
-        self.squared_criterion = nn.MSELoss(reduction='none')
 
     def forward(self, student_io_dict, teacher_io_dict, *args, **kwargs):
         squared_variances = student_io_dict[self.module_path][self.module_io].squeeze(1).pow(2)
         student_embed_outputs = student_io_dict[self.student_embed_module_path][self.student_embed_module_io].flatten(1)
         teacher_embed_outputs = teacher_io_dict[self.teacher_embed_module_path][self.teacher_embed_module_io].flatten(1)
-        squared_losses = self.squared_criterion(student_embed_outputs, teacher_embed_outputs)
-        squared_losses = squared_losses.sum(dim=1) if self.reduction == 'sum' else squared_losses.mean(dim=1)
-        pad_losses = squared_losses / squared_variances + torch.log(squared_variances)
-        return pad_losses.sum() if self.reduction == 'sum' else pad_losses.mean()
+        # The author's provided code takes average of losses
+        squared_losses = torch.mean(
+            (teacher_embed_outputs - student_embed_outputs) ** 2 / (self.eps + squared_variances)
+            + 2 * torch.log(squared_variances), dim=1
+        )
+        return squared_losses.mean()
 
 
 def get_loss_wrapper(single_loss, params_config, wrapper_config):
