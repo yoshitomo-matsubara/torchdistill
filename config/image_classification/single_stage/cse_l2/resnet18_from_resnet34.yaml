@@ -111,7 +111,7 @@ train:
                     reduction: 'mean'
             factor: 1.0
         sub_terms:
-            pad:
+            l2based:
                 criterion:
                     type: 'MSELoss'
                     params:
