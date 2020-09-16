@@ -790,7 +790,7 @@ class PADL2Loss(nn.Module):
         self.reduction = reduction
 
     def forward(self, student_io_dict, teacher_io_dict, *args, **kwargs):
-        log_variances = student_io_dict[self.module_path][self.module_io].squeeze(1).pow(2)
+        log_variances = student_io_dict[self.module_path][self.module_io]
         student_embed_outputs = student_io_dict[self.student_embed_module_path][self.student_embed_module_io].flatten(1)
         teacher_embed_outputs = teacher_io_dict[self.teacher_embed_module_path][self.teacher_embed_module_io].flatten(1)
         # The author's provided code takes average of losses
