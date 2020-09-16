@@ -406,8 +406,8 @@ class VarianceBranch4PAD(SpecialModule):
         self.input_module_path = input_module['path']
         self.input_module_io = input_module['io']
         var_estimator = nn.Sequential(
-            nn.Linear(feat_dim, 1),
-            nn.BatchNorm1d(1)
+            nn.Linear(feat_dim, feat_dim),
+            nn.BatchNorm1d(feat_dim)
         )
         self.ckpt_file_path = var_estimator_ckpt
         if os.path.isfile(self.ckpt_file_path):
