@@ -105,10 +105,10 @@ class SSKDDatasetWrapper(BaseDatasetWrapper):
 
     def __getitem__(self, index):
         sample, target, supp_dict = super().__getitem__(index)
-        sample = torch.stack([torch.rot90(sample, k=0, dims=(1, 2)).clone(),
-                              torch.rot90(sample, k=1, dims=(1, 2)).clone(),
-                              torch.rot90(sample, k=2, dims=(1, 2)).clone(),
-                              torch.rot90(sample, k=3, dims=(1, 2)).clone()])
+        sample = torch.stack([torch.rot90(sample, k=0, dims=(1, 2)).detach(),
+                              torch.rot90(sample, k=1, dims=(1, 2)).detach(),
+                              torch.rot90(sample, k=2, dims=(1, 2)).detach(),
+                              torch.rot90(sample, k=3, dims=(1, 2)).detach()])
         return sample, target, supp_dict
 
 
