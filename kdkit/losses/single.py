@@ -796,7 +796,7 @@ class PADL2Loss(nn.Module):
         # The author's provided code takes average of losses
         squared_losses = torch.mean(
             (teacher_embed_outputs - student_embed_outputs) ** 2 / (self.eps + torch.exp(log_variances))
-            + 2 * log_variances, dim=1
+            + log_variances, dim=1
         )
         return squared_losses.mean()
 
