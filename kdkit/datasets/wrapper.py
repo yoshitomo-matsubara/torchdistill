@@ -102,13 +102,15 @@ class ContrastiveDataset(BaseDatasetWrapper):
 class SSKDDatasetWrapper(BaseDatasetWrapper):
     def __init__(self, org_dataset):
         super().__init__(org_dataset)
+        self.transform = org_dataset.transform
+        org_dataset.transform = None
 
     def __getitem__(self, index):
         sample, target, supp_dict = super().__getitem__(index)
-        sample = torch.stack([torch.rot90(sample, k=0, dims=(1, 2)).detach(),
-                              torch.rot90(sample, k=1, dims=(1, 2)).detach(),
-                              torch.rot90(sample, k=2, dims=(1, 2)).detach(),
-                              torch.rot90(sample, k=3, dims=(1, 2)).detach()])
+        sample = torch.stack([torch.rot90(self.transform(sample), k=0, dims=(1, 2)).detach(),
+                              torch.rot90(self.transform(sample), k=1, dims=(1, 2)).detach(),
+                              torch.rot90(self.transform(sample), k=2, dims=(1, 2)).detach(),
+                              torch.rot90(self.transform(sample), k=3, dims=(1, 2)).detach()])
         return sample, target, supp_dict
 
 
