@@ -2,7 +2,7 @@ import math
 
 import torch
 from torch import nn
-from torch.nn.functional import adaptive_max_pool2d, normalize
+from torch.nn.functional import adaptive_max_pool2d, normalize, cosine_similarity
 
 from kdkit.common.constant import def_logger
 from myutils.pytorch import func_util
@@ -47,11 +47,14 @@ class SimpleLossWrapper(nn.Module):
     def extract_value(io_dict, path, key):
         return io_dict[path][key]
 
-    def forward(self, student_io_dict, teacher_io_dict, *args, **kwargs):
+    def forward(self, student_io_dict, teacher_io_dict, labels, *args, **kwargs):
         input_batch = self.extract_value(teacher_io_dict if self.is_input_from_teacher else student_io_dict,
                                          self.input_module_path, self.input_key)
-        target_batch = self.extract_value(teacher_io_dict if self.is_target_from_teacher else student_io_dict,
-                                          self.target_module_path, self.target_key)
+        if self.target_module_path is None and self.target_key is None:
+            target_batch = labels
+        else:
+            target_batch = self.extract_value(teacher_io_dict if self.is_target_from_teacher else student_io_dict,
+                                              self.target_module_path, self.target_key)
         return self.single_loss(input_batch, target_batch, *args, **kwargs)
 
 
@@ -82,22 +85,22 @@ class KDLoss(nn.KLDivLoss):
     """
     "Distilling the Knowledge in a Neural Network"
     """
-    def __init__(self, temperature, alpha=None, reduction='batchmean', **kwargs):
+    def __init__(self, temperature, alpha=None, beta=None, reduction='batchmean', **kwargs):
         super().__init__(reduction=reduction)
-        self.kldiv_loss = nn.KLDivLoss(reduction=reduction)
         self.temperature = temperature
         self.alpha = alpha
+        self.beta = 1 - alpha if beta is None else beta
         cel_reduction = 'mean' if reduction == 'batchmean' else reduction
         self.cross_entropy_loss = nn.CrossEntropyLoss(reduction=cel_reduction, **kwargs)
 
-    def forward(self, student_output, teacher_output, labels=None):
+    def forward(self, student_output, teacher_output, labels=None, *args, **kwargs):
         soft_loss = super().forward(torch.log_softmax(student_output / self.temperature, dim=1),
                                     torch.softmax(teacher_output / self.temperature, dim=1))
         if self.alpha is None or self.alpha == 0 or labels is None:
             return soft_loss
 
         hard_loss = self.cross_entropy_loss(student_output, labels)
-        return self.alpha * hard_loss + (1 - self.alpha) * (self.temperature ** 2) * soft_loss
+        return self.alpha * hard_loss + self.beta * (self.temperature ** 2) * soft_loss
 
 
 @register_single_loss
@@ -125,7 +128,7 @@ class FSPLoss(nn.Module):
         hw = first_feature_map.shape[2]
         return torch.matmul(first_feature_map, second_feature_map.transpose(1, 2)) / hw
 
-    def forward(self, student_io_dict, teacher_io_dict):
+    def forward(self, student_io_dict, teacher_io_dict, *args, **kwargs):
         fsp_loss = 0
         batch_size = None
         for pair_name, pair_config in self.fsp_pairs.items():
@@ -178,7 +181,7 @@ class ATLoss(nn.Module):
         at_teacher = self.attention_transfer(teacher_feature_map)
         return (at_student - at_teacher).pow(2).mean()
 
-    def forward(self, student_io_dict, teacher_io_dict):
+    def forward(self, student_io_dict, teacher_io_dict, *args, **kwargs):
         at_loss = 0
         batch_size = None
         for pair_name, pair_config in self.at_pairs.items():
@@ -235,7 +238,7 @@ class PKTLoss(nn.Module):
         return torch.mean(teacher_similarity *
                           torch.log((teacher_similarity + self.eps) / (student_similarity + self.eps)))
 
-    def forward(self, student_io_dict, teacher_io_dict):
+    def forward(self, student_io_dict, teacher_io_dict, *args, **kwargs):
         student_penultimate_outputs = teacher_io_dict[self.student_module_path][self.student_module_io]
         teacher_penultimate_outputs = student_io_dict[self.teacher_module_path][self.teacher_module_io]
         return self.cosine_similarity_loss(student_penultimate_outputs, teacher_penultimate_outputs)
@@ -254,7 +257,7 @@ class FTLoss(nn.Module):
         self.translator_path = translator_path
         self.reduction = reduction
 
-    def forward(self, student_io_dict, teacher_io_dict):
+    def forward(self, student_io_dict, teacher_io_dict, *args, **kwargs):
         paraphraser_flat_outputs = teacher_io_dict[self.paraphraser_path]['output'].flatten(1)
         translator_flat_outputs = student_io_dict[self.translator_path]['output'].flatten(1)
         norm_paraphraser_flat_outputs = paraphraser_flat_outputs / paraphraser_flat_outputs.norm(dim=1).unsqueeze(1)
@@ -284,7 +287,7 @@ class AltActTransferLoss(nn.Module):
                 (source - margin) ** 2 * ((source <= margin) & (target > 0)).float())
         return torch.abs(loss).sum()
 
-    def forward(self, student_io_dict, teacher_io_dict):
+    def forward(self, student_io_dict, teacher_io_dict, *args, **kwargs):
         dab_loss = 0
         batch_size = None
         for pair_name, pair_config in self.feature_pairs.items():
@@ -352,7 +355,7 @@ class RKDLoss(nn.Module):
         s_angle = torch.bmm(norm_sd, norm_sd.transpose(1, 2)).view(-1)
         return self.smooth_l1_loss(s_angle, t_angle)
 
-    def forward(self, student_io_dict, teacher_io_dict):
+    def forward(self, student_io_dict, teacher_io_dict, *args, **kwargs):
         teacher_flat_outputs = teacher_io_dict[self.teacher_output_path]['output'].flatten(1)
         student_flat_outputs = student_io_dict[self.student_output_path]['output'].flatten(1)
         rkd_distance_loss = self.compute_rkd_distance_loss(teacher_flat_outputs, student_flat_outputs)
@@ -370,7 +373,7 @@ class VIDLoss(nn.Module):
         super().__init__()
         self.feature_pairs = feature_pairs
 
-    def forward(self, student_io_dict, teacher_io_dict):
+    def forward(self, student_io_dict, teacher_io_dict, *args, **kwargs):
         vid_loss = 0
         for pair_name, pair_config in self.feature_pairs.items():
             pred_mean, pred_var = extract_feature_map(student_io_dict, pair_config['student'])
@@ -416,7 +419,7 @@ class CCKDLoss(nn.Module):
             row_list.append(row.squeeze(0))
         return torch.stack(row_list)
 
-    def forward(self, student_io_dict, teacher_io_dict):
+    def forward(self, student_io_dict, teacher_io_dict, *args, **kwargs):
         teacher_linear_outputs = teacher_io_dict[self.teacher_linear_path]['output']
         student_linear_outputs = student_io_dict[self.student_linear_path]['output']
         batch_size = teacher_linear_outputs.shape[0]
@@ -453,7 +456,7 @@ class SPKDLoss(nn.Module):
         g_s = self.matmul_and_normalize(student_outputs)
         return torch.norm(g_t - g_s) ** 2
 
-    def forward(self, student_io_dict, teacher_io_dict):
+    def forward(self, student_io_dict, teacher_io_dict, *args, **kwargs):
         teacher_outputs = teacher_io_dict[self.teacher_output_path]['output']
         student_outputs = student_io_dict[self.student_output_path]['output']
         batch_size = teacher_outputs.shape[0]
@@ -611,7 +614,7 @@ class CRDLoss(nn.Module):
         loss = - (log_d1.sum(0) + log_d0.view(-1, 1).sum(0)) / batch_size
         return loss
 
-    def forward(self, student_io_dict, teacher_io_dict):
+    def forward(self, student_io_dict, teacher_io_dict, *args, **kwargs):
         """
         pos_idx: the indices of these positive samples in the dataset, size [batch_size]
         contrast_idx: the indices of negative samples, size [batch_size, nce_k]
@@ -635,6 +638,168 @@ class CRDLoss(nn.Module):
         teacher_contrast_loss = self.compute_contrast_loss(out_t)
         loss = student_contrast_loss + teacher_contrast_loss
         return loss
+
+
+@register_single_loss
+class AuxSSKDLoss(nn.CrossEntropyLoss):
+    """
+    Loss of contrastive prediction as self-supervision task (auxiliary task)
+    "Knowledge Distillation Meets Self-Supervision"
+    Refactored https://github.com/xuguodong03/SSKD/blob/master/student.py
+    """
+    def __init__(self, module_path='ss_module', module_io='output', reduction='mean', **kwargs):
+        super().__init__(reduction=reduction, **kwargs)
+        self.module_path = module_path
+        self.module_io = module_io
+
+    def forward(self, student_io_dict, teacher_io_dict, *args, **kwargs):
+        ss_module_outputs = teacher_io_dict[self.module_path][self.module_io]
+        device = ss_module_outputs.device
+        batch_size = ss_module_outputs.shape[0]
+        three_forth_batch_size = int(batch_size * 3 / 4)
+        one_forth_batch_size = batch_size - three_forth_batch_size
+        normal_indices = (torch.arange(batch_size) % 4 == 0)
+        aug_indices = (torch.arange(batch_size) % 4 != 0)
+        normal_rep = ss_module_outputs[normal_indices]
+        aug_rep = ss_module_outputs[aug_indices]
+        normal_rep = normal_rep.unsqueeze(2).expand(-1, -1, three_forth_batch_size).transpose(0, 2)
+        aug_rep = aug_rep.unsqueeze(2).expand(-1, -1, one_forth_batch_size)
+        cos_similarities = cosine_similarity(aug_rep, normal_rep, dim=1)
+        targets = torch.arange(one_forth_batch_size).unsqueeze(1).expand(-1, 3).contiguous().view(-1)
+        targets = targets[:three_forth_batch_size].long().to(device)
+        return super().forward(cos_similarities, targets)
+
+
+@register_single_loss
+class SSKDLoss(nn.Module):
+    """
+    Loss of contrastive prediction as self-supervision task (auxiliary task)
+    "Knowledge Distillation Meets Self-Supervision"
+    Refactored https://github.com/xuguodong03/SSKD/blob/master/student.py
+    """
+    def __init__(self, student_linear_module_path, teacher_linear_module_path, student_ss_module_path,
+                 teacher_ss_module_path, kl_temp, ss_temp, tf_temp, ss_ratio, tf_ratio,
+                 student_linear_module_io='output', teacher_linear_module_io='output',
+                 student_ss_module_io='output', teacher_ss_module_io='output',
+                 loss_weights=None, reduction='batchmean', **kwargs):
+        super().__init__()
+        self.loss_weights = [1.0, 1.0, 1.0, 1.0] if loss_weights is None else loss_weights
+        self.kl_temp = kl_temp
+        self.ss_temp = ss_temp
+        self.tf_temp = tf_temp
+        self.ss_ratio = ss_ratio
+        self.tf_ratio = tf_ratio
+        cel_reduction = 'mean' if reduction == 'batchmean' else reduction
+        self.cross_entropy_loss = nn.CrossEntropyLoss(reduction=cel_reduction)
+        self.kldiv_loss = nn.KLDivLoss(reduction=reduction)
+        self.student_linear_module_path = student_linear_module_path
+        self.student_linear_module_io = student_linear_module_io
+        self.teacher_linear_module_path = teacher_linear_module_path
+        self.teacher_linear_module_io = teacher_linear_module_io
+        self.student_ss_module_path = student_ss_module_path
+        self.student_ss_module_io = student_ss_module_io
+        self.teacher_ss_module_path = teacher_ss_module_path
+        self.teacher_ss_module_io = teacher_ss_module_io
+
+    @staticmethod
+    def compute_cosine_similarities(ss_module_outputs, normal_indices, aug_indices,
+                                    three_forth_batch_size, one_forth_batch_size):
+        normal_feat = ss_module_outputs[normal_indices]
+        aug_feat = ss_module_outputs[aug_indices]
+        normal_feat = normal_feat.unsqueeze(2).expand(-1, -1, three_forth_batch_size).transpose(0, 2)
+        aug_feat = aug_feat.unsqueeze(2).expand(-1, -1, one_forth_batch_size)
+        return cosine_similarity(aug_feat, normal_feat, dim=1)
+
+    def forward(self, student_io_dict, teacher_io_dict, labels, *args, **kwargs):
+        student_linear_outputs = student_io_dict[self.student_linear_module_path][self.student_linear_module_io]
+        teacher_linear_outputs = teacher_io_dict[self.teacher_linear_module_path][self.teacher_linear_module_io]
+        device = student_linear_outputs.device
+        batch_size = student_linear_outputs.shape[0]
+        three_forth_batch_size = int(batch_size * 3 / 4)
+        one_forth_batch_size = batch_size - three_forth_batch_size
+        normal_indices = (torch.arange(batch_size) % 4 == 0)
+        aug_indices = (torch.arange(batch_size) % 4 != 0)
+        ce_loss = self.cross_entropy_loss(student_linear_outputs[normal_indices], labels)
+        kl_loss = self.kldiv_loss(torch.log_softmax(student_linear_outputs[normal_indices] / self.kl_temp, dim=1),
+                                  torch.softmax(teacher_linear_outputs[normal_indices] / self.kl_temp, dim=1))
+        kl_loss *= (self.kl_temp ** 2)
+
+        # error level ranking
+        aug_knowledges = torch.softmax(teacher_linear_outputs[aug_indices] / self.tf_temp, dim=1)
+        aug_targets = labels.unsqueeze(1).expand(-1, 3).contiguous().view(-1)
+        aug_targets = aug_targets[:three_forth_batch_size].long().to(device)
+        ranks = torch.argsort(aug_knowledges, dim=1, descending=True)
+        ranks = torch.argmax(torch.eq(ranks, aug_targets.unsqueeze(1)).long(), dim=1)  # groundtruth label's rank
+        indices = torch.argsort(ranks)
+        tmp = torch.nonzero(ranks, as_tuple=True)[0]
+        wrong_num = tmp.numel()
+        correct_num = three_forth_batch_size - wrong_num
+        wrong_keep = int(wrong_num * self.tf_ratio)
+        indices = indices[:correct_num + wrong_keep]
+        distill_index_tf = torch.sort(indices)[0]
+
+        student_ss_module_outputs = student_io_dict[self.student_ss_module_path][self.student_ss_module_io]
+        teacher_ss_module_outputs = teacher_io_dict[self.teacher_ss_module_path][self.teacher_ss_module_io]
+
+        s_cos_similarities = self.compute_cosine_similarities(student_ss_module_outputs, normal_indices,
+                                                              aug_indices, three_forth_batch_size, one_forth_batch_size)
+        t_cos_similarities = self.compute_cosine_similarities(teacher_ss_module_outputs, normal_indices,
+                                                              aug_indices, three_forth_batch_size, one_forth_batch_size)
+        t_cos_similarities = t_cos_similarities.detach()
+
+        aug_targets = \
+            torch.arange(one_forth_batch_size).unsqueeze(1).expand(-1, 3).contiguous().view(-1)
+        aug_targets = aug_targets[:three_forth_batch_size].long().to(device)
+        ranks = torch.argsort(t_cos_similarities, dim=1, descending=True)
+        ranks = torch.argmax(torch.eq(ranks, aug_targets.unsqueeze(1)).long(), dim=1)  # groundtruth label's rank
+        indices = torch.argsort(ranks)
+        tmp = torch.nonzero(ranks, as_tuple=True)[0]
+        wrong_num = tmp.numel()
+        correct_num = three_forth_batch_size - wrong_num
+        wrong_keep = int(wrong_num * self.ss_ratio)
+        indices = indices[:correct_num+wrong_keep]
+        distill_index_ss = torch.sort(indices)[0]
+
+        ss_loss = self.kldiv_loss(torch.log_softmax(s_cos_similarities[distill_index_ss] / self.ss_temp, dim=1),
+                                  torch.softmax(t_cos_similarities[distill_index_ss] / self.ss_temp, dim=1))
+        ss_loss *= (self.ss_temp ** 2)
+        log_aug_outputs = torch.log_softmax(student_linear_outputs[aug_indices] / self.tf_temp, dim=1)
+        tf_loss = self.kldiv_loss(log_aug_outputs[distill_index_tf], aug_knowledges[distill_index_tf])
+        tf_loss *= (self.tf_temp ** 2)
+        total_loss = 0
+        for loss_weight, loss in zip(self.loss_weights, [ce_loss, kl_loss, ss_loss, tf_loss]):
+            total_loss += loss_weight * loss
+        return total_loss
+
+
+@register_single_loss
+class PADL2Loss(nn.Module):
+    """
+    "Prime-Aware Adaptive Distillation"
+    """
+    def __init__(self, student_embed_module_path, teacher_embed_module_path,
+                 student_embed_module_io='output', teacher_embed_module_io='output',
+                 module_path='var_estimator', module_io='output', eps=1e-6, reduction='sum', **kwargs):
+        super().__init__()
+        self.student_embed_module_path = student_embed_module_path
+        self.teacher_embed_module_path = teacher_embed_module_path
+        self.student_embed_module_io = student_embed_module_io
+        self.teacher_embed_module_io = teacher_embed_module_io
+        self.module_path = module_path
+        self.module_io = module_io
+        self.eps = eps
+        self.reduction = reduction
+
+    def forward(self, student_io_dict, teacher_io_dict, *args, **kwargs):
+        log_variances = student_io_dict[self.module_path][self.module_io]
+        student_embed_outputs = student_io_dict[self.student_embed_module_path][self.student_embed_module_io].flatten(1)
+        teacher_embed_outputs = teacher_io_dict[self.teacher_embed_module_path][self.teacher_embed_module_io].flatten(1)
+        # The author's provided code takes average of losses
+        squared_losses = torch.mean(
+            (teacher_embed_outputs - student_embed_outputs) ** 2 / (self.eps + torch.exp(log_variances))
+            + log_variances, dim=1
+        )
+        return squared_losses.mean()
 
 
 def get_loss_wrapper(single_loss, params_config, wrapper_config):

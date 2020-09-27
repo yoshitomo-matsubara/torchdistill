@@ -35,12 +35,12 @@ class GeneralizedCustomLoss(CustomLoss):
         super().__init__(criterion_config)
         self.org_loss_factor = criterion_config['org_term'].get('factor', None)
 
-    def forward(self, output_dict, org_loss_dict):
+    def forward(self, output_dict, org_loss_dict, labels):
         loss_dict = dict()
         student_output_dict = output_dict['student']
         teacher_output_dict = output_dict['teacher']
         for loss_name, (criterion, factor) in self.term_dict.items():
-            loss_dict[loss_name] = factor * criterion(student_output_dict, teacher_output_dict)
+            loss_dict[loss_name] = factor * criterion(student_output_dict, teacher_output_dict, labels)
 
         sub_total_loss = sum(loss for loss in loss_dict.values()) if len(loss_dict) > 0 else 0
         if self.org_loss_factor is None or self.org_loss_factor == 0:
