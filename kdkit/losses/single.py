@@ -645,6 +645,7 @@ class AuxSSKDLoss(nn.CrossEntropyLoss):
     """
     Loss of contrastive prediction as self-supervision task (auxiliary task)
     "Knowledge Distillation Meets Self-Supervision"
+    Refactored https://github.com/xuguodong03/SSKD/blob/master/student.py
     """
     def __init__(self, module_path='ss_module', module_io='output', reduction='mean', **kwargs):
         super().__init__(reduction=reduction, **kwargs)
