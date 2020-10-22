@@ -62,11 +62,10 @@ c) Use CPU
 pipenv run python image_classification.py --device cpu --config config/image_classification/single_stage/kd/alexnet_from_resnet152.yaml --log log/kd/alexnet_from_resnet152.txt
 ```  
 
-#### 1.4 Top 1 accuracy of student models
-| Teacher \\ Student    | AlexNet   | ResNet-18 |  
-| :---                  | ---:      | ---:      |  
-| Pretrained (no *KD*)  | 56.52     | 69.76     |  
-| ResNet-152            | 57.22     | 70.34     |
+#### 1.4 Top 1 validation accuracy of student model on ILSVRC 2012
+| T: ResNet-34  | Vanilla (CELoss) | KD    | AT    | FT     | Tf-KD | SSKD  | L2    | PAD-L2    |  
+| :---          | ---:             | ---:  | ---:  | ---:   | ---:  | ---:  | ---:  | ---:      |  
+| S: ResNet-18  | 69.76            | 71.37 | 70.90 | 70.45  | 70.52 | 70.09 | 71.08 | 71.71     |  
 
 ### 2. COCO 2017: Object Detection
 #### 2.1 Download the datasets
@@ -124,3 +123,4 @@ pipenv run python object_detection.py --device cpu --config config/object_detect
 - [:mag:](config/object_detection/single_stage/ghnd) Yoshitomo Matsubara and Marco Levorato. ["Neural Compression and Filtering for Edge-assisted Real-time Object Detection in Challenged Networks"](https://arxiv.org/abs/2007.15818) (ICPR 2020)
 - [:mag:](config/image_classification/single_stage/tfkd) Li Yuan, Francis E.H.Tay, Guilin Li, Tao Wang and Jiashi Feng. ["Revisiting Knowledge Distillation via Label Smoothing Regularization"](https://openaccess.thecvf.com/content_CVPR_2020/papers/Yuan_Revisiting_Knowledge_Distillation_via_Label_Smoothing_Regularization_CVPR_2020_paper.pdf) (CVPR 2020)
 - [:mag:](config/image_classification/multi_stage/sskd) Guodong Xu, Ziwei Liu, Xiaoxiao Li and Chen Change Loy. ["Knowledge Distillation Meets Self-Supervision"](http://www.ecva.net/papers/eccv_2020/papers_ECCV/html/898_ECCV_2020_paper.php) (ECCV 2020)
+- [:mag:](config/image_classification/multi_stage/pad) Youcai Zhang, Zhonghao Lan, Yuchen Dai, Fangao Zeng, Yan Bai, Jie Chang and Yichen Wei. ["Prime-Aware Adaptive Distillation"](http://www.ecva.net/papers/eccv_2020/papers_ECCV/html/3317_ECCV_2020_paper.php) (ECCV 2020)
