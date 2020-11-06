@@ -13,6 +13,13 @@ pipenv install
 ```
 If you do not wish to use pipenv (a virtual environment), install the packages listed in [Pipfile](Pipfile).
 
+
+## Top-1 validation accuracy of student model on ILSVRC 2012
+| T: ResNet-34  | Vanilla (CELoss) | KD    | AT    | FT     | Tf-KD | SSKD  | L2    | PAD-L2    |  
+| :---          | ---:             | ---:  | ---:  | ---:   | ---:  | ---:  | ---:  | ---:      |  
+| S: ResNet-18  | 69.76            | 71.37 | 70.90 | 70.45  | 70.52 | 70.09 | 71.08 | 71.71     |  
+* The checkpoint (trained weights), configuration and log files are available.
+
 ## Examples
 ### 1. ImageNet (ILSVRC 2012): Image Classification
 #### 1.1 Download the datasets
@@ -59,10 +66,6 @@ c) Use CPU
 pipenv run python image_classification.py --device cpu --config config/image_classification/single_stage/kd/alexnet_from_resnet152.yaml --log log/kd/alexnet_from_resnet152.txt
 ```  
 
-#### 1.4 Top 1 validation accuracy of student model on ILSVRC 2012
-| T: ResNet-34  | Vanilla (CELoss) | KD    | AT    | FT     | Tf-KD | SSKD  | L2    | PAD-L2    |  
-| :---          | ---:             | ---:  | ---:  | ---:   | ---:  | ---:  | ---:  | ---:      |  
-| S: ResNet-18  | 69.76            | 71.37 | 70.90 | 70.45  | 70.52 | 70.09 | 71.08 | 71.71     |  
 
 ### 2. COCO 2017: Object Detection
 #### 2.1 Download the datasets
