@@ -1,14 +1,16 @@
 # Knowledge distillation kit for PyTorch
 
 ***kdkit*** offers various knowledge distillation methods 
-and enables you to design (new) experiments simply by editing a yaml file instead of Python code.  
-Even when you need to extract intermediate representations in teacher/student models, you will NOT need to reimplement 
-the models, that often change the interface of the forward, but instead specify the module path(s) in the yaml file.
+and enables you to design (new) experiments simply by editing a yaml file instead of Python code. 
+Even when you need to extract intermediate representations in teacher/student models, 
+you will **NOT** need to reimplement the models, that often change the interface of the forward, 
+but instead specify the module path(s) in the yaml file.
 
 ## Top-1 validation accuracy of student model on ILSVRC 2012
 | T: ResNet-34  | Pretrained | KD    | AT    | FT     | CRD   | Tf-KD | SSKD  | L2    | PAD-L2    |  
 | :---          | ---:       | ---:  | ---:  | ---:   | ---:  | ---:  | ---:  | ---:  | ---:      |  
 | S: ResNet-18  | 69.76      | 71.37 | 70.90 | 70.45  | 70.93 | 70.52 | 70.09 | 71.08 | 71.71     |  
+  
 The checkpoint (trained weights), configuration and log files are available.
 
 
