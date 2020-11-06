@@ -64,7 +64,10 @@ pipenv run python image_classification.py --device cpu --config config/image_cla
 | :---          | ---:             | ---:  | ---:  | ---:   | ---:  | ---:  | ---:  | ---:      |  
 | S: ResNet-18  | 69.76            | 71.37 | 70.90 | 70.45  | 70.52 | 70.09 | 71.08 | 71.71     |  
 
+<details>
+<summary>
 ### 2. COCO 2017: Object Detection
+</summary>
 #### 2.1 Download the datasets
 ```
 wget http://images.cocodataset.org/zips/train2017.zip ./
@@ -100,6 +103,7 @@ c) Use CPU
 ```
 pipenv run python object_detection.py --device cpu --config config/object_detection/multi_stage/ft/custom_fasterrcnn_resnet18_fpn_from_fasterrcnn_resnet50_fpn.yaml --log log/ft/custom_fasterrcnn_resnet18_fpn_from_fasterrcnn_resnet50_fpn.txt
 ```  
+</details>
 
 ## References
 - [:mag:](image_classification.py) [pytorch/vision/references/classification/](https://github.com/pytorch/vision/blob/master/references/classification/)
