@@ -6,10 +6,10 @@ from torch.nn import Module, Sequential
 from torch.nn.parallel import DistributedDataParallel
 
 from kdkit.common.constant import def_logger
+from kdkit.common.file_util import make_parent_dirs
 from kdkit.common.main_util import is_main_process, save_on_master
+from kdkit.common.module_util import check_if_wrapped, get_module, get_frozen_param_names, freeze_module_params
 from kdkit.models.adaptation import get_adaptation_module
-from myutils.common.file_util import make_parent_dirs
-from myutils.pytorch.module_util import check_if_wrapped, get_module, get_frozen_param_names, freeze_module_params
 
 logger = def_logger.getChild(__name__)
 

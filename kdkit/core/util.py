@@ -5,7 +5,7 @@ from torch.nn import DataParallel
 from torch.nn.parallel import DistributedDataParallel
 
 from kdkit.common.constant import def_logger
-from myutils.pytorch.module_util import get_module, check_if_wrapped
+from kdkit.common.module_util import get_module, check_if_wrapped
 
 logger = def_logger.getChild(__name__)
 

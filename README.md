@@ -3,15 +3,12 @@
 ## Requirements
 - Python 3.6
 - [pipenv](https://pypi.org/project/pipenv/)
-- [myutils](https://github.com/yoshitomo-matsubara/myutils)
 
 
 ## How to setup
 ```
 git clone https://github.com/yoshitomo-matsubara/kdkit.git
 cd kdkit/
-git submodule init
-git submodule update --recursive --remote
 pipenv install
 ```
 If you do not wish to use pipenv (a virtual environment), install the packages listed in [Pipfile](Pipfile).

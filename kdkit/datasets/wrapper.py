@@ -4,8 +4,8 @@ import numpy as np
 import torch
 from torch.utils.data import Dataset
 
+from kdkit.common import file_util
 from kdkit.common.constant import def_logger
-from myutils.common import file_util
 
 logger = def_logger.getChild(__name__)
 WRAPPER_CLASS_DICT = dict()

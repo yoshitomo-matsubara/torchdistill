@@ -5,6 +5,9 @@ import torch
 from torch import nn
 
 from kdkit.common.constant import def_logger
+from kdkit.common.file_util import make_parent_dirs
+from kdkit.common.func_util import get_optimizer, get_scheduler
+from kdkit.common.module_util import check_if_wrapped, freeze_module_params, unfreeze_module_params
 from kdkit.core.foward_proc import get_forward_proc_func
 from kdkit.core.util import set_hooks, wrap_model, change_device, tensor2numpy2tensor, extract_outputs, \
     extract_sub_model_output_dict
@@ -14,9 +17,6 @@ from kdkit.losses.single import KDLoss, get_single_loss
 from kdkit.losses.util import get_func2extract_org_output
 from kdkit.models.special import SpecialModule, build_special_module
 from kdkit.models.util import redesign_model
-from myutils.common.file_util import make_parent_dirs
-from myutils.pytorch.func_util import get_optimizer, get_scheduler
-from myutils.pytorch.module_util import check_if_wrapped, freeze_module_params, unfreeze_module_params
 
 logger = def_logger.getChild(__name__)
 try:

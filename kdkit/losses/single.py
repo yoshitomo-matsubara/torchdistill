@@ -4,8 +4,8 @@ import torch
 from torch import nn
 from torch.nn.functional import adaptive_max_pool2d, normalize, cosine_similarity
 
+from kdkit.common import func_util
 from kdkit.common.constant import def_logger
-from myutils.pytorch import func_util
 
 LOSS_WRAPPER_CLASS_DICT = dict()
 SINGLE_LOSS_CLASS_DICT = dict()

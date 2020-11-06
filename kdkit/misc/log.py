@@ -7,8 +7,8 @@ import torch
 import torch.distributed as dist
 
 from kdkit.common.constant import def_logger, LOGGING_FORMAT
+from kdkit.common.file_util import make_parent_dirs
 from kdkit.common.main_util import is_dist_avail_and_initialized
-from myutils.common.file_util import make_parent_dirs
 
 logger = def_logger.getChild(__name__)
 
