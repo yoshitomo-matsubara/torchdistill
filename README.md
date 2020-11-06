@@ -16,7 +16,7 @@ If you do not wish to use pipenv (a virtual environment), install the packages l
 
 ## Top-1 validation accuracy of student model on ILSVRC 2012
 | T: ResNet-34  | Vanilla (CELoss) | KD    | AT    | FT     | CRD   | Tf-KD | SSKD  | L2    | PAD-L2    |  
-| :---          | ---:             | ---:  | ---:  | ---:   | ---:  | ---:  | ---:  | ---:      |  
+| :---          | ---:             | ---:  | ---:  | ---:   | ---:  | ---:  | ---:  | ---:  | ---:      |  
 | S: ResNet-18  | 69.76            | 71.37 | 70.90 | 70.45  | 70.93 | 70.52 | 70.09 | 71.08 | 71.71     |  
 * The checkpoint (trained weights), configuration and log files are available.
 
