@@ -12,26 +12,20 @@ but instead specify the module path(s) in the yaml file.
 | S: ResNet-18\*  | 69.76      | 71.37 | 70.90 | 70.45  | 70.93 | 70.52 | 70.09 | 71.08 | 71.71     |  
 | Original work   | N/A        | N/A   | 70.70 | N/A\*\*| 71.17 | 70.42 | 71.62 | 70.90 | 71.71     |  
   
-\*The checkpoint (trained weights), configuration and log files are available.  
-\*\* FT is assessed with ILSVRC 2015 in the original work.
-
-
-## Requirements
-- Python 3.6 >=
-- [pipenv](https://pypi.org/project/pipenv/)
+\* The checkpoint (trained weights), configuration and log files are available.  
+\*\* FT is assessed with ILSVRC 2015 in the original work.  
+Example codes for image classification and object detection are available in [examples/](examples/).
 
 
 ## How to setup
+- Python 3.6 >=
+- pipenv (optional)
 ```
 git clone https://github.com/yoshitomo-matsubara/kdkit.git
 cd kdkit/
 pipenv install "-e ."
 ```
 If you do not wish to use pipenv (a virtual environment), install the packages listed in [Pipfile](Pipfile).
-
-
-## Examples
-Example codes for image classification and object detection are available in [examples/](examples/).
 
 
 ## Issues / Contact
