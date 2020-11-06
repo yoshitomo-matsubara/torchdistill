@@ -64,11 +64,10 @@ pipenv run python image_classification.py --device cpu --config config/image_cla
 | :---          | ---:             | ---:  | ---:  | ---:   | ---:  | ---:  | ---:  | ---:      |  
 | S: ResNet-18  | 69.76            | 71.37 | 70.90 | 70.45  | 70.52 | 70.09 | 71.08 | 71.71     |  
 
-### 2. COCO 2017: Object Detection
-
 <details>
-<summary>
-Read more ...
+<summary>  
+  
+### 2. COCO 2017: Object Detection
 </summary>
 #### 2.1 Download the datasets
 ```
