@@ -7,7 +7,6 @@ import time
 import torch
 from torch import distributed as dist
 from torch.backends import cudnn
-from torch.nn import DataParallel
 from torch.nn.parallel import DistributedDataParallel
 from torch.utils.data._utils.collate import default_collate
 from torchvision.models.detection.keypoint_rcnn import KeypointRCNN
@@ -73,7 +72,7 @@ def distill_one_epoch(distillation_box, device, epoch, log_freq):
 
 def get_iou_types(model):
     model_without_ddp = model
-    if isinstance(model, (DataParallel, DistributedDataParallel)):
+    if isinstance(model, DistributedDataParallel):
         model_without_ddp = model.module
 
     iou_type_list = ['bbox']
@@ -95,8 +94,6 @@ def evaluate(model, data_loader, device, device_ids, distributed, log_freq=1000,
     model.to(device)
     if distributed:
         model = DistributedDataParallel(model, device_ids=device_ids)
-    elif device.type.startswith('cuda'):
-        model = DataParallel(model, device_ids=device_ids)
 
     if title is not None:
         logger.info(title)
