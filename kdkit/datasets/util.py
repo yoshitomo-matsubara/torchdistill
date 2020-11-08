@@ -27,18 +27,27 @@ def load_coco_dataset(img_dir_path, ann_file_path, annotated_only, random_horizo
 
 
 def build_transform(transform_params_config):
-    if not isinstance(transform_params_config, dict) or len(transform_params_config) == 0:
+    if not isinstance(transform_params_config, (dict, list)) or len(transform_params_config) == 0:
         return None
 
     component_list = list()
-    for component_key in sorted(transform_params_config.keys()):
-        component_config = transform_params_config[component_key]
-        params_config = component_config.get('params', dict())
-        if params_config is None:
-            params_config = dict()
+    if isinstance(transform_params_config, dict):
+        for component_key in sorted(transform_params_config.keys()):
+            component_config = transform_params_config[component_key]
+            params_config = component_config.get('params', dict())
+            if params_config is None:
+                params_config = dict()
 
-        component = TRANSFORMS_DICT[component_config['type']](**params_config)
-        component_list.append(component)
+            component = TRANSFORMS_DICT[component_config['type']](**params_config)
+            component_list.append(component)
+    else:
+        for component_config in transform_params_config:
+            params_config = component_config.get('params', dict())
+            if params_config is None:
+                params_config = dict()
+
+            component = TRANSFORMS_DICT[component_config['type']](**params_config)
+            component_list.append(component)
     return transforms.Compose(component_list)
 
 

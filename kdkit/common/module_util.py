@@ -1,6 +1,5 @@
 from collections import OrderedDict
 
-import torch
 from torch.nn import DataParallel, Sequential
 from torch.nn.parallel import DistributedDataParallel
 
@@ -109,88 +108,3 @@ def extract_all_child_modules(parent_module, module_list):
 
     for child_module in child_modules:
         extract_all_child_modules(child_module, module_list)
-
-
-def extract_decomposable_modules(parent_module, z, module_list, output_size_list=None, first=True, exception_size=-1):
-    parent_module.eval()
-    child_modules = list(parent_module.children())
-    if first:
-        output_size_list = list()
-
-    if not child_modules:
-        module_list.append(parent_module)
-        try:
-            z = parent_module(z)
-            output_size_list.append([*z.size()])
-            return z, True
-        except (RuntimeError, ValueError):
-            try:
-                z = parent_module(z.view(z.size(0), exception_size))
-                output_size_list.append([*z.size()])
-                return z, True
-            except RuntimeError:
-                ValueError('Error w/o child modules\t', type(parent_module).__name__)
-        return z, False
-
-    try:
-        expected_z = parent_module(z)
-    except (RuntimeError, ValueError):
-        try:
-            resized_z = z.view(z.size(0), exception_size)
-            expected_z = parent_module(resized_z)
-            z = resized_z
-        except RuntimeError:
-            ValueError('Error w/ child modules\t', type(parent_module).__name__)
-            return z, False
-
-    submodule_list = list()
-    sub_output_size_list = list()
-    decomposable = True
-    for child_module in child_modules:
-        z, decomposable = extract_decomposable_modules(child_module, z, submodule_list, sub_output_size_list, False)
-        if not decomposable:
-            break
-
-    is_tensor = isinstance(expected_z, torch.Tensor) and isinstance(z, torch.Tensor)
-    if decomposable and is_tensor and expected_z.size() == z.size() and expected_z.isclose(z).all().item() == 1:
-        module_list.extend(submodule_list)
-        output_size_list.extend(sub_output_size_list)
-        return expected_z, True
-
-    if decomposable and not is_tensor and type(expected_z) == type(z) and expected_z == z:
-        module_list.extend(submodule_list)
-        output_size_list.extend(sub_output_size_list)
-    elif not first:
-        module_list.append(parent_module)
-        if is_tensor:
-            output_size_list.append([*expected_z.size()])
-        else:
-            output_size_list.append(len(expected_z))
-    elif not check_if_wrapped(parent_module) and len(module_list) == len(output_size_list) == 0\
-            and len(submodule_list) > 0 and len(sub_output_size_list) > 0:
-        module_list.extend(submodule_list)
-        output_size_list.extend(sub_output_size_list)
-    return expected_z, True
-
-
-def extract_intermediate_io(x, module, module_paths):
-    io_dict = OrderedDict()
-
-    def forward_hook(self, input, output):
-        path = self.__dict__['module_path']
-        if path not in io_dict:
-            io_dict[path] = list()
-        io_dict[path].append((input, output))
-
-    hook_list = list()
-    for module_path in module_paths:
-        target_module = get_module(module, module_path)
-        target_module.__dict__['module_path'] = module_path
-        hook = target_module.register_forward_hook(forward_hook)
-        hook_list.append(hook)
-
-    module(x)
-    while len(hook_list) > 0:
-        hook = hook_list.pop()
-        hook.remove()
-    return io_dict
