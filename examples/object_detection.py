@@ -1,4 +1,5 @@
 import argparse
+import builtins as __builtin__
 import datetime
 import os
 import time
@@ -83,6 +84,12 @@ def get_iou_types(model):
     return iou_type_list
 
 
+def log_info(*args, **kwargs):
+    force = kwargs.pop('force', False)
+    if is_main_process() or force:
+        logger.info(*args, **kwargs)
+
+
 @torch.no_grad()
 def evaluate(model, data_loader, device, device_ids, distributed, log_freq=1000, title=None, header='Test:'):
     model.to(device)
@@ -97,6 +104,11 @@ def evaluate(model, data_loader, device, device_ids, distributed, log_freq=1000,
     n_threads = torch.get_num_threads()
     # FIXME remove this and make paste_masks_in_image run on the GPU
     torch.set_num_threads(1)
+
+    # Replace built-in print function with logger.info to log summary printed by pycocotools
+    builtin_print = __builtin__.print
+    __builtin__.print = log_info
+
     cpu_device = torch.device('cpu')
     model.eval()
     metric_logger = MetricLogger(delimiter='  ')
@@ -128,6 +140,10 @@ def evaluate(model, data_loader, device, device_ids, distributed, log_freq=1000,
     # accumulate predictions from all images
     coco_evaluator.accumulate()
     coco_evaluator.summarize()
+
+    # Revert print function
+    __builtin__.print = builtin_print
+
     torch.set_num_threads(n_threads)
     return coco_evaluator
 
