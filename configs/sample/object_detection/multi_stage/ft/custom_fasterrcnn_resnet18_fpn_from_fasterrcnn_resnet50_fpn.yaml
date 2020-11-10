@@ -49,7 +49,7 @@ train:
     train_data_loader:
       dataset_id: *coco_train
       random_sample: True
-      num_workers: 16
+      num_workers: 4
       batch_sampler:
         type: 'GroupedBatchSampler'
         params:
@@ -61,7 +61,7 @@ train:
       dataset_id: *coco_val
       random_sample: False
       batch_size: 1
-      num_workers: 16
+      num_workers: 4
       collate_fn: 'coco_collate_fn'
     teacher:
       sequential: []
@@ -204,5 +204,5 @@ test:
     dataset_id: *coco_val
     random_sample: False
     batch_size: 1
-    num_workers: 16
+    num_workers: 4
     collate_fn: 'coco_collate_fn'
