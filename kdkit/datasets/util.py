@@ -7,26 +7,31 @@ from torchvision import transforms
 from torchvision.datasets import PhotoTour, VOCDetection, Kinetics400, HMDB51, UCF101
 
 from kdkit.common.constant import def_logger
-from kdkit.datasets.coco import ImageToTensor, Compose, CocoRandomHorizontalFlip, get_coco, coco_collate_fn
+from kdkit.datasets.coco import ImageToTensor, Compose, CocoRandomHorizontalFlip, get_coco
+from kdkit.datasets.collator import get_collate_func
 from kdkit.datasets.sample_loader import get_sample_loader
 from kdkit.datasets.sampler import get_batch_sampler
+from kdkit.datasets.transform import TRANSFORM_CLASS_DICT, CustomCompose
 from kdkit.datasets.wrapper import default_idx2subpath, BaseDatasetWrapper, CacheableDataset, get_dataset_wrapper
 
 logger = def_logger.getChild(__name__)
 
 DATASET_DICT = torchvision.datasets.__dict__
-TRANSFORMS_DICT = torchvision.transforms.__dict__
+TRANSFORM_CLASS_DICT.update(torchvision.transforms.__dict__)
 
 
-def load_coco_dataset(img_dir_path, ann_file_path, annotated_only, random_horizontal_flip=None):
-    transform_list = [ImageToTensor()]
-    if random_horizontal_flip is not None:
-        transform_list.append(CocoRandomHorizontalFlip(random_horizontal_flip))
+def load_coco_dataset(img_dir_path, ann_file_path, annotated_only, random_horizontal_flip=None, is_segment=False,
+                      transforms=None):
+    if transforms is None:
+        transform_list = [ImageToTensor()]
+        if random_horizontal_flip is not None and not is_segment:
+            transform_list.append(CocoRandomHorizontalFlip(random_horizontal_flip))
+        transforms = Compose(transform_list)
     return get_coco(img_dir_path=img_dir_path, ann_file_path=ann_file_path,
-                    transforms=Compose(transform_list), annotated_only=annotated_only)
+                    transforms=transforms, annotated_only=annotated_only, is_segment=is_segment)
 
 
-def build_transform(transform_params_config):
+def build_transform(transform_params_config, compose_cls=None):
     if not isinstance(transform_params_config, (dict, list)) or len(transform_params_config) == 0:
         return None
 
@@ -38,7 +43,7 @@ def build_transform(transform_params_config):
             if params_config is None:
                 params_config = dict()
 
-            component = TRANSFORMS_DICT[component_config['type']](**params_config)
+            component = TRANSFORM_CLASS_DICT[component_config['type']](**params_config)
             component_list.append(component)
     else:
         for component_config in transform_params_config:
@@ -46,9 +51,9 @@ def build_transform(transform_params_config):
             if params_config is None:
                 params_config = dict()
 
-            component = TRANSFORMS_DICT[component_config['type']](**params_config)
+            component = TRANSFORM_CLASS_DICT[component_config['type']](**params_config)
             component_list.append(component)
-    return transforms.Compose(component_list)
+    return transforms.Compose(component_list) if compose_cls is None else compose_cls(component_list)
 
 
 def get_official_dataset(dataset_cls, dataset_params_config):
@@ -76,9 +81,13 @@ def get_dataset_dict(dataset_config):
         dataset_splits_config = dataset_config['splits']
         for split_name in dataset_splits_config.keys():
             split_config = dataset_splits_config[split_name]
+            is_segment = split_config.get('is_segment', False)
+            compose_cls = CustomCompose if is_segment else None
+            transforms = build_transform(split_config.get('transform_params', None), compose_cls=compose_cls)
             dataset_dict[split_config['dataset_id']] =\
                 load_coco_dataset(split_config['images'], split_config['annotations'],
-                                  split_config['annotated_only'], split_config.get('random_horizontal_flip', None))
+                                  split_config['annotated_only'], split_config.get('random_horizontal_flip', None),
+                                  is_segment, transforms=transforms)
     elif dataset_type in DATASET_DICT:
         dataset_cls = DATASET_DICT[dataset_type]
         dataset_splits_config = dataset_config['splits']
@@ -117,7 +126,7 @@ def build_data_loader(dataset, data_loader_config, distributed):
     batch_sampler_config = data_loader_config.get('batch_sampler', None)
     batch_sampler = None if batch_sampler_config is None \
         else get_batch_sampler(dataset, batch_sampler_config['type'], sampler, **batch_sampler_config['params'])
-    collate_fn = coco_collate_fn if data_loader_config.get('collate_fn', None) == 'coco_collate_fn' else None
+    collate_fn = get_collate_func(data_loader_config.get('collate_fn', None))
     if batch_sampler is not None:
         return DataLoader(dataset, batch_sampler=batch_sampler, num_workers=num_workers, collate_fn=collate_fn)
 

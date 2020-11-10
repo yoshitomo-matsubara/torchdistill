@@ -7,7 +7,7 @@ from torch import nn
 from kdkit.common.constant import def_logger
 from kdkit.common.file_util import make_parent_dirs
 from kdkit.common.func_util import get_optimizer, get_scheduler
-from kdkit.common.module_util import check_if_wrapped, freeze_module_params, unfreeze_module_params
+from kdkit.common.module_util import check_if_wrapped, freeze_module_params, get_module, unfreeze_module_params
 from kdkit.core.foward_proc import get_forward_proc_func
 from kdkit.core.util import set_hooks, wrap_model, change_device, tensor2numpy2tensor, extract_outputs, \
     extract_sub_model_output_dict
@@ -119,14 +119,27 @@ class DistillationBox(nn.Module):
         # Set up optimizer and scheduler
         optim_config = train_config.get('optimizer', dict())
         optimizer_reset = False
-        trainable_module_list = nn.ModuleList([self.student_model])
-        if self.teacher_updatable:
-            logger.info('Note that you are training some/all of the modules in the teacher model')
-            trainable_module_list.append(self.teacher_model)
-
         if len(optim_config) > 0:
             optim_params_config = optim_config['params']
             optim_params_config['lr'] *= self.lr_factor
+            module_wise_params_configs = optim_config.get('module_wise_params', list())
+            if len(module_wise_params_configs) > 0:
+                trainable_module_list = list()
+                for module_wise_params_config in module_wise_params_configs:
+                    module_wise_params_dict = dict()
+                    module_wise_params_dict.update(module_wise_params_config['params'])
+                    if 'lr' in module_wise_params_dict:
+                        module_wise_params_dict['lr'] *= self.lr_factor
+
+                    module = get_module(self, module_wise_params_config['module'])
+                    module_wise_params_dict['params'] = module.parameters()
+                    trainable_module_list.append(module_wise_params_dict)
+            else:
+                trainable_module_list = nn.ModuleList([self.student_model])
+                if self.teacher_updatable:
+                    logger.info('Note that you are training some/all of the modules in the teacher model')
+                    trainable_module_list.append(self.teacher_model)
+
             self.optimizer = get_optimizer(trainable_module_list, optim_config['type'], optim_params_config)
             optimizer_reset = True
 

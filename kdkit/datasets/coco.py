@@ -4,9 +4,10 @@ import random
 
 import torch
 import torch.utils.data
-import torchvision
+from PIL import Image
 from pycocotools import mask as coco_mask
 from pycocotools.coco import COCO
+from torchvision.datasets import CocoDetection
 from torchvision.transforms import functional
 
 
@@ -61,17 +62,14 @@ class FilterAndRemapCocoCategories(object):
         self.categories = categories
         self.remap = remap
 
-    def __call__(self, image, target):
-        anno = target['annotations']
+    def __call__(self, image, anno):
         anno = [obj for obj in anno if obj['category_id'] in self.categories]
         if not self.remap:
-            target['annotations'] = anno
-            return image, target
+            return image, anno
         anno = copy.deepcopy(anno)
         for obj in anno:
             obj['category_id'] = self.categories.index(obj['category_id'])
-        target['annotations'] = anno
-        return image, target
+        return image, anno
 
 
 def convert_coco_poly_to_mask(segmentations, height, width):
@@ -91,7 +89,7 @@ def convert_coco_poly_to_mask(segmentations, height, width):
     return masks
 
 
-class ConvertCocoPolysToMask(object):
+class ConvertCocoPolysToMask4Detect(object):
     def __call__(self, image, target):
         w, h = image.size
 
@@ -143,7 +141,25 @@ class ConvertCocoPolysToMask(object):
         iscrowd = torch.tensor([obj['iscrowd'] for obj in anno])
         target['area'] = area
         target['iscrowd'] = iscrowd
+        return image, target
 
+
+class ConvertCocoPolysToMask4Seg(object):
+    def __call__(self, image, anno):
+        w, h = image.size
+        segmentations = [obj["segmentation"] for obj in anno]
+        cats = [obj["category_id"] for obj in anno]
+        if segmentations:
+            masks = convert_coco_poly_to_mask(segmentations, h, w)
+            cats = torch.as_tensor(cats, dtype=masks.dtype)
+            # merge all instance masks into a single segmentation map
+            # with its corresponding categories
+            target, _ = (masks * cats[:, None, None]).max(dim=0)
+            # discard overlapping instances
+            target[masks.sum(0) > 1] = 255
+        else:
+            target = torch.zeros((h, w), dtype=torch.uint8)
+        target = Image.fromarray(target.numpy())
         return image, target
 
 
@@ -174,7 +190,7 @@ def has_valid_annotation(anno, min_keypoints_per_image=10):
 
 
 def remove_images_without_annotations(dataset, cat_list=None):
-    assert isinstance(dataset, torchvision.datasets.CocoDetection)
+    assert isinstance(dataset, CocoDetection)
     ids = []
     for ds_idx, img_id in enumerate(dataset.ids):
         ann_ids = dataset.coco.getAnnIds(imgIds=img_id, iscrowd=None)
@@ -242,16 +258,16 @@ def convert_to_coco_api(ds):
 
 def get_coco_api_from_dataset(dataset):
     for _ in range(10):
-        if isinstance(dataset, torchvision.datasets.CocoDetection):
+        if isinstance(dataset, CocoDetection):
             break
         if isinstance(dataset, torch.utils.data.Subset):
             dataset = dataset.dataset
-    if isinstance(dataset, torchvision.datasets.CocoDetection):
+    if isinstance(dataset, CocoDetection):
         return dataset.coco
     return convert_to_coco_api(dataset)
 
 
-class CustomCocoDetection(torchvision.datasets.CocoDetection):
+class CustomCocoDetection(CocoDetection):
     def __init__(self, img_folder, ann_file, transforms=None):
         super().__init__(os.path.expanduser(img_folder), os.path.expanduser(ann_file))
         self.additional_transforms = transforms
@@ -265,17 +281,16 @@ class CustomCocoDetection(torchvision.datasets.CocoDetection):
         return img, target
 
 
-def get_coco(img_dir_path, ann_file_path, transforms, annotated_only):
-    t = [ConvertCocoPolysToMask()]
+def get_coco(img_dir_path, ann_file_path, transforms, annotated_only, is_segment):
+    CAT_LIST = [0, 5, 2, 16, 9, 44, 6, 3, 17, 62, 21, 67, 18, 19, 4, 1, 64, 20, 63, 7, 72]
+    t = [FilterAndRemapCocoCategories(CAT_LIST, remap=True), ConvertCocoPolysToMask4Seg()] if is_segment \
+        else [ConvertCocoPolysToMask4Detect()]
     if transforms is not None:
         t.append(transforms)
 
     transforms = Compose(t)
-    dataset = CustomCocoDetection(img_dir_path, ann_file_path, transforms=transforms)
+    dataset = CocoDetection(img_dir_path, os.path.expanduser(ann_file_path), transforms=transforms) if is_segment \
+        else CustomCocoDetection(img_dir_path, ann_file_path, transforms=transforms)
     if annotated_only:
         dataset = remove_images_without_annotations(dataset)
     return dataset
-
-
-def coco_collate_fn(batch):
-    return tuple(zip(*batch))
