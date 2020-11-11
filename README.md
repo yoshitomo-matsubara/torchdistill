@@ -14,7 +14,7 @@ but instead specify the module path(s) in the yaml file.
   
 \* The pretrained ResNet-34 and ResNet-18 are provided by torchvision.  
 \*\* FT is assessed with ILSVRC 2015 in the original work.  
-For the 2nd row (S: ResNet-18), the checkpoint (trained weights), configuration and log files are available, 
+For the 2nd row (S: ResNet-18), the checkpoint (trained weights), configuration and log files are [available](configs/official/ilsvrc2012/yoshitomo-matsubara/), 
 and the configurations reuse the hyperparameters such as number of epochs used in the original work except for KD.
 Example codes for image classification, object detection and semantic segmentation are available in [examples/](examples/).
 
