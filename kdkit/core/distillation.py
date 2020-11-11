@@ -8,7 +8,7 @@ from kdkit.common.constant import def_logger
 from kdkit.common.file_util import make_parent_dirs
 from kdkit.common.func_util import get_optimizer, get_scheduler
 from kdkit.common.module_util import check_if_wrapped, freeze_module_params, get_module, unfreeze_module_params
-from kdkit.core.foward_proc import get_forward_proc_func
+from kdkit.core.forward_proc import get_forward_proc_func
 from kdkit.core.util import set_hooks, wrap_model, change_device, tensor2numpy2tensor, extract_outputs, \
     extract_sub_model_output_dict
 from kdkit.datasets.util import build_data_loaders
