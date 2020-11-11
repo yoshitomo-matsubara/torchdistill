@@ -71,9 +71,9 @@ class DistillationBox(nn.Module):
         self.student_any_frozen = \
             len(student_config.get('frozen_modules', list())) > 0 or not teacher_config.get('requires_grad', True)
         self.target_teacher_pairs.extend(set_hooks(self.teacher_model, teacher_ref_model,
-                                                   teacher_config, self.teacher_info_dict))
+                                                   teacher_config, self.teacher_io_dict))
         self.target_student_pairs.extend(set_hooks(self.student_model, student_ref_model,
-                                                   student_config, self.student_info_dict))
+                                                   student_config, self.student_io_dict))
         self.teacher_forward_proc = get_forward_proc_func(teacher_config.get('forward_proc', None))
         self.student_forward_proc = get_forward_proc_func(student_config.get('forward_proc', None))
 
@@ -176,7 +176,7 @@ class DistillationBox(nn.Module):
         self.student_model = None
         self.teacher_forward_proc, self.student_forward_proc = None, None
         self.target_teacher_pairs, self.target_student_pairs = list(), list()
-        self.teacher_info_dict, self.student_info_dict = dict(), dict()
+        self.teacher_io_dict, self.student_io_dict = dict(), dict()
         self.train_data_loader, self.val_data_loader, self.optimizer, self.lr_scheduler = None, None, None, None
         self.org_criterion, self.criterion, self.uses_teacher_output, self.extract_org_loss = None, None, None, None
         self.teacher_updatable, self.teacher_any_frozen, self.student_any_frozen = None, None, None
@@ -216,28 +216,28 @@ class DistillationBox(nn.Module):
         if cached_extracted_teacher_output_dict is not None:
             if isinstance(self.teacher_model, SpecialModule) or \
                     (check_if_wrapped(self.teacher_model) and isinstance(self.teacher_model.module, SpecialModule)):
-                self.teacher_info_dict.update(cached_extracted_teacher_output_dict)
+                self.teacher_io_dict.update(cached_extracted_teacher_output_dict)
                 if isinstance(self.teacher_model, SpecialModule):
-                    self.teacher_model.post_forward(self.teacher_info_dict)
+                    self.teacher_model.post_forward(self.teacher_io_dict)
 
-            extracted_teacher_output_dict = extract_outputs(self.teacher_info_dict)
+            extracted_teacher_output_dict = extract_outputs(self.teacher_io_dict)
             return teacher_outputs, extracted_teacher_output_dict
 
         # Deep copy of teacher info dict if teacher special module contains trainable module(s)
-        teacher_info_dict4cache = copy.deepcopy(self.teacher_info_dict) \
+        teacher_io_dict4cache = copy.deepcopy(self.teacher_io_dict) \
             if self.teacher_updatable and isinstance(cache_file_paths, (list, tuple)) is not None else None
         if isinstance(self.teacher_model, SpecialModule):
-            self.teacher_model.post_forward(self.teacher_info_dict)
+            self.teacher_model.post_forward(self.teacher_io_dict)
 
-        extracted_teacher_output_dict = extract_outputs(self.teacher_info_dict)
+        extracted_teacher_output_dict = extract_outputs(self.teacher_io_dict)
         # Write cache files if output file paths (cache_file_paths) are given
         if isinstance(cache_file_paths, (list, tuple)):
-            if teacher_info_dict4cache is None:
-                teacher_info_dict4cache = extracted_teacher_output_dict
+            if teacher_io_dict4cache is None:
+                teacher_io_dict4cache = extracted_teacher_output_dict
 
             cpu_device = torch.device('cpu')
             for i, (teacher_output, cache_file_path) in enumerate(zip(teacher_outputs.cpu().numpy(), cache_file_paths)):
-                sub_dict = extract_sub_model_output_dict(teacher_info_dict4cache, i)
+                sub_dict = extract_sub_model_output_dict(teacher_io_dict4cache, i)
                 sub_dict = tensor2numpy2tensor(sub_dict, cpu_device)
                 cache_dict = {'teacher_outputs': torch.Tensor(teacher_output), 'extracted_outputs': sub_dict}
                 make_parent_dirs(cache_file_path)
@@ -249,12 +249,12 @@ class DistillationBox(nn.Module):
             self.get_teacher_output(sample_batch, targets, supp_dict=supp_dict)
         student_outputs = self.student_forward_proc(self.student_model, sample_batch, targets, supp_dict)
         if isinstance(self.student_model, SpecialModule):
-            self.student_model.post_forward(self.student_info_dict)
+            self.student_model.post_forward(self.student_io_dict)
 
         org_loss_dict = self.extract_org_loss(self.org_criterion, student_outputs, teacher_outputs, targets,
                                               uses_teacher_output=self.uses_teacher_output, supp_dict=supp_dict)
         output_dict = {'teacher': extracted_teacher_output_dict,
-                       'student': extract_outputs(self.student_info_dict)}
+                       'student': extract_outputs(self.student_io_dict)}
         total_loss = self.criterion(output_dict, org_loss_dict, targets)
         return total_loss
 
@@ -278,10 +278,13 @@ class DistillationBox(nn.Module):
     def clean_modules(self):
         unfreeze_module_params(self.org_teacher_model)
         unfreeze_module_params(self.org_student_model)
-        self.teacher_info_dict.clear()
-        self.student_info_dict.clear()
+        self.teacher_io_dict.clear()
+        self.student_io_dict.clear()
         for _, module_handle in self.target_teacher_pairs + self.target_student_pairs:
             module_handle.remove()
+
+        self.target_teacher_pairs.clear()
+        self.target_student_pairs.clear()
 
 
 class MultiStagesDistillationBox(DistillationBox):
