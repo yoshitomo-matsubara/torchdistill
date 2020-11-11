@@ -6,7 +6,7 @@ Even when you need to extract intermediate representations in teacher/student mo
 you will **NOT** need to reimplement the models, that often change the interface of the forward, 
 but instead specify the module path(s) in the yaml file.
 
-## Top-1 validation accuracy of student model on ILSVRC 2012 (ImageNet)
+## Top-1 validation accuracy for ILSVRC 2012 (ImageNet)
 | T: ResNet-34\*  | Pretrained | KD    | AT    | FT       | CRD   | Tf-KD | SSKD  | L2    | PAD-L2    |  
 | :---            | ---:       | ---:  | ---:  | ---:     | ---:  | ---:  | ---:  | ---:  | ---:      |  
 | S: ResNet-18    | 69.76\*    | 71.37 | 70.90 | 70.45    | 70.93 | 70.52 | 70.09 | 71.08 | 71.71     |  
@@ -14,7 +14,8 @@ but instead specify the module path(s) in the yaml file.
   
 \* The pretrained ResNet-34 and ResNet-18 are provided by torchvision.  
 \*\* FT is assessed with ILSVRC 2015 in the original work.  
-For the 2nd row (S: ResNet-18), the checkpoint (trained weights), configuration and log files are available.
+For the 2nd row (S: ResNet-18), the checkpoint (trained weights), configuration and log files are available, 
+and the configurations reuse the hyperparameters such as number of epochs used in the original work except for KD.
 Example codes for image classification, object detection and semantic segmentation are available in [examples/](examples/).
 
 
