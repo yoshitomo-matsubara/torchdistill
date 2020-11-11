@@ -7,14 +7,15 @@ you will **NOT** need to reimplement the models, that often change the interface
 but instead specify the module path(s) in the yaml file.
 
 ## Top-1 validation accuracy of student model on ILSVRC 2012
-| T: ResNet-34    | Pretrained | KD    | AT    | FT     | CRD   | Tf-KD | SSKD  | L2    | PAD-L2    |  
-| :---            | ---:       | ---:  | ---:  | ---:   | ---:  | ---:  | ---:  | ---:  | ---:      |  
-| S: ResNet-18\*  | 69.76      | 71.37 | 70.90 | 70.45  | 70.93 | 70.52 | 70.09 | 71.08 | 71.71     |  
-| Original work   | N/A        | N/A   | 70.70 | N/A\*\*| 71.17 | 70.42 | 71.62 | 70.90 | 71.71     |  
+| T: ResNet-34\*  | Pretrained | KD    | AT    | FT       | CRD   | Tf-KD | SSKD  | L2    | PAD-L2    |  
+| :---            | ---:       | ---:  | ---:  | ---:     | ---:  | ---:  | ---:  | ---:  | ---:      |  
+| S: ResNet-18    | 69.76\*    | 71.37 | 70.90 | 70.45    | 70.93 | 70.52 | 70.09 | 71.08 | 71.71     |  
+| Original work   | N/A        | N/A   | 70.70 | N/A\*\*  | 71.17 | 70.42 | 71.62 | 70.90 | 71.71     |  
   
-\* The checkpoint (trained weights), configuration and log files are available.  
+\* The pretrained ResNet-34 and ResNet-18 are provided by torchvision.  
 \*\* FT is assessed with ILSVRC 2015 in the original work.  
-Example codes for image classification and object detection are available in [examples/](examples/).
+For the 2nd row (S: ResNet-18), the checkpoint (trained weights), configuration and log files are available.
+Example codes for image classification, object detection and semantic segmentation are available in [examples/](examples/).
 
 
 ## How to setup
