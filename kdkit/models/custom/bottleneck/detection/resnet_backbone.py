@@ -98,16 +98,6 @@ def custom_resnet_fpn_backbone(backbone_name, backbone_params_config,
         backbone.layer1 = layer1
 
     trainable_layers = backbone_params_config.get('trainable_backbone_layers', 3)
-    """
-    Arguments:
-        backbone_name (string): resnet architecture. Possible values are 'ResNet', 'resnet18', 'resnet34', 'resnet50',
-             'resnet101', 'resnet152', 'resnext50_32x4d', 'resnext101_32x8d', 'wide_resnet50_2', 'wide_resnet101_2'
-        norm_layer (torchvision.ops): it is recommended to use the default value. For details visit:
-            (https://github.com/facebookresearch/maskrcnn-benchmark/issues/267)
-        pretrained (bool): If True, returns a model with backbone pre-trained on Imagenet
-        trainable_layers (int): number of trainable (not frozen) resnet layers starting from final block.
-            Valid values are between 0 and 5, with 5 meaning all backbone layers are trainable.
-    """
     # select layers that wont be frozen
     assert 0 <= trainable_layers <= 5
     layers_to_train = ['layer4', 'layer3', 'layer2', 'layer1', 'conv1'][:trainable_layers]
