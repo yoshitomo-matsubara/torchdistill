@@ -30,6 +30,12 @@ pipenv install "-e ."
 If you do not wish to use pipenv (a virtual environment), install the packages listed in [Pipfile](Pipfile).
 
 
+## Forward hook manager
+Using **ForwardHookManager**, you can extract intermediate representations in model without 
+modifying the interface of its forward function.  
+[This example notebook](demo/extract_intermediate_representations.ipynb) will give you a better idea of the usage.
+
+
 ## Issues / Contact
 The documentation is work-in-progress. In the meantime, feel free to create an issue if you have a feature request or 
 email me ( yoshitom@uci.edu ) if you would like to ask me in private. 
