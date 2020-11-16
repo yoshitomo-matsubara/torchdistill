@@ -3,9 +3,11 @@ from collections import abc
 import torch
 from torch.nn import DataParallel
 from torch.nn.parallel import DistributedDataParallel
+from torch.nn.parallel.scatter_gather import gather
 
 from kdkit.common.constant import def_logger
 from kdkit.common.module_util import get_module, check_if_wrapped
+from kdkit.core.forward_hook import register_forward_hook_with_dict
 
 logger = def_logger.getChild(__name__)
 
@@ -18,36 +20,6 @@ def extract_module(org_model, sub_model, module_path):
     if module_path.startswith('+'):
         return get_module(sub_model, module_path[1:])
     return get_module(org_model, module_path)
-
-
-def register_forward_hook_with_dict(module, module_path, requires_input, requires_output, io_dict):
-    def forward_hook4input(self, func_input, func_output):
-        if isinstance(func_input, tuple) and len(func_input) == 1:
-            func_input = func_input[0]
-        io_dict[module_path]['input'] = func_input
-
-    def forward_hook4output(self, func_input, func_output):
-        if isinstance(func_output, tuple) and len(func_output) == 1:
-            func_output = func_output[0]
-        io_dict[module_path]['output'] = func_output
-
-    def forward_hook4io(self, func_input, func_output):
-        if isinstance(func_input, tuple) and len(func_input) == 1:
-            func_input = func_input[0]
-
-        if isinstance(func_output, tuple) and len(func_output) == 1:
-            func_output = func_output[0]
-
-        io_dict[module_path]['input'] = func_input
-        io_dict[module_path]['output'] = func_output
-
-    if requires_input and not requires_output:
-        return module.register_forward_hook(forward_hook4input)
-    elif not requires_input and requires_output:
-        return module.register_forward_hook(forward_hook4output)
-    elif requires_input and requires_output:
-        return module.register_forward_hook(forward_hook4io)
-    raise ValueError('Either requires_input or requires_output should be True')
 
 
 def set_hooks(model, unwrapped_org_model, model_config, io_dict):
@@ -112,14 +84,17 @@ def tensor2numpy2tensor(data, device):
     return data
 
 
-def extract_outputs(model_io_dict):
-    model_output_dict = dict()
-    for module_path, model_io_dict in model_io_dict.items():
-        sub_model_io_dict = dict()
-        for key in list(model_io_dict.keys()):
-            sub_model_io_dict[key] = model_io_dict.pop(key)
-        model_output_dict[module_path] = sub_model_io_dict
-    return model_output_dict
+def extract_io_dict(model_io_dict, target_device):
+    uses_cuda = target_device.type.startswith('cuda')
+    gathered_io_dict = dict()
+    for module_path, module_io_dict in model_io_dict.items():
+        gathered_io_dict[module_path] = dict()
+        for io_type in list(module_io_dict.keys()):
+            sub_dict = module_io_dict.pop(io_type)
+            values = [sub_dict[key] for key in sorted(sub_dict.keys())]
+            gathered_obj = gather(values, target_device) if uses_cuda else values[-1]
+            gathered_io_dict[module_path][io_type] = gathered_obj
+    return gathered_io_dict
 
 
 def extract_sub_model_output_dict(model_output_dict, index):

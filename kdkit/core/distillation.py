@@ -9,7 +9,7 @@ from kdkit.common.file_util import make_parent_dirs
 from kdkit.common.func_util import get_optimizer, get_scheduler
 from kdkit.common.module_util import check_if_wrapped, freeze_module_params, get_module, unfreeze_module_params
 from kdkit.core.forward_proc import get_forward_proc_func
-from kdkit.core.util import set_hooks, wrap_model, change_device, tensor2numpy2tensor, extract_outputs, \
+from kdkit.core.util import set_hooks, wrap_model, change_device, tensor2numpy2tensor, extract_io_dict, \
     extract_sub_model_output_dict
 from kdkit.datasets.util import build_data_loaders
 from kdkit.losses.custom import get_custom_loss
@@ -220,8 +220,8 @@ class DistillationBox(nn.Module):
                 if isinstance(self.teacher_model, SpecialModule):
                     self.teacher_model.post_forward(self.teacher_io_dict)
 
-            extracted_teacher_output_dict = extract_outputs(self.teacher_io_dict)
-            return teacher_outputs, extracted_teacher_output_dict
+            extracted_teacher_io_dict = extract_io_dict(self.teacher_io_dict, self.device)
+            return teacher_outputs, extracted_teacher_io_dict
 
         # Deep copy of teacher info dict if teacher special module contains trainable module(s)
         teacher_io_dict4cache = copy.deepcopy(self.teacher_io_dict) \
@@ -229,11 +229,11 @@ class DistillationBox(nn.Module):
         if isinstance(self.teacher_model, SpecialModule):
             self.teacher_model.post_forward(self.teacher_io_dict)
 
-        extracted_teacher_output_dict = extract_outputs(self.teacher_io_dict)
+        extracted_teacher_io_dict = extract_io_dict(self.teacher_io_dict, self.device)
         # Write cache files if output file paths (cache_file_paths) are given
         if isinstance(cache_file_paths, (list, tuple)):
             if teacher_io_dict4cache is None:
-                teacher_io_dict4cache = extracted_teacher_output_dict
+                teacher_io_dict4cache = extracted_teacher_io_dict
 
             cpu_device = torch.device('cpu')
             for i, (teacher_output, cache_file_path) in enumerate(zip(teacher_outputs.cpu().numpy(), cache_file_paths)):
@@ -242,10 +242,10 @@ class DistillationBox(nn.Module):
                 cache_dict = {'teacher_outputs': torch.Tensor(teacher_output), 'extracted_outputs': sub_dict}
                 make_parent_dirs(cache_file_path)
                 torch.save(cache_dict, cache_file_path)
-        return teacher_outputs, extracted_teacher_output_dict
+        return teacher_outputs, extracted_teacher_io_dict
 
     def forward(self, sample_batch, targets, supp_dict):
-        teacher_outputs, extracted_teacher_output_dict =\
+        teacher_outputs, extracted_teacher_io_dict =\
             self.get_teacher_output(sample_batch, targets, supp_dict=supp_dict)
         student_outputs = self.student_forward_proc(self.student_model, sample_batch, targets, supp_dict)
         if isinstance(self.student_model, SpecialModule):
@@ -253,8 +253,8 @@ class DistillationBox(nn.Module):
 
         org_loss_dict = self.extract_org_loss(self.org_criterion, student_outputs, teacher_outputs, targets,
                                               uses_teacher_output=self.uses_teacher_output, supp_dict=supp_dict)
-        output_dict = {'teacher': extracted_teacher_output_dict,
-                       'student': extract_outputs(self.student_io_dict)}
+        output_dict = {'teacher': extracted_teacher_io_dict,
+                       'student': extract_io_dict(self.student_io_dict, self.device)}
         total_loss = self.criterion(output_dict, org_loss_dict, targets)
         return total_loss
 
