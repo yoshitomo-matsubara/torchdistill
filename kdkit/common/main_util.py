@@ -6,8 +6,8 @@ import torch
 import torch.distributed as dist
 
 from kdkit.common.constant import def_logger
-from myutils.common.file_util import check_if_exists, make_parent_dirs
-from myutils.pytorch.module_util import check_if_wrapped
+from kdkit.common.file_util import check_if_exists, make_parent_dirs
+from kdkit.common.module_util import check_if_wrapped
 
 logger = def_logger.getChild(__name__)
 

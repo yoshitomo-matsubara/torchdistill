@@ -4,8 +4,8 @@ import torch
 from torch import nn
 from torch.nn.functional import adaptive_max_pool2d, normalize, cosine_similarity
 
+from kdkit.common import func_util
 from kdkit.common.constant import def_logger
-from myutils.pytorch import func_util
 
 LOSS_WRAPPER_CLASS_DICT = dict()
 SINGLE_LOSS_CLASS_DICT = dict()
@@ -47,37 +47,30 @@ class SimpleLossWrapper(nn.Module):
     def extract_value(io_dict, path, key):
         return io_dict[path][key]
 
-    def forward(self, student_io_dict, teacher_io_dict, labels, *args, **kwargs):
+    def forward(self, student_io_dict, teacher_io_dict, targets, *args, **kwargs):
         input_batch = self.extract_value(teacher_io_dict if self.is_input_from_teacher else student_io_dict,
                                          self.input_module_path, self.input_key)
         if self.target_module_path is None and self.target_key is None:
-            target_batch = labels
+            target_batch = targets
         else:
             target_batch = self.extract_value(teacher_io_dict if self.is_target_from_teacher else student_io_dict,
                                               self.target_module_path, self.target_key)
         return self.single_loss(input_batch, target_batch, *args, **kwargs)
 
 
-@register_loss_wrapper
-class DictLossWrapper(SimpleLossWrapper):
-    def __init__(self, single_loss, params_config, reduction='mean', **kwargs):
-        super().__init__(single_loss, params_config)
-        self.factor_dict = params_config.get('factors', dict())
-        self.reduction = reduction
+@register_single_loss
+class OrgDictLoss(nn.Module):
+    def __init__(self, single_loss, factors, **kwargs):
+        super().__init__()
+        self.single_loss = get_single_loss(single_loss)
+        self.factor_dict = factors
 
-    def forward(self, student_io_dict, teacher_io_dict, *args, **kwargs):
-        input_batch_dict = self.extract_value(teacher_io_dict if self.is_input_from_teacher else student_io_dict,
-                                              self.input_module_path, self.input_key)
-        target_batch_dict = self.extract_value(teacher_io_dict if self.is_target_from_teacher else student_io_dict,
-                                               self.target_module_path, self.target_key)
+    def forward(self, student_output, targets, *args, **kwargs):
         loss = 0
-        count = 0
-        for key, input_batch in input_batch_dict.items():
-            target_batch = target_batch_dict[key]
-            count += target_batch.nelement()
+        for key, input_batch in student_output.items():
             factor = self.factor_dict.get(key, 1)
-            loss += factor * self.single_loss(input_batch, target_batch, *args, **kwargs)
-        return loss / count if self.reduction == 'mean' else loss
+            loss += factor * self.single_loss(input_batch, targets, *args, **kwargs)
+        return loss
 
 
 @register_single_loss
@@ -93,13 +86,13 @@ class KDLoss(nn.KLDivLoss):
         cel_reduction = 'mean' if reduction == 'batchmean' else reduction
         self.cross_entropy_loss = nn.CrossEntropyLoss(reduction=cel_reduction, **kwargs)
 
-    def forward(self, student_output, teacher_output, labels=None, *args, **kwargs):
+    def forward(self, student_output, teacher_output, targets=None, *args, **kwargs):
         soft_loss = super().forward(torch.log_softmax(student_output / self.temperature, dim=1),
                                     torch.softmax(teacher_output / self.temperature, dim=1))
-        if self.alpha is None or self.alpha == 0 or labels is None:
+        if self.alpha is None or self.alpha == 0 or targets is None:
             return soft_loss
 
-        hard_loss = self.cross_entropy_loss(student_output, labels)
+        hard_loss = self.cross_entropy_loss(student_output, targets)
         return self.alpha * hard_loss + self.beta * (self.temperature ** 2) * soft_loss
 
 
@@ -710,7 +703,7 @@ class SSKDLoss(nn.Module):
         aug_feat = aug_feat.unsqueeze(2).expand(-1, -1, one_forth_batch_size)
         return cosine_similarity(aug_feat, normal_feat, dim=1)
 
-    def forward(self, student_io_dict, teacher_io_dict, labels, *args, **kwargs):
+    def forward(self, student_io_dict, teacher_io_dict, targets, *args, **kwargs):
         student_linear_outputs = student_io_dict[self.student_linear_module_path][self.student_linear_module_io]
         teacher_linear_outputs = teacher_io_dict[self.teacher_linear_module_path][self.teacher_linear_module_io]
         device = student_linear_outputs.device
@@ -719,14 +712,14 @@ class SSKDLoss(nn.Module):
         one_forth_batch_size = batch_size - three_forth_batch_size
         normal_indices = (torch.arange(batch_size) % 4 == 0)
         aug_indices = (torch.arange(batch_size) % 4 != 0)
-        ce_loss = self.cross_entropy_loss(student_linear_outputs[normal_indices], labels)
+        ce_loss = self.cross_entropy_loss(student_linear_outputs[normal_indices], targets)
         kl_loss = self.kldiv_loss(torch.log_softmax(student_linear_outputs[normal_indices] / self.kl_temp, dim=1),
                                   torch.softmax(teacher_linear_outputs[normal_indices] / self.kl_temp, dim=1))
         kl_loss *= (self.kl_temp ** 2)
 
         # error level ranking
         aug_knowledges = torch.softmax(teacher_linear_outputs[aug_indices] / self.tf_temp, dim=1)
-        aug_targets = labels.unsqueeze(1).expand(-1, 3).contiguous().view(-1)
+        aug_targets = targets.unsqueeze(1).expand(-1, 3).contiguous().view(-1)
         aug_targets = aug_targets[:three_forth_batch_size].long().to(device)
         ranks = torch.argsort(aug_knowledges, dim=1, descending=True)
         ranks = torch.argmax(torch.eq(ranks, aug_targets.unsqueeze(1)).long(), dim=1)  # groundtruth label's rank

@@ -5,8 +5,11 @@ import torch
 from torch import nn
 
 from kdkit.common.constant import def_logger
-from kdkit.core.foward_proc import get_forward_proc_func
-from kdkit.core.util import set_hooks, wrap_model, change_device, tensor2numpy2tensor, extract_outputs, \
+from kdkit.common.file_util import make_parent_dirs
+from kdkit.common.func_util import get_optimizer, get_scheduler
+from kdkit.common.module_util import check_if_wrapped, freeze_module_params, get_module, unfreeze_module_params
+from kdkit.core.forward_proc import get_forward_proc_func
+from kdkit.core.util import set_hooks, wrap_model, change_device, tensor2numpy2tensor, extract_io_dict, \
     extract_sub_model_output_dict
 from kdkit.datasets.util import build_data_loaders
 from kdkit.losses.custom import get_custom_loss
@@ -14,9 +17,6 @@ from kdkit.losses.single import KDLoss, get_single_loss
 from kdkit.losses.util import get_func2extract_org_output
 from kdkit.models.special import SpecialModule, build_special_module
 from kdkit.models.util import redesign_model
-from myutils.common.file_util import make_parent_dirs
-from myutils.pytorch.func_util import get_optimizer, get_scheduler
-from myutils.pytorch.module_util import check_if_wrapped, freeze_module_params, unfreeze_module_params
 
 logger = def_logger.getChild(__name__)
 try:
@@ -71,9 +71,9 @@ class DistillationBox(nn.Module):
         self.student_any_frozen = \
             len(student_config.get('frozen_modules', list())) > 0 or not teacher_config.get('requires_grad', True)
         self.target_teacher_pairs.extend(set_hooks(self.teacher_model, teacher_ref_model,
-                                                   teacher_config, self.teacher_info_dict))
+                                                   teacher_config, self.teacher_io_dict))
         self.target_student_pairs.extend(set_hooks(self.student_model, student_ref_model,
-                                                   student_config, self.student_info_dict))
+                                                   student_config, self.student_io_dict))
         self.teacher_forward_proc = get_forward_proc_func(teacher_config.get('forward_proc', None))
         self.student_forward_proc = get_forward_proc_func(student_config.get('forward_proc', None))
 
@@ -119,14 +119,27 @@ class DistillationBox(nn.Module):
         # Set up optimizer and scheduler
         optim_config = train_config.get('optimizer', dict())
         optimizer_reset = False
-        trainable_module_list = nn.ModuleList([self.student_model])
-        if self.teacher_updatable:
-            logger.info('Note that you are training some/all of the modules in the teacher model')
-            trainable_module_list.append(self.teacher_model)
-
         if len(optim_config) > 0:
             optim_params_config = optim_config['params']
             optim_params_config['lr'] *= self.lr_factor
+            module_wise_params_configs = optim_config.get('module_wise_params', list())
+            if len(module_wise_params_configs) > 0:
+                trainable_module_list = list()
+                for module_wise_params_config in module_wise_params_configs:
+                    module_wise_params_dict = dict()
+                    module_wise_params_dict.update(module_wise_params_config['params'])
+                    if 'lr' in module_wise_params_dict:
+                        module_wise_params_dict['lr'] *= self.lr_factor
+
+                    module = get_module(self, module_wise_params_config['module'])
+                    module_wise_params_dict['params'] = module.parameters()
+                    trainable_module_list.append(module_wise_params_dict)
+            else:
+                trainable_module_list = nn.ModuleList([self.student_model])
+                if self.teacher_updatable:
+                    logger.info('Note that you are training some/all of the modules in the teacher model')
+                    trainable_module_list.append(self.teacher_model)
+
             self.optimizer = get_optimizer(trainable_module_list, optim_config['type'], optim_params_config)
             optimizer_reset = True
 
@@ -163,7 +176,7 @@ class DistillationBox(nn.Module):
         self.student_model = None
         self.teacher_forward_proc, self.student_forward_proc = None, None
         self.target_teacher_pairs, self.target_student_pairs = list(), list()
-        self.teacher_info_dict, self.student_info_dict = dict(), dict()
+        self.teacher_io_dict, self.student_io_dict = dict(), dict()
         self.train_data_loader, self.val_data_loader, self.optimizer, self.lr_scheduler = None, None, None, None
         self.org_criterion, self.criterion, self.uses_teacher_output, self.extract_org_loss = None, None, None, None
         self.teacher_updatable, self.teacher_any_frozen, self.student_any_frozen = None, None, None
@@ -203,45 +216,45 @@ class DistillationBox(nn.Module):
         if cached_extracted_teacher_output_dict is not None:
             if isinstance(self.teacher_model, SpecialModule) or \
                     (check_if_wrapped(self.teacher_model) and isinstance(self.teacher_model.module, SpecialModule)):
-                self.teacher_info_dict.update(cached_extracted_teacher_output_dict)
+                self.teacher_io_dict.update(cached_extracted_teacher_output_dict)
                 if isinstance(self.teacher_model, SpecialModule):
-                    self.teacher_model.post_forward(self.teacher_info_dict)
+                    self.teacher_model.post_forward(self.teacher_io_dict)
 
-            extracted_teacher_output_dict = extract_outputs(self.teacher_info_dict)
-            return teacher_outputs, extracted_teacher_output_dict
+            extracted_teacher_io_dict = extract_io_dict(self.teacher_io_dict, self.device)
+            return teacher_outputs, extracted_teacher_io_dict
 
         # Deep copy of teacher info dict if teacher special module contains trainable module(s)
-        teacher_info_dict4cache = copy.deepcopy(self.teacher_info_dict) \
+        teacher_io_dict4cache = copy.deepcopy(self.teacher_io_dict) \
             if self.teacher_updatable and isinstance(cache_file_paths, (list, tuple)) is not None else None
         if isinstance(self.teacher_model, SpecialModule):
-            self.teacher_model.post_forward(self.teacher_info_dict)
+            self.teacher_model.post_forward(self.teacher_io_dict)
 
-        extracted_teacher_output_dict = extract_outputs(self.teacher_info_dict)
+        extracted_teacher_io_dict = extract_io_dict(self.teacher_io_dict, self.device)
         # Write cache files if output file paths (cache_file_paths) are given
         if isinstance(cache_file_paths, (list, tuple)):
-            if teacher_info_dict4cache is None:
-                teacher_info_dict4cache = extracted_teacher_output_dict
+            if teacher_io_dict4cache is None:
+                teacher_io_dict4cache = extracted_teacher_io_dict
 
             cpu_device = torch.device('cpu')
             for i, (teacher_output, cache_file_path) in enumerate(zip(teacher_outputs.cpu().numpy(), cache_file_paths)):
-                sub_dict = extract_sub_model_output_dict(teacher_info_dict4cache, i)
+                sub_dict = extract_sub_model_output_dict(teacher_io_dict4cache, i)
                 sub_dict = tensor2numpy2tensor(sub_dict, cpu_device)
                 cache_dict = {'teacher_outputs': torch.Tensor(teacher_output), 'extracted_outputs': sub_dict}
                 make_parent_dirs(cache_file_path)
                 torch.save(cache_dict, cache_file_path)
-        return teacher_outputs, extracted_teacher_output_dict
+        return teacher_outputs, extracted_teacher_io_dict
 
     def forward(self, sample_batch, targets, supp_dict):
-        teacher_outputs, extracted_teacher_output_dict =\
+        teacher_outputs, extracted_teacher_io_dict =\
             self.get_teacher_output(sample_batch, targets, supp_dict=supp_dict)
         student_outputs = self.student_forward_proc(self.student_model, sample_batch, targets, supp_dict)
         if isinstance(self.student_model, SpecialModule):
-            self.student_model.post_forward(self.student_info_dict)
+            self.student_model.post_forward(self.student_io_dict)
 
         org_loss_dict = self.extract_org_loss(self.org_criterion, student_outputs, teacher_outputs, targets,
                                               uses_teacher_output=self.uses_teacher_output, supp_dict=supp_dict)
-        output_dict = {'teacher': extracted_teacher_output_dict,
-                       'student': extract_outputs(self.student_info_dict)}
+        output_dict = {'teacher': extracted_teacher_io_dict,
+                       'student': extract_io_dict(self.student_io_dict, self.device)}
         total_loss = self.criterion(output_dict, org_loss_dict, targets)
         return total_loss
 
@@ -265,10 +278,13 @@ class DistillationBox(nn.Module):
     def clean_modules(self):
         unfreeze_module_params(self.org_teacher_model)
         unfreeze_module_params(self.org_student_model)
-        self.teacher_info_dict.clear()
-        self.student_info_dict.clear()
+        self.teacher_io_dict.clear()
+        self.student_io_dict.clear()
         for _, module_handle in self.target_teacher_pairs + self.target_student_pairs:
             module_handle.remove()
+
+        self.target_teacher_pairs.clear()
+        self.target_student_pairs.clear()
 
 
 class MultiStagesDistillationBox(DistillationBox):

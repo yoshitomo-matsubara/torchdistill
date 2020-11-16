@@ -1,113 +1,51 @@
-# Knowledge distillation kit for PyTorch
+# kdkit: A Unified Knowledge Distillation Framework for Reproducible Studies
 
-## Requirements
-- Python 3.6
-- [pipenv](https://pypi.org/project/pipenv/)
-- [myutils](https://github.com/yoshitomo-matsubara/myutils)
+***kdkit*** offers various knowledge distillation methods 
+and enables you to design (new) experiments simply by editing a yaml file instead of Python code. 
+Even when you need to extract intermediate representations in teacher/student models, 
+you will **NOT** need to reimplement the models, that often change the interface of the forward, 
+but instead specify the module path(s) in the yaml file.
+
+## Top-1 validation accuracy for ILSVRC 2012 (ImageNet)
+| T: ResNet-34\*  | Pretrained | KD    | AT    | FT       | CRD   | Tf-KD | SSKD  | L2    | PAD-L2    |  
+| :---            | ---:       | ---:  | ---:  | ---:     | ---:  | ---:  | ---:  | ---:  | ---:      |  
+| S: ResNet-18    | 69.76\*    | 71.37 | 70.90 | 70.45    | 70.93 | 70.52 | 70.09 | 71.08 | 71.71     |  
+| Original work   | N/A        | N/A   | 70.70 | N/A\*\*  | 71.17 | 70.42 | 71.62 | 70.90 | 71.71     |  
+  
+\* The pretrained ResNet-34 and ResNet-18 are provided by torchvision.  
+\*\* FT is assessed with ILSVRC 2015 in the original work.  
+For the 2nd row (S: ResNet-18), the checkpoint (trained weights), configuration and log files are [available](configs/official/ilsvrc2012/yoshitomo-matsubara/), 
+and the configurations reuse the hyperparameters such as number of epochs used in the original work except for KD.
+Example codes for image classification, object detection and semantic segmentation are available in [examples/](examples/).
 
 
 ## How to setup
+- Python 3.6 >=
+- pipenv (optional)
 ```
 git clone https://github.com/yoshitomo-matsubara/kdkit.git
 cd kdkit/
-git submodule init
-git submodule update --recursive --remote
-pipenv install
+pipenv install "-e ."
 ```
 If you do not wish to use pipenv (a virtual environment), install the packages listed in [Pipfile](Pipfile).
 
-## Examples
-### 1. ImageNet (ILSVRC 2012): Image Classification
-#### 1.1 Download the datasets
-As the terms of use do not allow to distribute the URLs, you will have to create an account [here](http://image-net.org/download) to get the URLs, and replace `${TRAIN_DATASET_URL}` and `${VAL_DATASET_URL}` with them.
-```
-wget ${TRAIN_DATASET_URL} ./
-wget ${VAL_DATASET_URL} ./
-```
 
-#### 1.2 Untar and extract files
-```
-# Go to the root of this repository
-mkdir ./resource/dataset/ilsvrc2012/{train,val} -p
-mv ILSVRC2012_img_train.tar ./resource/dataset/ilsvrc2012/train/
-cd ./resource/dataset/ilsvrc2012/train/
-tar -xvf ILSVRC2012_img_train.tar
-for f in *.tar; do
-  d=`basename $f .tar`
-  mkdir $d
-  (cd $d && tar xf ../$f)
-done
-rm -r *.tar
+## Forward hook manager
+Using **ForwardHookManager**, you can extract intermediate representations in model without 
+modifying the interface of its forward function.  
+[This example notebook](demo/extract_intermediate_representations.ipynb) will give you a better idea of the usage.
 
-mv ILSVRC2012_img_val.tar ./resource/dataset/ilsvrc2012/val/
-wget https://raw.githubusercontent.com/soumith/imagenetloader.torch/master/valprep.sh
-mv valpre.sh ./resource/dataset/ilsvrc2012/val/
-cd ./resource/dataset/ilsvrc2012/val/
-sh valpre.sh
-cd ../../../../
-```
 
-#### 1.3 Run an experiment
-e.g., Teacher: ResNet-152, Student: AlexNet  
-a) Use GPUs for multiple distributed training processes
-```
-pipenv run python -m torch.distributed.launch --nproc_per_node=${NUM_GPUS} --use_env image_classification.py --world_size ${NUM_GPUS} --config config/image_classification/single_stage/kd/alexnet_from_resnet152.yaml --log log/kd/alexnet_from_resnet152.txt
-```
-b) Use GPU(s) for single training process
-```
-pipenv run python image_classification.py --config config/image_classification/single_stage/kd/alexnet_from_resnet152.yaml --log log/kd/alexnet_from_resnet152.txt
-```  
-c) Use CPU
-```
-pipenv run python image_classification.py --device cpu --config config/image_classification/single_stage/kd/alexnet_from_resnet152.yaml --log log/kd/alexnet_from_resnet152.txt
-```  
+## Issues / Contact
+The documentation is work-in-progress. In the meantime, feel free to create an issue if you have a feature request or 
+email me ( yoshitom@uci.edu ) if you would like to ask me in private. 
 
-#### 1.4 Top 1 validation accuracy of student model on ILSVRC 2012
-| T: ResNet-34  | Vanilla (CELoss) | KD    | AT    | FT     | Tf-KD | SSKD  | L2    | PAD-L2    |  
-| :---          | ---:             | ---:  | ---:  | ---:   | ---:  | ---:  | ---:  | ---:      |  
-| S: ResNet-18  | 69.76            | 71.37 | 70.90 | 70.45  | 70.52 | 70.09 | 71.08 | 71.71     |  
-
-### 2. COCO 2017: Object Detection
-#### 2.1 Download the datasets
-```
-wget http://images.cocodataset.org/zips/train2017.zip ./
-wget http://images.cocodataset.org/zips/val2017.zip ./
-wget http://images.cocodataset.org/annotations/annotations_trainval2017.zip ./
-```
-
-#### 2.2 Unzip and extract files
-```
-# Go to the root of this repository
-mkdir ./resource/dataset/coco2017/ -p
-mv train2017.zip ./resource/dataset/coco2017/
-mv val2017.zip ./resource/dataset/coco2017/
-mv annotations_trainval2017.zip ./resource/dataset/coco2017/
-cd ./resource/dataset/coco2017/
-unzip train2017.zip
-unzip val2017.zip
-unzip annotations_trainval2017.zip
-cd ../../../
-```
-
-#### 2.3 Run an experiment
-e.g., Teacher: Faster R-CNN with ResNet-50-FPN backbone, Student: Faster R-CNN with ResNet-18-FPN backbone  
-a) Use GPUs for multiple distributed training processes
-```
-pipenv run python -m torch.distributed.launch --nproc_per_node=${NUM_GPUS} --use_env object_detection.py --world_size ${NUM_GPUS} --config config/object_detection/multi_stage/ft/custom_fasterrcnn_resnet18_fpn_from_fasterrcnn_resnet50_fpn.yaml --log log/ft/custom_fasterrcnn_resnet18_fpn_from_fasterrcnn_resnet50_fpn.txt
-```
-b) Use GPU(s) for single training process
-```
-pipenv run python object_detection.py --config config/object_detection/multi_stage/ft/custom_fasterrcnn_resnet18_fpn_from_fasterrcnn_resnet50_fpn.yaml --log log/ft/custom_fasterrcnn_resnet18_fpn_from_fasterrcnn_resnet50_fpn.txt
-```  
-c) Use CPU
-```
-pipenv run python object_detection.py --device cpu --config config/object_detection/multi_stage/ft/custom_fasterrcnn_resnet18_fpn_from_fasterrcnn_resnet50_fpn.yaml --log log/ft/custom_fasterrcnn_resnet18_fpn_from_fasterrcnn_resnet50_fpn.txt
-```  
 
 ## References
-- [:mag:](image_classification.py) [pytorch/vision/references/classification/](https://github.com/pytorch/vision/blob/master/references/classification/)
-- [:mag:](object_detection.py) [pytorch/vision/references/detection/](https://github.com/pytorch/vision/tree/master/references/detection/)
-- [:mag:](config/image_classification/single_stage/kd) Hinton, Geoffrey, Oriol Vinyals and Jeff Dean. ["Distilling the Knowledge in a Neural Network"](https://fb56552f-a-62cb3a1a-s-sites.googlegroups.com/site/deeplearningworkshopnips2014/65.pdf?attachauth=ANoY7co8sQACDsEYLkP11zqEAxPgYHLwkdkDP9NHfEB6pzQOUPmfWf3cVrL3WE7PNyed-lrRsF7CY6Tcme5OEQ92CTSN4f8nDfJcgt71fPtAvcTvH5BpzF-2xPvLkPAvU9Ub8XvbySAPOsMKMWmGsXG2FS1_X1LJsUfuwKdQKYVVTtRfG5LHovLHIwv6kXd3mOkDKEH7YdoyYQqjSv6ku2KDjOpVQBt0lKGVPXeRdwUcD0mxDqCe4u8%3D&attredirects=1) (Deep Learning and Representation Learning Workshop: NeurIPS 2014)
+- [:mag:](examples/image_classification.py) [pytorch/vision/references/classification/](https://github.com/pytorch/vision/blob/master/references/classification/)
+- [:mag:](examples/object_detection.py) [pytorch/vision/references/detection/](https://github.com/pytorch/vision/tree/master/references/detection/)
+- [:mag:](examples/semantic_segmentation.py) [pytorch/vision/references/segmentation/](https://github.com/pytorch/vision/tree/master/references/segmentation/)
+- [:mag:](config/image_classification/single_stage/kd) Geoffrey Hinton, Oriol Vinyals and Jeff Dean. ["Distilling the Knowledge in a Neural Network"](https://fb56552f-a-62cb3a1a-s-sites.googlegroups.com/site/deeplearningworkshopnips2014/65.pdf?attachauth=ANoY7co8sQACDsEYLkP11zqEAxPgYHLwkdkDP9NHfEB6pzQOUPmfWf3cVrL3WE7PNyed-lrRsF7CY6Tcme5OEQ92CTSN4f8nDfJcgt71fPtAvcTvH5BpzF-2xPvLkPAvU9Ub8XvbySAPOsMKMWmGsXG2FS1_X1LJsUfuwKdQKYVVTtRfG5LHovLHIwv6kXd3mOkDKEH7YdoyYQqjSv6ku2KDjOpVQBt0lKGVPXeRdwUcD0mxDqCe4u8%3D&attredirects=1) (Deep Learning and Representation Learning Workshop: NeurIPS 2014)
 - [:mag:](config/image_classification/multi_stage/fitnet) Adriana Romero, Nicolas Ballas, Samira Ebrahimi Kahou, Antoine Chassang, Carlo Gatta and Yoshua Bengio. ["FitNets: Hints for Thin Deep Nets"](https://arxiv.org/abs/1412.6550) (ICLR 2015)
 - [:mag:](config/image_classification/multi_stage/fsp) Junho Yim, Donggyu Joo, Jihoon Bae and Junmo Kim. ["A Gift From Knowledge Distillation: Fast Optimization, Network Minimization and Transfer Learning"](http://openaccess.thecvf.com/content_cvpr_2017/html/Yim_A_Gift_From_CVPR_2017_paper.html) (CVPR 2017)
 - [:mag:](config/image_classification/single_stage/at) Sergey Zagoruyko and Nikos Komodakis. ["Paying More Attention to Attention: Improving the Performance of Convolutional Neural Networks via Attention Transfer"](https://openreview.net/forum?id=Sks9_ajex) (ICLR 2017)

@@ -141,10 +141,10 @@ class Teacher4FactorTransfer(SpecialModule):
         with torch.no_grad():
             return self.teacher_model(*args)
 
-    def post_forward(self, info_dict):
+    def post_forward(self, io_dict):
         if self.uses_decoder and not self.paraphraser.training:
             self.paraphraser.train()
-        self.paraphraser(info_dict[self.input_module_path]['output'])
+        self.paraphraser(io_dict[self.input_module_path]['output'])
 
     def post_process(self, *args, **kwargs):
         save_module_ckpt(self.paraphraser, self.ckpt_file_path)
@@ -166,8 +166,8 @@ class Student4FactorTransfer(SpecialModule):
     def forward(self, *args):
         return self.student_model(*args)
 
-    def post_forward(self, info_dict):
-        self.translator(info_dict[self.input_module_path]['output'])
+    def post_forward(self, io_dict):
+        self.translator(io_dict[self.input_module_path]['output'])
 
 
 @register_special_module
@@ -197,9 +197,9 @@ class Connector4DAB(SpecialModule):
     def forward(self, x):
         return self.student_model(x)
 
-    def post_forward(self, info_dict):
+    def post_forward(self, io_dict):
         for connector_key, io_type, module_path in self.io_path_pairs:
-            self.connector_dict[connector_key](info_dict[module_path][io_type])
+            self.connector_dict[connector_key](io_dict[module_path][io_type])
 
 
 class Regressor4VID(nn.Module):
@@ -244,9 +244,9 @@ class VariationalDistributor4VID(SpecialModule):
     def forward(self, x):
         return self.student_model(x)
 
-    def post_forward(self, info_dict):
+    def post_forward(self, io_dict):
         for regressor_key, io_type, module_path in self.io_path_pairs:
-            self.regressor_dict[regressor_key](info_dict[module_path][io_type])
+            self.regressor_dict[regressor_key](io_dict[module_path][io_type])
 
 
 @register_special_module
@@ -275,8 +275,8 @@ class Linear4CCKD(SpecialModule):
                 return self.model(x)
         return self.model(x)
 
-    def post_forward(self, info_dict):
-        flat_outputs = torch.flatten(info_dict[self.input_module_path][self.input_module_io], 1)
+    def post_forward(self, io_dict):
+        flat_outputs = torch.flatten(io_dict[self.input_module_path][self.input_module_io], 1)
         self.linear(flat_outputs)
 
 
@@ -315,15 +315,15 @@ class Linear4CRD(SpecialModule):
         self.normalizer = wrap_if_distributed(Normalizer4CRD(linear, power=power), device, device_ids, distributed)
 
     def forward(self, x, supp_dict):
-        # supp_dict is given to be hooked and stored in info_dict
+        # supp_dict is given to be hooked and stored in io_dict
         self.empty(supp_dict)
         if self.is_teacher:
             with torch.no_grad():
                 return self.model(x)
         return self.model(x)
 
-    def post_forward(self, info_dict):
-        flat_outputs = torch.flatten(info_dict[self.input_module_path]['output'], 1)
+    def post_forward(self, io_dict):
+        flat_outputs = torch.flatten(io_dict[self.input_module_path]['output'], 1)
         self.normalizer(flat_outputs)
 
 
@@ -385,8 +385,8 @@ class SSWrapper4SSKD(SpecialModule):
                 return self.model(x)
         return self.model(x)
 
-    def post_forward(self, info_dict):
-        flat_outputs = torch.flatten(info_dict[self.input_module_path][self.input_module_io], 1)
+    def post_forward(self, io_dict):
+        flat_outputs = torch.flatten(io_dict[self.input_module_path][self.input_module_io], 1)
         self.ss_module(flat_outputs)
 
     def post_process(self, *args, **kwargs):
@@ -418,8 +418,8 @@ class VarianceBranch4PAD(SpecialModule):
     def forward(self, x):
         return self.student_model(x)
 
-    def post_forward(self, info_dict):
-        embed_outputs = info_dict[self.input_module_path][self.input_module_io].flatten(1)
+    def post_forward(self, io_dict):
+        embed_outputs = io_dict[self.input_module_path][self.input_module_io].flatten(1)
         self.var_estimator(embed_outputs)
 
     def post_process(self, *args, **kwargs):
