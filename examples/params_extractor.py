@@ -2,7 +2,7 @@ import argparse
 
 import torch
 
-from kdkit.common.file_util import check_if_exists, make_parent_dirs
+from torchdistill.common.file_util import check_if_exists, make_parent_dirs
 
 
 def get_argparser():

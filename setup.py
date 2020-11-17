@@ -6,12 +6,12 @@ with open('README.md', 'r') as f:
 
 
 setup(
-    name='kdkit',
+    name='torchdistill',
     version='0.0.1',
     description='A unified knowledge distillation framework.',
     long_description=long_description,
     long_description_content_type='text/markdown',
-    url='https://github.com/yoshitomo-matsubara/kdkit',
+    url='https://github.com/yoshitomo-matsubara/torchdistill',
     packages=find_packages(exclude=('tests', 'examples', 'config')),
     python_requires='>=3.6',
     install_requires=[
