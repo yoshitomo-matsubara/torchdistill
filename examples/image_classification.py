@@ -9,15 +9,15 @@ from torch.backends import cudnn
 from torch.nn import DataParallel
 from torch.nn.parallel import DistributedDataParallel
 
-from kdkit.common import file_util, yaml_util, module_util
-from kdkit.common.constant import def_logger
-from kdkit.common.main_util import is_main_process, init_distributed_mode, load_ckpt, save_ckpt
-from kdkit.core.distillation import get_distillation_box
-from kdkit.datasets import util
-from kdkit.eval.classification import compute_accuracy
-from kdkit.misc.log import setup_log_file, SmoothedValue, MetricLogger
-from kdkit.models import MODEL_DICT
-from kdkit.models.official import get_image_classification_model
+from torchdistill.common import file_util, yaml_util, module_util
+from torchdistill.common.constant import def_logger
+from torchdistill.common.main_util import is_main_process, init_distributed_mode, load_ckpt, save_ckpt
+from torchdistill.core.distillation import get_distillation_box
+from torchdistill.datasets import util
+from torchdistill.eval.classification import compute_accuracy
+from torchdistill.misc.log import setup_log_file, SmoothedValue, MetricLogger
+from torchdistill.models import MODEL_DICT
+from torchdistill.models.official import get_image_classification_model
 
 logger = def_logger.getChild(__name__)
 

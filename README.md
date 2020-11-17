@@ -1,10 +1,10 @@
-# kdkit: A Unified Knowledge Distillation Framework for Reproducible Studies
+# torchdistill: A Modular, Configuration-Driven Framework for Knowledge Distillation
 
-***kdkit*** offers various knowledge distillation methods 
+***torchdistill*** (formerly *kdkit*) offers various knowledge distillation methods 
 and enables you to design (new) experiments simply by editing a yaml file instead of Python code. 
 Even when you need to extract intermediate representations in teacher/student models, 
 you will **NOT** need to reimplement the models, that often change the interface of the forward, 
-but instead specify the module path(s) in the yaml file.
+but instead specify the module path(s) in the yaml file.  
 
 ## Top-1 validation accuracy for ILSVRC 2012 (ImageNet)
 | T: ResNet-34\*  | Pretrained | KD    | AT    | FT       | CRD   | Tf-KD | SSKD  | L2    | PAD-L2    |  
@@ -23,8 +23,8 @@ Example codes for image classification, object detection and semantic segmentati
 - Python 3.6 >=
 - pipenv (optional)
 ```
-git clone https://github.com/yoshitomo-matsubara/kdkit.git
-cd kdkit/
+git clone https://github.com/yoshitomo-matsubara/torchdistill.git
+cd torchdistill/
 pipenv install "-e ."
 ```
 If you do not wish to use pipenv (a virtual environment), install the packages listed in [Pipfile](Pipfile).
