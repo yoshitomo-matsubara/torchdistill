@@ -1,6 +1,6 @@
 # torchdistill: A Modular, Configuration-Driven Framework for Knowledge Distillation
 
-***torchdistill*** offers various knowledge distillation methods 
+***torchdistill*** (formerly *kdkit*)offers various knowledge distillation methods 
 and enables you to design (new) experiments simply by editing a yaml file instead of Python code. 
 Even when you need to extract intermediate representations in teacher/student models, 
 you will **NOT** need to reimplement the models, that often change the interface of the forward, 
