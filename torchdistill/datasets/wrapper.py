@@ -106,11 +106,12 @@ class SSKDDatasetWrapper(BaseDatasetWrapper):
         org_dataset.transform = None
 
     def __getitem__(self, index):
+        # Assume sample is a PIL Image
         sample, target, supp_dict = super().__getitem__(index)
-        sample = torch.stack([torch.rot90(self.transform(sample), k=0, dims=(1, 2)).detach(),
-                              torch.rot90(self.transform(sample), k=1, dims=(1, 2)).detach(),
-                              torch.rot90(self.transform(sample), k=2, dims=(1, 2)).detach(),
-                              torch.rot90(self.transform(sample), k=3, dims=(1, 2)).detach()])
+        sample = torch.stack([self.transform(sample).detach(),
+                              self.transform(sample.rotate(90, expand=True)).detach(),
+                              self.transform(sample.rotate(180, expand=True)).detach(),
+                              self.transform(sample.rotate(270, expand=True)).detach()])
         return sample, target, supp_dict
 
 
