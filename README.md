@@ -22,12 +22,18 @@ Example codes for image classification, object detection and semantic segmentati
 ## How to setup
 - Python 3.6 >=
 - pipenv (optional)
+
+### Install by pip
+```
+pip3 install torchdistill
+```
+
+### Install from this repository 
 ```
 git clone https://github.com/yoshitomo-matsubara/torchdistill.git
 cd torchdistill/
 pipenv install "-e ."
 ```
-If you do not wish to use pipenv (a virtual environment), install the packages listed in [Pipfile](Pipfile).
 
 
 ## Forward hook manager
