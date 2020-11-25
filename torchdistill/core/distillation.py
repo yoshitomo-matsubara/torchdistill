@@ -2,6 +2,7 @@ import copy
 import sys
 
 import torch
+from torch import distributed as dist
 from torch import nn
 
 from torchdistill.common.constant import def_logger
@@ -274,6 +275,8 @@ class DistillationBox(nn.Module):
             self.teacher_model.post_process()
         if isinstance(self.student_model, SpecialModule):
             self.student_model.post_process()
+        if self.distributed:
+            dist.barrier()
 
     def clean_modules(self):
         unfreeze_module_params(self.org_teacher_model)
