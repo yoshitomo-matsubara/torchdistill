@@ -3,6 +3,8 @@ language: python
 os:
   - linux
 
+dist: bionic
+
 cache:
   pip: true
   directories: $HOME/.cache/
