@@ -23,6 +23,7 @@
 | S: ResNet-18\*  | 69.76      | 71.37 | 70.90 | 70.45  | 70.93 | 70.52 | 70.09 | 71.08 | 71.71     |  
 
 ### Checkpoints
+[imagenet.zip](https://github.com/yoshitomo-matsubara/torchdistill/releases/download/v0.0.1/imagenet.zip)
 
 ### Command
 #### Knowledge Distillation
