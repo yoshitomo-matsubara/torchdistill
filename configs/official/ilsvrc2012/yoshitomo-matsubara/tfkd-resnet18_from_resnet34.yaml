@@ -1,0 +1,111 @@
+datasets:
+  ilsvrc2012:
+    name: &dataset_name 'ilsvrc2012'
+    type: 'ImageFolder'
+    root: &root_dir !join ['~/dataset/', *dataset_name]
+    splits:
+      train:
+        dataset_id: &imagenet_train !join [*dataset_name, '/train']
+        params:
+          root: !join [*root_dir, '/train']
+          transform_params:
+            - type: 'RandomResizedCrop'
+              params:
+                size: &input_size [224, 224]
+            - type: 'RandomHorizontalFlip'
+              params:
+                p: 0.5
+            - &totensor
+              type: 'ToTensor'
+              params:
+            - &normalize
+              type: 'Normalize'
+              params:
+                mean: [0.485, 0.456, 0.406]
+                std: [0.229, 0.224, 0.225]
+      val:
+        dataset_id: &imagenet_val !join [*dataset_name, '/val']
+        params:
+          root: !join [*root_dir, '/val']
+          transform_params:
+            - type: 'Resize'
+              params:
+                size: 256
+            - type: 'CenterCrop'
+              params:
+                size: *input_size
+            - *totensor
+            - *normalize
+
+models:
+  teacher_model:
+    name: &teacher_model_name 'resnet18'
+    params:
+      num_classes: 1000
+      pretrained: True
+    experiment: &teacher_experiment !join [*dataset_name, '-', *teacher_model_name]
+    ckpt: !join ['./resource/ckpt/image_classification/teacher/', *teacher_experiment, '.pt']
+  student_model:
+    name: &student_model_name 'resnet18'
+    params:
+      num_classes: 1000
+      pretrained: False
+    experiment: &student_experiment !join [*dataset_name, '-', *student_model_name, '_from_', *teacher_model_name]
+    ckpt: !join ['./imagenet/tfkd/', *student_experiment, '.pt']
+
+train:
+  log_freq: 1000
+  num_epochs: 90
+  train_data_loader:
+    dataset_id: *imagenet_train
+    random_sample: True
+    batch_size: 256
+    num_workers: 16
+    cache_output:
+  val_data_loader:
+    dataset_id: *imagenet_val
+    random_sample: False
+    batch_size: 128
+    num_workers: 16
+  teacher:
+    sequential: []
+    wrapper: 'DistributedDataParallel'
+    requires_grad: False
+  student:
+    adaptations:
+    sequential: []
+    wrapper: 'DistributedDataParallel'
+    requires_grad: True
+    frozen_modules: []
+  apex:
+    requires: False
+    opt_level: '01'
+  optimizer:
+    type: 'SGD'
+    params:
+      lr: 0.1
+      momentum: 0.9
+      weight_decay: 0.0001
+  scheduler:
+    type: 'MultiStepLR'
+    params:
+      milestones: [30, 60, 80]
+      gamma: 0.1
+  criterion:
+    type: 'GeneralizedCustomLoss'
+    org_term:
+      criterion:
+        type: 'KDLoss'
+        params:
+          temperature: 1.0
+          alpha: 0.9
+          reduction: 'batchmean'
+      factor: 1.0
+    sub_terms:
+
+test:
+  test_data_loader:
+    dataset_id: *imagenet_val
+    random_sample: False
+    batch_size: 1
+    num_workers: 16

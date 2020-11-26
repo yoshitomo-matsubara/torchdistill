@@ -18,16 +18,35 @@ For the 2nd row (S: ResNet-18), the checkpoint (trained weights), configuration 
 and the configurations reuse the hyperparameters such as number of epochs used in the original work except for KD.
 Example codes for image classification, object detection and semantic segmentation are available in [examples/](examples/).
 
+## Citation
+```bibtex
+@article{matsubara2020kdkit,
+  title={torchdistill: A Modular, Configuration-Driven Framework for Knowledge Distillation},
+  author={Matsubara, Yoshitomo},
+  year={2020}
+  eprint={2011.12913},
+  archivePrefix={arXiv},
+  primaryClass={cs.LG}
+}
+```
 
 ## How to setup
 - Python 3.6 >=
 - pipenv (optional)
+
+### Install by pip/pipenv
+```
+pip3 install torchdistill
+# or use pipenv
+pipenv install torchdistill
+```
+
+### Install from this repository 
 ```
 git clone https://github.com/yoshitomo-matsubara/torchdistill.git
 cd torchdistill/
 pipenv install "-e ."
 ```
-If you do not wish to use pipenv (a virtual environment), install the packages listed in [Pipfile](Pipfile).
 
 
 ## Forward hook manager
