@@ -19,9 +19,9 @@ and the configurations reuse the hyperparameters such as number of epochs used i
 Example codes for image classification, object detection and semantic segmentation are available in [examples/](examples/).
 
 ## Citation
-[Preprint](https://arxiv.org/abs/2011.12913)  
+[[Preprint]](https://arxiv.org/abs/2011.12913)  
 ```bibtex
-@article{matsubara2020kdkit,
+@article{matsubara2020torchdistill,
   title={torchdistill: A Modular, Configuration-Driven Framework for Knowledge Distillation},
   author={Matsubara, Yoshitomo},
   year={2020}
