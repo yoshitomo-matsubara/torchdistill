@@ -7,6 +7,10 @@ Even when you need to extract intermediate representations in teacher/student mo
 you will **NOT** need to reimplement the models, that often change the interface of the forward, 
 but instead specify the module path(s) in the yaml file.  
 
+## Forward hook manager
+Using **ForwardHookManager**, you can extract intermediate representations in model without modifying the interface of its forward function.  
+[This example notebook](demo/extract_intermediate_representations.ipynb) will give you a better idea of the usage.
+
 ## Top-1 validation accuracy for ILSVRC 2012 (ImageNet)
 | T: ResNet-34\*  | Pretrained | KD    | AT    | FT       | CRD   | Tf-KD | SSKD  | L2    | PAD-L2    |  
 | :---            | ---:       | ---:  | ---:  | ---:     | ---:  | ---:  | ---:  | ---:  | ---:      |  
@@ -47,14 +51,10 @@ pipenv install torchdistill
 ```
 git clone https://github.com/yoshitomo-matsubara/torchdistill.git
 cd torchdistill/
+pip3 install -e .
+# or use pipenv
 pipenv install "-e ."
 ```
-
-
-## Forward hook manager
-Using **ForwardHookManager**, you can extract intermediate representations in model without 
-modifying the interface of its forward function.  
-[This example notebook](demo/extract_intermediate_representations.ipynb) will give you a better idea of the usage.
 
 
 ## Issues / Contact
