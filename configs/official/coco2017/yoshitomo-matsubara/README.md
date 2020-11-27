@@ -12,10 +12,6 @@
 ```
 
 ## Configuration
-### Models
-- Teacher: Faster R-CNN with ResNet-50 and FPN (Pretrained)
-- Student: Faster R-CNN with Bottleneck-injected ResNet-50 and FPN
-
 ### Reported Results
 #### Validation mAP (0.5:0.95) of student model on COCO 2017
 | T: Faster R-CNN with ResNet-50 and FPN                      | GHND (BBox)  |  
@@ -28,6 +24,10 @@
 
 ### Checkpoints
 [coco.zip](https://github.com/yoshitomo-matsubara/torchdistill/releases/download/v0.0.1/coco.zip)
+
+### Models
+- Teacher: Faster R-CNN with ResNet-50 and FPN (Pretrained)
+- Student: Faster R-CNN with Bottleneck-injected ResNet-50 and FPN
 
 ### Command
 #### Generalized Head Network Distillation
