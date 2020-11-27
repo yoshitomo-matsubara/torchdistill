@@ -1,5 +1,6 @@
 # 1. torchdistill: A Modular, Configuration-Driven Framework for Knowledge Distillation
 ## Citation
+[[Preprint](https://arxiv.org/abs/2011.12913)]  
 ```bibtex
 @article{matsubara2020torchdistill,
   title={torchdistill: A Modular, Configuration-Driven Framework for Knowledge Distillation},
@@ -57,6 +58,10 @@ python3 examples/image_classification.py --config configs/official/ilsvrc2012/cs
 ```
 
 #### PAD-L2 (2nd stage)
+Note that you first need to train a model with L2 (CSE + L2), and load the ckpt file designated in the following yaml file.  
+i.e., PAD-L2 is a two-stage training method.
 ```
 python3 examples/image_classification.py --config configs/official/ilsvrc2012/pad_l2-resnet18_from_resnet34.yaml -test_only
 ```
+Multi-stage methods can be defined in one yaml file like [this](configs/sample/image_classification/multi_stage/pad/), 
+but you should modify the hyperparameters like number of epochs, lr scheduler, and so on.
