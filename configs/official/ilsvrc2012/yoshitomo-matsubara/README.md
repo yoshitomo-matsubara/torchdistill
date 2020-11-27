@@ -1,5 +1,6 @@
 # 1. torchdistill: A Modular, Configuration-Driven Framework for Knowledge Distillation
 ## Citation
+[[Preprint](https://arxiv.org/abs/2011.12913)]  
 ```bibtex
 @article{matsubara2020torchdistill,
   title={torchdistill: A Modular, Configuration-Driven Framework for Knowledge Distillation},
