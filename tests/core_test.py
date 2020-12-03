@@ -48,4 +48,4 @@ class ForwardHookManagerUnitTest(TestCase):
         assert 'output' in io_dict[target_module_path]
         hooked_y = io_dict[target_module_path]['output']
         assert torch.equal(y, hooked_y)
-        assert len(fhm.io_dict[target_module_path]) == 0
+        assert len(fhm.io_dict[target_module_path]['output']) == 0
