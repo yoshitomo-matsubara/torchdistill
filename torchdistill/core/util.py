@@ -85,16 +85,23 @@ def tensor2numpy2tensor(data, device):
 
 
 def extract_io_dict(model_io_dict, target_device):
-    uses_cuda = target_device.type.startswith('cuda')
+    uses_cuda = target_device.type == 'cuda'
     gathered_io_dict = dict()
     for module_path, module_io_dict in model_io_dict.items():
         gathered_io_dict[module_path] = dict()
         for io_type in list(module_io_dict.keys()):
             sub_dict = module_io_dict.pop(io_type)
             values = [sub_dict[key] for key in sorted(sub_dict.keys())]
-            gathered_obj = gather(values, target_device) if uses_cuda else values[-1]
+            gathered_obj = gather(values, target_device) if uses_cuda and len(values) > 1 else values[-1]
             gathered_io_dict[module_path][io_type] = gathered_obj
     return gathered_io_dict
+
+
+def update_io_dict(main_io_dict, new_io_dict):
+    for key, module_io_dict in new_io_dict.items():
+        for io_type, value in module_io_dict.items():
+            if len(value) > 0:
+                main_io_dict[key][io_type] = value
 
 
 def extract_sub_model_output_dict(model_output_dict, index):
