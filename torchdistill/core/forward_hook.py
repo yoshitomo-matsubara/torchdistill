@@ -116,6 +116,16 @@ class ForwardHookManager(object):
                 gathered_io_dict[module_path][io_type] = gathered_obj
         return gathered_io_dict
 
+    def pop_io_dict_from_device(self, device):
+        device_io_dict = dict()
+        device_key = device.index if device.type == 'cuda' else device.type
+        for module_path, module_io_dict in self.io_dict.items():
+            device_io_dict[module_path] = dict()
+            for io_type in list(module_io_dict.keys()):
+                sub_dict = module_io_dict[io_type]
+                device_io_dict[module_path][io_type] = sub_dict.pop(device_key)
+        return device_io_dict
+
     def change_target_device(self, target_device):
         if self.target_device.type != target_device.type:
             for sub_dict in self.io_dict.values():
