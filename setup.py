@@ -4,11 +4,12 @@ from setuptools import setup, find_packages
 with open('README.md', 'r') as f:
     long_description = f.read()
 
-
+description = 'A Modular, Configuration-Driven Framework for Knowledge Distillation. ' \
+              'Trained models, training logs and configurations are available for ensuring the reproducibiliy.'
 setup(
     name='torchdistill',
-    version='0.0.1',
-    description='A unified knowledge distillation framework.',
+    version='0.0.2',
+    description=description,
     long_description=long_description,
     long_description_content_type='text/markdown',
     url='https://github.com/yoshitomo-matsubara/torchdistill',

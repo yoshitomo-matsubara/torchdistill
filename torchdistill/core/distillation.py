@@ -11,7 +11,7 @@ from torchdistill.common.func_util import get_optimizer, get_scheduler
 from torchdistill.common.module_util import check_if_wrapped, freeze_module_params, get_module, unfreeze_module_params
 from torchdistill.core.forward_proc import get_forward_proc_func
 from torchdistill.core.util import set_hooks, wrap_model, change_device, tensor2numpy2tensor, extract_io_dict, \
-    extract_sub_model_output_dict
+    update_io_dict, extract_sub_model_output_dict
 from torchdistill.datasets.util import build_data_loaders
 from torchdistill.losses.custom import get_custom_loss
 from torchdistill.losses.single import KDLoss, get_single_loss
@@ -227,10 +227,11 @@ class DistillationBox(nn.Module):
         # Deep copy of teacher info dict if teacher special module contains trainable module(s)
         teacher_io_dict4cache = copy.deepcopy(self.teacher_io_dict) \
             if self.teacher_updatable and isinstance(cache_file_paths, (list, tuple)) is not None else None
-        if isinstance(self.teacher_model, SpecialModule):
-            self.teacher_model.post_forward(self.teacher_io_dict)
-
         extracted_teacher_io_dict = extract_io_dict(self.teacher_io_dict, self.device)
+        if isinstance(self.teacher_model, SpecialModule):
+            self.teacher_model.post_forward(extracted_teacher_io_dict)
+
+        update_io_dict(extracted_teacher_io_dict, extract_io_dict(self.teacher_io_dict, self.device))
         # Write cache files if output file paths (cache_file_paths) are given
         if isinstance(cache_file_paths, (list, tuple)):
             if teacher_io_dict4cache is None:
@@ -249,13 +250,15 @@ class DistillationBox(nn.Module):
         teacher_outputs, extracted_teacher_io_dict =\
             self.get_teacher_output(sample_batch, targets, supp_dict=supp_dict)
         student_outputs = self.student_forward_proc(self.student_model, sample_batch, targets, supp_dict)
+        extracted_student_io_dict = extract_io_dict(self.student_io_dict, self.device)
         if isinstance(self.student_model, SpecialModule):
-            self.student_model.post_forward(self.student_io_dict)
+            self.student_model.post_forward(extracted_student_io_dict)
 
         org_loss_dict = self.extract_org_loss(self.org_criterion, student_outputs, teacher_outputs, targets,
                                               uses_teacher_output=self.uses_teacher_output, supp_dict=supp_dict)
+        update_io_dict(extracted_student_io_dict, extract_io_dict(self.student_io_dict, self.device))
         output_dict = {'teacher': extracted_teacher_io_dict,
-                       'student': extract_io_dict(self.student_io_dict, self.device)}
+                       'student': extracted_student_io_dict}
         total_loss = self.criterion(output_dict, org_loss_dict, targets)
         return total_loss
 
