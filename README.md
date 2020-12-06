@@ -1,5 +1,5 @@
 # torchdistill: A Modular, Configuration-Driven Framework for Knowledge Distillation
-[![Build Status](https://travis-ci.com/yoshitomo-matsubara/torchdistill.svg?branch=master)](https://travis-ci.com/github/yoshitomo-matsubara/torchdistill) 
+[![PyPI version](https://badge.fury.io/py/torchdistill.svg)](https://badge.fury.io/py/torchdistill) [![Build Status](https://travis-ci.com/yoshitomo-matsubara/torchdistill.svg?branch=master)](https://travis-ci.com/github/yoshitomo-matsubara/torchdistill) 
 
 ***torchdistill*** (formerly *kdkit*) offers various knowledge distillation methods 
 and enables you to design (new) experiments simply by editing a yaml file instead of Python code. 
