@@ -63,5 +63,5 @@ i.e., PAD-L2 is a two-stage training method.
 ```
 python3 examples/image_classification.py --config configs/official/ilsvrc2012/pad_l2-resnet18_from_resnet34.yaml -test_only
 ```
-Multi-stage methods can be defined in one yaml file like [this](configs/sample/image_classification/multi_stage/pad/), 
+Multi-stage methods can be defined in one yaml file like [this](https://github.com/yoshitomo-matsubara/torchdistill/blob/master/configs/sample/image_classification/multi_stage/pad), 
 but you should modify the hyperparameters like number of epochs, lr scheduler, and so on.
