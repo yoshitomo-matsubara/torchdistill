@@ -11,6 +11,9 @@ from torchdistill.models.registry import register_model_class, register_model_fu
 
 @register_model_class
 class Bottleneck4DenseNets(BottleneckBase):
+    """
+    Head Network Distillation: Splitting Distilled Deep Neural Networks for Resource-constrained Edge Computing Systems
+    """
     def __init__(self, bottleneck_channel=12, bottleneck_idx=7, compressor=None, decompressor=None):
         modules = [
             nn.Conv2d(3, 64, kernel_size=7, stride=2, padding=3, bias=False),
