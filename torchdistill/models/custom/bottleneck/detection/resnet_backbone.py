@@ -8,6 +8,9 @@ from torchdistill.models.custom.bottleneck.processor import get_bottleneck_proce
 
 
 class Bottleneck4SmallResNet(BottleneckBase):
+    """
+    Neural Compression and Filtering for Edge-assisted Real-time Object Detection in Challenged Networks
+    """
     def __init__(self, bottleneck_channel, compressor=None, decompressor=None):
         encoder = nn.Sequential(
             nn.Conv2d(64, 64, kernel_size=2, padding=1, bias=False),
@@ -37,6 +40,9 @@ class Bottleneck4SmallResNet(BottleneckBase):
 
 
 class Bottleneck4LargeResNet(BottleneckBase):
+    """
+    Neural Compression and Filtering for Edge-assisted Real-time Object Detection in Challenged Networks
+    """
     def __init__(self, bottleneck_channel, compressor=None, decompressor=None):
         encoder = nn.Sequential(
             nn.Conv2d(64, 64, kernel_size=2, padding=1, bias=False),
