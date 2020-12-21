@@ -2,7 +2,7 @@ datasets:
   ilsvrc2012:
     name: &dataset_name 'ilsvrc2012'
     type: 'ImageFolder'
-    root: &root_dir !join ['~/dataset/', *dataset_name]
+    root: &root_dir !join ['./resource/dataset/', *dataset_name]
     splits:
       train:
         dataset_id: &imagenet_train !join [*dataset_name, '/train']
@@ -39,7 +39,7 @@ datasets:
 
 models:
   teacher_model:
-    name: &teacher_model_name 'resnet34'
+    name: &teacher_model_name 'resnet50'
     params:
       num_classes: 1000
       pretrained: True
@@ -49,39 +49,75 @@ models:
     name: &student_model_name 'resnet18'
     params:
       num_classes: 1000
-      pretrained: False
+      pretrained: True
     experiment: &student_experiment !join [*dataset_name, '-', *student_model_name, '_from_', *teacher_model_name]
-    ckpt: !join ['./imagenet/at/', *student_experiment, '.pt']
+    ckpt: !join ['./resource/ckpt/ilsvrc2012/single_stage/vid/', *student_experiment, '.pt']
 
 train:
   log_freq: 1000
-  num_epochs: 100
+  num_epochs: 20
   train_data_loader:
     dataset_id: *imagenet_train
     random_sample: True
-    batch_size: 256
+    batch_size: 32
     num_workers: 16
     cache_output:
   val_data_loader:
     dataset_id: *imagenet_val
     random_sample: False
-    batch_size: 128
+    batch_size: 32
     num_workers: 16
   teacher:
     sequential: []
     forward_hook:
       input: []
-      output: ['layer3', 'layer4']
+      output: ['layer1', 'layer2', 'layer3', 'layer4']
     wrapper: 'DistributedDataParallel'
     requires_grad: False
   student:
     adaptations:
     sequential: []
+    special:
+      type: 'VariationalDistributor4VID'
+      params:
+        regressors:
+          regressor1:
+            io: 'output'
+            path: 'student_model.layer1'
+            in_channels: 64
+            middle_channels: &och1 256
+            out_channels: *och1
+            eps: 0.00001
+            init_pred_var: 5.0
+          regressor2:
+            io: 'output'
+            path: 'student_model.layer2'
+            in_channels: 128
+            middle_channels: &och2 512
+            out_channels: *och2
+            eps: 0.00001
+            init_pred_var: 5.0
+          regressor3:
+            io: 'output'
+            path: 'student_model.layer3'
+            in_channels: 256
+            middle_channels: &och3 1024
+            out_channels: *och3
+            eps: 0.00001
+            init_pred_var: 5.0
+          regressor4:
+            io: 'output'
+            path: 'student_model.layer4'
+            in_channels: 512
+            middle_channels: &och4 2048
+            out_channels: *och4
+            eps: 0.00001
+            init_pred_var: 5.0
     frozen_modules: []
     forward_hook:
       input: []
-      output: ['layer3', 'layer4']
-    wrapper: 'DistributedDataParallel'
+      output: ['student_model.layer1', 'student_model.layer2', 'student_model.layer3', 'student_model.layer4', 'regressor_dict.regressor1', 'regressor_dict.regressor2', 'regressor_dict.regressor3', 'regressor_dict.regressor4']
+    wrapper:
     requires_grad: True
   apex:
     requires: False
@@ -89,46 +125,64 @@ train:
   optimizer:
     type: 'SGD'
     params:
-      lr: 0.1
+      lr: 0.0001
       momentum: 0.9
       weight_decay: 0.0001
   scheduler:
     type: 'MultiStepLR'
     params:
-      milestones: [30, 60, 90]
+      milestones: [5, 10]
       gamma: 0.1
   criterion:
     type: 'GeneralizedCustomLoss'
     org_term:
       criterion:
-        type: 'CrossEntropyLoss'
+        type: 'KDLoss'
         params:
-          reduction: 'mean'
+          temperature: 1.0
+          alpha: 1.0
+          reduction: 'batchmean'
       factor: 1.0
     sub_terms:
-      at_loss:
+      vid:
         criterion:
-          type: 'ATLoss'
+          type: 'VIDLoss'
           params:
-            at_pairs:
+            feature_pairs:
               pair1:
                 teacher:
                   io: 'output'
-                  path: 'layer3'
+                  path: 'layer1'
                 student:
                   io: 'output'
-                  path: 'layer3'
+                  path: 'regressor_dict.regressor1'
                 factor: 1
               pair2:
                 teacher:
                   io: 'output'
+                  path: 'layer2'
+                student:
+                  io: 'output'
+                  path: 'regressor_dict.regressor2'
+                factor: 1
+              pair3:
+                teacher:
+                  io: 'output'
+                  path: 'layer3'
+                student:
+                  io: 'output'
+                  path: 'regressor_dict.regressor3'
+                factor: 1
+              pair4:
+                teacher:
+                  io: 'output'
                   path: 'layer4'
                 student:
                   io: 'output'
-                  path: 'layer4'
+                  path: 'regressor_dict.regressor4'
                 factor: 1
-            mode: 'code'
-        factor: 1000.0
+            margin: 1.0
+        factor: 1.0
 
 test:
   test_data_loader:
