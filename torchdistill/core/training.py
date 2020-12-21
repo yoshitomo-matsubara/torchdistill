@@ -48,7 +48,7 @@ class TrainingBox(nn.Module):
             if special_model is not None:
                 ref_model = special_model
                 model_type = type(ref_model).__name__
-            self.model = redesign_model(ref_model, model_config, 'single', model_type)
+            self.model = redesign_model(ref_model, model_config, 'student', model_type)
 
         self.model_any_frozen = \
             len(model_config.get('frozen_modules', list())) > 0 or not model_config.get('requires_grad', True)
