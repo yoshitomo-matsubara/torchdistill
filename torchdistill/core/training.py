@@ -129,8 +129,7 @@ class TrainingBox(nn.Module):
                 amp.initialize(self.model, self.optimizer, opt_level=apex_config['opt_level'])
             self.apex = True
 
-    def __init__(self, model, dataset_dict,
-                 train_config, device, device_ids, distributed, lr_factor):
+    def __init__(self, model, dataset_dict, train_config, device, device_ids, distributed, lr_factor):
         super().__init__()
         self.org_model = model
         self.dataset_dict = dataset_dict
@@ -194,8 +193,7 @@ class TrainingBox(nn.Module):
 
 
 class MultiStagesTrainingBox(TrainingBox):
-    def __init__(self, model, data_loader_dict,
-                 train_config, device, device_ids, distributed, lr_factor):
+    def __init__(self, model, data_loader_dict, train_config, device, device_ids, distributed, lr_factor):
         stage1_config = train_config['stage1']
         super().__init__(model, data_loader_dict,
                          stage1_config, device, device_ids, distributed, lr_factor)
