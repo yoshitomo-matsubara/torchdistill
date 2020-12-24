@@ -44,7 +44,8 @@ def get_argparser():
 def load_model(model_config, device):
     model = get_semantic_segmentation_model(model_config)
     if model is None:
-        model = get_model(model_config['name'], **model_config['params'])
+        repo_or_dir = model_config.get('repo_or_dir', None)
+        model = get_model(model_config['name'], repo_or_dir, **model_config['params'])
 
     ckpt_file_path = model_config['ckpt']
     load_ckpt(ckpt_file_path, model=model, strict=True)
