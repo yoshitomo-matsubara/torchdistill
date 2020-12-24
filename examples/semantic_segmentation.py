@@ -18,8 +18,8 @@ from torchdistill.core.training import get_training_box
 from torchdistill.datasets import util
 from torchdistill.eval.coco import SegEvaluator
 from torchdistill.misc.log import setup_log_file, SmoothedValue, MetricLogger
-from torchdistill.models import MODEL_DICT
 from torchdistill.models.official import get_semantic_segmentation_model
+from torchdistill.models.registry import get_model
 
 logger = def_logger.getChild(__name__)
 
@@ -41,10 +41,10 @@ def get_argparser():
     return parser
 
 
-def get_model(model_config, device):
+def load_model(model_config, device):
     model = get_semantic_segmentation_model(model_config)
     if model is None:
-        model = MODEL_DICT[model_config['name']](**model_config['params'])
+        model = get_model(model_config['name'], **model_config['params'])
 
     ckpt_file_path = model_config['ckpt']
     load_ckpt(ckpt_file_path, model=model, strict=True)
@@ -159,11 +159,11 @@ def main(args):
     dataset_dict = util.get_all_dataset(config['datasets'])
     models_config = config['models']
     teacher_model_config = models_config.get('teacher_model', None)
-    teacher_model = get_model(teacher_model_config, device) if teacher_model_config is not None else None
+    teacher_model = load_model(teacher_model_config, device) if teacher_model_config is not None else None
     student_model_config =\
         models_config['student_model'] if 'student_model' in models_config else models_config['model']
     ckpt_file_path = student_model_config['ckpt']
-    student_model = get_model(student_model_config, device)
+    student_model = load_model(student_model_config, device)
     if not args.test_only:
         train(teacher_model, student_model, dataset_dict, ckpt_file_path, device, device_ids, distributed, config, args)
         student_model_without_ddp =\
