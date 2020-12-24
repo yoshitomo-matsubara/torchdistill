@@ -2,7 +2,7 @@ datasets:
   ilsvrc2012:
     name: &dataset_name 'ilsvrc2012'
     type: 'ImageFolder'
-    root: &root_dir !join ['~/dataset/', *dataset_name]
+    root: &root_dir !join ['./resource/dataset/', *dataset_name]
     splits:
       train:
         dataset_id: &imagenet_train !join [*dataset_name, '/train']
@@ -49,18 +49,18 @@ models:
     name: &student_model_name 'resnet18'
     params:
       num_classes: 1000
-      pretrained: False
+      pretrained: True
     experiment: &student_experiment !join [*dataset_name, '-', *student_model_name, '_from_', *teacher_model_name]
-    ckpt: !join ['./imagenet/pad/', *student_experiment, '.pt']
+    ckpt: !join ['./resource/ckpt/ilsvrc2012/multi_stage/pad/', *student_experiment, '.pt']
 
 train:
   log_freq: 1000
   stage1:
-    num_epochs: 30
+    num_epochs: 10
     train_data_loader:
       dataset_id: *imagenet_train
       random_sample: True
-      batch_size: 171
+      batch_size: 512
       num_workers: 16
       cache_output:
     val_data_loader:
@@ -68,13 +68,63 @@ train:
       random_sample: False
       batch_size: 256
       num_workers: 16
-    teacher:
+    teacher: &teacher
       sequential: []
       forward_hook:
         input: []
         output: ['avgpool']
       wrapper: 'DistributedDataParallel'
       requires_grad: False
+    student:
+      adaptations:
+      sequential: []
+      frozen_modules: []
+      forward_hook:
+        input: []
+        output: ['avgpool']
+      wrapper: 'DistributedDataParallel'
+      requires_grad: True
+    apex:
+      requires: False
+      opt_level: '01'
+    optimizer: &optimizer
+      type: 'SGD'
+      params:
+        lr: 0.0001
+        momentum: 0.9
+        weight_decay: 0.0001
+    scheduler: &scheduler
+      type: 'MultiStepLR'
+      params:
+        milestones: [5]
+        gamma: 0.1
+    criterion:
+      type: 'GeneralizedCustomLoss'
+      org_term:
+        criterion:
+          type: 'CrossEntropyLoss'
+          params:
+            reduction: 'mean'
+        factor: 1.0
+      sub_terms:
+        l2based:
+          criterion:
+            type: 'MSELoss'
+            params:
+              reduction: 'mean'
+          params:
+            input:
+              is_from_teacher: False
+              module_path: 'avgpool'
+              io: 'output'
+            target:
+              is_from_teacher: True
+              module_path: 'avgpool'
+              io: 'output'
+          factor: 1.0
+  stage2:
+    num_epochs: 10
+    teacher: *teacher
     student:
       adaptations:
       sequential: []
@@ -85,7 +135,7 @@ train:
             path: 'student_model.avgpool'
             io: 'output'
           feat_dim: 512
-          var_estimator_ckpt: !join ['./imagenet/pad/', *student_experiment, '_var_estimator.pt']
+          var_estimator_ckpt: !join ['./resource/ckpt/ilsvrc2012/multi_stage/pad/', *student_experiment, '_var_estimator.pt']
       frozen_modules: []
       forward_hook:
         input: []
@@ -95,17 +145,8 @@ train:
     apex:
       requires: False
       opt_level: '01'
-    optimizer: &optimizer
-      type: 'SGD'
-      params:
-        lr: 0.002
-        momentum: 0.9
-        weight_decay: 0.0001
-    scheduler: &scheduler
-      type: 'MultiStepLR'
-      params:
-        milestones: [30]
-        gamma: 0.1
+    optimizer: *optimizer
+    scheduler: *scheduler
     criterion:
       type: 'GeneralizedCustomLoss'
       org_term:

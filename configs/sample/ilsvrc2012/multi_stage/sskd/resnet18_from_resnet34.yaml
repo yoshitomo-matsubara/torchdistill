@@ -2,7 +2,7 @@ datasets:
   ilsvrc2012:
     name: &dataset_name 'ilsvrc2012'
     type: 'ImageFolder'
-    root: &root_dir !join ['~/dataset/', *dataset_name]
+    root: &root_dir !join ['./resource/dataset/', *dataset_name]
     splits:
       train:
         dataset_id: &imagenet_train !join [*dataset_name, '/train']
@@ -51,7 +51,7 @@ models:
       num_classes: 1000
       pretrained: False
     experiment: &student_experiment !join [*dataset_name, '-', *student_model_name, '_from_', *teacher_model_name]
-    ckpt: !join ['./imagenet/sskd/', *student_experiment, '.pt']
+    ckpt: !join ['./resource/ckpt/ilsvrc2012/multi_stage/sskd/', *student_experiment, '.pt']
 
 train:
   log_freq: 1000
@@ -60,7 +60,7 @@ train:
     train_data_loader:
       dataset_id: *imagenet_train
       random_sample: True
-      batch_size: 85
+      batch_size: 32
       num_workers: 16
       dataset_wrapper:
         name: 'SSKDDatasetWrapper'
@@ -81,7 +81,7 @@ train:
             io: 'output'
           feat_dim: &teacher4sskd_feat_dim 512
           freezes_ss_module: False
-          ss_module_ckpt: &teacher4sskd_ckpt !join ['./imagenet/sskd/', *student_experiment, '_teacher_ss_module.pt']
+          ss_module_ckpt: &teacher4sskd_ckpt !join ['./resource/ckpt/ilsvrc2012/multi_stage/sskd/', *student_experiment, '_teacher_ss_module.pt']
       forward_hook:
         input: []
         output: ['model.avgpool', 'ss_module']
@@ -155,7 +155,7 @@ train:
             io: 'output'
           feat_dim: 512
           freezes_ss_module: False
-          ss_module_ckpt: !join ['./imagenet/sskd/', *student_experiment, '_student_ss_module.pt']
+          ss_module_ckpt: !join ['./resource/ckpt/ilsvrc2012/multi_stage/sskd/', *student_experiment, '_student_ss_module.pt']
       forward_hook:
         input: []
         output: ['model.avgpool', 'model.fc', 'ss_module']

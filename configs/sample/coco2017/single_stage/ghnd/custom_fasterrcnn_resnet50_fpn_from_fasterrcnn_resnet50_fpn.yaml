@@ -2,7 +2,7 @@ datasets:
   coco2017:
     name: &dataset_name 'coco2017'
     type: 'cocodetect'
-    root: &root_dir !join ['~/dataset/', *dataset_name]
+    root: &root_dir !join ['./resource/dataset/', *dataset_name]
     splits:
       train:
         dataset_id: &coco_train !join [*dataset_name, '/train']
@@ -45,7 +45,7 @@ models:
             compressor:
             decompressor:
     experiment: &student_experiment !join [*dataset_name, '-', *student_model_name, '_from_', *teacher_model_name]
-    ckpt: !join ['./coco/ghnd/', *student_experiment, '.pt']
+    ckpt: !join ['./resource/ckpt/coco2017/single_stage/ghnd/', *student_experiment, '.pt']
 
 train:
   log_freq: 1000
@@ -53,7 +53,7 @@ train:
   train_data_loader:
     dataset_id: *coco_train
     random_sample: True
-    num_workers: 16
+    num_workers: 4
     batch_sampler:
       type: 'GroupedBatchSampler'
       params:
@@ -65,7 +65,7 @@ train:
     dataset_id: *coco_val
     random_sample: False
     batch_size: 1
-    num_workers: 16
+    num_workers: 4
     collate_fn: 'coco_collate_fn'
   teacher:
     forward_proc: 'forward_batch'
@@ -179,5 +179,5 @@ test:
     dataset_id: *coco_val
     random_sample: False
     batch_size: 1
-    num_workers: 16
+    num_workers: 4
     collate_fn: 'coco_collate_fn'

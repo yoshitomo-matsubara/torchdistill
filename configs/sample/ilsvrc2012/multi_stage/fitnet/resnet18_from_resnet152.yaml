@@ -2,7 +2,7 @@ datasets:
   ilsvrc2012:
     name: &dataset_name 'ilsvrc2012'
     type: 'ImageFolder'
-    root: &root_dir !join ['~/dataset/', *dataset_name]
+    root: &root_dir !join ['./resource/dataset/', *dataset_name]
     splits:
       train:
         dataset_id: &imagenet_train !join [*dataset_name, '/train']
@@ -39,7 +39,7 @@ datasets:
 
 models:
   teacher_model:
-    name: &teacher_model_name 'resnet34'
+    name: &teacher_model_name 'resnet152'
     params:
       num_classes: 1000
       pretrained: True
@@ -49,85 +49,119 @@ models:
     name: &student_model_name 'resnet18'
     params:
       num_classes: 1000
-      pretrained: False
+      pretrained: True
     experiment: &student_experiment !join [*dataset_name, '-', *student_model_name, '_from_', *teacher_model_name]
-    ckpt: !join ['./imagenet/pad/', *student_experiment, '.pt']
+    ckpt: !join ['./resource/ckpt/ilsvrc2012/multi_stage/fitnet/', *student_experiment, '.pt']
 
 train:
   log_freq: 1000
   stage1:
-    num_epochs: 30
+    num_epochs: 5
     train_data_loader:
       dataset_id: *imagenet_train
       random_sample: True
-      batch_size: 171
+      batch_size: 32
       num_workers: 16
       cache_output:
     val_data_loader:
       dataset_id: *imagenet_val
       random_sample: False
-      batch_size: 256
+      batch_size: 32
       num_workers: 16
     teacher:
-      sequential: []
+      sequential: ['conv1', 'relu', 'maxpool', 'layer1']
       forward_hook:
         input: []
-        output: ['avgpool']
+        output: ['layer1']
+      wrapper: 'DistributedDataParallel'
+      requires_grad: False
+    student:
+      adaptations:
+        convreg:
+          type: 'ConvReg'
+          params:
+            num_input_channels: 64
+            num_output_channels: 256
+            kernel_size: 1
+            stride: 1
+            padding: 0
+            uses_relu: True
+      sequential: ['conv1', 'relu', 'maxpool', 'layer1', '+convreg']
+      frozen_modules: []
+      forward_hook:
+        input: []
+        output: ['+convreg']
+      wrapper: 'DistributedDataParallel'
+      requires_grad: True
+    apex:
+      requires: False
+      opt_level: '01'
+    optimizer:
+      type: 'Adam'
+      params:
+        lr: 0.001
+    scheduler:
+      type: 'MultiStepLR'
+      params:
+        milestones: [3]
+        gamma: 0.1
+    criterion:
+      type: 'GeneralizedCustomLoss'
+      org_term:
+        factor: 0.0
+      sub_terms:
+        layer1:
+          criterion:
+            type: 'MSELoss'
+            params:
+              reduction: 'sum'
+          params:
+            input:
+              is_from_teacher: False
+              module_path: '+convreg'
+              io: 'output'
+            target:
+              is_from_teacher: True
+              module_path: 'layer1'
+              io: 'output'
+          factor: 1.0
+  stage2:
+    num_epochs: 15
+    teacher:
+      sequential: []
       wrapper: 'DistributedDataParallel'
       requires_grad: False
     student:
       adaptations:
       sequential: []
-      special:
-        type: 'VarianceBranch4PAD'
-        params:
-          input_module:
-            path: 'student_model.avgpool'
-            io: 'output'
-          feat_dim: 512
-          var_estimator_ckpt: !join ['./imagenet/pad/', *student_experiment, '_var_estimator.pt']
-      frozen_modules: []
-      forward_hook:
-        input: []
-        output: ['student_model.avgpool', 'var_estimator']
-      wrapper:
+      wrapper: 'DistributedDataParallel'
       requires_grad: True
+      frozen_modules: []
     apex:
       requires: False
       opt_level: '01'
-    optimizer: &optimizer
+    optimizer:
       type: 'SGD'
       params:
-        lr: 0.002
+        lr: 0.0001
         momentum: 0.9
-        weight_decay: 0.0001
-    scheduler: &scheduler
+        weight_decay: 0.0005
+    scheduler:
       type: 'MultiStepLR'
       params:
-        milestones: [30]
+        milestones: [5, 10]
         gamma: 0.1
     criterion:
       type: 'GeneralizedCustomLoss'
       org_term:
         criterion:
-          type: 'CrossEntropyLoss'
+          type: 'KDLoss'
           params:
-            reduction: 'mean'
+            temperature: 1.0
+            alpha: 0.5
+            reduction: 'batchmean'
         factor: 1.0
       sub_terms:
-        pad_l2:
-          criterion:
-            type: 'PADL2Loss'
-            params:
-              student_embed_module_path: 'student_model.avgpool'
-              student_embed_module_io: 'output'
-              teacher_embed_module_path: 'avgpool'
-              teacher_embed_module_io: 'output'
-              module_path: 'var_estimator'
-              module_io: 'output'
-              eps: 0.000001
-              reduction: 'mean'
-          factor: 1.0
 
 test:
   test_data_loader:

@@ -10,3 +10,11 @@ def register_model_class(cls):
 def register_model_func(func):
     MODEL_FUNC_DICT[func.__name__] = func
     return func
+
+
+def get_model(model_name, **kwargs):
+    if model_name in MODEL_CLASS_DICT:
+        return MODEL_CLASS_DICT[model_name](**kwargs)
+    elif model_name in MODEL_FUNC_DICT:
+        return MODEL_FUNC_DICT[model_name](**kwargs)
+    raise ValueError('model_name `{}` is not expected'.format(model_name))

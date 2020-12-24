@@ -2,7 +2,7 @@ datasets:
   ilsvrc2012:
     name: &dataset_name 'ilsvrc2012'
     type: 'ImageFolder'
-    root: &root_dir !join ['~/dataset/', *dataset_name]
+    root: &root_dir !join ['./resource/dataset/', *dataset_name]
     splits:
       train:
         dataset_id: &imagenet_train !join [*dataset_name, '/train']
@@ -39,69 +39,98 @@ datasets:
 
 models:
   teacher_model:
-    name: &teacher_model_name 'resnet34'
+    name: &teacher_model_name 'inception_v3'
     params:
       num_classes: 1000
       pretrained: True
     experiment: &teacher_experiment !join [*dataset_name, '-', *teacher_model_name]
     ckpt: !join ['./resource/ckpt/ilsvrc2012/teacher/', *teacher_experiment, '.pt']
   student_model:
-    name: &student_model_name 'resnet18'
+    name: &student_model_name 'custom_inception_v3'
     params:
+      bottleneck_channel: 12
+      bottleneck_idx: 7
+      compressor:
+      decompressor:
       num_classes: 1000
-      pretrained: False
+      pretrained: True
     experiment: &student_experiment !join [*dataset_name, '-', *student_model_name, '_from_', *teacher_model_name]
-    ckpt: !join ['./imagenet/kd/', *student_experiment, '.pt']
+    ckpt: !join ['./resource/ckpt/ilsvrc2012/single_stage/hnd/', *student_experiment, '.pt']
 
 train:
   log_freq: 1000
-  num_epochs: 100
+  num_epochs: 20
   train_data_loader:
     dataset_id: *imagenet_train
     random_sample: True
-    batch_size: 256
+    batch_size: 32
     num_workers: 16
     cache_output:
   val_data_loader:
     dataset_id: *imagenet_val
     random_sample: False
-    batch_size: 128
+    batch_size: 32
     num_workers: 16
   teacher:
-    sequential: []
+    adaptations:
+      maxpool1:
+        type: 'MaxPool2d'
+        params:
+          kernel_size: 3
+          stride: 2
+      maxpool2:
+        type: 'MaxPool2d'
+        params:
+          kernel_size: 3
+          stride: 2
+    sequential: ['Conv2d_1a_3x3', 'Conv2d_2a_3x3', 'Conv2d_2b_3x3', '+maxpool1', 'Conv2d_3b_1x1', 'Conv2d_4a_3x3', '+maxpool2']
+    frozen_modules: []
+    forward_hook:
+      input: []
+      output: ['+maxpool2']
     wrapper: 'DistributedDataParallel'
     requires_grad: False
   student:
     adaptations:
-    sequential: []
+    sequential: ['bottleneck']
+    frozen_modules: []
+    forward_hook:
+      input: []
+      output: ['bottleneck']
     wrapper: 'DistributedDataParallel'
     requires_grad: True
-    frozen_modules: []
   apex:
     requires: False
     opt_level: '01'
   optimizer:
-    type: 'SGD'
+    type: 'Adam'
     params:
-      lr: 0.1
-      momentum: 0.9
-      weight_decay: 0.0001
+      lr: 0.001
   scheduler:
     type: 'MultiStepLR'
     params:
-      milestones: [30, 60, 90]
+      milestones: [5, 10, 15]
       gamma: 0.1
   criterion:
     type: 'GeneralizedCustomLoss'
     org_term:
-      criterion:
-        type: 'KDLoss'
-        params:
-          temperature: 1.0
-          alpha: 0.5
-          reduction: 'batchmean'
-      factor: 1.0
+      factor: 0.0
     sub_terms:
+      maxpool2:
+        criterion:
+          type: 'MSELoss'
+          params:
+            reduction: 'sum'
+        params:
+          input:
+            is_from_teacher: False
+            module_path: 'bottleneck'
+            io: 'output'
+          target:
+            is_from_teacher: True
+            module_path: '+maxpool2'
+            io: 'output'
+        factor: 1.0
 
 test:
   test_data_loader:

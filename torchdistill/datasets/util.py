@@ -3,7 +3,6 @@ import time
 import torchvision
 from torch.utils.data import DataLoader, RandomSampler, SequentialSampler
 from torch.utils.data.distributed import DistributedSampler
-from torchvision import transforms
 from torchvision.datasets import PhotoTour, VOCDetection, Kinetics400, HMDB51, UCF101
 
 from torchdistill.common.constant import def_logger
@@ -53,7 +52,7 @@ def build_transform(transform_params_config, compose_cls=None):
 
             component = TRANSFORM_CLASS_DICT[component_config['type']](**params_config)
             component_list.append(component)
-    return transforms.Compose(component_list) if compose_cls is None else compose_cls(component_list)
+    return torchvision.transforms.Compose(component_list) if compose_cls is None else compose_cls(component_list)
 
 
 def get_official_dataset(dataset_cls, dataset_params_config):

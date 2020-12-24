@@ -70,7 +70,7 @@ class DistillationBox(nn.Module):
         self.teacher_any_frozen = \
             len(teacher_config.get('frozen_modules', list())) > 0 or not teacher_config.get('requires_grad', True)
         self.student_any_frozen = \
-            len(student_config.get('frozen_modules', list())) > 0 or not teacher_config.get('requires_grad', True)
+            len(student_config.get('frozen_modules', list())) > 0 or not student_config.get('requires_grad', True)
         self.target_teacher_pairs.extend(set_hooks(self.teacher_model, teacher_ref_model,
                                                    teacher_config, self.teacher_io_dict))
         self.target_student_pairs.extend(set_hooks(self.student_model, student_ref_model,
