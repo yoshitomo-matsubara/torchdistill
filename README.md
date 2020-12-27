@@ -23,7 +23,8 @@ Using **ForwardHookManager**, you can extract intermediate representations in mo
 For the 2nd row (S: ResNet-18), the checkpoint (trained weights), configuration and log files are [available](configs/official/ilsvrc2012/yoshitomo-matsubara/), 
 and the configurations reuse the hyperparameters such as number of epochs used in the original work except for KD.
 
-## [Examples](examples/)
+## Examples
+Executable code can be found in [examples/](examples/) such as
 - [Image classification](examples/image_classification.py): ImageNet (ILSVRC 2012), CIFAR-10, CIFAR-100, etc
 - [Object detection](examples/object_detection.py): COCO 2017, etc
 - [Semantic segmentation](examples/semantic_segmentation.py): COCO 2017, etc 
