@@ -1,7 +1,8 @@
 import time
 
+import torch
 import torchvision
-from torch.utils.data import DataLoader, RandomSampler, SequentialSampler
+from torch.utils.data import DataLoader, RandomSampler, SequentialSampler, random_split
 from torch.utils.data.distributed import DistributedSampler
 from torchvision.datasets import PhotoTour, VOCDetection, Kinetics400, HMDB51, UCF101
 
@@ -73,6 +74,35 @@ def get_official_dataset(dataset_cls, dataset_params_config):
     return dataset_cls(transform=transform, target_transform=target_transform, **params_config)
 
 
+def split_dataset(org_dataset, random_split_config, dataset_id, dataset_dict):
+    org_dataset_length = len(org_dataset)
+    logger.info('Splitting `{}` dataset ({} samples in total)'.format(dataset_id, org_dataset_length))
+    lengths = random_split_config['lengths']
+    total_length = sum(lengths)
+    if total_length != org_dataset_length:
+        lengths = [int((l / total_length) * org_dataset_length) for l in lengths]
+        if len(lengths) > 1 and sum(lengths) != org_dataset_length:
+            lengths[-1] = org_dataset_length - sum(lengths[:-1])
+
+    manual_seed = random_split_config.get('generator_seed', None)
+    sub_datasets = random_split(org_dataset, lengths) if manual_seed is None \
+        else random_split(org_dataset, lengths, generator=torch.Generator().manual_seed(manual_seed))
+    sub_splits_config = random_split_config['sub_splits']
+    assert len(sub_datasets) == len(sub_splits_config), \
+        'len(lengths) `{}` should be equal to len(sub_splits) `{}`'.format(len(sub_datasets), len(sub_splits_config))
+    for sub_dataset, sub_split_params in zip(sub_datasets, sub_splits_config):
+        sub_dataset_id = sub_split_params['dataset_id']
+        logger.info('new dataset_id: `{}` ({} samples)'.format(sub_dataset_id, len(sub_dataset)))
+        params_config = sub_split_params.copy()
+        transform = build_transform(params_config.pop('transform_params', None))
+        target_transform = build_transform(params_config.pop('transform_params', None))
+        if hasattr(sub_dataset.dataset, 'transform') and transform is not None:
+            sub_dataset.dataset.transform = transform
+        if hasattr(sub_dataset.dataset, 'target_transform') and target_transform is not None:
+            sub_dataset.dataset.target_transform = target_transform
+        dataset_dict[sub_dataset_id] = sub_dataset
+
+
 def get_dataset_dict(dataset_config):
     dataset_type = dataset_config['type']
     dataset_dict = dict()
@@ -94,7 +124,13 @@ def get_dataset_dict(dataset_config):
             st = time.time()
             logger.info('Loading {} data'.format(split_name))
             split_config = dataset_splits_config[split_name]
-            dataset_dict[split_config['dataset_id']] = get_official_dataset(dataset_cls, split_config['params'])
+            org_dataset = get_official_dataset(dataset_cls, split_config['params'])
+            dataset_id = split_config['dataset_id']
+            random_split_config = split_config.get('random_split', None)
+            if random_split_config is None:
+                dataset_dict[dataset_id] = org_dataset
+            else:
+                split_dataset(org_dataset, random_split_config, dataset_id, dataset_dict)
             logger.info('{} sec'.format(time.time() - st))
     else:
         raise ValueError('dataset_type `{}` is not expected'.format(dataset_type))
