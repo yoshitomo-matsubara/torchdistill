@@ -11,13 +11,14 @@ Refactored https://github.com/pytorch/vision/blob/master/torchvision/models/resn
 for CIFAR datasets, referring to https://github.com/szagoruyko/wide-residual-networks
 """
 
+ROOT_URL = 'https://github.com/yoshitomo-matsubara/torchdistill/releases/download'
 MODEL_URL_DICT = {
-    'cifar10-wide_resnet40_': '',
-    'cifar10-wide_resnet28_10': '',
-    'cifar10-wide_resnet16_': '',
-    'cifar100-wide_resnet40_4': '',
-    'cifar100-wide_resnet28_10': '',
-    'cifar100-wide_resnet16_8': ''
+    'cifar10-wide_resnet40_4': ROOT_URL + '/v0.1.0/cifar10-wide_resnet40_4.pt',
+    'cifar10-wide_resnet28_10': ROOT_URL + '/v0.1.0/cifar10-wide_resnet28_10.pt',
+    'cifar10-wide_resnet16_8': ROOT_URL + '/v0.1.0/cifar10-wide_resnet16_8.pt',
+    'cifar100-wide_resnet40_4': ROOT_URL + '/v0.1.0/cifar100-wide_resnet40_4.pt',
+    'cifar100-wide_resnet28_10': ROOT_URL + '/v0.1.0/cifar100-wide_resnet28_10.pt',
+    'cifar100-wide_resnet16_8': ROOT_URL + '/v0.1.0/cifar100-wide_resnet16_8.pt'
 }
 
 
