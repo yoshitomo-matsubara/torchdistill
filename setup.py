@@ -8,7 +8,7 @@ description = 'A Modular, Configuration-Driven Framework for Knowledge Distillat
               'Trained models, training logs and configurations are available for ensuring the reproducibiliy.'
 setup(
     name='torchdistill',
-    version='0.1.0',
+    version='0.1.1',
     description=description,
     long_description=long_description,
     long_description_content_type='text/markdown',
