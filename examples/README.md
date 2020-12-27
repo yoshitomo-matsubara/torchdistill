@@ -33,15 +33,15 @@ cd ../../../../
 e.g., Teacher: ResNet-152, Student: AlexNet  
 a) Use GPUs for multiple distributed training processes
 ```
-python3 -m torch.distributed.launch --nproc_per_node=${NUM_GPUS} --use_env image_classification.py --world_size ${NUM_GPUS} --config config/image_classification/single_stage/kd/alexnet_from_resnet152.yaml --log log/kd/alexnet_from_resnet152.txt
+python3 -m torch.distributed.launch --nproc_per_node=${NUM_GPUS} --use_env examples/image_classification.py --world_size ${NUM_GPUS} --config config/sample/ilsvrc2012/single_stage/kd/alexnet_from_resnet152.yaml --log log/ilsvrc2012/kd/alexnet_from_resnet152.txt
 ```
 b) Use GPU(s) for single training process
 ```
-python3 image_classification.py --config config/image_classification/single_stage/kd/alexnet_from_resnet152.yaml --log log/kd/alexnet_from_resnet152.txt
+python3 examples/image_classification.py --config config/sample/ilsvrc2012/single_stage/kd/alexnet_from_resnet152.yaml --log log/ilsvrc2012/kd/alexnet_from_resnet152.txt
 ```  
 c) Use CPU
 ```
-python3 image_classification.py --device cpu --config config/image_classification/single_stage/kd/alexnet_from_resnet152.yaml --log log/kd/alexnet_from_resnet152.txt
+python3 examples/image_classification.py --device cpu --config config/sample/ilsvrc2012/single_stage/kd/alexnet_from_resnet152.yaml --log log/ilsvrc2012/kd/alexnet_from_resnet152.txt
 ```  
 
 
@@ -71,13 +71,13 @@ cd ../../../
 e.g., Teacher: Faster R-CNN with ResNet-50-FPN backbone, Student: Faster R-CNN with ResNet-18-FPN backbone  
 a) Use GPUs for multiple distributed training processes
 ```
-python3 -m torch.distributed.launch --nproc_per_node=${NUM_GPUS} --use_env object_detection.py --world_size ${NUM_GPUS} --config config/object_detection/multi_stage/ft/custom_fasterrcnn_resnet18_fpn_from_fasterrcnn_resnet50_fpn.yaml --log log/ft/custom_fasterrcnn_resnet18_fpn_from_fasterrcnn_resnet50_fpn.txt
+python3 -m torch.distributed.launch --nproc_per_node=${NUM_GPUS} --use_env examples/object_detection.py --world_size ${NUM_GPUS} --config config/sample/coco2017/multi_stage/ft/custom_fasterrcnn_resnet18_fpn_from_fasterrcnn_resnet50_fpn.yaml --log log/coco2017/ft/custom_fasterrcnn_resnet18_fpn_from_fasterrcnn_resnet50_fpn.txt
 ```
 b) Use GPU(s) for single training process
 ```
-python3 object_detection.py --config config/object_detection/multi_stage/ft/custom_fasterrcnn_resnet18_fpn_from_fasterrcnn_resnet50_fpn.yaml --log log/ft/custom_fasterrcnn_resnet18_fpn_from_fasterrcnn_resnet50_fpn.txt
+python3 examples/object_detection.py --config config/sample/coco2017/multi_stage/ft/custom_fasterrcnn_resnet18_fpn_from_fasterrcnn_resnet50_fpn.yaml --log log/coco2017/ft/custom_fasterrcnn_resnet18_fpn_from_fasterrcnn_resnet50_fpn.txt
 ```  
 c) Use CPU
 ```
-python3 object_detection.py --device cpu --config config/object_detection/multi_stage/ft/custom_fasterrcnn_resnet18_fpn_from_fasterrcnn_resnet50_fpn.yaml --log log/ft/custom_fasterrcnn_resnet18_fpn_from_fasterrcnn_resnet50_fpn.txt
+python3 examples/object_detection.py --device cpu --config config/sample/coco2017/multi_stage/ft/custom_fasterrcnn_resnet18_fpn_from_fasterrcnn_resnet50_fpn.yaml --log log/coco2017/ft/custom_fasterrcnn_resnet18_fpn_from_fasterrcnn_resnet50_fpn.txt
 ```  
