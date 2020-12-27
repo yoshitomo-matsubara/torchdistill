@@ -120,17 +120,6 @@ class ResNet4Cifar(nn.Module):
         return self._forward_impl(x)
 
 
-def _resnet(
-        block: Type[Union[BasicBlock]],
-        depth: int,
-        **kwargs: Any
-) -> ResNet4Cifar:
-    assert (depth - 2) % 6 == 0, 'depth should be one of 20, 32, 44, 56, 110, 1202'
-    n = (depth - 2) // 6
-    model = ResNet4Cifar(block, [n, n, n], **kwargs)
-    return model
-
-
 @register_model_func
 def resnet(
         depth: int,

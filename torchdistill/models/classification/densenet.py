@@ -98,21 +98,6 @@ class DenseNet4Cifar(nn.Module):
         return out
 
 
-def _densenet(
-    growth_rate: int,
-    depth: int,
-    num_init_features: int,
-    bottleneck: bool,
-    **kwargs: Any
-) -> DenseNet4Cifar:
-    n = (depth - 4) // 3
-    if bottleneck:
-        n //= 2
-        num_init_features = growth_rate * 2
-    model = DenseNet4Cifar(growth_rate, (n, n, n), num_init_features, **kwargs)
-    return model
-
-
 @register_model_func
 def densenet(
     growth_rate: int,

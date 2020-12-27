@@ -1,4 +1,4 @@
-from typing import Type, Any, Union
+from typing import Any
 
 import torch
 import torch.nn as nn
@@ -99,18 +99,6 @@ class WideResNet(nn.Module):
 
     def forward(self, x: Tensor) -> Tensor:
         return self._forward_impl(x)
-
-
-def _wide_resnet(
-        depth: int,
-        k: int,
-        dropout_p: float,
-        block: Type[Union[WideBasicBlock]],
-        **kwargs: Any
-) -> WideResNet:
-    assert (depth - 4) % 6 == 0, 'depth of Wide ResNet (WRN) should be 6n + 4'
-    model = WideResNet(depth, k, dropout_p, block, **kwargs)
-    return model
 
 
 @register_model_func
