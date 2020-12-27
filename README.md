@@ -1,5 +1,7 @@
 # torchdistill: A Modular, Configuration-Driven Framework for Knowledge Distillation
-[![PyPI version](https://badge.fury.io/py/torchdistill.svg)](https://badge.fury.io/py/torchdistill) [![Build Status](https://travis-ci.com/yoshitomo-matsubara/torchdistill.svg?branch=master)](https://travis-ci.com/github/yoshitomo-matsubara/torchdistill) 
+[![PyPI version](https://badge.fury.io/py/torchdistill.svg)](https://badge.fury.io/py/torchdistill)
+[![PyPI downloads](https://img.shields.io/pypi/dm/torchdistill.svg)](https://pypistats.org/packages/torchdistill)
+[![Build Status](https://travis-ci.com/yoshitomo-matsubara/torchdistill.svg?branch=master)](https://travis-ci.com/github/yoshitomo-matsubara/torchdistill) 
 
 ***torchdistill*** (formerly *kdkit*) offers various knowledge distillation methods 
 and enables you to design (new) experiments simply by editing a yaml file instead of Python code. 
@@ -21,7 +23,11 @@ Using **ForwardHookManager**, you can extract intermediate representations in mo
 \*\* FT is assessed with ILSVRC 2015 in the original work.  
 For the 2nd row (S: ResNet-18), the checkpoint (trained weights), configuration and log files are [available](configs/official/ilsvrc2012/yoshitomo-matsubara/), 
 and the configurations reuse the hyperparameters such as number of epochs used in the original work except for KD.
-Example codes for image classification, object detection and semantic segmentation are available in [examples/](examples/).
+
+## Examples
+- [Image classification](examples/image_classification.py): ImageNet (ILSVRC 2012), CIFAR-10, CIFAR-100, etc
+- [Object detection](examples/object_detection.py): COCO 2017, etc
+- [Semantic segmentation](examples/semantic_segmentation.py): COCO 2017, etc 
 
 ## Citation
 [[Preprint](https://arxiv.org/abs/2011.12913)]  
