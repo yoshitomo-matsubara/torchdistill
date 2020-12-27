@@ -14,11 +14,11 @@ for CIFAR datasets, referring to https://github.com/facebookarchive/fb.resnet.to
 
 ROOT_URL = 'https://github.com/yoshitomo-matsubara/torchdistill/releases/download'
 MODEL_URL_DICT = {
-    'cifar10-resnet20': ROOT_URL + '/v0.1.0/cifar10-resnet20.pt',
-    'cifar10-resnet32': ROOT_URL + '/v0.1.0/cifar10-resnet32.pt',
-    'cifar10-resnet44': ROOT_URL + '/v0.1.0/cifar10-resnet44.pt',
-    'cifar10-resnet56': ROOT_URL + '/v0.1.0/cifar10-resnet56.pt',
-    'cifar10-resnet110': ROOT_URL + '/v0.1.0/cifar10-resnet110.pt'
+    'cifar10-resnet20': ROOT_URL + '/v0.1.1/cifar10-resnet20.pt',
+    'cifar10-resnet32': ROOT_URL + '/v0.1.1/cifar10-resnet32.pt',
+    'cifar10-resnet44': ROOT_URL + '/v0.1.1/cifar10-resnet44.pt',
+    'cifar10-resnet56': ROOT_URL + '/v0.1.1/cifar10-resnet56.pt',
+    'cifar10-resnet110': ROOT_URL + '/v0.1.1/cifar10-resnet110.pt'
 }
 
 

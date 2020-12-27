@@ -16,8 +16,8 @@ for CIFAR datasets, referring to https://github.com/liuzhuang13/DenseNet
 
 ROOT_URL = 'https://github.com/yoshitomo-matsubara/torchdistill/releases/download'
 MODEL_URL_DICT = {
-    'cifar10-densenet_bc_k12_depth100': ROOT_URL + '/v0.1.0/cifar10-densenet_bc_k12_depth100.pt',
-    'cifar100-densenet_bc_k12_depth100': ROOT_URL + '/v0.1.0/cifar100-densenet_bc_k12_depth100.pt'
+    'cifar10-densenet_bc_k12_depth100': ROOT_URL + '/v0.1.1/cifar10-densenet_bc_k12_depth100.pt',
+    'cifar100-densenet_bc_k12_depth100': ROOT_URL + '/v0.1.1/cifar100-densenet_bc_k12_depth100.pt'
 }
 
 

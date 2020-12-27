@@ -13,12 +13,12 @@ for CIFAR datasets, referring to https://github.com/szagoruyko/wide-residual-net
 
 ROOT_URL = 'https://github.com/yoshitomo-matsubara/torchdistill/releases/download'
 MODEL_URL_DICT = {
-    'cifar10-wide_resnet40_4': ROOT_URL + '/v0.1.0/cifar10-wide_resnet40_4.pt',
-    'cifar10-wide_resnet28_10': ROOT_URL + '/v0.1.0/cifar10-wide_resnet28_10.pt',
-    'cifar10-wide_resnet16_8': ROOT_URL + '/v0.1.0/cifar10-wide_resnet16_8.pt',
-    'cifar100-wide_resnet40_4': ROOT_URL + '/v0.1.0/cifar100-wide_resnet40_4.pt',
-    'cifar100-wide_resnet28_10': ROOT_URL + '/v0.1.0/cifar100-wide_resnet28_10.pt',
-    'cifar100-wide_resnet16_8': ROOT_URL + '/v0.1.0/cifar100-wide_resnet16_8.pt'
+    'cifar10-wide_resnet40_4': ROOT_URL + '/v0.1.1/cifar10-wide_resnet40_4.pt',
+    'cifar10-wide_resnet28_10': ROOT_URL + '/v0.1.1/cifar10-wide_resnet28_10.pt',
+    'cifar10-wide_resnet16_8': ROOT_URL + '/v0.1.1/cifar10-wide_resnet16_8.pt',
+    'cifar100-wide_resnet40_4': ROOT_URL + '/v0.1.1/cifar100-wide_resnet40_4.pt',
+    'cifar100-wide_resnet28_10': ROOT_URL + '/v0.1.1/cifar100-wide_resnet28_10.pt',
+    'cifar100-wide_resnet16_8': ROOT_URL + '/v0.1.1/cifar100-wide_resnet16_8.pt'
 }
 
 
