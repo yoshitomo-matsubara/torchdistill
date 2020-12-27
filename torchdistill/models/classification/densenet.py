@@ -15,8 +15,8 @@ for CIFAR datasets, referring to https://github.com/liuzhuang13/DenseNet
 """
 
 MODEL_URL_DICT = {
-    'densenet_bc_k12_depth100-cifar10': '',
-    'densenet_bc_k12_depth100-cifar100': ''
+    'cifar10-densenet_bc_k12_depth100': '',
+    'cifar100-densenet_bc_k12_depth100': ''
 }
 
 
@@ -115,7 +115,7 @@ def densenet(
         num_init_features = growth_rate * 2
     model = DenseNet4Cifar(growth_rate, (n, n, n), num_init_features, **kwargs)
     base_model_name = 'densenet_bc' if bottleneck else 'densenet'
-    model_key = '{}_{}_{}-cifar{}'.format(base_model_name, growth_rate, depth, num_classes)
+    model_key = 'cifar{}-{}_{}_{}'.format(num_classes, base_model_name, growth_rate, depth)
     if pretrained and model_key in MODEL_URL_DICT:
         state_dict = torch.hub.load_state_dict_from_url(MODEL_URL_DICT[model_key], progress=progress)
         model.load_state_dict(state_dict)

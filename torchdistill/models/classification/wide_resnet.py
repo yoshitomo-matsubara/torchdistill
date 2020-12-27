@@ -12,12 +12,12 @@ for CIFAR datasets, referring to https://github.com/szagoruyko/wide-residual-net
 """
 
 MODEL_URL_DICT = {
-    'wide_resnet40_4-cifar10': '',
-    'wide_resnet28_10-cifar10': '',
-    'wide_resnet16_8-cifar10': '',
-    'wide_resnet40_4-cifar100': '',
-    'wide_resnet28_10-cifar100': '',
-    'wide_resnet16_8-cifar100': ''
+    'cifar10-wide_resnet40_': '',
+    'cifar10-wide_resnet28_10': '',
+    'cifar10-wide_resnet16_': '',
+    'cifar100-wide_resnet40_4': '',
+    'cifar100-wide_resnet28_10': '',
+    'cifar100-wide_resnet16_8': ''
 }
 
 
@@ -113,7 +113,7 @@ def wide_resnet(
 ) -> WideResNet:
     assert (depth - 4) % 6 == 0, 'depth of Wide ResNet (WRN) should be 6n + 4'
     model = WideResNet(depth, k, dropout_p, WideBasicBlock, num_classes, **kwargs)
-    model_key = 'wide_resnet{}_{}-cifar{}'.format(depth, k, num_classes)
+    model_key = 'cifar{}-wide_resnet{}_{}'.format(num_classes, depth, k)
     if pretrained and model_key in MODEL_URL_DICT:
         state_dict = torch.hub.load_state_dict_from_url(MODEL_URL_DICT[model_key], progress=progress)
         model.load_state_dict(state_dict)

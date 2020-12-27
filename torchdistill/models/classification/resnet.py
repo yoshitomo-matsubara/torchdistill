@@ -13,11 +13,11 @@ for CIFAR datasets, referring to https://github.com/facebookarchive/fb.resnet.to
 """
 
 MODEL_URL_DICT = {
-    'resnet20-cifar10': '',
-    'resnet32-cifar10': '',
-    'resnet44-cifar10': '',
-    'resnet56-cifar10': '',
-    'resnet110-cifar10': ''
+    'cifar10-resnet20': '',
+    'cifar10-resnet32': '',
+    'cifar10-resnet44': '',
+    'cifar10-resnet56': '',
+    'cifar10-resnet110': ''
 }
 
 
@@ -131,7 +131,7 @@ def resnet(
     assert (depth - 2) % 6 == 0, 'depth should be one of 20, 32, 44, 56, 110, 1202'
     n = (depth - 2) // 6
     model = ResNet4Cifar(BasicBlock, [n, n, n], num_classes, **kwargs)
-    model_key = 'resnet{}-cifar{}'.format(depth, num_classes)
+    model_key = 'cifar{}-resnet{}'.format(num_classes, depth)
     if pretrained and model_key in MODEL_URL_DICT:
         state_dict = torch.hub.load_state_dict_from_url(MODEL_URL_DICT[model_key], progress=progress)
         model.load_state_dict(state_dict)
