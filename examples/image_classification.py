@@ -51,7 +51,7 @@ def load_model(model_config, device, distributed, sync_bn):
     return model.to(device)
 
 
-def distill_one_epoch(distillation_box, device, epoch, log_freq):
+def train_one_epoch(distillation_box, device, epoch, log_freq):
     metric_logger = MetricLogger(delimiter='  ')
     metric_logger.add_meter('lr', SmoothedValue(window_size=1, fmt='{value}'))
     metric_logger.add_meter('img/s', SmoothedValue(window_size=10, fmt='{value}'))
@@ -120,7 +120,7 @@ def train(teacher_model, student_model, dataset_dict, ckpt_file_path, device, de
     start_time = time.time()
     for epoch in range(args.start_epoch, training_box.num_epochs):
         training_box.pre_process(epoch=epoch)
-        distill_one_epoch(training_box, device, epoch, log_freq)
+        train_one_epoch(training_box, device, epoch, log_freq)
         val_top1_accuracy = evaluate(student_model, training_box.val_data_loader, device, device_ids, distributed,
                                      log_freq=log_freq, header='Validation:')
         if val_top1_accuracy > best_val_top1_accuracy and is_main_process():
