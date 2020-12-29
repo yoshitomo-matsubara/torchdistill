@@ -1,4 +1,5 @@
 import random
+from io import BytesIO
 
 import numpy as np
 import torch
@@ -41,13 +42,20 @@ class CustomCompose(object):
 
 @register_transform_class
 class CustomRandomResize(object):
-    def __init__(self, min_size, max_size=None):
+    def __init__(self, min_size, max_size=None, jpeg_quality=None):
         self.min_size = min_size
         if max_size is None:
             max_size = min_size
+
         self.max_size = max_size
+        self.jpeg_quality = jpeg_quality
 
     def __call__(self, image, target):
+        if self.jpeg_quality is not None:
+            img_buffer = BytesIO()
+            image.save(img_buffer, 'JPEG', quality=self.jpeg_quality)
+            image = Image.open(img_buffer)
+
         size = random.randint(self.min_size, self.max_size)
         image = F.resize(image, size)
         target = F.resize(target, size, interpolation=Image.NEAREST)

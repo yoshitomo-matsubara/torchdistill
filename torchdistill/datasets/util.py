@@ -21,9 +21,9 @@ TRANSFORM_CLASS_DICT.update(torchvision.transforms.__dict__)
 
 
 def load_coco_dataset(img_dir_path, ann_file_path, annotated_only, random_horizontal_flip=None, is_segment=False,
-                      transforms=None):
+                      transforms=None, jpeg_quality=None):
     if transforms is None:
-        transform_list = [ImageToTensor()]
+        transform_list = [ImageToTensor(jpeg_quality)]
         if random_horizontal_flip is not None and not is_segment:
             transform_list.append(CocoRandomHorizontalFlip(random_horizontal_flip))
         transforms = Compose(transform_list)
@@ -116,7 +116,7 @@ def get_dataset_dict(dataset_config):
             dataset_dict[split_config['dataset_id']] =\
                 load_coco_dataset(split_config['images'], split_config['annotations'],
                                   split_config['annotated_only'], split_config.get('random_horizontal_flip', None),
-                                  is_segment, transforms=transforms)
+                                  is_segment, transforms, split_config.get('jpeg_quality', None))
     elif dataset_type in DATASET_DICT:
         dataset_cls = DATASET_DICT[dataset_type]
         dataset_splits_config = dataset_config['splits']
