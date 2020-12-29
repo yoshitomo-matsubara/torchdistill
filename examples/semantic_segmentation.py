@@ -10,7 +10,7 @@ from torch.nn import DataParallel
 from torch.nn.parallel import DistributedDataParallel
 from torch.utils.data._utils.collate import default_collate
 
-from common import file_util, module_util, yaml_util
+from torchdistill.common import file_util, module_util, yaml_util
 from torchdistill.common.constant import def_logger
 from torchdistill.common.main_util import is_main_process, init_distributed_mode, load_ckpt, save_ckpt
 from torchdistill.core.distillation import get_distillation_box
