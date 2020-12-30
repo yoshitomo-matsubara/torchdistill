@@ -74,7 +74,7 @@ train:
         type: &teacher4ft 'Teacher4FactorTransfer'
         params:
           minimal:
-            sequential: ['conv1', 'relu', 'maxpool', 'layer1', 'layer2', 'layer3', 'layer4']
+            sequential: ['conv1', 'bn1', 'relu', 'maxpool', 'layer1', 'layer2', 'layer3', 'layer4']
           input_module_path: &teacher4ft_in_module 'teacher_model.layer4'
           paraphraser_params: &teacher4ft_paraphraser_params
             k: 0.5
