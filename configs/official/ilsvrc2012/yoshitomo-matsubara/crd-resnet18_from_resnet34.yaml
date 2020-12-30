@@ -132,7 +132,7 @@ train:
           reduction: 'mean'
       factor: 1.0
     sub_terms:
-      cckd:
+      crd:
         criterion:
           type: 'CRDLoss'
           params:

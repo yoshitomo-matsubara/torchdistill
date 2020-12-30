@@ -134,7 +134,7 @@ train:
           reduction: 'batchmean'
       factor: 2.0
     sub_terms:
-      cckd:
+      crd:
         criterion:
           type: 'CRDLoss'
           params:
