@@ -1,6 +1,7 @@
 import copy
 import os
 import random
+from io import BytesIO
 
 import torch
 import torch.utils.data
@@ -22,7 +23,15 @@ def _flip_coco_person_keypoints(kps, width):
 
 
 class ImageToTensor(object):
+    def __init__(self, jpeg_quality=None):
+        self.jpeg_quality = jpeg_quality
+
     def __call__(self, image, target):
+        if self.jpeg_quality is not None:
+            img_buffer = BytesIO()
+            image.save(img_buffer, 'JPEG', quality=self.jpeg_quality)
+            image = Image.open(img_buffer)
+
         image = functional.to_tensor(image)
         return image, target
 
