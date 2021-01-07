@@ -114,7 +114,7 @@ def densenet(
     if bottleneck:
         n //= 2
         num_init_features = growth_rate * 2
-    model = DenseNet4Cifar(growth_rate, (n, n, n), num_init_features, **kwargs)
+    model = DenseNet4Cifar(growth_rate, (n, n, n), num_init_features, num_classes=num_classes, **kwargs)
     base_model_name = 'densenet_bc' if bottleneck else 'densenet'
     model_key = 'cifar{}-{}_k{}_depth{}'.format(num_classes, base_model_name, growth_rate, depth)
     if pretrained and model_key in MODEL_URL_DICT:
