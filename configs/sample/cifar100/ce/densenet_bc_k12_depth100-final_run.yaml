@@ -1,0 +1,105 @@
+datasets:
+  ilsvrc2012:
+    name: &dataset_name 'cifar100'
+    type: 'CIFAR100'
+    root: &root_dir !join ['./resource/dataset/', *dataset_name]
+    splits:
+      train:
+        dataset_id: &cifar100_train !join [*dataset_name, '/train']
+        params:
+          root: *root_dir
+          train: True
+          download: True
+          transform_params:
+            - type: 'RandomCrop'
+              params:
+                size: 32
+                padding: 4
+            - type: 'RandomHorizontalFlip'
+              params:
+                p: 0.5
+            - type: 'ToTensor'
+              params:
+            - &normalize
+              type: 'Normalize'
+              params:
+                mean: [0.5070754, 0.48655024, 0.44091907]
+                std: [0.26733398, 0.25643876, 0.2761503]
+      val:
+        dataset_id: &cifar100_val !join [*dataset_name, '/val']
+        params:
+          root: *root_dir
+          train: False
+          download: True
+          transform_params: &val_transform
+            - type: 'ToTensor'
+              params:
+            - *normalize
+      test:
+        dataset_id: &cifar100_test !join [*dataset_name, '/test']
+        params:
+          root: *root_dir
+          train: False
+          download: True
+          transform_params: *val_transform
+
+models:
+  model:
+    name: &student_model_name 'densenet_bc_k12_depth100'
+    params:
+      num_classes: 100
+      memory_efficient: False
+      pretrained: False
+    experiment: &student_experiment !join [*dataset_name, '-', *student_model_name]
+    ckpt: !join ['./resource/ckpt/', *dataset_name, '/ce/', *student_experiment, '.pt']
+
+train:
+  log_freq: 1000
+  num_epochs: 300
+  train_data_loader:
+    dataset_id: *cifar100_train
+    random_sample: True
+    batch_size: 64
+    num_workers: 16
+    cache_output:
+  val_data_loader:
+    dataset_id: *cifar100_val
+    random_sample: False
+    batch_size: 128
+    num_workers: 16
+  model:
+    adaptations:
+    sequential: []
+    wrapper: 'DistributedDataParallel'
+    requires_grad: True
+    frozen_modules: []
+  apex:
+    requires: False
+    opt_level: '01'
+  optimizer:
+    type: 'SGD'
+    params:
+      lr: 0.1
+      momentum: 0.9
+      weight_decay: 0.0001
+  scheduler:
+    type: 'MultiStepLR'
+    params:
+      milestones: [150, 225]
+      gamma: 0.1
+  criterion:
+    type: 'GeneralizedCustomLoss'
+    org_term:
+      criterion:
+        type: 'CrossEntropyLoss'
+        params:
+          reduction: 'mean'
+      factor: 1.0
+    sub_terms:
+
+test:
+  test_data_loader:
+    dataset_id: *cifar100_test
+    random_sample: False
+    batch_size: 1
+    num_workers: 16
