@@ -53,7 +53,7 @@ models:
     ckpt: !join ['./resource/ckpt/', *dataset_name, '/ce/', *student_experiment, '-final_run.pt']
 
 train:
-  log_freq: 1000
+  log_freq: 100
   num_epochs: 300
   train_data_loader:
     dataset_id: *cifar10_train
