@@ -29,6 +29,15 @@ Executable code can be found in [examples/](examples/) such as
 - [Object detection](examples/object_detection.py): COCO 2017, etc
 - [Semantic segmentation](examples/semantic_segmentation.py): COCO 2017, etc 
 
+## Google Colab Examples
+### CIFAR-10 and CIFAR-100
+- Training without teacher models [![Open In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/yoshitomo-matsubara/torchdistill/blob/master/demo/cifar_training.ipynb)
+- Knowledge distillation [![Open In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/yoshitomo-matsubara/torchdistill/blob/master/demo/cifar_kd.ipynb)
+
+These examples are available in [demo/](demo/). 
+Note that the examples are for Google Colab users, and usually [examples/](examples/) would be a better reference 
+if you have your own GPU(s).
+
 ## Citation
 [[Preprint](https://arxiv.org/abs/2011.12913)]  
 ```bibtex
