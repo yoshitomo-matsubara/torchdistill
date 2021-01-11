@@ -106,7 +106,7 @@ train:
         type: 'KDLoss'
         params:
           temperature: 4.0
-          alpha: 0.5
+          alpha: 0.9
           reduction: 'batchmean'
       factor: 1.0
     sub_terms:
