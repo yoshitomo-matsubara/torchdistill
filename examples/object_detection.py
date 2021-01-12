@@ -54,21 +54,21 @@ def load_model(model_config, device):
     return model.to(device)
 
 
-def train_one_epoch(distillation_box, device, epoch, log_freq):
+def train_one_epoch(training_box, device, epoch, log_freq):
     metric_logger = MetricLogger(delimiter='  ')
     metric_logger.add_meter('lr', SmoothedValue(window_size=1, fmt='{value}'))
     metric_logger.add_meter('img/s', SmoothedValue(window_size=10, fmt='{value}'))
     header = 'Epoch: [{}]'.format(epoch)
     for sample_batch, targets, supp_dict in \
-            metric_logger.log_every(distillation_box.train_data_loader, log_freq, header):
+            metric_logger.log_every(training_box.train_data_loader, log_freq, header):
         start_time = time.time()
         sample_batch = list(image.to(device) for image in sample_batch)
         targets = [{k: v.to(device) for k, v in t.items()} for t in targets]
         supp_dict = default_collate(supp_dict)
-        loss = distillation_box(sample_batch, targets, supp_dict)
-        distillation_box.update_params(loss)
+        loss = training_box(sample_batch, targets, supp_dict)
+        training_box.update_params(loss)
         batch_size = len(sample_batch)
-        metric_logger.update(loss=loss.item(), lr=distillation_box.optimizer.param_groups[0]['lr'])
+        metric_logger.update(loss=loss.item(), lr=training_box.optimizer.param_groups[0]['lr'])
         metric_logger.meters['img/s'].update(batch_size / (time.time() - start_time))
 
 
