@@ -2,6 +2,9 @@ from collections import OrderedDict
 
 from torch.nn import DataParallel, Sequential
 from torch.nn.parallel import DistributedDataParallel
+from torchdistill.common.constant import def_logger
+
+logger = def_logger.getChild(__name__)
 
 
 def check_if_wrapped(model):
@@ -41,15 +44,15 @@ def get_module(root_module, module_path):
                     if isinstance(module, Sequential):
                         module = module[int(module_name)]
                     else:
-                        print('`{}` of `{}` could not be reached in `{}`'.format(module_name, module_path,
-                                                                                 type(root_module).__name__))
+                        logger.info('`{}` of `{}` could not be reached in `{}`'.format(module_name, module_path,
+                                                                                       type(root_module).__name__))
                 else:
                     module = getattr(module, module_name)
             elif isinstance(module, Sequential):
                 module = module[int(module_name)]
             else:
-                print('`{}` of `{}` could not be reached in `{}`'.format(module_name, module_path,
-                                                                         type(root_module).__name__))
+                logger.info('`{}` of `{}` could not be reached in `{}`'.format(module_name, module_path,
+                                                                               type(root_module).__name__))
                 return None
         else:
             module = getattr(module, module_name)
