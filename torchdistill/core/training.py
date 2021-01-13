@@ -101,7 +101,7 @@ class TrainingBox(nn.Module):
                     if 'lr' in module_wise_params_dict:
                         module_wise_params_dict['lr'] *= self.lr_factor
 
-                    module = get_module(self, module_wise_params_config['module'])
+                    module = get_module(self.model, module_wise_params_config['module'])
                     module_wise_params_dict['params'] = module.parameters()
                     trainable_module_list.append(module_wise_params_dict)
             else:
