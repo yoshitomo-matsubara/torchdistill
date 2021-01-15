@@ -15,7 +15,7 @@ Using **ForwardHookManager**, you can extract intermediate representations in mo
 ## Top-1 validation accuracy for ILSVRC 2012 (ImageNet)
 | T: ResNet-34\*  | Pretrained | KD    | AT    | FT       | CRD   | Tf-KD | SSKD  | L2    | PAD-L2    |  
 | :---            | ---:       | ---:  | ---:  | ---:     | ---:  | ---:  | ---:  | ---:  | ---:      |  
-| S: ResNet-18    | 69.76\*    | 71.37 | 70.90 | 70.45    | 70.93 | 70.52 | 70.09 | 71.08 | 71.71     |  
+| S: ResNet-18    | 69.76\*    | 71.37 | 70.90 | 71.56    | 70.93 | 70.52 | 70.09 | 71.08 | 71.71     |  
 | Original work   | N/A        | N/A   | 70.70 | N/A\*\*  | 71.17 | 70.42 | 71.62 | 70.90 | 71.71     |  
   
 \* The pretrained ResNet-34 and ResNet-18 are provided by torchvision.  
