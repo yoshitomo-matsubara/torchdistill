@@ -189,13 +189,6 @@ python3 examples/image_classification.py \
     --log log/ilsvrc2012/ft-resnet18_from_resnet34.log
 ```
 
-#### Contrastive Representation Distillation
-```
-python3 examples/image_classification.py \
-    --config configs/official/ilsvrc2012/yoshitomo-matsubara/rrpr2020/crd-resnet18_from_resnet34.yaml \
-    --log log/ilsvrc2012/crd-resnet18_from_resnet34.log
-```
-
 #### Teacher-free Knowledge Distillation
 ```
 python3 examples/image_classification.py \
