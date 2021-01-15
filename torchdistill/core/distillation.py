@@ -132,7 +132,9 @@ class DistillationBox(nn.Module):
                     if 'lr' in module_wise_params_dict:
                         module_wise_params_dict['lr'] *= self.lr_factor
 
-                    module = get_module(self, module_wise_params_config['module'])
+                    target_model = \
+                        self.teacher_model if module_wise_params_config.get('is_teacher', False) else self.student_model
+                    module = get_module(target_model, module_wise_params_config['module'])
                     module_wise_params_dict['params'] = module.parameters()
                     trainable_module_list.append(module_wise_params_dict)
             else:
