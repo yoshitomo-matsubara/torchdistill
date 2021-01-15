@@ -165,7 +165,7 @@ Multi-stage methods can be defined in one yaml file like [this](https://github.c
 but you should modify the hyperparameters like number of epochs, lr scheduler, and so on.
 
 ---
-### Command to train without distributed processes
+### Command for training without distributed processes
 Make sure checkpoint files do not exist at `ckpt` in `student_model` entry to train models from scratch.
 
 #### Knowledge Distillation

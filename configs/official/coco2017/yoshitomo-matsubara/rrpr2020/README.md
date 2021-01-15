@@ -26,6 +26,7 @@
 ### Checkpoints
 [coco.zip](https://github.com/yoshitomo-matsubara/torchdistill/releases/download/v0.0.1/coco.zip)
 
+---
 ### Command to test with checkpoints
 - Download [coco.zip](https://github.com/yoshitomo-matsubara/torchdistill/releases/download/v0.0.1/coco.zip)
 - Unzip `coco.zip` at the root directory of this repository
@@ -43,6 +44,7 @@ python3 examples/object_detection.py --config configs/official/coco2017/yoshitom
 python3 examples/object_detection.py --config configs/official/coco2017/yoshitomo-matsubara/rrpr2020/ghnd-custom_maskrcnn_resnet50_fpn_from_maskrcnn_resnet50_fpn.yaml -test_only
 ```
 
+---
 ### Command for distributed training on 3 GPUs
 1. Make sure checkpoint files do not exist at `ckpt` in `student_model` entry to train models from scratch.
 2. Execute `export NUM_GPUS=3`
