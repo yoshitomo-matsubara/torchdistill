@@ -199,6 +199,6 @@ python3 examples/image_classification.py \
 #### Teacher-free Knowledge Distillation
 ```
 python3 examples/image_classification.py \
-    --config configs/official/ilsvrc2012/yoshitomo-matsubara/rrpr2020/tfkd-resnet18_from_resnet34.yaml \
-    --log log/ilsvrc2012/tfkd-resnet18_from_resnet34.log
+    --config configs/official/ilsvrc2012/yoshitomo-matsubara/rrpr2020/tfkd-resnet18_from_resnet18.yaml \
+    --log log/ilsvrc2012/tfkd-resnet18_from_resnet18.log
 ```
