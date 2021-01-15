@@ -1,4 +1,4 @@
-# 1. torchdistill: A Modular, Configuration-Driven Framework for Knowledge Distillation
+# torchdistill: A Modular, Configuration-Driven Framework for Knowledge Distillation
 ## Citation
 [[Preprint](https://arxiv.org/abs/2011.12913)]  
 ```bibtex
@@ -34,13 +34,13 @@
 - Teacher: Faster R-CNN with ResNet-50 and FPN (Pretrained)
 - Student: Faster R-CNN with Bottleneck-injected ResNet-50 and FPN
 ```
-python3 examples/object_detection.py --config configs/official/coco2017/ghnd-custom_fasterrcnn_resnet50_fpn_from_fasterrcnn_resnet50_fpn.yaml -test_only
+python3 examples/object_detection.py --config configs/official/coco2017/yoshitomo-matsubara/rrpr2020/ghnd-custom_fasterrcnn_resnet50_fpn_from_fasterrcnn_resnet50_fpn.yaml -test_only
 ```
 
 - Teacher: Mask R-CNN with ResNet-50 and FPN
 - Student: Mask R-CNN with Bottleneck-injected ResNet-50 and FPN
 ```
-python3 examples/object_detection.py --config configs/official/coco2017/ghnd-custom_maskrcnn_resnet50_fpn_from_maskrcnn_resnet50_fpn.yaml -test_only
+python3 examples/object_detection.py --config configs/official/coco2017/yoshitomo-matsubara/rrpr2020/ghnd-custom_maskrcnn_resnet50_fpn_from_maskrcnn_resnet50_fpn.yaml -test_only
 ```
 
 ### Command for distributed training on 3 GPUs
@@ -52,8 +52,8 @@ python3 examples/object_detection.py --config configs/official/coco2017/ghnd-cus
 - Student: Faster R-CNN with Bottleneck-injected ResNet-50 and FPN
 ```
 python3 -m torch.distributed.launch --nproc_per_node=${NUM_GPUS} --use_env examples/object_detection.py \
-    --config configs/official/coco2017/ghnd-custom_fasterrcnn_resnet50_fpn_from_fasterrcnn_resnet50_fpn.yaml \
-    --log log/configs/official/coco2017/ghnd-custom_fasterrcnn_resnet50_fpn_from_fasterrcnn_resnet50_fpn.log \
+    --config configs/official/coco2017/yoshitomo-matsubara/rrpr2020/ghnd-custom_fasterrcnn_resnet50_fpn_from_fasterrcnn_resnet50_fpn.yaml \
+    --log log/ghnd-custom_fasterrcnn_resnet50_fpn_from_fasterrcnn_resnet50_fpn.log \
     --world_size ${NUM_GPUS} 
 ```
 
@@ -61,7 +61,7 @@ python3 -m torch.distributed.launch --nproc_per_node=${NUM_GPUS} --use_env examp
 - Student: Mask R-CNN with Bottleneck-injected ResNet-50 and FPN
 ```
 python3 -m torch.distributed.launch --nproc_per_node=${NUM_GPUS} --use_env examples/object_detection.py \
-    --config configs/official/coco2017/ghnd-custom_maskrcnn_resnet50_fpn_from_maskrcnn_resnet50_fpn.yaml \
-    --log log/configs/official/coco2017/ghnd-custom_maskrcnn_resnet50_fpn_from_maskrcnn_resnet50_fpn.log \
+    --config configs/official/coco2017/yoshitomo-matsubara/rrpr2020/ghnd-custom_maskrcnn_resnet50_fpn_from_maskrcnn_resnet50_fpn.yaml \
+    --log log/coco2017/ghnd-custom_maskrcnn_resnet50_fpn_from_maskrcnn_resnet50_fpn.log \
     --world_size ${NUM_GPUS} 
 ```

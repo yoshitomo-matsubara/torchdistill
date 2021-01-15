@@ -1,4 +1,4 @@
-# 1. torchdistill: A Modular, Configuration-Driven Framework for Knowledge Distillation
+# torchdistill: A Modular, Configuration-Driven Framework for Knowledge Distillation
 ## Citation
 [[Preprint](https://arxiv.org/abs/2011.12913)]  
 ```bibtex
@@ -37,44 +37,44 @@ You can find configuration and log files for both 1) and 2) in `imagenet.zip`.
 
 #### Knowledge Distillation
 ```
-python3 examples/image_classification.py --config configs/official/ilsvrc2012/kd-resnet18_from_resnet34.yaml -test_only
+python3 examples/image_classification.py --config configs/official/ilsvrc2012/yoshitomo-matsubara/rrpr2020/kd-resnet18_from_resnet34.yaml -test_only
 ```
 
 #### Attention Transfer
 ```
-python3 examples/image_classification.py --config configs/official/ilsvrc2012/at-resnet18_from_resnet34.yaml -test_only
+python3 examples/image_classification.py --config configs/official/ilsvrc2012/yoshitomo-matsubara/rrpr2020/at-resnet18_from_resnet34.yaml -test_only
 ```
 
 #### Contrastive Representation Distillation
 ```
-python3 examples/image_classification.py --config configs/official/ilsvrc2012/crd-resnet18_from_resnet34.yaml -test_only
+python3 examples/image_classification.py --config configs/official/ilsvrc2012/yoshitomo-matsubara/rrpr2020/crd-resnet18_from_resnet34.yaml -test_only
 ```
 
 #### Factor Transfer
 ```
-python3 examples/image_classification.py --config configs/official/ilsvrc2012/ft-resnet18_from_resnet34.yaml -test_only
+python3 examples/image_classification.py --config configs/official/ilsvrc2012/yoshitomo-matsubara/rrpr2020/ft-resnet18_from_resnet34.yaml -test_only
 ```
 
 #### Teacher-free Knowledge Distillation
 ```
-python3 examples/image_classification.py --config configs/official/ilsvrc2012/tfkd-resnet18_from_resnet34.yaml -test_only
+python3 examples/image_classification.py --config configs/official/ilsvrc2012/yoshitomo-matsubara/rrpr2020/tfkd-resnet18_from_resnet34.yaml -test_only
 ```
 
 #### Semi-supervisioned Knowledge Distillation
 ```
-python3 examples/image_classification.py --config configs/official/ilsvrc2012/sskd-resnet18_from_resnet34.yaml -test_only
+python3 examples/image_classification.py --config configs/official/ilsvrc2012/yoshitomo-matsubara/rrpr2020/sskd-resnet18_from_resnet34.yaml -test_only
 ```
 
 #### L2 (CSE + L2)
 ```
-python3 examples/image_classification.py --config configs/official/ilsvrc2012/cse_l2-resnet18_from_resnet34.yaml -test_only
+python3 examples/image_classification.py --config configs/official/ilsvrc2012/yoshitomo-matsubara/rrpr2020/cse_l2-resnet18_from_resnet34.yaml -test_only
 ```
 
 #### PAD-L2 (2nd stage)
 Note that you first need to train a model with L2 (CSE + L2), and load the ckpt file designated in the following yaml file.  
 i.e., PAD-L2 is a two-stage training method.
 ```
-python3 examples/image_classification.py --config configs/official/ilsvrc2012/pad_l2-resnet18_from_resnet34.yaml -test_only
+python3 examples/image_classification.py --config configs/official/ilsvrc2012/yoshitomo-matsubara/rrpr2020/pad_l2-resnet18_from_resnet34.yaml -test_only
 ```
 
 ### Command for distributed training on 3 GPUs
@@ -84,8 +84,8 @@ python3 examples/image_classification.py --config configs/official/ilsvrc2012/pa
 #### Knowledge Distillation
 ```
 python3 -m torch.distributed.launch --nproc_per_node=${NUM_GPUS} --use_env examples/image_classification.py \
-    --config configs/official/ilsvrc2012/kd-resnet18_from_resnet34.yaml \
-    --log log/kd-resnet18_from_resnet34.log \
+    --config configs/official/ilsvrc2012/yoshitomo-matsubara/rrpr2020/kd-resnet18_from_resnet34.yaml \
+    --log log/ilsvrc2012/kd-resnet18_from_resnet34.log \
     --world_size ${NUM_GPUS} \
     -adjust_lr
 ```
@@ -93,8 +93,8 @@ python3 -m torch.distributed.launch --nproc_per_node=${NUM_GPUS} --use_env examp
 #### Attention Transfer
 ```
 python3 -m torch.distributed.launch --nproc_per_node=${NUM_GPUS} --use_env examples/image_classification.py \
-    --config configs/official/ilsvrc2012/at-resnet18_from_resnet34.yaml \
-    --log log/at-resnet18_from_resnet34.log \
+    --config configs/official/ilsvrc2012/yoshitomo-matsubara/rrpr2020/at-resnet18_from_resnet34.yaml \
+    --log log/ilsvrc2012/at-resnet18_from_resnet34.log \
     --world_size ${NUM_GPUS} \
     -adjust_lr
 ```
@@ -102,8 +102,8 @@ python3 -m torch.distributed.launch --nproc_per_node=${NUM_GPUS} --use_env examp
 #### Factor Transfer
 ```
 python3 -m torch.distributed.launch --nproc_per_node=${NUM_GPUS} --use_env examples/image_classification.py \
-    --config configs/official/ilsvrc2012/ft-resnet18_from_resnet34.yaml \
-    --log log/ft-resnet18_from_resnet34.log \
+    --config configs/official/ilsvrc2012/yoshitomo-matsubara/rrpr2020/ft-resnet18_from_resnet34.yaml \
+    --log log/ilsvrc2012/ft-resnet18_from_resnet34.log \
     --world_size ${NUM_GPUS} \
     -adjust_lr
 ```
@@ -113,16 +113,16 @@ If you use fewer or more GPUs for distributed training, you should update `batch
 so that (batch size) * (number of GPUs) = 256. (e.g., `batch_size: 32` if you use 8 GPUs for distributed training.)  
 ```
 python3 -m torch.distributed.launch --nproc_per_node=${NUM_GPUS} --use_env examples/image_classification.py \
-    --config configs/official/ilsvrc2012/crd-resnet18_from_resnet34.yaml \
-    --log log/crd-resnet18_from_resnet34.log \
+    --config configs/official/ilsvrc2012/yoshitomo-matsubara/rrpr2020/crd-resnet18_from_resnet34.yaml \
+    --log log/ilsvrc2012/crd-resnet18_from_resnet34.log \
     --world_size ${NUM_GPUS} 
 ```
 
 #### Teacher-free Knowledge Distillation
 ```
 python3 -m torch.distributed.launch --nproc_per_node=${NUM_GPUS} --use_env examples/image_classification.py \
-    --config configs/official/ilsvrc2012/tfkd-resnet18_from_resnet34.yaml \
-    --log log/tfkd-resnet18_from_resnet34.log \
+    --config configs/official/ilsvrc2012/yoshitomo-matsubara/rrpr2020/tfkd-resnet18_from_resnet34.yaml \
+    --log log/ilsvrc2012/tfkd-resnet18_from_resnet34.log \
     --world_size ${NUM_GPUS} \
     -adjust_lr
 ```
@@ -132,8 +132,8 @@ If you use fewer or more GPUs for distributed training, you should update `batch
 so that (batch size) * (number of GPUs) = 256. (e.g., `batch_size: 32` if you use 8 GPUs for distributed training.)  
 ```
 python3 -m torch.distributed.launch --nproc_per_node=${NUM_GPUS} --use_env examples/image_classification.py \
-    --config configs/official/ilsvrc2012/sskd-resnet18_from_resnet34.yaml \
-    --log log/sskd-resnet18_from_resnet34.log \
+    --config configs/official/ilsvrc2012/yoshitomo-matsubara/rrpr2020/sskd-resnet18_from_resnet34.yaml \
+    --log log/ilsvrc2012/sskd-resnet18_from_resnet34.log \
     --world_size ${NUM_GPUS} 
 ```
 
@@ -142,8 +142,8 @@ If you use fewer or more GPUs for distributed training, you should update `batch
 so that (batch size) * (number of GPUs) = 512. (e.g., `batch_size: 64` if you use 8 GPUs for distributed training.)  
 ```
 python3 -m torch.distributed.launch --nproc_per_node=${NUM_GPUS} --use_env examples/image_classification.py \
-    --config configs/official/ilsvrc2012/cse_l2-resnet18_from_resnet34.yaml \
-    --log log/cse_l2-resnet18_from_resnet34.log \
+    --config configs/official/ilsvrc2012/yoshitomo-matsubara/rrpr2020/cse_l2-resnet18_from_resnet34.yaml \
+    --log log/ilsvrc2012/cse_l2-resnet18_from_resnet34.log \
     --world_size ${NUM_GPUS} 
 ```
 
@@ -155,8 +155,8 @@ If you use fewer or more GPUs for distributed training, you should update `batch
 so that (batch size) * (number of GPUs) = 512. (e.g., `batch_size: 64` if you use 8 GPUs for distributed training.) 
 ```
 python3 -m torch.distributed.launch --nproc_per_node=${NUM_GPUS} --use_env examples/image_classification.py \
-    --config configs/official/ilsvrc2012/pad_l2-resnet18_from_resnet34.yaml \
-    --log log/pad_l2-resnet18_from_resnet34.log \
+    --config configs/official/ilsvrc2012/yoshitomo-matsubara/rrpr2020/pad_l2-resnet18_from_resnet34.yaml \
+    --log log/ilsvrc2012/pad_l2-resnet18_from_resnet34.log \
     --world_size ${NUM_GPUS} 
 ```
 Multi-stage methods can be defined in one yaml file like [this](https://github.com/yoshitomo-matsubara/torchdistill/blob/master/configs/sample/image_classification/multi_stage/pad), 
@@ -168,34 +168,34 @@ Make sure checkpoint files do not exist at `ckpt` in `student_model` entry to tr
 #### Knowledge Distillation
 ```
 python3 examples/image_classification.py \
-    --config configs/official/ilsvrc2012/kd-resnet18_from_resnet34.yaml \
-    --log log/kd-resnet18_from_resnet34.log
+    --config configs/official/ilsvrc2012/yoshitomo-matsubara/rrpr2020/kd-resnet18_from_resnet34.yaml \
+    --log log/ilsvrc2012/kd-resnet18_from_resnet34.log
 ```
 
 #### Attention Transfer
 ```
 python3 examples/image_classification.py \
-    --config configs/official/ilsvrc2012/at-resnet18_from_resnet34.yaml \
-    --log log/at-resnet18_from_resnet34.log
+    --config configs/official/ilsvrc2012/yoshitomo-matsubara/rrpr2020/at-resnet18_from_resnet34.yaml \
+    --log log/ilsvrc2012/at-resnet18_from_resnet34.log
 ```
 
 #### Factor Transfer
 ```
 python3 examples/image_classification.py \
-    --config configs/official/ilsvrc2012/ft-resnet18_from_resnet34.yaml \
-    --log log/ft-resnet18_from_resnet34.log
+    --config configs/official/ilsvrc2012/yoshitomo-matsubara/rrpr2020/ft-resnet18_from_resnet34.yaml \
+    --log log/ilsvrc2012/ft-resnet18_from_resnet34.log
 ```
 
 #### Contrastive Representation Distillation
 ```
 python3 examples/image_classification.py \
-    --config configs/official/ilsvrc2012/crd-resnet18_from_resnet34.yaml \
-    --log log/crd-resnet18_from_resnet34.log
+    --config configs/official/ilsvrc2012/yoshitomo-matsubara/rrpr2020/crd-resnet18_from_resnet34.yaml \
+    --log log/ilsvrc2012/crd-resnet18_from_resnet34.log
 ```
 
 #### Teacher-free Knowledge Distillation
 ```
 python3 examples/image_classification.py \
-    --config configs/official/ilsvrc2012/tfkd-resnet18_from_resnet34.yaml \
-    --log log/tfkd-resnet18_from_resnet34.log
+    --config configs/official/ilsvrc2012/yoshitomo-matsubara/rrpr2020/tfkd-resnet18_from_resnet34.yaml \
+    --log log/ilsvrc2012/tfkd-resnet18_from_resnet34.log
 ```
