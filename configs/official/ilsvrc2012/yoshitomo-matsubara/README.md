@@ -162,7 +162,7 @@ python3 -m torch.distributed.launch --nproc_per_node=${NUM_GPUS} --use_env examp
 Multi-stage methods can be defined in one yaml file like [this](https://github.com/yoshitomo-matsubara/torchdistill/blob/master/configs/sample/image_classification/multi_stage/pad), 
 but you should modify the hyperparameters like number of epochs, lr scheduler, and so on.
 
-### Command to train without distributed training
+### Command to train without distributed processes
 Make sure checkpoint files do not exist at `ckpt` in `student_model` entry to train models from scratch.
 
 #### Knowledge Distillation
