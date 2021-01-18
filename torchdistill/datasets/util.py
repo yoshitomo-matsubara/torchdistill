@@ -59,7 +59,7 @@ def build_transform(transform_params_config, compose_cls=None):
 def get_torchvision_dataset(dataset_cls, dataset_params_config):
     params_config = dataset_params_config.copy()
     transform = build_transform(params_config.pop('transform_params', None))
-    target_transform = build_transform(params_config.pop('transform_params', None))
+    target_transform = build_transform(params_config.pop('target_transform_params', None))
     if 'loader' in params_config:
         loader_config = params_config.pop('loader')
         loader_type = loader_config['type']
