@@ -9,6 +9,7 @@ from torchvision.datasets import PhotoTour, VOCDetection, Kinetics400, HMDB51, U
 from torchdistill.common.constant import def_logger
 from torchdistill.datasets.coco import ImageToTensor, Compose, CocoRandomHorizontalFlip, get_coco
 from torchdistill.datasets.collator import get_collate_func
+from torchdistill.datasets.registry import DATASET_DICT
 from torchdistill.datasets.sample_loader import get_sample_loader
 from torchdistill.datasets.sampler import get_batch_sampler
 from torchdistill.datasets.transform import TRANSFORM_CLASS_DICT, CustomCompose
@@ -16,7 +17,6 @@ from torchdistill.datasets.wrapper import default_idx2subpath, BaseDatasetWrappe
 
 logger = def_logger.getChild(__name__)
 
-DATASET_DICT = torchvision.datasets.__dict__
 TRANSFORM_CLASS_DICT.update(torchvision.transforms.__dict__)
 
 

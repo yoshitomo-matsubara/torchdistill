@@ -7,6 +7,16 @@ OPTIM_DICT = misc_util.get_classes_as_dict('torch.optim')
 SCHEDULER_DICT = misc_util.get_classes_as_dict('torch.optim.lr_scheduler')
 
 
+def register_optimizer(cls_or_func):
+    OPTIM_DICT[cls_or_func.__name__] = cls_or_func
+    return cls_or_func
+
+
+def register_scheduler(cls_or_func):
+    SCHEDULER_DICT[cls_or_func.__name__] = cls_or_func
+    return cls_or_func
+
+
 def get_loss(loss_type, param_dict=dict(), **kwargs):
     lower_loss_type = loss_type.lower()
     if lower_loss_type in LOSS_DICT:
