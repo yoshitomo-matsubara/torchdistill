@@ -1,4 +1,4 @@
-import torch.nn as nn
+from torch import nn
 
 from torchdistill.common import misc_util
 
