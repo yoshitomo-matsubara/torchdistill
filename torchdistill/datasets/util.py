@@ -56,7 +56,7 @@ def build_transform(transform_params_config, compose_cls=None):
     return torchvision.transforms.Compose(component_list) if compose_cls is None else compose_cls(component_list)
 
 
-def get_official_dataset(dataset_cls, dataset_params_config):
+def get_torchvision_dataset(dataset_cls, dataset_params_config):
     params_config = dataset_params_config.copy()
     transform = build_transform(params_config.pop('transform_params', None))
     target_transform = build_transform(params_config.pop('transform_params', None))
@@ -118,13 +118,15 @@ def get_dataset_dict(dataset_config):
                                   split_config['annotated_only'], split_config.get('random_horizontal_flip', None),
                                   is_segment, transforms, split_config.get('jpeg_quality', None))
     elif dataset_type in DATASET_DICT:
-        dataset_cls = DATASET_DICT[dataset_type]
+        dataset_cls_or_func = DATASET_DICT[dataset_type]
+        is_torchvision = dataset_type in torchvision.datasets.__dict__
         dataset_splits_config = dataset_config['splits']
         for split_name in dataset_splits_config.keys():
             st = time.time()
             logger.info('Loading {} data'.format(split_name))
             split_config = dataset_splits_config[split_name]
-            org_dataset = get_official_dataset(dataset_cls, split_config['params'])
+            org_dataset = get_torchvision_dataset(dataset_cls_or_func, split_config['params']) if is_torchvision \
+                else dataset_cls_or_func(**split_config['params'])
             dataset_id = split_config['dataset_id']
             random_split_config = split_config.get('random_split', None)
             if random_split_config is None:
