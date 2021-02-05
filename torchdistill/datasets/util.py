@@ -60,6 +60,7 @@ def get_torchvision_dataset(dataset_cls, dataset_params_config):
     params_config = dataset_params_config.copy()
     transform = build_transform(params_config.pop('transform_params', None))
     target_transform = build_transform(params_config.pop('target_transform_params', None))
+    transforms = build_transform(params_config.pop('transforms_params', None))
     if 'loader' in params_config:
         loader_config = params_config.pop('loader')
         loader_type = loader_config['type']
@@ -69,9 +70,9 @@ def get_torchvision_dataset(dataset_cls, dataset_params_config):
         params_config['loader'] = loader
 
     # For datasets without target_transform
-    if dataset_cls in (PhotoTour, VOCDetection, Kinetics400, HMDB51, UCF101):
+    if dataset_cls in (PhotoTour, Kinetics400, HMDB51, UCF101):
         return dataset_cls(transform=transform, **params_config)
-    return dataset_cls(transform=transform, target_transform=target_transform, **params_config)
+    return dataset_cls(transform=transform, target_transform=target_transform, transforms=transforms, **params_config)
 
 
 def split_dataset(org_dataset, random_split_config, dataset_id, dataset_dict):
@@ -96,10 +97,13 @@ def split_dataset(org_dataset, random_split_config, dataset_id, dataset_dict):
         params_config = sub_split_params.copy()
         transform = build_transform(params_config.pop('transform_params', None))
         target_transform = build_transform(params_config.pop('transform_params', None))
+        transforms = build_transform(params_config.pop('transforms_params', None))
         if hasattr(sub_dataset.dataset, 'transform') and transform is not None:
             sub_dataset.dataset.transform = transform
         if hasattr(sub_dataset.dataset, 'target_transform') and target_transform is not None:
             sub_dataset.dataset.target_transform = target_transform
+        if hasattr(sub_dataset.dataset, 'transforms') and transforms is not None:
+            sub_dataset.dataset.transforms = transforms
         dataset_dict[sub_dataset_id] = sub_dataset
 
 
@@ -133,7 +137,7 @@ def get_dataset_dict(dataset_config):
                 dataset_dict[dataset_id] = org_dataset
             else:
                 split_dataset(org_dataset, random_split_config, dataset_id, dataset_dict)
-            logger.info('{} sec'.format(time.time() - st))
+            logger.info('dataset_id `{}`: {} sec'.format(dataset_id, time.time() - st))
     else:
         raise ValueError('dataset_type `{}` is not expected'.format(dataset_type))
     return dataset_dict
