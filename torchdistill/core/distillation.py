@@ -144,13 +144,18 @@ class DistillationBox(nn.Module):
                     trainable_module_list.append(self.teacher_model)
 
             self.optimizer = get_optimizer(trainable_module_list, optim_config['type'], optim_params_config)
+            self.optimizer.zero_grad()
+            self.max_grad_norm = optim_config.get('max_grad_norm', None)
+            self.grad_accum_step = optim_config.get('grad_accum_step', 1)
             optimizer_reset = True
 
         scheduler_config = train_config.get('scheduler', None)
         if scheduler_config is not None and len(scheduler_config) > 0:
             self.lr_scheduler = get_scheduler(self.optimizer, scheduler_config['type'], scheduler_config['params'])
+            self.scheduling_step = scheduler_config.get('scheduling_step', 0)
         elif optimizer_reset:
             self.lr_scheduler = None
+            self.scheduling_step = None
 
         # Set up apex if you require mixed-precision training
         self.apex = False
@@ -168,6 +173,7 @@ class DistillationBox(nn.Module):
     def __init__(self, teacher_model, student_model, dataset_dict,
                  train_config, device, device_ids, distributed, lr_factor):
         super().__init__()
+        # Key attributes (should not be modified)
         self.org_teacher_model = teacher_model
         self.org_student_model = student_model
         self.dataset_dict = dataset_dict
@@ -175,6 +181,7 @@ class DistillationBox(nn.Module):
         self.device_ids = device_ids
         self.distributed = distributed
         self.lr_factor = lr_factor
+        # Local attributes (can be updated at each stage)
         self.teacher_model = None
         self.student_model = None
         self.teacher_forward_proc, self.student_forward_proc = None, None
@@ -183,6 +190,10 @@ class DistillationBox(nn.Module):
         self.train_data_loader, self.val_data_loader, self.optimizer, self.lr_scheduler = None, None, None, None
         self.org_criterion, self.criterion, self.uses_teacher_output, self.extract_org_loss = None, None, None, None
         self.teacher_updatable, self.teacher_any_frozen, self.student_any_frozen = None, None, None
+        self.grad_accum_step = None
+        self.max_grad_norm = None
+        self.scheduling_step = 0
+        self.stage_grad_count = 0
         self.apex = None
         self.setup(train_config)
         self.num_epochs = train_config['num_epochs']
@@ -265,16 +276,33 @@ class DistillationBox(nn.Module):
         return total_loss
 
     def update_params(self, loss):
-        self.optimizer.zero_grad()
+        self.stage_grad_count += 1
+        if self.grad_accum_step > 1:
+            loss /= self.grad_accum_step
+
         if self.apex:
             with amp.scale_loss(loss, self.optimizer) as scaled_loss:
                 scaled_loss.backward()
         else:
             loss.backward()
-        self.optimizer.step()
+
+        if self.stage_grad_count % self.grad_accum_step == 0:
+            if self.max_grad_norm is not None:
+                target_params = amp.master_params(self.optimizer) if self.apex \
+                    else [p for group in self.optimizer.param_groups for p in group['group']]
+                torch.nn.utils.clip_grad_norm_(target_params, self.max_grad_norm)
+
+            self.optimizer.step()
+            self.optimizer.zero_grad()
+
+        # Step-wise scheduler step
+        if self.lr_scheduler is not None and self.scheduling_step > 0 \
+                and self.stage_grad_count % self.scheduling_step == 0:
+            self.lr_scheduler.step()
 
     def post_process(self, **kwargs):
-        if self.lr_scheduler is not None:
+        # Epoch-wise scheduler step
+        if self.lr_scheduler is not None and self.scheduling_step <= 0:
             self.lr_scheduler.step()
         if isinstance(self.teacher_model, SpecialModule):
             self.teacher_model.post_process()
@@ -310,6 +338,7 @@ class MultiStagesDistillationBox(DistillationBox):
 
     def advance_to_next_stage(self):
         self.clean_modules()
+        self.stage_grad_count = 0
         self.stage_number += 1
         next_stage_config = self.train_config['stage{}'.format(self.stage_number)]
         self.setup(next_stage_config)
