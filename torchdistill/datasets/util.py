@@ -35,6 +35,9 @@ def build_transform(transform_params_config, compose_cls=None):
     if not isinstance(transform_params_config, (dict, list)) or len(transform_params_config) == 0:
         return None
 
+    if isinstance(compose_cls, str):
+        compose_cls = TRANSFORM_CLASS_DICT[compose_cls]
+
     component_list = list()
     if isinstance(transform_params_config, dict):
         for component_key in sorted(transform_params_config.keys()):
@@ -58,9 +61,13 @@ def build_transform(transform_params_config, compose_cls=None):
 
 def get_torchvision_dataset(dataset_cls, dataset_params_config):
     params_config = dataset_params_config.copy()
-    transform = build_transform(params_config.pop('transform_params', None))
-    target_transform = build_transform(params_config.pop('target_transform_params', None))
-    transforms = build_transform(params_config.pop('transforms_params', None))
+    transform_compose_cls_name = params_config.pop('transform_compose_cls', None)
+    transform = build_transform(params_config.pop('transform_params', None), compose_cls=transform_compose_cls_name)
+    target_transform_compose_cls_name = params_config.pop('target_transform_compose_cls', None)
+    target_transform = build_transform(params_config.pop('target_transform_params', None),
+                                       compose_cls=target_transform_compose_cls_name)
+    transforms_compose_cls_name = params_config.pop('transforms_compose_cls', None)
+    transforms = build_transform(params_config.pop('transforms_params', None), compose_cls=transforms_compose_cls_name)
     if 'loader' in params_config:
         loader_config = params_config.pop('loader')
         loader_type = loader_config['type']
