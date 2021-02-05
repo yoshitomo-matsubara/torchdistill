@@ -1,5 +1,5 @@
 datasets:
-  ilsvrc2012:
+  cifar100:
     name: &dataset_name 'cifar100'
     type: 'CIFAR100'
     root: &root_dir !join ['./resource/dataset/', *dataset_name]
