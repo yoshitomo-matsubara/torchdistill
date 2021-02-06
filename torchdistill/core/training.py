@@ -1,5 +1,6 @@
 import sys
 
+import torch
 from torch import distributed as dist
 from torch import nn
 
@@ -108,13 +109,18 @@ class TrainingBox(nn.Module):
                 trainable_module_list = nn.ModuleList([self.model])
 
             self.optimizer = get_optimizer(trainable_module_list, optim_config['type'], optim_params_config)
+            self.optimizer.zero_grad()
+            self.max_grad_norm = optim_config.get('max_grad_norm', None)
+            self.grad_accum_step = optim_config.get('grad_accum_step', 1)
             optimizer_reset = True
 
         scheduler_config = train_config.get('scheduler', None)
         if scheduler_config is not None and len(scheduler_config) > 0:
             self.lr_scheduler = get_scheduler(self.optimizer, scheduler_config['type'], scheduler_config['params'])
+            self.scheduling_step = scheduler_config.get('scheduling_step', 0)
         elif optimizer_reset:
             self.lr_scheduler = None
+            self.scheduling_step = None
 
         # Set up apex if you require mixed-precision training
         self.apex = False
@@ -131,12 +137,14 @@ class TrainingBox(nn.Module):
 
     def __init__(self, model, dataset_dict, train_config, device, device_ids, distributed, lr_factor):
         super().__init__()
+        # Key attributes (should not be modified)
         self.org_model = model
         self.dataset_dict = dataset_dict
         self.device = device
         self.device_ids = device_ids
         self.distributed = distributed
         self.lr_factor = lr_factor
+        # Local attributes (can be updated at each stage)
         self.model = None
         self.model_forward_proc = None
         self.target_model_pairs = list()
@@ -144,6 +152,10 @@ class TrainingBox(nn.Module):
         self.train_data_loader, self.val_data_loader, self.optimizer, self.lr_scheduler = None, None, None, None
         self.org_criterion, self.criterion, self.extract_org_loss = None, None, None
         self.model_any_frozen = None
+        self.grad_accum_step = None
+        self.max_grad_norm = None
+        self.scheduling_step = 0
+        self.stage_grad_count = 0
         self.apex = None
         self.setup(train_config)
         self.num_epochs = train_config['num_epochs']
@@ -168,16 +180,33 @@ class TrainingBox(nn.Module):
         return total_loss
 
     def update_params(self, loss):
-        self.optimizer.zero_grad()
+        self.stage_grad_count += 1
+        if self.grad_accum_step > 1:
+            loss /= self.grad_accum_step
+
         if self.apex:
             with amp.scale_loss(loss, self.optimizer) as scaled_loss:
                 scaled_loss.backward()
         else:
             loss.backward()
-        self.optimizer.step()
+
+        if self.stage_grad_count % self.grad_accum_step == 0:
+            if self.max_grad_norm is not None:
+                target_params = amp.master_params(self.optimizer) if self.apex \
+                    else [p for group in self.optimizer.param_groups for p in group['group']]
+                torch.nn.utils.clip_grad_norm_(target_params, self.max_grad_norm)
+
+            self.optimizer.step()
+            self.optimizer.zero_grad()
+
+        # Step-wise scheduler step
+        if self.lr_scheduler is not None and self.scheduling_step > 0 \
+                and self.stage_grad_count % self.scheduling_step == 0:
+            self.lr_scheduler.step()
 
     def post_process(self, **kwargs):
-        if self.lr_scheduler is not None:
+        # Epoch-wise scheduler step
+        if self.lr_scheduler is not None and self.scheduling_step <= 0:
             self.lr_scheduler.step()
         if isinstance(self.model, SpecialModule):
             self.model.post_process()
@@ -206,6 +235,7 @@ class MultiStagesTrainingBox(TrainingBox):
 
     def advance_to_next_stage(self):
         self.clean_modules()
+        self.stage_grad_count = 0
         self.stage_number += 1
         next_stage_config = self.train_config['stage{}'.format(self.stage_number)]
         self.setup(next_stage_config)

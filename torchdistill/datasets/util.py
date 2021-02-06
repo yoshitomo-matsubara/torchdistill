@@ -4,7 +4,8 @@ import torch
 import torchvision
 from torch.utils.data import DataLoader, RandomSampler, SequentialSampler, random_split
 from torch.utils.data.distributed import DistributedSampler
-from torchvision.datasets import PhotoTour, VOCDetection, Kinetics400, HMDB51, UCF101
+from torchvision.datasets import PhotoTour, Kinetics400, HMDB51, UCF101, Cityscapes, CocoCaptions, CocoDetection, \
+    SBDataset, VOCSegmentation, VOCDetection
 
 from torchdistill.common.constant import def_logger
 from torchdistill.datasets.coco import ImageToTensor, Compose, CocoRandomHorizontalFlip, get_coco
@@ -35,6 +36,9 @@ def build_transform(transform_params_config, compose_cls=None):
     if not isinstance(transform_params_config, (dict, list)) or len(transform_params_config) == 0:
         return None
 
+    if isinstance(compose_cls, str):
+        compose_cls = TRANSFORM_CLASS_DICT[compose_cls]
+
     component_list = list()
     if isinstance(transform_params_config, dict):
         for component_key in sorted(transform_params_config.keys()):
@@ -58,8 +62,13 @@ def build_transform(transform_params_config, compose_cls=None):
 
 def get_torchvision_dataset(dataset_cls, dataset_params_config):
     params_config = dataset_params_config.copy()
-    transform = build_transform(params_config.pop('transform_params', None))
-    target_transform = build_transform(params_config.pop('target_transform_params', None))
+    transform_compose_cls_name = params_config.pop('transform_compose_cls', None)
+    transform = build_transform(params_config.pop('transform_params', None), compose_cls=transform_compose_cls_name)
+    target_transform_compose_cls_name = params_config.pop('target_transform_compose_cls', None)
+    target_transform = build_transform(params_config.pop('target_transform_params', None),
+                                       compose_cls=target_transform_compose_cls_name)
+    transforms_compose_cls_name = params_config.pop('transforms_compose_cls', None)
+    transforms = build_transform(params_config.pop('transforms_params', None), compose_cls=transforms_compose_cls_name)
     if 'loader' in params_config:
         loader_config = params_config.pop('loader')
         loader_type = loader_config['type']
@@ -69,8 +78,12 @@ def get_torchvision_dataset(dataset_cls, dataset_params_config):
         params_config['loader'] = loader
 
     # For datasets without target_transform
-    if dataset_cls in (PhotoTour, VOCDetection, Kinetics400, HMDB51, UCF101):
+    if dataset_cls in (PhotoTour, Kinetics400, HMDB51, UCF101):
         return dataset_cls(transform=transform, **params_config)
+    # For datasets with transforms
+    if dataset_cls in (Cityscapes, CocoCaptions, CocoDetection, SBDataset, VOCSegmentation, VOCDetection):
+        return dataset_cls(transform=transform, target_transform=target_transform,
+                           transforms=transforms, **params_config)
     return dataset_cls(transform=transform, target_transform=target_transform, **params_config)
 
 
@@ -96,10 +109,13 @@ def split_dataset(org_dataset, random_split_config, dataset_id, dataset_dict):
         params_config = sub_split_params.copy()
         transform = build_transform(params_config.pop('transform_params', None))
         target_transform = build_transform(params_config.pop('transform_params', None))
+        transforms = build_transform(params_config.pop('transforms_params', None))
         if hasattr(sub_dataset.dataset, 'transform') and transform is not None:
             sub_dataset.dataset.transform = transform
         if hasattr(sub_dataset.dataset, 'target_transform') and target_transform is not None:
             sub_dataset.dataset.target_transform = target_transform
+        if hasattr(sub_dataset.dataset, 'transforms') and transforms is not None:
+            sub_dataset.dataset.transforms = transforms
         dataset_dict[sub_dataset_id] = sub_dataset
 
 
@@ -133,7 +149,7 @@ def get_dataset_dict(dataset_config):
                 dataset_dict[dataset_id] = org_dataset
             else:
                 split_dataset(org_dataset, random_split_config, dataset_id, dataset_dict)
-            logger.info('{} sec'.format(time.time() - st))
+            logger.info('dataset_id `{}`: {} sec'.format(dataset_id, time.time() - st))
     else:
         raise ValueError('dataset_type `{}` is not expected'.format(dataset_type))
     return dataset_dict
