@@ -4,7 +4,8 @@ import torch
 import torchvision
 from torch.utils.data import DataLoader, RandomSampler, SequentialSampler, random_split
 from torch.utils.data.distributed import DistributedSampler
-from torchvision.datasets import PhotoTour, VOCDetection, Kinetics400, HMDB51, UCF101
+from torchvision.datasets import PhotoTour, Kinetics400, HMDB51, UCF101, Cityscapes, CocoCaptions, CocoDetection, \
+    SBDataset, VOCSegmentation, VOCDetection
 
 from torchdistill.common.constant import def_logger
 from torchdistill.datasets.coco import ImageToTensor, Compose, CocoRandomHorizontalFlip, get_coco
@@ -79,7 +80,11 @@ def get_torchvision_dataset(dataset_cls, dataset_params_config):
     # For datasets without target_transform
     if dataset_cls in (PhotoTour, Kinetics400, HMDB51, UCF101):
         return dataset_cls(transform=transform, **params_config)
-    return dataset_cls(transform=transform, target_transform=target_transform, transforms=transforms, **params_config)
+    # For datasets with transforms
+    if dataset_cls in (Cityscapes, CocoCaptions, CocoDetection, SBDataset, VOCSegmentation, VOCDetection):
+        return dataset_cls(transform=transform, target_transform=target_transform,
+                           transforms=transforms, **params_config)
+    return dataset_cls(transform=transform, target_transform=target_transform, **params_config)
 
 
 def split_dataset(org_dataset, random_split_config, dataset_id, dataset_dict):
