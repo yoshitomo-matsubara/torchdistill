@@ -28,6 +28,11 @@ class CustomLoss(nn.Module):
     def forward(self, *args, **kwargs):
         raise NotImplementedError('forward function is not implemented')
 
+    def __str__(self):
+        desc = 'Loss = '
+        desc += ' + '.join(['{} * {}'.format(factor, criterion) for criterion, factor in self.term_dict.values()])
+        return desc
+
 
 @register_custom_loss
 class GeneralizedCustomLoss(CustomLoss):
@@ -46,6 +51,14 @@ class GeneralizedCustomLoss(CustomLoss):
         if self.org_loss_factor is None or self.org_loss_factor == 0:
             return sub_total_loss
         return sub_total_loss + self.org_loss_factor * sum(org_loss_dict.values() if len(org_loss_dict) > 0 else [])
+
+    def __str__(self):
+        desc = 'Loss = '
+        tuple_list = [(self.org_loss_factor, 'OrgLoss')] \
+            if self.org_loss_factor is not None and self.org_loss_factor != 0 else list()
+        tuple_list.extend([(factor, criterion) for criterion, factor in self.term_dict.values()])
+        desc += ' + '.join(['{} * {}'.format(factor, criterion) for factor, criterion in tuple_list])
+        return desc
 
 
 def get_custom_loss(criterion_config):
