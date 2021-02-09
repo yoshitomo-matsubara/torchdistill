@@ -112,14 +112,9 @@ def custom_resnet_fpn_backbone(backbone_name, backbone_params_config,
         if all([not name.startswith(layer) for layer in layers_to_train]):
             parameter.requires_grad_(False)
 
-    return_layers = {'layer1': '0', 'layer2': '1', 'layer3': '2', 'layer4': '3'}
-
+    returned_layers = backbone_params_config.get('returned_layers', [1, 2, 3, 4])
+    return_layers = {f'layer{k}': str(v) for v, k in enumerate(returned_layers)}
     in_channels_stage2 = backbone.inplanes // 8
-    in_channels_list = [
-        in_channels_stage2,
-        in_channels_stage2 * 2,
-        in_channels_stage2 * 4,
-        in_channels_stage2 * 8,
-    ]
+    in_channels_list = [in_channels_stage2 * 2 ** (i - 1) for i in returned_layers]
     out_channels = 256
     return BackboneWithFPN(backbone, return_layers, in_channels_list, out_channels)
