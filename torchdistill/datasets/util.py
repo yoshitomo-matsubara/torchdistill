@@ -128,7 +128,7 @@ def get_dataset_dict(dataset_config):
             split_config = dataset_splits_config[split_name]
             is_segment = split_config.get('is_segment', False)
             compose_cls = CustomCompose if is_segment else None
-            transforms = build_transform(split_config.get('transform_params', None), compose_cls=compose_cls)
+            transforms = build_transform(split_config.get('transforms_params', None), compose_cls=compose_cls)
             dataset_dict[split_config['dataset_id']] =\
                 load_coco_dataset(split_config['images'], split_config['annotations'],
                                   split_config['annotated_only'], split_config.get('random_horizontal_flip', None),
