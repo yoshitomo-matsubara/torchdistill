@@ -85,6 +85,7 @@ class DistillationBox(nn.Module):
         self.org_criterion = None if org_criterion_config is None or len(org_criterion_config) == 0 \
             else get_single_loss(org_criterion_config)
         self.criterion = get_custom_loss(criterion_config)
+        logger.info(self.criterion)
         self.uses_teacher_output = self.org_criterion is not None and isinstance(self.org_criterion, KDLoss)
         self.extract_org_loss = get_func2extract_org_output(criterion_config.get('func2extract_org_loss', None))
 
