@@ -26,7 +26,7 @@ def extract_simple_org_loss(org_criterion, student_outputs, teacher_outputs, tar
 
 
 @register_func2extract_org_output
-def extract_rcnn_org_loss(org_criterion, student_outputs, teacher_outputs, targets, uses_teacher_output, **kwargs):
+def extract_org_loss_dict(org_criterion, student_outputs, teacher_outputs, targets, uses_teacher_output, **kwargs):
     org_loss_dict = dict()
     if isinstance(student_outputs, dict):
         org_loss_dict.update(student_outputs)
