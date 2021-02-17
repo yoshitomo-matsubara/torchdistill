@@ -9,6 +9,7 @@ description = 'A Modular, Configuration-Driven Framework for Knowledge Distillat
 setup(
     name='torchdistill',
     version='0.1.3',
+    author='Yoshitomo Matsubara',
     description=description,
     long_description=long_description,
     long_description_content_type='text/markdown',
