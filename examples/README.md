@@ -25,6 +25,7 @@ mv ILSVRC2012_img_val.tar ./resource/dataset/ilsvrc2012/val/
 wget https://raw.githubusercontent.com/soumith/imagenetloader.torch/master/valprep.sh
 mv valpre.sh ./resource/dataset/ilsvrc2012/val/
 cd ./resource/dataset/ilsvrc2012/val/
+tar -xvf ILSVRC2012_img_val.tar
 sh valpre.sh
 cd ../../../../
 ```
