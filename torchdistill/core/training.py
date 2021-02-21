@@ -99,7 +99,9 @@ class TrainingBox(nn.Module):
                 trainable_module_list = list()
                 for module_wise_params_config in module_wise_params_configs:
                     module_wise_params_dict = dict()
-                    module_wise_params_dict.update(module_wise_params_config['params'])
+                    if isinstance(module_wise_params_config.get('params', None), dict):
+                        module_wise_params_dict.update(module_wise_params_config['params'])
+
                     if 'lr' in module_wise_params_dict:
                         module_wise_params_dict['lr'] *= self.lr_factor
 
