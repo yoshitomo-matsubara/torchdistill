@@ -1,0 +1,21 @@
+language: python
+
+os:
+  - linux
+
+dist: bionic
+
+cache:
+  pip: true
+  directories: $HOME/.cache/
+
+python:
+  - "3.6"
+  - "3.7"
+  - "3.8"
+
+install:
+  - pip install .
+
+script:
+  - python -m pytest
