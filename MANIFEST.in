@@ -1,0 +1,4 @@
+include *.md
+include LICENSE
+
+recursive-exclude * __pycache__
