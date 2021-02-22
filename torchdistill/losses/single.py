@@ -57,6 +57,9 @@ class SimpleLossWrapper(nn.Module):
                                               self.target_module_path, self.target_key)
         return self.single_loss(input_batch, target_batch, *args, **kwargs)
 
+    def __repr__(self):
+        return self.single_loss.__repr__()
+
 
 @register_single_loss
 class OrgDictLoss(nn.Module):
