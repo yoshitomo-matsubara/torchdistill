@@ -35,6 +35,8 @@ def get_argparser():
     parser.add_argument('--start_epoch', default=0, type=int, metavar='N', help='start epoch')
     parser.add_argument('-test_only', action='store_true', help='Only test the models')
     parser.add_argument('-student_only', action='store_true', help='Test the student model only')
+    parser.add_argument('--iou_types', nargs='+', help='IoU types for evaluation '
+                                                       '(the first IoU type is used for checkpoint selection)')
     # distributed training parameters
     parser.add_argument('--world_size', default=1, type=int, help='number of distributed processes')
     parser.add_argument('--dist_url', default='env://', help='url used to set up distributed training')
@@ -92,7 +94,7 @@ def log_info(*args, **kwargs):
 
 
 @torch.no_grad()
-def evaluate(model, data_loader, device, device_ids, distributed, log_freq=1000, title=None, header='Test:'):
+def evaluate(model, data_loader, iou_types, device, device_ids, distributed, log_freq=1000, title=None, header='Test:'):
     model.to(device)
     if distributed:
         model = DistributedDataParallel(model, device_ids=device_ids)
@@ -112,7 +114,9 @@ def evaluate(model, data_loader, device, device_ids, distributed, log_freq=1000,
     model.eval()
     metric_logger = MetricLogger(delimiter='  ')
     coco = get_coco_api_from_dataset(data_loader.dataset)
-    iou_types = get_iou_types(model)
+    if iou_types is None or (isinstance(iou_types, (list, tuple)) and len(iou_types) == 0):
+        iou_types = get_iou_types(model)
+
     coco_evaluator = CocoEvaluator(coco, iou_types)
     for sample_batch, targets in metric_logger.log_every(data_loader, log_freq, header):
         sample_batch = list(image.to(device) for image in sample_batch)
@@ -161,18 +165,20 @@ def train(teacher_model, student_model, dataset_dict, ckpt_file_path, device, de
         best_val_map, _, _ = load_ckpt(ckpt_file_path, optimizer=optimizer, lr_scheduler=lr_scheduler)
 
     log_freq = train_config['log_freq']
+    iou_types = args.iou_types
+    val_iou_type = iou_types[0] if isinstance(iou_types, (list, tuple)) and len(iou_types) > 0 else 'bbox'
     student_model_without_ddp = student_model.module if module_util.check_if_wrapped(student_model) else student_model
     start_time = time.time()
     for epoch in range(args.start_epoch, training_box.num_epochs):
         training_box.pre_process(epoch=epoch)
         train_one_epoch(training_box, device, epoch, log_freq)
         val_coco_evaluator =\
-            evaluate(student_model, training_box.val_data_loader, device, device_ids, distributed,
+            evaluate(student_model, training_box.val_data_loader, iou_types, device, device_ids, distributed,
                      log_freq=log_freq, header='Validation:')
         # Average Precision  (AP) @[ IoU=0.50:0.95 | area=   all | maxDets=100 ]
-        val_map = val_coco_evaluator.coco_eval['bbox'].stats[0]
+        val_map = val_coco_evaluator.coco_eval[val_iou_type].stats[0]
         if val_map > best_val_map and is_main_process():
-            logger.info('Updating ckpt (Best BBox mAP: {:.4f} -> {:.4f})'.format(best_val_map, val_map))
+            logger.info('Updating ckpt (Best mAP: {:.4f} -> {:.4f})'.format(best_val_map, val_map))
             best_val_map = val_map
             save_ckpt(student_model_without_ddp, optimizer, lr_scheduler,
                       best_val_map, config, args, ckpt_file_path)
@@ -215,10 +221,11 @@ def main(args):
     test_data_loader_config = test_config['test_data_loader']
     test_data_loader = util.build_data_loader(dataset_dict[test_data_loader_config['dataset_id']],
                                               test_data_loader_config, distributed)
+    iou_types = args.iou_types
     if not args.student_only and teacher_model is not None:
-        evaluate(teacher_model, test_data_loader, device, device_ids, distributed,
+        evaluate(teacher_model, test_data_loader, iou_types, device, device_ids, distributed,
                  title='[Teacher: {}]'.format(teacher_model_config['name']))
-    evaluate(student_model, test_data_loader, device, device_ids, distributed,
+    evaluate(student_model, test_data_loader, iou_types, device, device_ids, distributed,
              title='[Student: {}]'.format(student_model_config['name']))
 
 
