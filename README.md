@@ -12,6 +12,13 @@ but instead specify the module path(s) in the yaml file.
 Using **ForwardHookManager**, you can extract intermediate representations in model without modifying the interface of its forward function.  
 [This example notebook](demo/extract_intermediate_representations.ipynb) will give you a better idea of the usage.
 
+## 1 experiment → 1 PyYAML config file
+In ***torchdistill***, many components and PyTorch modules are abstracted e.g., models, datasets, optimizers, losses, 
+and more! You can define them in a PyYAML config file so that can be seen as a summary of your experiment, and 
+unless you want to introduce your own modules, you do not need to write Python code at all. 
+Take a look at some configurations available in [configs/](configs/). You'll see what modules are abstracted and 
+how they are defined in a PyYAML config file to design an experiment.
+
 ## Top-1 validation accuracy for ILSVRC 2012 (ImageNet)
 | T: ResNet-34\*  | Pretrained | KD    | AT    | FT         | CRD   | Tf-KD | SSKD  | L2    | PAD-L2    |  
 | :---            | ---:       | ---:  | ---:  | ---:       | ---:  | ---:  | ---:  | ---:  | ---:      |  
@@ -28,6 +35,9 @@ Executable code can be found in [examples/](examples/) such as
 - [Image classification](examples/image_classification.py): ImageNet (ILSVRC 2012), CIFAR-10, CIFAR-100, etc
 - [Object detection](examples/object_detection.py): COCO 2017, etc
 - [Semantic segmentation](examples/semantic_segmentation.py): COCO 2017, PASCAL VOC, etc 
+
+For CIFAR-10 and CIFAR-100, some models are reimplemented and available as pretrained models in ***torchdistill***. 
+More details can be found [here](https://github.com/yoshitomo-matsubara/torchdistill/releases/tag/v0.1.1).
 
 ## Google Colab Examples
 ### CIFAR-10 and CIFAR-100
