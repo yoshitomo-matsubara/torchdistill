@@ -49,7 +49,7 @@ models:
     name: &student_model_name 'resnet18'
     params:
       num_classes: 1000
-      pretrained: True
+      pretrained: False
     experiment: &student_experiment !join [*dataset_name, '-', *student_model_name, '_from_', *teacher_model_name]
     ckpt: !join ['./resource/ckpt/ilsvrc2012/single_stage/crd/', *student_experiment, '.pt']
 
