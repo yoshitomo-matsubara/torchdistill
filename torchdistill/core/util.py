@@ -41,12 +41,13 @@ def set_hooks(model, unwrapped_org_model, model_config, io_dict):
     return pair_list
 
 
-def wrap_model(model, model_config, device, device_ids=None, distributed=False, any_frozen=False):
+def wrap_model(model, model_config, device, device_ids=None, distributed=False,
+               find_unused_parameters=False, any_updatable=True):
     wrapper = model_config.get('wrapper', None) if model_config is not None else None
     model.to(device)
     if wrapper is not None and device.type.startswith('cuda') and not check_if_wrapped(model):
-        if wrapper == 'DistributedDataParallel' and distributed:
-            model = DistributedDataParallel(model, device_ids=device_ids, find_unused_parameters=any_frozen)
+        if wrapper == 'DistributedDataParallel' and distributed and any_updatable:
+            model = DistributedDataParallel(model, device_ids=device_ids, find_unused_parameters=find_unused_parameters)
         elif wrapper in {'DataParallel', 'DistributedDataParallel'}:
             model = DataParallel(model, device_ids=device_ids)
     return model

@@ -8,7 +8,8 @@ from torch import nn
 from torchdistill.common.constant import def_logger
 from torchdistill.common.file_util import make_parent_dirs
 from torchdistill.common.func_util import get_optimizer, get_scheduler
-from torchdistill.common.module_util import check_if_wrapped, freeze_module_params, get_module, unfreeze_module_params
+from torchdistill.common.module_util import check_if_wrapped, freeze_module_params, get_module, unfreeze_module_params, \
+    get_updatable_param_names
 from torchdistill.core.forward_proc import get_forward_proc_func
 from torchdistill.core.util import set_hooks, wrap_model, change_device, tensor2numpy2tensor, extract_io_dict, \
     update_io_dict, extract_sub_model_output_dict
@@ -101,13 +102,7 @@ class DistillationBox(nn.Module):
         # Define loss function used in this stage
         self.setup_loss(train_config)
 
-        # Wrap models if necessary
-        self.teacher_model =\
-            wrap_model(self.teacher_model, teacher_config, self.device, self.device_ids, self.distributed,
-                       self.teacher_any_frozen)
-        self.student_model =\
-            wrap_model(self.student_model, student_config, self.device, self.device_ids, self.distributed,
-                       self.student_any_frozen)
+        # Freeze parameters if specified
         self.teacher_updatable = True
         if not teacher_config.get('requires_grad', True):
             logger.info('Freezing the whole teacher model')
@@ -117,6 +112,16 @@ class DistillationBox(nn.Module):
         if not student_config.get('requires_grad', True):
             logger.info('Freezing the whole student model')
             freeze_module_params(self.student_model)
+
+        # Wrap models if necessary
+        teacher_any_updatable = len(get_updatable_param_names(self.teacher_model)) > 0
+        self.teacher_model =\
+            wrap_model(self.teacher_model, teacher_config, self.device, self.device_ids, self.distributed,
+                       teacher_any_updatable)
+        student_any_updatable = len(get_updatable_param_names(self.student_model)) > 0
+        self.student_model =\
+            wrap_model(self.student_model, student_config, self.device, self.device_ids, self.distributed,
+                       student_any_updatable)
 
         # Set up optimizer and scheduler
         optim_config = train_config.get('optimizer', dict())
@@ -223,6 +228,7 @@ class DistillationBox(nn.Module):
             if not self.teacher_updatable:
                 return teacher_outputs, cached_extracted_teacher_output_dict
 
+        # If no cached data
         if teacher_outputs is None:
             if self.teacher_updatable:
                 teacher_outputs = self.teacher_forward_proc(self.teacher_model, sample_batch, targets, supp_dict)

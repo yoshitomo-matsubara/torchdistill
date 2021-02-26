@@ -6,7 +6,8 @@ from torch import nn
 
 from torchdistill.common.constant import def_logger
 from torchdistill.common.func_util import get_optimizer, get_scheduler
-from torchdistill.common.module_util import check_if_wrapped, freeze_module_params, get_module, unfreeze_module_params
+from torchdistill.common.module_util import check_if_wrapped, freeze_module_params, get_module, unfreeze_module_params, \
+    get_updatable_param_names
 from torchdistill.core.forward_proc import get_forward_proc_func
 from torchdistill.core.util import set_hooks, wrap_model, extract_io_dict, update_io_dict
 from torchdistill.datasets.util import build_data_loaders
@@ -53,8 +54,7 @@ class TrainingBox(nn.Module):
 
         self.model_any_frozen = \
             len(model_config.get('frozen_modules', list())) > 0 or not model_config.get('requires_grad', True)
-        self.target_model_pairs.extend(set_hooks(self.model, ref_model,
-                                                   model_config, self.model_io_dict))
+        self.target_model_pairs.extend(set_hooks(self.model, ref_model, model_config, self.model_io_dict))
         self.model_forward_proc = get_forward_proc_func(model_config.get('forward_proc', None))
 
     def setup_loss(self, train_config):
@@ -79,14 +79,16 @@ class TrainingBox(nn.Module):
         # Define loss function used in this stage
         self.setup_loss(train_config)
 
-        # Wrap models if necessary
-        self.model =\
-            wrap_model(self.model, model_config, self.device, self.device_ids, self.distributed,
-                       self.model_any_frozen)
-
+        # Freeze parameters if specified
         if not model_config.get('requires_grad', True):
             logger.info('Freezing the whole model')
             freeze_module_params(self.model)
+
+        # Wrap models if necessary
+        any_updatable = len(get_updatable_param_names(self.model)) > 0
+        self.model =\
+            wrap_model(self.model, model_config, self.device, self.device_ids, self.distributed,
+                       self.model_any_frozen, any_updatable)
 
         # Set up optimizer and scheduler
         optim_config = train_config.get('optimizer', dict())
