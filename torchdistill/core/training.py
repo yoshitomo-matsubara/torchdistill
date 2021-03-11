@@ -198,7 +198,7 @@ class TrainingBox(nn.Module):
         if self.stage_grad_count % self.grad_accum_step == 0:
             if self.max_grad_norm is not None:
                 target_params = amp.master_params(self.optimizer) if self.apex \
-                    else [p for group in self.optimizer.param_groups for p in group['group']]
+                    else [p for group in self.optimizer.param_groups for p in group['params']]
                 torch.nn.utils.clip_grad_norm_(target_params, self.max_grad_norm)
 
             self.optimizer.step()
