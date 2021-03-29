@@ -1,4 +1,4 @@
-# [torchdistill: A Modular, Configuration-Driven Framework for Knowledge Distillation](https://arxiv.org/abs/2011.12913)
+# torchdistill: A Modular, Configuration-Driven Framework for Knowledge Distillation
 [![PyPI version](https://badge.fury.io/py/torchdistill.svg)](https://badge.fury.io/py/torchdistill)
 [![Build Status](https://travis-ci.com/yoshitomo-matsubara/torchdistill.svg?branch=master)](https://travis-ci.com/github/yoshitomo-matsubara/torchdistill) 
 
@@ -6,7 +6,8 @@
 and enables you to design (new) experiments simply by editing a yaml file instead of Python code. 
 Even when you need to extract intermediate representations in teacher/student models, 
 you will **NOT** need to reimplement the models, that often change the interface of the forward, 
-but instead specify the module path(s) in the yaml file.  
+but instead specify the module path(s) in the yaml file.
+Refer to [this paper](https://arxiv.org/abs/2011.12913) for more details.  
 
 ## Forward hook manager
 Using **ForwardHookManager**, you can extract intermediate representations in model without modifying the interface of its forward function.  
@@ -47,6 +48,24 @@ More details can be found [here](https://github.com/yoshitomo-matsubara/torchdis
 These examples are available in [demo/](demo/). 
 Note that the examples are for Google Colab users, and usually [examples/](examples/) would be a better reference 
 if you have your own GPU(s).
+
+## PyTorch Hub
+If you find models on [PyTorch Hub](https://pytorch.org/hub/) or GitHub repositories supporting PyTorch Hub,
+you can import them as teacher/student models simply by editing a yaml config file.  
+
+e.g., If you use a pretrained ResNeSt-50 available in [rwightman/pytorch-image-models](https://github.com/rwightman/pytorch-image-models)
+as a teacher model for ImageNet dataset, you can import the model via PyTorch Hub with the following entry in your yaml
+config file.
+
+```yaml
+models:
+  teacher_model:
+    name: 'resnest50d'
+    repo_or_dir: 'rwightman/pytorch-image-models'
+    params:
+      num_classes: 1000
+      pretrained: True
+```
 
 ## How to setup
 - Python 3.6 >=
