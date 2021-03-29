@@ -1,4 +1,4 @@
-# torchdistill: A Modular, Configuration-Driven Framework for Knowledge Distillation
+# [torchdistill: A Modular, Configuration-Driven Framework for Knowledge Distillation](https://arxiv.org/abs/2011.12913)
 [![PyPI version](https://badge.fury.io/py/torchdistill.svg)](https://badge.fury.io/py/torchdistill)
 [![Build Status](https://travis-ci.com/yoshitomo-matsubara/torchdistill.svg?branch=master)](https://travis-ci.com/github/yoshitomo-matsubara/torchdistill) 
 
@@ -48,19 +48,6 @@ These examples are available in [demo/](demo/).
 Note that the examples are for Google Colab users, and usually [examples/](examples/) would be a better reference 
 if you have your own GPU(s).
 
-## Citation
-[[Preprint](https://arxiv.org/abs/2011.12913)]  
-```bibtex
-@article{matsubara2020torchdistill,
-  title={torchdistill: A Modular, Configuration-Driven Framework for Knowledge Distillation},
-  author={Matsubara, Yoshitomo},
-  year={2020}
-  eprint={2011.12913},
-  archivePrefix={arXiv},
-  primaryClass={cs.LG}
-}
-```
-
 ## How to setup
 - Python 3.6 >=
 - pipenv (optional)
@@ -81,11 +68,22 @@ pip3 install -e .
 pipenv install "-e ."
 ```
 
-
 ## Issues / Contact
 The documentation is work-in-progress. In the meantime, feel free to create an issue if you have a feature request or 
 email me ( yoshitom@uci.edu ) if you would like to ask me in private. 
 
+## Citation
+[[Preprint](https://arxiv.org/abs/2011.12913)]  
+```bibtex
+@article{matsubara2020torchdistill,
+  title={torchdistill: A Modular, Configuration-Driven Framework for Knowledge Distillation},
+  author={Matsubara, Yoshitomo},
+  year={2020}
+  eprint={2011.12913},
+  archivePrefix={arXiv},
+  primaryClass={cs.LG}
+}
+```
 
 ## References
 - [:mag:](examples/image_classification.py) [pytorch/vision/references/classification/](https://github.com/pytorch/vision/blob/master/references/classification/)
