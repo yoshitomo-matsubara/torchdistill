@@ -6,7 +6,8 @@
 and enables you to design (new) experiments simply by editing a yaml file instead of Python code. 
 Even when you need to extract intermediate representations in teacher/student models, 
 you will **NOT** need to reimplement the models, that often change the interface of the forward, 
-but instead specify the module path(s) in the yaml file.  
+but instead specify the module path(s) in the yaml file.
+Refer to [this paper](https://arxiv.org/abs/2011.12913) for more details.  
 
 ## Forward hook manager
 Using **ForwardHookManager**, you can extract intermediate representations in model without modifying the interface of its forward function.  
@@ -48,17 +49,22 @@ These examples are available in [demo/](demo/).
 Note that the examples are for Google Colab users, and usually [examples/](examples/) would be a better reference 
 if you have your own GPU(s).
 
-## Citation
-[[Preprint](https://arxiv.org/abs/2011.12913)]  
-```bibtex
-@article{matsubara2020torchdistill,
-  title={torchdistill: A Modular, Configuration-Driven Framework for Knowledge Distillation},
-  author={Matsubara, Yoshitomo},
-  year={2020}
-  eprint={2011.12913},
-  archivePrefix={arXiv},
-  primaryClass={cs.LG}
-}
+## PyTorch Hub
+If you find models on [PyTorch Hub](https://pytorch.org/hub/) or GitHub repositories supporting PyTorch Hub,
+you can import them as teacher/student models simply by editing a yaml config file.  
+
+e.g., If you use a pretrained ResNeSt-50 available in [rwightman/pytorch-image-models](https://github.com/rwightman/pytorch-image-models)
+as a teacher model for ImageNet dataset, you can import the model via PyTorch Hub with the following entry in your yaml
+config file.
+
+```yaml
+models:
+  teacher_model:
+    name: 'resnest50d'
+    repo_or_dir: 'rwightman/pytorch-image-models'
+    params:
+      num_classes: 1000
+      pretrained: True
 ```
 
 ## How to setup
@@ -81,11 +87,22 @@ pip3 install -e .
 pipenv install "-e ."
 ```
 
-
 ## Issues / Contact
 The documentation is work-in-progress. In the meantime, feel free to create an issue if you have a feature request or 
 email me ( yoshitom@uci.edu ) if you would like to ask me in private. 
 
+## Citation
+[[Preprint](https://arxiv.org/abs/2011.12913)]  
+```bibtex
+@article{matsubara2020torchdistill,
+  title={torchdistill: A Modular, Configuration-Driven Framework for Knowledge Distillation},
+  author={Matsubara, Yoshitomo},
+  year={2020}
+  eprint={2011.12913},
+  archivePrefix={arXiv},
+  primaryClass={cs.LG}
+}
+```
 
 ## References
 - [:mag:](examples/image_classification.py) [pytorch/vision/references/classification/](https://github.com/pytorch/vision/blob/master/references/classification/)
