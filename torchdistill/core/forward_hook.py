@@ -137,4 +137,3 @@ class ForwardHookManager(object):
         for _, handle in self.hook_list:
             handle.remove()
         self.hook_list.clear()
-
