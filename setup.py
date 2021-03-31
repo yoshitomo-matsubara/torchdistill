@@ -20,7 +20,7 @@ setup(
         'torch>=1.7.1',
         'torchvision>=0.8.2',
         'numpy',
-        'pyyaml',
+        'pyyaml>=5.4.1',
         'scipy',
         'cython',
         'pycocotools>=2.0.1'
