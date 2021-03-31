@@ -4,8 +4,8 @@ import torch
 from torch import nn
 from torch.nn.functional import adaptive_max_pool2d, normalize, cosine_similarity
 
-from torchdistill.common import func_util
 from torchdistill.common.constant import def_logger
+from torchdistill.losses.registry import get_loss
 
 LOSS_WRAPPER_CLASS_DICT = dict()
 SINGLE_LOSS_CLASS_DICT = dict()
@@ -808,7 +808,7 @@ def get_loss_wrapper(single_loss, params_config, wrapper_config):
 def get_single_loss(single_criterion_config, params_config=None):
     loss_type = single_criterion_config['type']
     single_loss = SINGLE_LOSS_CLASS_DICT[loss_type](**single_criterion_config['params']) \
-        if loss_type in SINGLE_LOSS_CLASS_DICT else func_util.get_loss(loss_type, single_criterion_config['params'])
+        if loss_type in SINGLE_LOSS_CLASS_DICT else get_loss(loss_type, single_criterion_config['params'])
     if params_config is None:
         return single_loss
     return get_loss_wrapper(single_loss, params_config, params_config.get('wrapper', dict()))

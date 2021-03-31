@@ -5,7 +5,6 @@ from torch import distributed as dist
 from torch import nn
 
 from torchdistill.common.constant import def_logger
-from torchdistill.common.func_util import get_optimizer, get_scheduler
 from torchdistill.common.module_util import check_if_wrapped, freeze_module_params, get_module, unfreeze_module_params, \
     get_updatable_param_names
 from torchdistill.core.forward_proc import get_forward_proc_func
@@ -16,6 +15,7 @@ from torchdistill.losses.single import get_single_loss
 from torchdistill.losses.util import get_func2extract_org_output
 from torchdistill.models.special import SpecialModule, build_special_module
 from torchdistill.models.util import redesign_model
+from torchdistill.optim.registry import get_optimizer, get_scheduler
 
 logger = def_logger.getChild(__name__)
 try:
