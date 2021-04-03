@@ -12,7 +12,7 @@ from torch.utils.data._utils.collate import default_collate
 
 from torchdistill.common import file_util, module_util, yaml_util
 from torchdistill.common.constant import def_logger
-from torchdistill.common.main_util import is_main_process, init_distributed_mode, load_ckpt, save_ckpt
+from torchdistill.common.main_util import is_main_process, init_distributed_mode, load_ckpt, save_ckpt, set_seed
 from torchdistill.core.distillation import get_distillation_box
 from torchdistill.core.training import get_training_box
 from torchdistill.datasets import util
@@ -31,6 +31,7 @@ def get_argparser():
     parser.add_argument('--log', help='log file path')
     parser.add_argument('--start_epoch', default=0, type=int, metavar='N', help='start epoch')
     parser.add_argument('--num_classes', default=21, type=int, metavar='N', help='number of classes for evaluation')
+    parser.add_argument('--seed', type=int, help='seed in random number generator')
     parser.add_argument('-test_only', action='store_true', help='Only test the models')
     parser.add_argument('-student_only', action='store_true', help='Test the student model only')
     # distributed training parameters
@@ -155,6 +156,7 @@ def main(args):
     distributed, device_ids = init_distributed_mode(args.world_size, args.dist_url)
     logger.info(args)
     cudnn.benchmark = True
+    set_seed(args.seed)
     config = yaml_util.load_yaml_file(os.path.expanduser(args.config))
     device = torch.device(args.device)
     dataset_dict = util.get_all_dataset(config['datasets'])

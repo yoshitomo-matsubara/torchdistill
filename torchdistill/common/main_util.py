@@ -1,7 +1,9 @@
 import builtins as __builtin__
 import logging
 import os
+import random
 
+import numpy as np
 import torch
 import torch.distributed as dist
 
@@ -25,6 +27,16 @@ def setup_for_distributed(is_master):
             builtin_print(*args, **kwargs)
 
     __builtin__.print = print
+
+
+def set_seed(seed):
+    if not isinstance(seed, int):
+        return
+
+    random.seed(seed)
+    np.random.seed(seed)
+    torch.manual_seed(seed)
+    torch.cuda.manual_seed_all(seed)
 
 
 def is_dist_avail_and_initialized():
