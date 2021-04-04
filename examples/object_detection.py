@@ -153,7 +153,7 @@ def evaluate(model, data_loader, iou_types, device, device_ids, distributed, log
 
 
 def train(teacher_model, student_model, dataset_dict, ckpt_file_path, device, device_ids, distributed, config, args):
-    logger.info('Start distillation')
+    logger.info('Start training')
     train_config = config['train']
     lr_factor = args.world_size if distributed and args.adjust_lr else 1
     training_box = get_training_box(student_model, dataset_dict, train_config,
