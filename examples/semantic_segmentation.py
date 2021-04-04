@@ -20,6 +20,7 @@ from torchdistill.eval.coco import SegEvaluator
 from torchdistill.misc.log import setup_log_file, SmoothedValue, MetricLogger
 from torchdistill.models.official import get_semantic_segmentation_model
 from torchdistill.models.registry import get_model
+from torchdistill.optim.util import customize_lr_config
 
 logger = def_logger.getChild(__name__)
 
@@ -153,13 +154,17 @@ def main(args):
     if is_main_process() and log_file_path is not None:
         setup_log_file(os.path.expanduser(log_file_path))
 
-    distributed, device_ids = init_distributed_mode(args.world_size, args.dist_url)
+    world_size = args.world_size
+    distributed, device_ids = init_distributed_mode(world_size, args.dist_url)
     logger.info(args)
     cudnn.benchmark = True
     set_seed(args.seed)
     config = yaml_util.load_yaml_file(os.path.expanduser(args.config))
     device = torch.device(args.device)
     dataset_dict = util.get_all_dataset(config['datasets'])
+    # Update config with dataset size len(data_loader)
+    customize_lr_config(config, dataset_dict, world_size)
+
     models_config = config['models']
     teacher_model_config = models_config.get('teacher_model', None)
     teacher_model = load_model(teacher_model_config, device) if teacher_model_config is not None else None
