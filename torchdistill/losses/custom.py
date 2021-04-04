@@ -48,8 +48,13 @@ class GeneralizedCustomLoss(CustomLoss):
             loss_dict[loss_name] = factor * criterion(student_output_dict, teacher_output_dict, targets)
 
         sub_total_loss = sum(loss for loss in loss_dict.values()) if len(loss_dict) > 0 else 0
-        if self.org_loss_factor is None or self.org_loss_factor == 0:
+        if self.org_loss_factor is None or \
+                (isinstance(self.org_loss_factor, (int, float)) and self.org_loss_factor == 0):
             return sub_total_loss
+
+        if isinstance(self.org_loss_factor, dict):
+            org_loss = sum([self.org_loss_factor[k] * v for k, v in org_loss_dict.items()])
+            return sub_total_loss + org_loss
         return sub_total_loss + self.org_loss_factor * sum(org_loss_dict.values() if len(org_loss_dict) > 0 else [])
 
     def __str__(self):
