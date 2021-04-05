@@ -180,12 +180,14 @@ def build_data_loader(dataset, data_loader_config, distributed):
     batch_sampler = None if batch_sampler_config is None \
         else get_batch_sampler(dataset, batch_sampler_config['type'], sampler, **batch_sampler_config['params'])
     collate_fn = get_collate_func(data_loader_config.get('collate_fn', None))
+    drop_last = data_loader_config.get('drop_last', False)
     if batch_sampler is not None:
-        return DataLoader(dataset, batch_sampler=batch_sampler, num_workers=num_workers, collate_fn=collate_fn)
+        return DataLoader(dataset, batch_sampler=batch_sampler, num_workers=num_workers,
+                          collate_fn=collate_fn, drop_last=drop_last)
 
     batch_size = data_loader_config['batch_size']
     return DataLoader(dataset, batch_size=batch_size, sampler=sampler,
-                      num_workers=num_workers, collate_fn=collate_fn, pin_memory=True)
+                      num_workers=num_workers, collate_fn=collate_fn, pin_memory=True, drop_last=drop_last)
 
 
 def build_data_loaders(dataset_dict, data_loader_configs, distributed):
