@@ -6,6 +6,7 @@ import torch
 from PIL import Image
 from torchvision import transforms as T
 from torchvision.transforms import functional as F
+from torchvision.transforms.functional import InterpolationMode
 
 from torchdistill.common.constant import def_logger
 
@@ -58,7 +59,7 @@ class CustomRandomResize(object):
 
         size = random.randint(self.min_size, self.max_size)
         image = F.resize(image, size)
-        target = F.resize(target, size, interpolation=Image.NEAREST)
+        target = F.resize(target, size, interpolation=InterpolationMode.NEAREST)
         return image, target
 
 
