@@ -161,7 +161,7 @@ def main(args):
     set_seed(args.seed)
     config = yaml_util.load_yaml_file(os.path.expanduser(args.config))
     device = torch.device(args.device)
-    dataset_dict = util.get_all_dataset(config['datasets'])
+    dataset_dict = util.get_all_datasets(config['datasets'])
     # Update config with dataset size len(data_loader)
     customize_lr_config(config, dataset_dict, world_size)
 
