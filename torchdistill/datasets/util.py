@@ -155,7 +155,7 @@ def get_dataset_dict(dataset_config):
     return dataset_dict
 
 
-def get_all_dataset(datasets_config):
+def get_all_datasets(datasets_config):
     dataset_dict = dict()
     for dataset_name in datasets_config.keys():
         sub_dataset_dict = get_dataset_dict(datasets_config[dataset_name])
