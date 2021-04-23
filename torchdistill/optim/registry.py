@@ -26,7 +26,8 @@ def get_optimizer(module, optim_type, param_dict=None, **kwargs):
     if lower_optim_type in OPTIM_DICT:
         optim_cls_or_func = OPTIM_DICT[lower_optim_type]
         if is_module:
-            return optim_cls_or_func([p for p in params if p.requires_grad], **param_dict, **kwargs)
+            updatable_params = [p for p in params if p.requires_grad]
+            return optim_cls_or_func(updatable_params, **param_dict, **kwargs)
         return optim_cls_or_func(params, **param_dict, **kwargs)
     raise ValueError('optim_type `{}` is not expected'.format(optim_type))
 
