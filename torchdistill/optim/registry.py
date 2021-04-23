@@ -16,18 +16,18 @@ def register_scheduler(cls_or_func):
     return cls_or_func
 
 
-def get_optimizer(target, optim_type, param_dict=None, **kwargs):
+def get_optimizer(module, optim_type, param_dict=None, **kwargs):
     if param_dict is None:
         param_dict = dict()
 
-    is_module = isinstance(target, nn.Module)
-    params = target.parameters() if is_module else target
+    is_module = isinstance(module, nn.Module)
+    params = module.parameters() if is_module else module
     lower_optim_type = optim_type.lower()
     if lower_optim_type in OPTIM_DICT:
-        optim_cls = OPTIM_DICT[lower_optim_type]
+        optim_cls_or_func = OPTIM_DICT[lower_optim_type]
         if is_module:
-            return optim_cls([p for p in params if p.requires_grad], **param_dict, **kwargs)
-        return optim_cls(params, **param_dict, **kwargs)
+            return optim_cls_or_func([p for p in params if p.requires_grad], **param_dict, **kwargs)
+        return optim_cls_or_func(params, **param_dict, **kwargs)
     raise ValueError('optim_type `{}` is not expected'.format(optim_type))
 
 
