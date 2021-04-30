@@ -27,10 +27,13 @@ except ImportError:
 class TrainingBox(nn.Module):
     def setup_data_loaders(self, train_config):
         train_data_loader_config = train_config.get('train_data_loader', dict())
-        train_data_loader_config['requires_supp'] = True
+        if 'requires_supp' not in train_data_loader_config:
+            train_data_loader_config['requires_supp'] = True
+
         val_data_loader_config = train_config.get('val_data_loader', dict())
         train_data_loader, val_data_loader =\
-            build_data_loaders(self.dataset_dict, [train_data_loader_config, val_data_loader_config], self.distributed)
+            build_data_loaders(self.dataset_dict, [train_data_loader_config, val_data_loader_config],
+                               self.distributed, self.accelerator)
         if train_data_loader is not None:
             self.train_data_loader = train_data_loader
         if val_data_loader is not None:
@@ -113,7 +116,9 @@ class TrainingBox(nn.Module):
             else:
                 trainable_module_list = nn.ModuleList([self.model])
 
-            self.optimizer = get_optimizer(trainable_module_list, optim_config['type'], optim_params_config)
+            filters_params = optim_config.get('filters_params', True)
+            self.optimizer = \
+                get_optimizer(trainable_module_list, optim_config['type'], optim_params_config, filters_params)
             self.optimizer.zero_grad()
             self.max_grad_norm = optim_config.get('max_grad_norm', None)
             self.grad_accum_step = optim_config.get('grad_accum_step', 1)
@@ -127,10 +132,13 @@ class TrainingBox(nn.Module):
             self.lr_scheduler = None
             self.scheduling_step = None
 
-        # Set up apex if you require mixed-precision training
+        # Set up accelerator/apex if necessary
         self.apex = False
         apex_config = train_config.get('apex', None)
-        if apex_config is not None and apex_config.get('requires', False):
+        if self.accelerator is not None:
+            self.model, self.optimizer, self.train_data_loader, self.val_data_loader = \
+                self.accelerator.prepare(self.model, self.optimizer, self.train_data_loader, self.val_data_loader)
+        elif apex_config is not None and apex_config.get('requires', False):
             if sys.version_info < (3, 0):
                 raise RuntimeError('Apex currently only supports Python 3. Aborting.')
             if amp is None:
@@ -140,7 +148,7 @@ class TrainingBox(nn.Module):
                 amp.initialize(self.model, self.optimizer, opt_level=apex_config['opt_level'])
             self.apex = True
 
-    def __init__(self, model, dataset_dict, train_config, device, device_ids, distributed, lr_factor):
+    def __init__(self, model, dataset_dict, train_config, device, device_ids, distributed, lr_factor, accelerator=None):
         super().__init__()
         # Key attributes (should not be modified)
         self.org_model = model
@@ -149,6 +157,7 @@ class TrainingBox(nn.Module):
         self.device_ids = device_ids
         self.distributed = distributed
         self.lr_factor = lr_factor
+        self.accelerator = accelerator
         # Local attributes (can be updated at each stage)
         self.model = None
         self.model_forward_proc = None
@@ -189,7 +198,9 @@ class TrainingBox(nn.Module):
         if self.grad_accum_step > 1:
             loss /= self.grad_accum_step
 
-        if self.apex:
+        if self.accelerator is not None:
+            self.accelerator.backward(loss)
+        elif self.apex:
             with amp.scale_loss(loss, self.optimizer) as scaled_loss:
                 scaled_loss.backward()
         else:
@@ -227,10 +238,11 @@ class TrainingBox(nn.Module):
 
 
 class MultiStagesTrainingBox(TrainingBox):
-    def __init__(self, model, data_loader_dict, train_config, device, device_ids, distributed, lr_factor):
+    def __init__(self, model, data_loader_dict, train_config,
+                 device, device_ids, distributed, lr_factor, accelerator=None):
         stage1_config = train_config['stage1']
         super().__init__(model, data_loader_dict,
-                         stage1_config, device, device_ids, distributed, lr_factor)
+                         stage1_config, device, device_ids, distributed, lr_factor, accelerator)
         self.train_config = train_config
         self.stage_number = 1
         self.stage_end_epoch = stage1_config['num_epochs']
@@ -254,8 +266,9 @@ class MultiStagesTrainingBox(TrainingBox):
             self.advance_to_next_stage()
 
 
-def get_training_box(model, data_loader_dict, train_config, device, device_ids, distributed, lr_factor):
+def get_training_box(model, data_loader_dict, train_config, device, device_ids, distributed,
+                     lr_factor, accelerator=None):
     if 'stage1' in train_config:
         return MultiStagesTrainingBox(model, data_loader_dict,
-                                      train_config, device, device_ids, distributed, lr_factor)
-    return TrainingBox(model, data_loader_dict, train_config, device, device_ids, distributed, lr_factor)
+                                      train_config, device, device_ids, distributed, lr_factor, accelerator)
+    return TrainingBox(model, data_loader_dict, train_config, device, device_ids, distributed, lr_factor, accelerator)

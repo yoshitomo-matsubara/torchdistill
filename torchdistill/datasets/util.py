@@ -163,7 +163,7 @@ def get_all_datasets(datasets_config):
     return dataset_dict
 
 
-def build_data_loader(dataset, data_loader_config, distributed):
+def build_data_loader(dataset, data_loader_config, distributed, accelerator=None):
     num_workers = data_loader_config['num_workers']
     cache_dir_path = data_loader_config.get('cache_output', None)
     dataset_wrapper_config = data_loader_config.get('dataset_wrapper', None)
@@ -174,7 +174,7 @@ def build_data_loader(dataset, data_loader_config, distributed):
     elif data_loader_config.get('requires_supp', False):
         dataset = BaseDatasetWrapper(dataset)
 
-    sampler = DistributedSampler(dataset) if distributed \
+    sampler = DistributedSampler(dataset) if distributed and accelerator is None \
         else RandomSampler(dataset) if data_loader_config.get('random_sample', False) else SequentialSampler(dataset)
     batch_sampler_config = data_loader_config.get('batch_sampler', None)
     batch_sampler = None if batch_sampler_config is None \
@@ -190,11 +190,11 @@ def build_data_loader(dataset, data_loader_config, distributed):
                       num_workers=num_workers, collate_fn=collate_fn, pin_memory=True, drop_last=drop_last)
 
 
-def build_data_loaders(dataset_dict, data_loader_configs, distributed):
+def build_data_loaders(dataset_dict, data_loader_configs, distributed, accelerator=None):
     data_loader_list = list()
     for data_loader_config in data_loader_configs:
         dataset_id = data_loader_config.get('dataset_id', None)
         data_loader = None if dataset_id is None or dataset_id not in dataset_dict \
-            else build_data_loader(dataset_dict[dataset_id], data_loader_config, distributed)
+            else build_data_loader(dataset_dict[dataset_id], data_loader_config, distributed, accelerator)
         data_loader_list.append(data_loader)
     return data_loader_list
