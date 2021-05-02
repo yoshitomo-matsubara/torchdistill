@@ -132,7 +132,9 @@ class DistillationBox(nn.Module):
         optimizer_reset = False
         if len(optim_config) > 0:
             optim_params_config = optim_config['params']
-            optim_params_config['lr'] *= self.lr_factor
+            if 'lr' in optim_params_config:
+                optim_params_config['lr'] *= self.lr_factor
+
             module_wise_params_configs = optim_config.get('module_wise_params', list())
             if len(module_wise_params_configs) > 0:
                 trainable_module_list = list()
