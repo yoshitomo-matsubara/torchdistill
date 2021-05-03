@@ -79,8 +79,6 @@ def evaluate(model, data_loader, device, device_ids, distributed, log_freq=1000,
     if title is not None:
         logger.info(title)
 
-    num_threads = torch.get_num_threads()
-    torch.set_num_threads(1)
     model.eval()
     metric_logger = MetricLogger(delimiter='  ')
     for image, target in metric_logger.log_every(data_loader, log_freq, header):
@@ -99,7 +97,6 @@ def evaluate(model, data_loader, device, device_ids, distributed, log_freq=1000,
     top1_accuracy = metric_logger.acc1.global_avg
     top5_accuracy = metric_logger.acc5.global_avg
     logger.info(' * Acc@1 {:.4f}\tAcc@5 {:.4f}\n'.format(top1_accuracy, top5_accuracy))
-    torch.set_num_threads(num_threads)
     return metric_logger.acc1.global_avg
 
 

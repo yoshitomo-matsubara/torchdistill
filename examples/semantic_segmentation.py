@@ -83,9 +83,6 @@ def evaluate(model, data_loader, device, device_ids, distributed, num_classes,
     if title is not None:
         logger.info(title)
 
-    n_threads = torch.get_num_threads()
-    # FIXME remove this and make paste_masks_in_image run on the GPU
-    torch.set_num_threads(1)
     model.eval()
     metric_logger = MetricLogger(delimiter='  ')
     seg_evaluator = SegEvaluator(num_classes)
@@ -104,7 +101,6 @@ def evaluate(model, data_loader, device, device_ids, distributed, num_classes,
     # gather the stats from all processes
     seg_evaluator.reduce_from_all_processes()
     logger.info(seg_evaluator)
-    torch.set_num_threads(n_threads)
     return seg_evaluator
 
 
