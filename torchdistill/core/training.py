@@ -3,6 +3,7 @@ import sys
 import torch
 from torch import distributed as dist
 from torch import nn
+from torch.optim.lr_scheduler import ReduceLROnPlateau
 
 from torchdistill.common.constant import def_logger
 from torchdistill.common.module_util import check_if_wrapped, freeze_module_params, get_module, unfreeze_module_params, \
@@ -195,7 +196,7 @@ class TrainingBox(nn.Module):
         total_loss = self.criterion(output_dict, org_loss_dict, targets)
         return total_loss
 
-    def update_params(self, loss):
+    def update_params(self, loss, **kwargs):
         self.stage_grad_count += 1
         if self.grad_accum_step > 1:
             loss /= self.grad_accum_step
@@ -220,12 +221,20 @@ class TrainingBox(nn.Module):
         # Step-wise scheduler step
         if self.lr_scheduler is not None and self.scheduling_step > 0 \
                 and self.stage_grad_count % self.scheduling_step == 0:
-            self.lr_scheduler.step()
+            if isinstance(self.lr_scheduler, ReduceLROnPlateau):
+                metrics = kwargs['metrics']
+                self.lr_scheduler.step(metrics)
+            else:
+                self.lr_scheduler.step()
 
     def post_process(self, **kwargs):
         # Epoch-wise scheduler step
         if self.lr_scheduler is not None and self.scheduling_step <= 0:
-            self.lr_scheduler.step()
+            if isinstance(self.lr_scheduler, ReduceLROnPlateau):
+                metrics = kwargs['metrics']
+                self.lr_scheduler.step(metrics)
+            else:
+                self.lr_scheduler.step()
         if isinstance(self.model, SpecialModule):
             self.model.post_process()
         if self.distributed:

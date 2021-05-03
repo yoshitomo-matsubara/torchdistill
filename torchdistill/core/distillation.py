@@ -4,6 +4,7 @@ import sys
 import torch
 from torch import distributed as dist
 from torch import nn
+from torch.optim.lr_scheduler import ReduceLROnPlateau
 
 from torchdistill.common.constant import def_logger
 from torchdistill.common.file_util import make_parent_dirs
@@ -306,7 +307,7 @@ class DistillationBox(nn.Module):
         total_loss = self.criterion(output_dict, org_loss_dict, targets)
         return total_loss
 
-    def update_params(self, loss):
+    def update_params(self, loss, **kwargs):
         self.stage_grad_count += 1
         if self.grad_accum_step > 1:
             loss /= self.grad_accum_step
@@ -331,12 +332,20 @@ class DistillationBox(nn.Module):
         # Step-wise scheduler step
         if self.lr_scheduler is not None and self.scheduling_step > 0 \
                 and self.stage_grad_count % self.scheduling_step == 0:
-            self.lr_scheduler.step()
+            if isinstance(self.lr_scheduler, ReduceLROnPlateau):
+                metrics = kwargs['metrics']
+                self.lr_scheduler.step(metrics)
+            else:
+                self.lr_scheduler.step()
 
     def post_process(self, **kwargs):
         # Epoch-wise scheduler step
         if self.lr_scheduler is not None and self.scheduling_step <= 0:
-            self.lr_scheduler.step()
+            if isinstance(self.lr_scheduler, ReduceLROnPlateau):
+                metrics = kwargs['metrics']
+                self.lr_scheduler.step(metrics)
+            else:
+                self.lr_scheduler.step()
         if isinstance(self.teacher_model, SpecialModule):
             self.teacher_model.post_process()
         if isinstance(self.student_model, SpecialModule):
