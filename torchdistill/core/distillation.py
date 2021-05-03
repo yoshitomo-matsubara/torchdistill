@@ -4,6 +4,7 @@ import sys
 import torch
 from torch import distributed as dist
 from torch import nn
+from torch.optim.lr_scheduler import ReduceLROnPlateau
 
 from torchdistill.common.constant import def_logger
 from torchdistill.common.file_util import make_parent_dirs
@@ -14,7 +15,7 @@ from torchdistill.core.util import set_hooks, wrap_model, change_device, tensor2
     update_io_dict, extract_sub_model_output_dict
 from torchdistill.datasets.util import build_data_loaders
 from torchdistill.losses.custom import get_custom_loss
-from torchdistill.losses.single import KDLoss, get_single_loss
+from torchdistill.losses.single import ORG_LOSS_LIST, get_single_loss
 from torchdistill.losses.util import get_func2extract_org_output
 from torchdistill.models.special import SpecialModule, build_special_module
 from torchdistill.models.util import redesign_model
@@ -30,10 +31,13 @@ except ImportError:
 class DistillationBox(nn.Module):
     def setup_data_loaders(self, train_config):
         train_data_loader_config = train_config.get('train_data_loader', dict())
-        train_data_loader_config['requires_supp'] = True
+        if 'requires_supp' not in train_data_loader_config:
+            train_data_loader_config['requires_supp'] = True
+
         val_data_loader_config = train_config.get('val_data_loader', dict())
         train_data_loader, val_data_loader =\
-            build_data_loaders(self.dataset_dict, [train_data_loader_config, val_data_loader_config], self.distributed)
+            build_data_loaders(self.dataset_dict, [train_data_loader_config, val_data_loader_config],
+                               self.distributed, self.accelerator)
         if train_data_loader is not None:
             self.train_data_loader = train_data_loader
         if val_data_loader is not None:
@@ -87,7 +91,8 @@ class DistillationBox(nn.Module):
             else get_single_loss(org_criterion_config)
         self.criterion = get_custom_loss(criterion_config)
         logger.info(self.criterion)
-        self.uses_teacher_output = self.org_criterion is not None and isinstance(self.org_criterion, KDLoss)
+        self.uses_teacher_output = \
+            self.org_criterion is not None and isinstance(self.org_criterion, tuple(ORG_LOSS_LIST))
         self.extract_org_loss = get_func2extract_org_output(criterion_config.get('func2extract_org_loss', None))
 
     def setup(self, train_config):
@@ -128,7 +133,9 @@ class DistillationBox(nn.Module):
         optimizer_reset = False
         if len(optim_config) > 0:
             optim_params_config = optim_config['params']
-            optim_params_config['lr'] *= self.lr_factor
+            if 'lr' in optim_params_config:
+                optim_params_config['lr'] *= self.lr_factor
+
             module_wise_params_configs = optim_config.get('module_wise_params', list())
             if len(module_wise_params_configs) > 0:
                 trainable_module_list = list()
@@ -151,7 +158,9 @@ class DistillationBox(nn.Module):
                     logger.info('Note that you are training some/all of the modules in the teacher model')
                     trainable_module_list.append(self.teacher_model)
 
-            self.optimizer = get_optimizer(trainable_module_list, optim_config['type'], optim_params_config)
+            filters_params = optim_config.get('filters_params', True)
+            self.optimizer = \
+                get_optimizer(trainable_module_list, optim_config['type'], optim_params_config, filters_params)
             self.optimizer.zero_grad()
             self.max_grad_norm = optim_config.get('max_grad_norm', None)
             self.grad_accum_step = optim_config.get('grad_accum_step', 1)
@@ -165,10 +174,20 @@ class DistillationBox(nn.Module):
             self.lr_scheduler = None
             self.scheduling_step = None
 
-        # Set up apex if you require mixed-precision training
+        # Set up accelerator/apex if necessary
         self.apex = False
         apex_config = train_config.get('apex', None)
-        if apex_config is not None and apex_config.get('requires', False):
+        if self.accelerator is not None:
+            if self.teacher_updatable:
+                self.teacher_model, self.student_model, self.optimizer, self.train_data_loader, self.val_data_loader = \
+                    self.accelerator.prepare(self.teacher_model, self.student_model, self.optimizer,
+                                             self.train_data_loader, self.val_data_loader)
+            else:
+                self.teacher_model = self.teacher_model.to(self.accelerator.device)
+                self.student_model, self.optimizer, self.train_data_loader, self.val_data_loader = \
+                    self.accelerator.prepare(self.student_model, self.optimizer,
+                                             self.train_data_loader, self.val_data_loader)
+        elif apex_config is not None and apex_config.get('requires', False):
             if sys.version_info < (3, 0):
                 raise RuntimeError('Apex currently only supports Python 3. Aborting.')
             if amp is None:
@@ -179,7 +198,7 @@ class DistillationBox(nn.Module):
             self.apex = True
 
     def __init__(self, teacher_model, student_model, dataset_dict,
-                 train_config, device, device_ids, distributed, lr_factor):
+                 train_config, device, device_ids, distributed, lr_factor, accelerator=None):
         super().__init__()
         # Key attributes (should not be modified)
         self.org_teacher_model = teacher_model
@@ -189,6 +208,7 @@ class DistillationBox(nn.Module):
         self.device_ids = device_ids
         self.distributed = distributed
         self.lr_factor = lr_factor
+        self.accelerator = accelerator
         # Local attributes (can be updated at each stage)
         self.teacher_model = None
         self.student_model = None
@@ -213,6 +233,9 @@ class DistillationBox(nn.Module):
             self.train_data_loader.batch_sampler.sampler.set_epoch(epoch)
 
     def get_teacher_output(self, sample_batch, targets, supp_dict):
+        if supp_dict is None:
+            supp_dict = dict()
+
         cached_data = supp_dict.get('cached_data', None)
         cache_file_paths = supp_dict.get('cache_file_path', None)
         teacher_outputs = None
@@ -284,12 +307,14 @@ class DistillationBox(nn.Module):
         total_loss = self.criterion(output_dict, org_loss_dict, targets)
         return total_loss
 
-    def update_params(self, loss):
+    def update_params(self, loss, **kwargs):
         self.stage_grad_count += 1
         if self.grad_accum_step > 1:
             loss /= self.grad_accum_step
 
-        if self.apex:
+        if self.accelerator is not None:
+            self.accelerator.backward(loss)
+        elif self.apex:
             with amp.scale_loss(loss, self.optimizer) as scaled_loss:
                 scaled_loss.backward()
         else:
@@ -307,12 +332,20 @@ class DistillationBox(nn.Module):
         # Step-wise scheduler step
         if self.lr_scheduler is not None and self.scheduling_step > 0 \
                 and self.stage_grad_count % self.scheduling_step == 0:
-            self.lr_scheduler.step()
+            if isinstance(self.lr_scheduler, ReduceLROnPlateau):
+                metrics = kwargs['metrics']
+                self.lr_scheduler.step(metrics)
+            else:
+                self.lr_scheduler.step()
 
     def post_process(self, **kwargs):
         # Epoch-wise scheduler step
         if self.lr_scheduler is not None and self.scheduling_step <= 0:
-            self.lr_scheduler.step()
+            if isinstance(self.lr_scheduler, ReduceLROnPlateau):
+                metrics = kwargs['metrics']
+                self.lr_scheduler.step(metrics)
+            else:
+                self.lr_scheduler.step()
         if isinstance(self.teacher_model, SpecialModule):
             self.teacher_model.post_process()
         if isinstance(self.student_model, SpecialModule):
@@ -334,10 +367,10 @@ class DistillationBox(nn.Module):
 
 class MultiStagesDistillationBox(DistillationBox):
     def __init__(self, teacher_model, student_model, data_loader_dict,
-                 train_config, device, device_ids, distributed, lr_factor):
+                 train_config, device, device_ids, distributed, lr_factor, accelerator=None):
         stage1_config = train_config['stage1']
         super().__init__(teacher_model, student_model, data_loader_dict,
-                         stage1_config, device, device_ids, distributed, lr_factor)
+                         stage1_config, device, device_ids, distributed, lr_factor, accelerator)
         self.train_config = train_config
         self.stage_number = 1
         self.stage_end_epoch = stage1_config['num_epochs']
@@ -362,9 +395,9 @@ class MultiStagesDistillationBox(DistillationBox):
 
 
 def get_distillation_box(teacher_model, student_model, data_loader_dict,
-                         train_config, device, device_ids, distributed, lr_factor):
+                         train_config, device, device_ids, distributed, lr_factor, accelerator=None):
     if 'stage1' in train_config:
         return MultiStagesDistillationBox(teacher_model, student_model, data_loader_dict,
-                                          train_config, device, device_ids, distributed, lr_factor)
+                                          train_config, device, device_ids, distributed, lr_factor, accelerator)
     return DistillationBox(teacher_model, student_model, data_loader_dict, train_config,
-                           device, device_ids, distributed, lr_factor)
+                           device, device_ids, distributed, lr_factor, accelerator)

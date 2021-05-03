@@ -9,6 +9,7 @@ from torchdistill.losses.registry import get_loss
 
 LOSS_WRAPPER_CLASS_DICT = dict()
 SINGLE_LOSS_CLASS_DICT = dict()
+ORG_LOSS_LIST = list()
 
 logger = def_logger.getChild(__name__)
 
@@ -20,6 +21,12 @@ def register_loss_wrapper(cls):
 
 def register_single_loss(cls):
     SINGLE_LOSS_CLASS_DICT[cls.__name__] = cls
+    return cls
+
+
+def register_org_loss(cls):
+    SINGLE_LOSS_CLASS_DICT[cls.__name__] = cls
+    ORG_LOSS_LIST.append(cls)
     return cls
 
 
@@ -76,7 +83,7 @@ class OrgDictLoss(nn.Module):
         return loss
 
 
-@register_single_loss
+@register_org_loss
 class KDLoss(nn.KLDivLoss):
     """
     "Distilling the Knowledge in a Neural Network"
