@@ -1,7 +1,7 @@
 # Examples of Use of Hugging Face Transformers
 
 ## 0. Requirements
-### Install packages
+### Install additional packages
 You will first need to install Hugging Face's `transformers`, `datasets`, and `accelerate` packages.
 Install dependencies using [requirements.txt](requirements.txt).  
 ```
@@ -23,7 +23,7 @@ accelerate config
 pipenv run accelerate config
 ```
 
-## 1. Text classification (GLUE tasks)
+## 1. GLUE: Text classification
 GLUE consists of 9 different tasks: CoLA, SST-2, MRPC, STS-B (regression), QQP, MNLI, QNLI, RTE, and WNLI.  
 For these tasks, you can run experiments with `cola`, `sst2`, `mrpc`, `stsb`, `qqp`, `mnli`, `qnli`, `rte`, and `wnli`, respectively.
 
