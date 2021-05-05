@@ -22,7 +22,7 @@ models:
     model_params:
       pretrained_model_name_or_path: *student_model_name
     experiment: &student_experiment !join [*dataset_name, '-', *student_model_name]
-    ckpt: !join ['./resource/ckpt/', *dataset_name, '/ce/', *student_experiment]
+    ckpt: !join ['./resource/ckpt/glue/', *dataset_name, '/ce/', *student_experiment]
 
 train:
   log_freq: 50
