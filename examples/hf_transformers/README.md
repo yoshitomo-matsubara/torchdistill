@@ -33,7 +33,7 @@ e.g., Fine-tuning BERT-Base (uncased)
 export TASK_NAME=cola
 
 accelerate launch examples/hf_transformers/text_classification.py \
-  --config configs/samples/glue/${TASK_NAME}/ce/bert_base_uncased.yaml \
+  --config configs/sample/glue/${TASK_NAME}/ce/bert_base_uncased.yaml \
   --task ${TASK_NAME}
   
 # use `pipenv run accelerate launch ...` if you're using pipenv
