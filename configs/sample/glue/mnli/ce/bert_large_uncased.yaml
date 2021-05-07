@@ -25,7 +25,7 @@ models:
     ckpt: !join ['./resource/ckpt/glue/', *dataset_name, '/ce/', *student_experiment]
 
 train:
-  log_freq: 50
+  log_freq: 1000
   num_epochs: 3
   train_data_loader:
     dataset_id: *glue_train
