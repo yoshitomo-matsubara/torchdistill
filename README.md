@@ -44,13 +44,17 @@ For CIFAR-10 and CIFAR-100, some models are reimplemented and available as pretr
 More details can be found [here](https://github.com/yoshitomo-matsubara/torchdistill/releases/tag/v0.1.1).
 
 ## Google Colab Examples
+The following examples are available in [demo/](demo/). 
+Note that the examples are for Google Colab users. Usually, [examples/](examples/) would be a better reference 
+if you have your own GPU(s).
+
 ### CIFAR-10 and CIFAR-100
 - Training without teacher models [![Open In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/yoshitomo-matsubara/torchdistill/blob/master/demo/cifar_training.ipynb)
 - Knowledge distillation [![Open In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/yoshitomo-matsubara/torchdistill/blob/master/demo/cifar_kd.ipynb)
 
-These examples are available in [demo/](demo/). 
-Note that the examples are for Google Colab users, and usually [examples/](examples/) would be a better reference 
-if you have your own GPU(s).
+### GLUE
+- Fine-tuning without teacher models [![Open In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/yoshitomo-matsubara/torchdistill/blob/master/demo/glue_fine_tuning.ipynb)
+
 
 ## PyTorch Hub
 If you find models on [PyTorch Hub](https://pytorch.org/hub/) or GitHub repositories supporting PyTorch Hub,
