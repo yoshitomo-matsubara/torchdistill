@@ -83,13 +83,14 @@ def get_all_datasets(datasets_config, task_name, student_tokenizer, student_mode
     for dataset_name in datasets_config.keys():
         dataset_config = datasets_config[dataset_name]
         raw_data_params = dataset_config['raw_data_params']
+        base_split_name = dataset_config.get('base_split_name', 'train')
         raw_datasets, num_labels, label_list, is_regression = \
-            load_raw_glue_datasets_and_misc(task_name, **raw_data_params)
+            load_raw_glue_datasets_and_misc(task_name, base_split_name=base_split_name, **raw_data_params)
         pad_to_max_length = dataset_config.get('pad_to_max_length', False)
         max_length = dataset_config.get('pad_to_max_length', 128)
         sub_dataset_dict = \
             preprocess_glue_datasets(task_name, raw_datasets, num_labels, label_list, is_regression,
-                                     pad_to_max_length, max_length, student_tokenizer, student_model)
+                                     pad_to_max_length, max_length, student_tokenizer, student_model, base_split_name)
         for split_name, dataset_id in dataset_config['dataset_id_map'].items():
             dataset_dict[dataset_id] = sub_dataset_dict[split_name]
     return dataset_dict, is_regression
@@ -238,6 +239,6 @@ def main(args):
              title='[Student: {}]'.format(student_model_config['name']))
 
 
-if __name__ == "__main__":
+if __name__ == '__main__':
     argparser = get_argparser()
     main(argparser.parse_args())
