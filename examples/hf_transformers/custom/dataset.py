@@ -1,19 +1,12 @@
-import os
-import time
-
-import torch
 from datasets import load_dataset
-from torch import distributed as dist
 from torchdistill.common.constant import def_logger
-from torchdistill.common.main_util import is_main_process
 from torchdistill.datasets.collator import register_collate_func
-from torchdistill.datasets.registry import register_dataset
-from transformers import squad_convert_examples_to_features, PretrainedConfig, default_data_collator
-from transformers.data.processors.squad import SquadV1Processor, SquadV2Processor
+from transformers import PretrainedConfig, default_data_collator
 
 logger = def_logger.getChild(__name__)
 
 GLUE_TASK2KEYS = {
+    'ax': ('premise', 'hypothesis'),
     'cola': ('sentence', None),
     'mnli': ('premise', 'hypothesis'),
     'mrpc': ('sentence1', 'sentence2'),
@@ -28,7 +21,7 @@ GLUE_TASK2KEYS = {
 register_collate_func(default_data_collator)
 
 
-def load_raw_glue_datasets_and_misc(task_name, train_file_path=None, valid_file_path=None):
+def load_raw_glue_datasets_and_misc(task_name, train_file_path=None, valid_file_path=None, base_split_name='train'):
     # For CSV/JSON files, this script will use as labels the column called 'label' and as pair of sentences the
     # sentences in columns called 'sentence1' and 'sentence2' if such column exists or the first two columns not named
     # label if at least two columns are provided.
@@ -48,6 +41,7 @@ def load_raw_glue_datasets_and_misc(task_name, train_file_path=None, valid_file_
             data_files['train'] = train_file_path
         if valid_file_path is not None:
             data_files['validation'] = valid_file_path
+
         extension = (train_file_path if train_file_path is not None else valid_file_path).split('.')[-1]
         raw_datasets = load_dataset(extension, data_files=data_files)
     # See more about loading any type of standard or custom dataset at
@@ -58,32 +52,32 @@ def load_raw_glue_datasets_and_misc(task_name, train_file_path=None, valid_file_
     if task_name is not None:
         is_regression = task_name == 'stsb'
         if not is_regression:
-            label_list = raw_datasets['train'].features['label'].names
+            label_list = raw_datasets[base_split_name].features['label'].names
             num_labels = len(label_list)
         else:
             num_labels = 1
     else:
         # Trying to have good defaults here, don't hesitate to tweak to your needs.
-        is_regression = raw_datasets['train'].features['label'].dtype in ['float32', 'float64']
+        is_regression = raw_datasets[base_split_name].features['label'].dtype in ['float32', 'float64']
         if is_regression:
             num_labels = 1
         else:
             # A useful fast method:
             # https://huggingface.co/docs/datasets/package_reference/main_classes.html#datasets.Dataset.unique
-            label_list = raw_datasets['train'].unique('label')
+            label_list = raw_datasets[base_split_name].unique('label')
             label_list.sort()  # Let's sort it for determinism
             num_labels = len(label_list)
     return raw_datasets, num_labels, label_list, is_regression
 
 
 def preprocess_glue_datasets(task_name, raw_datasets, num_labels, label_list, is_regression,
-                             pad_to_max_length, max_length, tokenizer, model):
+                             pad_to_max_length, max_length, tokenizer, model, base_split_name='train'):
     # Preprocessing the datasets
     if task_name is not None:
         sentence1_key, sentence2_key = GLUE_TASK2KEYS[task_name]
     else:
         # Again, we try to have some nice defaults but don't hesitate to tweak to your use case.
-        non_label_column_names = [name for name in raw_datasets['train'].column_names if name != 'label']
+        non_label_column_names = [name for name in raw_datasets[base_split_name].column_names if name != 'label']
         if 'sentence1' in non_label_column_names and 'sentence2' in non_label_column_names:
             sentence1_key, sentence2_key = 'sentence1', 'sentence2'
         else:
@@ -135,6 +129,6 @@ def preprocess_glue_datasets(task_name, raw_datasets, num_labels, label_list, is
         return result
 
     processed_datasets = raw_datasets.map(
-        preprocess_function, batched=True, remove_columns=raw_datasets['train'].column_names
+        preprocess_function, batched=True, remove_columns=raw_datasets[base_split_name].column_names
     )
     return processed_datasets
