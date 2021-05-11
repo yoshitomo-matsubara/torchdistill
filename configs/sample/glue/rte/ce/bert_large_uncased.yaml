@@ -30,7 +30,7 @@ train:
   train_data_loader:
     dataset_id: *glue_train
     random_sample: True
-    batch_size: 32
+    batch_size: 8
     num_workers: 0
     collate_fn: 'DataCollatorWithPadding'
     requires_supp: False
@@ -49,7 +49,6 @@ train:
     wrapper:
     requires_grad: True
     frozen_modules: []
-  accelerator: True
   apex:
     requires: False
     opt_level: '01'
@@ -57,7 +56,7 @@ train:
     type: 'optimizer_no_decay'
     params:
       optimizer_type: 'AdamW'
-      lr: 2.0e-5
+      lr: 5.0e-5
       weight_decay: 0.0
     filters_params: False
     max_grad_norm: 1.0
