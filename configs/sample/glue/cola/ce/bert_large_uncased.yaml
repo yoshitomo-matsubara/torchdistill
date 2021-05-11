@@ -49,7 +49,6 @@ train:
     wrapper:
     requires_grad: True
     frozen_modules: []
-  accelerator: True
   apex:
     requires: False
     opt_level: '01'
