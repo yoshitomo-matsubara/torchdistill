@@ -1,7 +1,8 @@
+from transformers import PretrainedConfig, default_data_collator
+
 from datasets import load_dataset
 from torchdistill.common.constant import def_logger
 from torchdistill.datasets.collator import register_collate_func
-from transformers import PretrainedConfig, default_data_collator
 
 logger = def_logger.getChild(__name__)
 

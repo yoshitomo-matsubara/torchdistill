@@ -24,12 +24,16 @@ import logging
 import os
 import time
 
-import datasets
 import torch
 import transformers
 from accelerate import Accelerator, DistributedType
-from datasets import load_metric
 from torch.backends import cudnn
+from transformers import AutoConfig, AutoModelForSequenceClassification, AutoTokenizer, DataCollatorWithPadding
+
+import datasets
+from custom.dataset import load_raw_glue_datasets_and_misc, preprocess_glue_datasets
+from custom.optim import customize_lr_config
+from datasets import load_metric
 from torchdistill.common import file_util, yaml_util
 from torchdistill.common.constant import def_logger
 from torchdistill.common.main_util import is_main_process, setup_for_distributed, set_seed
@@ -38,10 +42,6 @@ from torchdistill.core.training import get_training_box
 from torchdistill.datasets import util
 from torchdistill.datasets.collator import register_collate_func
 from torchdistill.misc.log import setup_log_file, SmoothedValue, MetricLogger
-from transformers import AutoConfig, AutoModelForSequenceClassification, AutoTokenizer, DataCollatorWithPadding
-
-from custom.dataset import load_raw_glue_datasets_and_misc, preprocess_glue_datasets
-from custom.optim import customize_lr_config
 
 logger = def_logger.getChild(__name__)
 
@@ -50,7 +50,7 @@ def get_argparser():
     parser = argparse.ArgumentParser(description='Knowledge distillation for a text classification task')
     parser.add_argument('--config', required=True, help='yaml file path')
     parser.add_argument('--log', help='log file path')
-    parser.add_argument('--task_name', type=str, default=None, help='The name of the glue task to train on.')
+    parser.add_argument('--task_name', default=None, help='The name of the glue task to train on.')
     parser.add_argument('--seed', type=int, default=None, help="A seed for reproducible training.")
     parser.add_argument('-test_only', action='store_true', help='Only test the models')
     parser.add_argument('-student_only', action='store_true', help='Test the student model only')
