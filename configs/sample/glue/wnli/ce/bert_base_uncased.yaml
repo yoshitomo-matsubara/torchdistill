@@ -7,6 +7,7 @@ datasets:
     dataset_id_map:
       train: &glue_train !join [*dataset_name, '/train']
       validation: &glue_val !join [*dataset_name, '/val']
+      test: &glue_test !join [*dataset_name, '/test']
 
 models:
   student_model:
@@ -81,3 +82,13 @@ test:
     batch_size: 32
     num_workers: 0
     collate_fn: 'DataCollatorWithPadding'
+
+private:
+  - private_data_loader:
+      dataset_id: *glue_test
+      task_name: wnli
+      random_sample: False
+      batch_size: 32
+      num_workers: 0
+      collate_fn: 'DataCollatorWithPadding'
+    pred_output: 'WNLI.tsv'
