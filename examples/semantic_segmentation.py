@@ -33,8 +33,8 @@ def get_argparser():
     parser.add_argument('--start_epoch', default=0, type=int, metavar='N', help='start epoch')
     parser.add_argument('--num_classes', default=21, type=int, metavar='N', help='number of classes for evaluation')
     parser.add_argument('--seed', type=int, help='seed in random number generator')
-    parser.add_argument('-test_only', action='store_true', help='Only test the models')
-    parser.add_argument('-student_only', action='store_true', help='Test the student model only')
+    parser.add_argument('-test_only', action='store_true', help='only test the models')
+    parser.add_argument('-student_only', action='store_true', help='test the student model only')
     # distributed training parameters
     parser.add_argument('--world_size', default=1, type=int, help='number of distributed processes')
     parser.add_argument('--dist_url', default='env://', help='url used to set up distributed training')

@@ -94,9 +94,9 @@ pip3 install -e .
 pipenv install "-e ."
 ```
 
-## Issues / Contact
-The documentation is work-in-progress. In the meantime, feel free to create an issue if you have a feature request or 
-email me ( yoshitom@uci.edu ) if you would like to ask me in private. 
+## Issues / Questions / Requests
+The documentation is work-in-progress. In the meantime, feel free to create an issue if you find a bug.  
+If you have either a question or feature request, start a new discussion [here](https://github.com/yoshitomo-matsubara/torchdistill/discussions).
 
 ## Citation
 [[Preprint](https://arxiv.org/abs/2011.12913)]  
