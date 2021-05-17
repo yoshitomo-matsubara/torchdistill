@@ -24,18 +24,18 @@ import logging
 import os
 import time
 
+import datasets
 import numpy as np
 import pandas as pd
 import torch
 import transformers
 from accelerate import Accelerator, DistributedType
+from datasets import load_metric
 from torch.backends import cudnn
 from transformers import AutoConfig, AutoModelForSequenceClassification, AutoTokenizer, DataCollatorWithPadding
 
-import datasets
 from custom.dataset import load_raw_glue_datasets_and_misc, preprocess_glue_datasets
 from custom.optim import customize_lr_config
-from datasets import load_metric
 from torchdistill.common import file_util, yaml_util
 from torchdistill.common.constant import def_logger
 from torchdistill.common.main_util import is_main_process, setup_for_distributed, set_seed
