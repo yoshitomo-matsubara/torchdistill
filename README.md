@@ -99,6 +99,7 @@ The documentation is work-in-progress. In the meantime, feel free to create an i
 If you have either a question or feature request, start a new discussion [here](https://github.com/yoshitomo-matsubara/torchdistill/discussions).
 
 ## Citation
+If you use ***torchdistill*** in your research, please cite the following paper.  
 [[Paper](https://link.springer.com/chapter/10.1007/978-3-030-76423-4_3)] [[Preprint](https://arxiv.org/abs/2011.12913)]  
 ```bibtex
 @inproceedings{matsubara2021torchdistill,
