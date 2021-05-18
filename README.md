@@ -99,15 +99,15 @@ The documentation is work-in-progress. In the meantime, feel free to create an i
 If you have either a question or feature request, start a new discussion [here](https://github.com/yoshitomo-matsubara/torchdistill/discussions).
 
 ## Citation
-[[Preprint](https://arxiv.org/abs/2011.12913)]  
+[[Paper](https://link.springer.com/chapter/10.1007/978-3-030-76423-4_3)] [[Preprint](https://arxiv.org/abs/2011.12913)]  
 ```bibtex
-@article{matsubara2020torchdistill,
+@inproceedings{matsubara2021torchdistill,
   title={torchdistill: A Modular, Configuration-Driven Framework for Knowledge Distillation},
   author={Matsubara, Yoshitomo},
-  year={2020}
-  eprint={2011.12913},
-  archivePrefix={arXiv},
-  primaryClass={cs.LG}
+  booktitle={International Workshop on Reproducible Research in Pattern Recognition},
+  pages={24--44},
+  year={2021},
+  organization={Springer}
 }
 ```
 
