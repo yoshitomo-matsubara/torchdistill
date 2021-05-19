@@ -172,7 +172,7 @@ def train(teacher_model, student_model, dataset_dict, is_regression, ckpt_dir_pa
 @torch.no_grad()
 def predict_private(model, dataset_dict, label_names_dict, is_regression, accelerator,
                     private_configs, private_output_dir_path):
-    logger.info('Start predicting for private dataset(s)')
+    logger.info('Start prediction for private dataset(s)')
     model.eval()
     for private_config in private_configs:
         # Dataset
