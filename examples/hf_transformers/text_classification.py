@@ -24,16 +24,18 @@ import logging
 import os
 import time
 
+import datasets
+import numpy as np
+import pandas as pd
 import torch
 import transformers
 from accelerate import Accelerator, DistributedType
+from datasets import load_metric
 from torch.backends import cudnn
 from transformers import AutoConfig, AutoModelForSequenceClassification, AutoTokenizer, DataCollatorWithPadding
 
-import datasets
 from custom.dataset import load_raw_glue_datasets_and_misc, preprocess_glue_datasets
 from custom.optim import customize_lr_config
-from datasets import load_metric
 from torchdistill.common import file_util, yaml_util
 from torchdistill.common.constant import def_logger
 from torchdistill.common.main_util import is_main_process, setup_for_distributed, set_seed
@@ -50,10 +52,11 @@ def get_argparser():
     parser = argparse.ArgumentParser(description='Knowledge distillation for a text classification task')
     parser.add_argument('--config', required=True, help='yaml file path')
     parser.add_argument('--log', help='log file path')
-    parser.add_argument('--task_name', default=None, help='The name of the glue task to train on.')
-    parser.add_argument('--seed', type=int, default=None, help="A seed for reproducible training.")
-    parser.add_argument('-test_only', action='store_true', help='Only test the models')
-    parser.add_argument('-student_only', action='store_true', help='Test the student model only')
+    parser.add_argument('--task_name', type=str, default=None, help='name of the glue task to train on.')
+    parser.add_argument('--private_output', help='output dir path for private dataset(s)')
+    parser.add_argument('--seed', type=int, default=None, help='a seed for reproducible training')
+    parser.add_argument('-test_only', action='store_true', help='only test the models')
+    parser.add_argument('-student_only', action='store_true', help='test the student model only')
     # distributed training parameters
     parser.add_argument('--world_size', default=1, type=int, help='number of distributed processes')
     parser.add_argument('-adjust_lr', action='store_true',
@@ -79,21 +82,24 @@ def load_tokenizer_and_model(model_config, task_name, prioritizes_ckpt=False):
 
 def get_all_datasets(datasets_config, task_name, student_tokenizer, student_model):
     dataset_dict = dict()
+    label_names_dict = dict()
     is_regression = None
     for dataset_name in datasets_config.keys():
         dataset_config = datasets_config[dataset_name]
         raw_data_params = dataset_config['raw_data_params']
         base_split_name = dataset_config.get('base_split_name', 'train')
-        raw_datasets, num_labels, label_list, is_regression = \
-            load_raw_glue_datasets_and_misc(task_name, base_split_name=base_split_name, **raw_data_params)
+        sub_task_name = dataset_config.get('name', task_name)
+        raw_datasets, num_labels, label_names, is_regression = \
+            load_raw_glue_datasets_and_misc(sub_task_name, base_split_name=base_split_name, **raw_data_params)
         pad_to_max_length = dataset_config.get('pad_to_max_length', False)
         max_length = dataset_config.get('pad_to_max_length', 128)
         sub_dataset_dict = \
-            preprocess_glue_datasets(task_name, raw_datasets, num_labels, label_list, is_regression,
+            preprocess_glue_datasets(sub_task_name, raw_datasets, num_labels, label_names, is_regression,
                                      pad_to_max_length, max_length, student_tokenizer, student_model, base_split_name)
         for split_name, dataset_id in dataset_config['dataset_id_map'].items():
             dataset_dict[dataset_id] = sub_dataset_dict[split_name]
-    return dataset_dict, is_regression
+        label_names_dict[sub_task_name] = label_names
+    return dataset_dict, label_names_dict, is_regression
 
 
 def get_metrics(task_name):
@@ -163,6 +169,41 @@ def train(teacher_model, student_model, dataset_dict, is_regression, ckpt_dir_pa
             unwrapped_model.save_pretrained(ckpt_dir_path, save_function=accelerator.save)
 
 
+@torch.no_grad()
+def predict_private(model, dataset_dict, label_names_dict, is_regression, accelerator,
+                    private_configs, private_output_dir_path):
+    logger.info('Start prediction for private dataset(s)')
+    model.eval()
+    for private_config in private_configs:
+        # Dataset
+        private_data_loader_config = private_config['private_data_loader']
+        private_dataset_id = private_data_loader_config['dataset_id']
+        private_dataset = dataset_dict[private_dataset_id]
+        label_names = label_names_dict[private_data_loader_config['task_name']]
+        logger.info('{}: {} samples'.format(private_dataset_id, len(private_dataset)))
+
+        # Dataloader
+        private_data_loader = util.build_data_loader(private_dataset, private_data_loader_config, False)
+        private_data_loader = accelerator.prepare(private_data_loader)
+
+        # Prediction
+        private_output_file_path = os.path.join(private_output_dir_path, private_config['pred_output'])
+        file_util.make_parent_dirs(private_output_file_path)
+        np_preds = None
+        for batch in private_data_loader:
+            batch.pop('labels')
+            outputs = model(**batch)
+            predictions = outputs.logits.argmax(dim=-1) if not is_regression else outputs.logits.squeeze()
+            predictions = predictions.detach().cpu().numpy()
+            np_preds = predictions if np_preds is None else np.append(np_preds, predictions, axis=0)
+
+        df_output = pd.DataFrame({'prediction': np_preds})
+        # Map prediction index to label name
+        if not is_regression:
+            df_output.prediction = df_output.prediction.apply(lambda pred_idx: label_names[pred_idx])
+        df_output.to_csv(private_output_file_path, sep='\t', index=True, index_label='index')
+
+
 def main(args):
     log_file_path = args.log
     if is_main_process() and log_file_path is not None:
@@ -206,7 +247,8 @@ def main(args):
     ckpt_dir_path = student_model_config['ckpt']
     # Get the datasets: you can either provide your own CSV/JSON training and evaluation files (see below)
     # or specify a GLUE benchmark task (the dataset will be downloaded automatically from the datasets Hub).
-    dataset_dict, is_regression = get_all_datasets(config['datasets'], task_name, student_tokenizer, student_model)
+    dataset_dict, label_names_dict, is_regression = \
+        get_all_datasets(config['datasets'], task_name, student_tokenizer, student_model)
 
     # Update config with dataset size len(data_loader)
     customize_lr_config(config, dataset_dict, world_size)
@@ -237,6 +279,13 @@ def main(args):
     student_model = accelerator.prepare(student_model)
     evaluate(student_model, test_data_loader, metric, is_regression, accelerator,
              title='[Student: {}]'.format(student_model_config['name']))
+
+    # Output prediction for private dataset(s) if both the config and output dir path are given
+    private_configs = config.get('private', None)
+    private_output_dir_path = args.private_output
+    if private_configs is not None and private_output_dir_path is not None and is_main_process():
+        predict_private(student_model, dataset_dict, label_names_dict, is_regression, accelerator,
+                        private_configs, private_output_dir_path)
 
 
 if __name__ == '__main__':

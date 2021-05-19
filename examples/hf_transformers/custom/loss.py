@@ -1,7 +1,8 @@
 import torch
 from torch import nn
 from torch.nn import functional
-from torchdistill.losses.single import register_single_loss, register_org_loss
+
+from torchdistill.losses.single import register_org_loss
 from torchdistill.losses.util import register_func2extract_org_output
 
 

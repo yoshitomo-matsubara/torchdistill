@@ -1,9 +1,9 @@
 import math
 
 from torch import nn
-from torchdistill.optim.registry import register_optimizer, get_optimizer
-from torchdistill.optim.registry import register_scheduler
 from transformers.optimization import TYPE_TO_SCHEDULER_FUNCTION
+
+from torchdistill.optim.registry import register_optimizer, register_scheduler, get_optimizer
 
 # Register lr schedulers
 for func in TYPE_TO_SCHEDULER_FUNCTION.values():

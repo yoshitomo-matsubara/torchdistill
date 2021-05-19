@@ -1,6 +1,6 @@
+from datasets import load_dataset
 from transformers import PretrainedConfig, default_data_collator
 
-from datasets import load_dataset
 from torchdistill.common.constant import def_logger
 from torchdistill.datasets.collator import register_collate_func
 
@@ -49,12 +49,12 @@ def load_raw_glue_datasets_and_misc(task_name, train_file_path=None, valid_file_
     # https://huggingface.co/docs/datasets/loading_datasets.html.
 
     # Labels
-    label_list = None
+    label_names = None
     if task_name is not None:
         is_regression = task_name == 'stsb'
         if not is_regression:
-            label_list = raw_datasets[base_split_name].features['label'].names
-            num_labels = len(label_list)
+            label_names = raw_datasets[base_split_name].features['label'].names
+            num_labels = len(label_names)
         else:
             num_labels = 1
     else:
@@ -65,13 +65,13 @@ def load_raw_glue_datasets_and_misc(task_name, train_file_path=None, valid_file_
         else:
             # A useful fast method:
             # https://huggingface.co/docs/datasets/package_reference/main_classes.html#datasets.Dataset.unique
-            label_list = raw_datasets[base_split_name].unique('label')
-            label_list.sort()  # Let's sort it for determinism
-            num_labels = len(label_list)
-    return raw_datasets, num_labels, label_list, is_regression
+            label_names = raw_datasets[base_split_name].unique('label')
+            label_names.sort()  # Let's sort it for determinism
+            num_labels = len(label_names)
+    return raw_datasets, num_labels, label_names, is_regression
 
 
-def preprocess_glue_datasets(task_name, raw_datasets, num_labels, label_list, is_regression,
+def preprocess_glue_datasets(task_name, raw_datasets, num_labels, label_names, is_regression,
                              pad_to_max_length, max_length, tokenizer, model, base_split_name='train'):
     # Preprocessing the datasets
     if task_name is not None:
@@ -96,20 +96,20 @@ def preprocess_glue_datasets(task_name, raw_datasets, num_labels, label_list, is
     ):
         # Some have all caps in their config, some don't.
         label_name_to_id = {k.lower(): v for k, v in model.config.label2id.items()}
-        if list(sorted(label_name_to_id.keys())) == list(sorted(label_list)):
+        if list(sorted(label_name_to_id.keys())) == list(sorted(label_names)):
             logger.info(
                 f'The configuration of the model provided the following label correspondence: {label_name_to_id}. '
                 'Using it!'
             )
-            label_to_id = {i: label_name_to_id[label_list[i]] for i in range(num_labels)}
+            label_to_id = {i: label_name_to_id[label_names[i]] for i in range(num_labels)}
         else:
             logger.warning(
                 "Your model seems to have been trained with labels, but they don't match the dataset: ",
-                f'model labels: {list(sorted(label_name_to_id.keys()))}, dataset labels: {list(sorted(label_list))}.'
+                f'model labels: {list(sorted(label_name_to_id.keys()))}, dataset labels: {list(sorted(label_names))}.'
                 '\nIgnoring the model labels as a result.',
             )
     elif task_name is None:
-        label_to_id = {v: i for i, v in enumerate(label_list)}
+        label_to_id = {v: i for i, v in enumerate(label_names)}
 
     padding = 'max_length' if pad_to_max_length else False
 
