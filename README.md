@@ -1,6 +1,8 @@
 # torchdistill: A Modular, Configuration-Driven Framework for Knowledge Distillation
 [![PyPI version](https://badge.fury.io/py/torchdistill.svg)](https://badge.fury.io/py/torchdistill)
-[![Build Status](https://travis-ci.com/yoshitomo-matsubara/torchdistill.svg?branch=master)](https://travis-ci.com/github/yoshitomo-matsubara/torchdistill) 
+[![Build Status](https://travis-ci.com/yoshitomo-matsubara/torchdistill.svg?branch=master)](https://travis-ci.com/github/yoshitomo-matsubara/torchdistill)
+[![DOI:10.1007/978-3-030-76423-4_3](https://zenodo.org/badge/DOI/10.1007/978-3-030-76423-4_3.svg)](https://doi.org/10.1007/978-3-030-76423-4_3)
+
 
 ***torchdistill*** (formerly *kdkit*) offers various knowledge distillation methods 
 and enables you to design (new) experiments simply by editing a yaml config file instead of Python code. 
@@ -54,7 +56,7 @@ if you have your own GPU(s).
 
 ### GLUE
 - Fine-tuning without teacher models [![Open In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/yoshitomo-matsubara/torchdistill/blob/master/demo/glue_fine_tuning.ipynb)
-
+- Knowledge distillation (coming soon!)
 
 ## PyTorch Hub
 If you find models on [PyTorch Hub](https://pytorch.org/hub/) or GitHub repositories supporting PyTorch Hub,
