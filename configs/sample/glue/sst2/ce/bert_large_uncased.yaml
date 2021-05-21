@@ -91,4 +91,5 @@ private:
       batch_size: 32
       num_workers: 0
       collate_fn: 'DataCollatorWithPadding'
-    pred_output: 'STS-2.tsv'
+    idx2str: False
+    pred_output: 'SST-2.tsv'

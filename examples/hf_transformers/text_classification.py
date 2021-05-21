@@ -199,7 +199,7 @@ def predict_private(model, dataset_dict, label_names_dict, is_regression, accele
 
         df_output = pd.DataFrame({'prediction': np_preds})
         # Map prediction index to label name
-        if not is_regression:
+        if not is_regression and private_config.get('idx2str', True):
             df_output.prediction = df_output.prediction.apply(lambda pred_idx: label_names[pred_idx])
         df_output.to_csv(private_output_file_path, sep='\t', index=True, index_label='index')
 

@@ -101,6 +101,7 @@ private:
       batch_size: 32
       num_workers: 0
       collate_fn: 'DataCollatorWithPadding'
+    idx2str: True
     pred_output: 'MNLI-m.tsv'
   - private_data_loader:
       dataset_id: *glue_test_mm
@@ -109,6 +110,7 @@ private:
       batch_size: 32
       num_workers: 0
       collate_fn: 'DataCollatorWithPadding'
+    idx2str: True
     pred_output: 'MNLI-mm.tsv'
   - private_data_loader:
       dataset_id: *glue_test_ax
@@ -117,4 +119,5 @@ private:
       batch_size: 32
       num_workers: 0
       collate_fn: 'DataCollatorWithPadding'
+    idx2str: True
     pred_output: 'AX.tsv'
