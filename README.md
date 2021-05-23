@@ -15,7 +15,8 @@ excluding teacher entries from a yaml config file. You can find such examples be
 
 ## Forward hook manager
 Using **ForwardHookManager**, you can extract intermediate representations in model without modifying the interface of its forward function.  
-[This example notebook](demo/extract_intermediate_representations.ipynb) will give you a better idea of the usage.
+[This example notebook](demo/extract_intermediate_representations.ipynb) [![Open In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/yoshitomo-matsubara/torchdistill/blob/master/demo/extract_intermediate_representations.ipynb) 
+will give you a better idea of the usage such as knowledge distillation and analysis of intermediate representations.
 
 ## 1 experiment → 1 PyYAML config file
 In ***torchdistill***, many components and PyTorch modules are abstracted e.g., models, datasets, optimizers, losses, 
@@ -56,7 +57,9 @@ if you have your own GPU(s).
 
 ### GLUE
 - Fine-tuning without teacher models [![Open In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/yoshitomo-matsubara/torchdistill/blob/master/demo/glue_finetuning_and_submission.ipynb)
-- Knowledge distillation (coming soon!)
+- Knowledge distillation (coming soon!) 
+
+These examples write out test prediction files for you to see the test performance at [the GLUE leaderboard system](https://gluebenchmark.com/).
 
 ## PyTorch Hub
 If you find models on [PyTorch Hub](https://pytorch.org/hub/) or GitHub repositories supporting PyTorch Hub,

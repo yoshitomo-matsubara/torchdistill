@@ -263,6 +263,7 @@ def main(args):
     if not args.test_only:
         train(teacher_model, student_model, dataset_dict, is_regression, ckpt_dir_path, metric,
               device, device_ids, distributed, config, args, accelerator)
+        student_tokenizer.save_pretrained(ckpt_dir_path)
 
     test_config = config['test']
     test_data_loader_config = test_config['test_data_loader']
