@@ -60,3 +60,11 @@ accelerate launch examples/hf_transformers/text_classification.py \
 ```
 Note that you should re-configure `accelerate` by `accelerate config` and avoid the distributed processing mode 
 when writing out the prediction file. If you have a fine-tuned model, you can skip training by adding `-test_only`.
+
+### Sample benchmark results and fine-tuned models
+Using [this Google Colab example](https://colab.research.google.com/github/yoshitomo-matsubara/torchdistill/blob/dev/demo/glue_finetuning_and_submission.ipynb) 
+and sample configs `configs/sample/glue/`, you should be able to get similar results.
+
+#### BERT-Large (uncased) fine-tuned on each task
+- Overall GLUE score: [79.1](https://gluebenchmark.com/leaderboard)
+- Fine-tuned models: `yoshitomo-matsubara/bert-large-uncased-{dataset}` available at [Hugging Face Model Hub](https://huggingface.co/yoshitomo-matsubara)
