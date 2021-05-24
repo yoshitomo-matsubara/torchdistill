@@ -44,7 +44,10 @@ Executable code can be found in [examples/](examples/) such as
 - [Text classification](examples/hf_transformers/text_classification.py): GLUE, etc
 
 For CIFAR-10 and CIFAR-100, some models are reimplemented and available as pretrained models in ***torchdistill***. 
-More details can be found [here](https://github.com/yoshitomo-matsubara/torchdistill/releases/tag/v0.1.1).
+More details can be found [here](https://github.com/yoshitomo-matsubara/torchdistill/releases/tag/v0.1.1).  
+
+Some Transformer models fine-tuned by ***torchdistill*** for GLUE tasks are available at [Hugging Face Model Hub](https://huggingface.co/yoshitomo-matsubara). 
+Sample GLUE benchmark results and details can be found [here](https://github.com/yoshitomo-matsubara/torchdistill/tree/dev/examples/hf_transformers#sample-benchmark-results-and-fine-tuned-models)
 
 ## Google Colab Examples
 The following examples are available in [demo/](demo/). 
