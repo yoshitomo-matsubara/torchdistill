@@ -167,6 +167,7 @@ def train(teacher_model, student_model, dataset_dict, is_regression, ckpt_dir_pa
             accelerator.wait_for_everyone()
             unwrapped_model = accelerator.unwrap_model(student_model)
             unwrapped_model.save_pretrained(ckpt_dir_path, save_function=accelerator.save)
+        training_box.post_process()
 
 
 @torch.no_grad()
