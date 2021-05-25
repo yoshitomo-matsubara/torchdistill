@@ -130,7 +130,8 @@ def train(teacher_model, student_model, dataset_dict, ckpt_file_path, device, de
         val_acc_global, val_acc, val_iou = val_seg_evaluator.compute()
         val_miou = val_iou.mean().item()
         if val_miou > best_val_miou and is_main_process():
-            logger.info('Updating ckpt (Best mIoU: {:.4f} -> {:.4f})'.format(best_val_miou, val_miou))
+            logger.info('Best mIoU: {:.4f} -> {:.4f}'.format(best_val_miou, val_miou))
+            logger.info('Updating ckpt at {}'.format(ckpt_file_path))
             best_val_miou = val_miou
             save_ckpt(student_model_without_ddp, optimizer, lr_scheduler,
                       best_val_miou, config, args, ckpt_file_path)

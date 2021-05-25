@@ -162,7 +162,7 @@ def train(teacher_model, student_model, dataset_dict, is_regression, ckpt_dir_pa
                             accelerator, header='Validation: ')
         val_value = sum(val_dict.values())
         if val_value > best_val_number:
-            logger.info('Updating ckpt')
+            logger.info('Updating ckpt at {}'.format(ckpt_dir_path))
             best_val_number = val_value
             accelerator.wait_for_everyone()
             unwrapped_model = accelerator.unwrap_model(student_model)
