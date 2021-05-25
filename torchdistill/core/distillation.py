@@ -184,6 +184,9 @@ class DistillationBox(nn.Module):
                                              self.train_data_loader, self.val_data_loader)
             else:
                 self.teacher_model = self.teacher_model.to(self.accelerator.device)
+                if self.accelerator.state.use_fp16:
+                    self.teacher_model = self.teacher_model.half()
+
                 self.student_model, self.optimizer, self.train_data_loader, self.val_data_loader = \
                     self.accelerator.prepare(self.student_model, self.optimizer,
                                              self.train_data_loader, self.val_data_loader)
