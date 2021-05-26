@@ -179,7 +179,8 @@ def train(teacher_model, student_model, dataset_dict, ckpt_file_path, device, de
         # Average Precision  (AP) @[ IoU=0.50:0.95 | area=   all | maxDets=100 ]
         val_map = val_coco_evaluator.coco_eval[val_iou_type].stats[0]
         if val_map > best_val_map and is_main_process():
-            logger.info('Updating ckpt (Best mAP: {:.4f} -> {:.4f})'.format(best_val_map, val_map))
+            logger.info('Best mAP ({}): {:.4f} -> {:.4f}'.format(val_iou_type, best_val_map, val_map))
+            logger.info('Updating ckpt at {}'.format(ckpt_file_path))
             best_val_map = val_map
             save_ckpt(student_model_without_ddp, optimizer, lr_scheduler,
                       best_val_map, config, args, ckpt_file_path)

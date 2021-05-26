@@ -122,8 +122,8 @@ def train(teacher_model, student_model, dataset_dict, ckpt_file_path, device, de
         val_top1_accuracy = evaluate(student_model, training_box.val_data_loader, device, device_ids, distributed,
                                      log_freq=log_freq, header='Validation:')
         if val_top1_accuracy > best_val_top1_accuracy and is_main_process():
-            logger.info('Updating ckpt (Best top1 accuracy: '
-                        '{:.4f} -> {:.4f})'.format(best_val_top1_accuracy, val_top1_accuracy))
+            logger.info('Best top-1 accuracy: {:.4f} -> {:.4f}'.format(best_val_top1_accuracy, val_top1_accuracy))
+            logger.info('Updating ckpt at {}'.format(ckpt_file_path))
             best_val_top1_accuracy = val_top1_accuracy
             save_ckpt(student_model_without_ddp, optimizer, lr_scheduler,
                       best_val_top1_accuracy, config, args, ckpt_file_path)
