@@ -57,7 +57,7 @@ train:
     type: 'optimizer_no_decay'
     params:
       optimizer_type: 'AdamW'
-      lr: 5.0e-5
+      lr: 2.0e-5
       weight_decay: 0.0
     filters_params: False
     max_grad_norm: 1.0
