@@ -66,5 +66,5 @@ Using [this Google Colab example](https://colab.research.google.com/github/yoshi
 and sample configs `configs/sample/glue/`, you should be able to get similar results.
 
 #### BERT-Large (uncased) fine-tuned on each task
-- Overall GLUE score: [79.1](https://gluebenchmark.com/leaderboard)
+- Overall GLUE score: [80.2](https://gluebenchmark.com/leaderboard)
 - Fine-tuned models: `yoshitomo-matsubara/bert-large-uncased-{dataset}` available at [Hugging Face Model Hub](https://huggingface.co/yoshitomo-matsubara)
