@@ -65,6 +65,10 @@ when writing out the prediction file. If you have a fine-tuned model, you can sk
 Using [this Google Colab example](https://colab.research.google.com/github/yoshitomo-matsubara/torchdistill/blob/dev/demo/glue_finetuning_and_submission.ipynb) 
 and sample configs `configs/sample/glue/`, you should be able to get similar results.
 
+#### BERT-Base (uncased) fine-tuned on each task
+- Overall GLUE score: [77.9](https://gluebenchmark.com/leaderboard)
+- Fine-tuned models: `yoshitomo-matsubara/bert-base-uncased-{dataset}` available at [Hugging Face Model Hub](https://huggingface.co/yoshitomo-matsubara)
+
 #### BERT-Large (uncased) fine-tuned on each task
 - Overall GLUE score: [80.2](https://gluebenchmark.com/leaderboard)
 - Fine-tuned models: `yoshitomo-matsubara/bert-large-uncased-{dataset}` available at [Hugging Face Model Hub](https://huggingface.co/yoshitomo-matsubara)
