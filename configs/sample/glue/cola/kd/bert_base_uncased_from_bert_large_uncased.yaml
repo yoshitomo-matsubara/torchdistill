@@ -1,0 +1,119 @@
+datasets:
+  glue:
+    name: &dataset_name 'cola'
+    raw_data_params:
+      train_file_path:
+      valid_file_path:
+    dataset_id_map:
+      train: &glue_train !join [*dataset_name, '/train']
+      validation: &glue_val !join [*dataset_name, '/val']
+      test: &glue_test !join [*dataset_name, '/test']
+
+models:
+  teacher_model:
+    name: &teacher_model_name 'bert-large-uncased'
+    model_name_or_path: &teacher_model_path 'yoshitomo-matsubara/bert-large-uncased-cola'
+    num_labels: 2
+    config_params:
+      pretrained_model_name_or_path: *teacher_model_path
+    tokenizer_params:
+      pretrained_model_name_or_path: *teacher_model_path
+      do_lower: True
+      use_fast: True
+    model_params:
+      pretrained_model_name_or_path: *teacher_model_path
+  student_model:
+    name: &student_model_name 'bert-base-uncased'
+    model_name_or_path: *student_model_name
+    num_labels: 2
+    config_params:
+      pretrained_model_name_or_path: *student_model_name
+    tokenizer_params:
+      pretrained_model_name_or_path: *student_model_name
+      do_lower: True
+      use_fast: True
+    model_params:
+      pretrained_model_name_or_path: *student_model_name
+    experiment: &student_experiment !join [*dataset_name, '-', *student_model_name, '_from_', *teacher_model_name]
+    ckpt: !join ['./resource/ckpt/glue/', *dataset_name, '/kd/', *student_experiment]
+
+train:
+  log_freq: 50
+  num_epochs: 3
+  train_data_loader:
+    dataset_id: *glue_train
+    random_sample: True
+    batch_size: 16
+    num_workers: 0
+    collate_fn: 'DataCollatorWithPadding'
+    requires_supp: False
+    cache_output:
+  val_data_loader:
+    dataset_id: *glue_val
+    random_sample: False
+    batch_size: 32
+    num_workers: 0
+    collate_fn: 'DataCollatorWithPadding'
+    requires_supp: False
+  teacher:
+    forward_proc: 'forward_batch_as_kwargs'
+    adaptations:
+    sequential: []
+    wrapper:
+    requires_grad: False
+    frozen_modules: []
+  student:
+    forward_proc: 'forward_batch_as_kwargs'
+    adaptations:
+    sequential: []
+    wrapper:
+    requires_grad: True
+    frozen_modules: []
+  apex:
+    requires: False
+    opt_level: '01'
+  optimizer:
+    type: 'optimizer_no_decay'
+    params:
+      optimizer_type: 'AdamW'
+      lr: 1.0e-4
+      weight_decay: 0.0
+    filters_params: False
+    max_grad_norm: 1.0
+    grad_accum_step: 1
+  scheduler:
+    type: 'get_linear_schedule_with_warmup'
+    params:
+      num_warmup_steps: 0
+      num_training_steps:
+    scheduling_step: 1
+  criterion:
+    type: 'GeneralizedCustomLoss'
+    org_term:
+      criterion:
+        type: 'KDLoss4Transformer'
+        params:
+          temperature: 7.0
+          alpha: 0.9
+          reduction: 'batchmean'
+      factor: 1.0
+    sub_terms:
+
+test:
+  test_data_loader:
+    dataset_id: *glue_val
+    random_sample: False
+    batch_size: 32
+    num_workers: 0
+    collate_fn: 'DataCollatorWithPadding'
+
+private:
+  - private_data_loader:
+      dataset_id: *glue_test
+      task_name: cola
+      random_sample: False
+      batch_size: 32
+      num_workers: 0
+      collate_fn: 'DataCollatorWithPadding'
+    idx2str: False
+    pred_output: 'CoLA.tsv'
