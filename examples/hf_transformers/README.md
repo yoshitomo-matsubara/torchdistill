@@ -65,10 +65,14 @@ when writing out the prediction file. If you have a fine-tuned model, you can sk
 Using [this Google Colab example](https://colab.research.google.com/github/yoshitomo-matsubara/torchdistill/blob/dev/demo/glue_finetuning_and_submission.ipynb) 
 and sample configs `configs/sample/glue/`, you should be able to get similar results.
 
+#### BERT-Large (uncased) fine-tuned on each task
+- Overall GLUE score: [80.2](https://gluebenchmark.com/leaderboard)
+- Fine-tuned models: `yoshitomo-matsubara/bert-large-uncased-{dataset}` available at [Hugging Face Model Hub](https://huggingface.co/yoshitomo-matsubara)
+
 #### BERT-Base (uncased) fine-tuned on each task
 - Overall GLUE score: [77.9](https://gluebenchmark.com/leaderboard)
 - Fine-tuned models: `yoshitomo-matsubara/bert-base-uncased-{dataset}` available at [Hugging Face Model Hub](https://huggingface.co/yoshitomo-matsubara)
 
-#### BERT-Large (uncased) fine-tuned on each task
-- Overall GLUE score: [80.2](https://gluebenchmark.com/leaderboard)
-- Fine-tuned models: `yoshitomo-matsubara/bert-large-uncased-{dataset}` available at [Hugging Face Model Hub](https://huggingface.co/yoshitomo-matsubara)
+#### BERT-Base (uncased) fine-tuned on each task, using fine-tuned BERT-Large (uncased) as teacher for knowledge distillation
+- Overall GLUE score: [78.9](https://gluebenchmark.com/leaderboard)
+- Fine-tuned models: `yoshitomo-matsubara/bert-base-uncased-{dataset}_from_bert-large-uncased-{dataset}` available at [Hugging Face Model Hub](https://huggingface.co/yoshitomo-matsubara)

@@ -60,7 +60,7 @@ if you have your own GPU(s).
 
 ### GLUE
 - Fine-tuning without teacher models [![Open In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/yoshitomo-matsubara/torchdistill/blob/master/demo/glue_finetuning_and_submission.ipynb)
-- Knowledge distillation (coming soon!) 
+- Knowledge distillation [![Open In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/yoshitomo-matsubara/torchdistill/blob/master/demo/glue_kd_and_submission.ipynb)
 
 These examples write out test prediction files for you to see the test performance at [the GLUE leaderboard system](https://gluebenchmark.com/).
 
