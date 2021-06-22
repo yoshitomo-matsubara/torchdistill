@@ -1,5 +1,7 @@
+from collections import abc
+
 import torch
-from torch._six import container_abcs, string_classes
+from torch._six import string_classes
 from torch.nn.parallel.scatter_gather import gather
 
 from torchdistill.common.module_util import check_if_wrapped, get_module
@@ -9,7 +11,7 @@ def get_device_index(data):
     if isinstance(data, torch.Tensor):
         device = data.device
         return 'cpu' if device.type == 'cpu' else device.index
-    elif isinstance(data, container_abcs.Mapping):
+    elif isinstance(data, abc.Mapping):
         for key, data in data.items():
             result = get_device_index(data)
             if result is not None:
@@ -19,7 +21,7 @@ def get_device_index(data):
             result = get_device_index(d)
             if result is not None:
                 return result
-    elif isinstance(data, container_abcs.Sequence) and not isinstance(data, string_classes):
+    elif isinstance(data, abc.Sequence) and not isinstance(data, string_classes):
         for d in data:
             result = get_device_index(d)
             if result is not None:

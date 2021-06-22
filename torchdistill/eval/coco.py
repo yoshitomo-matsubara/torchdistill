@@ -9,6 +9,7 @@ import torch
 import torch.distributed as dist
 from pycocotools.coco import COCO
 from pycocotools.cocoeval import COCOeval
+from torch._six import string_classes
 
 from torchdistill.common.main_util import get_world_size
 
@@ -326,7 +327,7 @@ def loadRes(self, resFile):
 
     # print('Loading and preparing results...')
     # tic = time.time()
-    if isinstance(resFile, torch._six.string_classes):
+    if isinstance(resFile, string_classes):
         anns = json.load(open(resFile))
     elif type(resFile) == np.ndarray:
         anns = self.loadNumpyAnnotations(resFile)
