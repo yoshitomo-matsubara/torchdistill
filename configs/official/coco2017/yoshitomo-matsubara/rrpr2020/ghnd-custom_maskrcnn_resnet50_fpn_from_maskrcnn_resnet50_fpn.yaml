@@ -79,7 +79,7 @@ train:
     forward_hook:
       input: []
       output: ['seq.backbone.body.layer1', 'seq.backbone.body.layer2', 'seq.backbone.body.layer3', 'seq.backbone.body.layer4']
-    wrapper: 'DistributedDataParallel'
+    wrapper: 'DataParallel'
     requires_grad: False
   student:
     forward_proc: 'forward_batch'
