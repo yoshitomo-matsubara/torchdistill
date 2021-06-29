@@ -119,14 +119,16 @@ class DistillationBox(nn.Module):
             freeze_module_params(self.student_model)
 
         # Wrap models if necessary
+        teacher_unused_parameters = teacher_config.get('find_unused_parameters', self.teacher_any_frozen)
         teacher_any_updatable = len(get_updatable_param_names(self.teacher_model)) > 0
         self.teacher_model =\
             wrap_model(self.teacher_model, teacher_config, self.device, self.device_ids, self.distributed,
-                       teacher_any_updatable)
+                       teacher_unused_parameters, teacher_any_updatable)
+        student_unused_parameters = student_config.get('find_unused_parameters', self.student_any_frozen)
         student_any_updatable = len(get_updatable_param_names(self.student_model)) > 0
         self.student_model =\
             wrap_model(self.student_model, student_config, self.device, self.device_ids, self.distributed,
-                       student_any_updatable)
+                       student_unused_parameters, student_any_updatable)
 
         # Set up optimizer and scheduler
         optim_config = train_config.get('optimizer', dict())
