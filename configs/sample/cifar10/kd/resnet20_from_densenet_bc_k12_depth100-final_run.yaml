@@ -76,7 +76,7 @@ train:
     num_workers: 16
   teacher:
     sequential: []
-    wrapper: 'DistributedDataParallel'
+    wrapper: 'DataParallel'
     requires_grad: False
     frozen_modules: []
   student:

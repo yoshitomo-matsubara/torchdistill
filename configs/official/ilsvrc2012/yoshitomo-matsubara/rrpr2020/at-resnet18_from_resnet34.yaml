@@ -72,7 +72,7 @@ train:
     forward_hook:
       input: []
       output: ['layer3', 'layer4']
-    wrapper: 'DistributedDataParallel'
+    wrapper: 'DataParallel'
     requires_grad: False
   student:
     adaptations:
