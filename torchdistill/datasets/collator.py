@@ -1,10 +1,11 @@
-from types import BuiltinFunctionType, BuiltinMethodType
+from types import BuiltinFunctionType, BuiltinMethodType, FunctionType
 
 COLLATE_FUNC_DICT = dict()
 
 
 def register_collate_func(func):
-    key = func.__name__ if isinstance(func, (BuiltinMethodType, BuiltinFunctionType)) else type(func).__name__
+    key = func.__name__ if isinstance(func, (BuiltinMethodType, BuiltinFunctionType, FunctionType)) \
+        else type(func).__name__
     COLLATE_FUNC_DICT[key] = func
     return func
 
