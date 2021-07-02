@@ -11,7 +11,7 @@ you will **NOT** need to reimplement the models, that often change the interface
 specify the module path(s) in the yaml file. Refer to [this paper](https://github.com/yoshitomo-matsubara/torchdistill#citation) for more details.  
 
 In addition to knowledge distillation, this framework enables you to train models without teachers simply by 
-excluding teacher entries from a yaml config file. You can find such examples below and in [configs/samples/](https://github.com/yoshitomo-matsubara/torchdistill/tree/main/configs/samples/).
+excluding teacher entries from a yaml config file. You can find such examples below and in [configs/sample/](https://github.com/yoshitomo-matsubara/torchdistill/tree/main/configs/sample/).
 
 ## Forward hook manager
 Using **ForwardHookManager**, you can extract intermediate representations in model without modifying the interface of its forward function.  
