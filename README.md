@@ -37,7 +37,7 @@ For the 2nd row (S: ResNet-18), the checkpoint (trained weights), configuration 
 and the configurations reuse the hyperparameters such as number of epochs used in the original work except for KD.
 
 ## Examples
-Executable code can be found in [examples/](examples/) such as
+Executable code can be found in [examples/](https://github.com/yoshitomo-matsubara/torchdistill/tree/main/examples/) such as
 - [Image classification](https://github.com/yoshitomo-matsubara/torchdistill/tree/main/examples/image_classification.py): ImageNet (ILSVRC 2012), CIFAR-10, CIFAR-100, etc
 - [Object detection](https://github.com/yoshitomo-matsubara/torchdistill/tree/main/examples/object_detection.py): COCO 2017, etc
 - [Semantic segmentation](https://github.com/yoshitomo-matsubara/torchdistill/tree/main/examples/semantic_segmentation.py): COCO 2017, PASCAL VOC, etc
