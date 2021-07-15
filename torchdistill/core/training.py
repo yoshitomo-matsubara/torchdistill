@@ -9,7 +9,7 @@ from torchdistill.common.constant import def_logger
 from torchdistill.common.module_util import check_if_wrapped, freeze_module_params, get_module, unfreeze_module_params, \
     get_updatable_param_names
 from torchdistill.core.forward_proc import get_forward_proc_func
-from torchdistill.core.util import set_hooks, wrap_model, extract_io_dict, update_io_dict
+from torchdistill.core.util import set_hooks, wrap_model, clear_io_dict, extract_io_dict, update_io_dict
 from torchdistill.datasets.util import build_data_loaders
 from torchdistill.losses.custom import get_custom_loss
 from torchdistill.losses.single import get_single_loss
@@ -179,6 +179,7 @@ class TrainingBox(nn.Module):
         self.num_epochs = train_config['num_epochs']
 
     def pre_process(self, epoch=None, **kwargs):
+        clear_io_dict(self.model_io_dict)
         self.model.train()
         if self.distributed:
             self.train_data_loader.batch_sampler.sampler.set_epoch(epoch)

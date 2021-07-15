@@ -85,6 +85,12 @@ def tensor2numpy2tensor(data, device):
     return data
 
 
+def clear_io_dict(model_io_dict):
+    for module_io_dict in model_io_dict.values():
+        for sub_dict in list(module_io_dict.values()):
+            sub_dict.clear()
+
+
 def extract_io_dict(model_io_dict, target_device):
     uses_cuda = target_device.type == 'cuda'
     gathered_io_dict = dict()
