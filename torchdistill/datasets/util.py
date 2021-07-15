@@ -186,8 +186,9 @@ def build_data_loader(dataset, data_loader_config, distributed, accelerator=None
                           collate_fn=collate_fn, drop_last=drop_last)
 
     batch_size = data_loader_config['batch_size']
+    pin_memory = data_loader_config.get('pin_memory', True)
     return DataLoader(dataset, batch_size=batch_size, sampler=sampler,
-                      num_workers=num_workers, collate_fn=collate_fn, pin_memory=True, drop_last=drop_last)
+                      num_workers=num_workers, collate_fn=collate_fn, pin_memory=pin_memory, drop_last=drop_last)
 
 
 def build_data_loaders(dataset_dict, data_loader_configs, distributed, accelerator=None):
