@@ -3,6 +3,7 @@ import os
 import numpy as np
 import torch
 from torch import nn
+from torch.nn import functional
 from torch.jit.annotations import Tuple, List
 
 from torchdistill.common.constant import def_logger
@@ -42,7 +43,6 @@ class Paraphraser4FactorTransfer(nn.Module):
     Paraphraser for factor transfer described in the supplementary material of
     "Paraphrasing Complex Network: Network Compression via Factor Transfer"
     """
-
     @staticmethod
     def make_tail_modules(num_output_channels, uses_bn):
         leaky_relu = nn.LeakyReLU(0.1)
@@ -113,7 +113,6 @@ class Teacher4FactorTransfer(SpecialModule):
     """
     Teacher for factor transfer proposed in "Paraphrasing Complex Network: Network Compression via Factor Transfer"
     """
-
     def __init__(self, teacher_model, minimal, input_module_path,
                  paraphraser_params, paraphraser_ckpt, uses_decoder, device, device_ids, distributed, **kwargs):
         super().__init__()
@@ -155,7 +154,6 @@ class Student4FactorTransfer(SpecialModule):
     """
     Student for factor transfer proposed in "Paraphrasing Complex Network: Network Compression via Factor Transfer"
     """
-
     def __init__(self, student_model, input_module_path, translator_params, device, device_ids, distributed, **kwargs):
         super().__init__()
         self.student_model = wrap_if_distributed(student_model, device, device_ids, distributed)
@@ -175,7 +173,6 @@ class Connector4DAB(SpecialModule):
     """
     Connector proposed in "Knowledge Transfer via Distillation of Activation Boundaries Formed by Hidden Neurons"
     """
-
     @staticmethod
     def build_connector(conv_params_config, bn_params_config=None):
         module_list = [nn.Conv2d(**conv_params_config)]
@@ -229,7 +226,6 @@ class VariationalDistributor4VID(SpecialModule):
     """
     "Variational Information Distillation for Knowledge Transfer"
     """
-
     def __init__(self, student_model, regressors, device, device_ids, distributed, **kwargs):
         super().__init__()
         self.student_model = wrap_if_distributed(student_model, device, device_ids, distributed)
@@ -255,7 +251,6 @@ class Linear4CCKD(SpecialModule):
     Fully-connected layer to cope with a mismatch of feature representations of teacher and student network for
     "Correlation Congruence for Knowledge Distillation"
     """
-
     def __init__(self, input_module, linear_params, device, device_ids, distributed,
                  teacher_model=None, student_model=None, **kwargs):
         super().__init__()
@@ -299,7 +294,6 @@ class Linear4CRD(SpecialModule):
     "Contrastive Representation Distillation"
     Refactored https://github.com/HobbitLong/RepDistiller/blob/master/crd/memory.py
     """
-
     def __init__(self, input_module_path, linear_params, device, device_ids, distributed, power=2,
                  teacher_model=None, student_model=None, **kwargs):
         super().__init__()
@@ -355,7 +349,6 @@ class SSWrapper4SSKD(SpecialModule):
     """
     Semi-supervision wrapper for "Knowledge Distillation Meets Self-Supervision"
     """
-
     def __init__(self, input_module, feat_dim, ss_module_ckpt, device, device_ids, distributed, freezes_ss_module=False,
                  teacher_model=None, student_model=None, **kwargs):
         super().__init__()
@@ -398,7 +391,6 @@ class VarianceBranch4PAD(SpecialModule):
     """
     Variance branch wrapper for "Prime-Aware Adaptive Distillation"
     """
-
     def __init__(self, student_model, input_module, feat_dim, var_estimator_ckpt,
                  device, device_ids, distributed, **kwargs):
         super().__init__()
@@ -424,6 +416,77 @@ class VarianceBranch4PAD(SpecialModule):
 
     def post_process(self, *args, **kwargs):
         save_module_ckpt(self.var_estimator, self.ckpt_file_path)
+
+
+class AttentionBasedFusion(nn.Module):
+    """
+    Attention based fusion module in "Distilling Knowledge via Knowledge Review"
+    Refactored https://github.com/dvlab-research/ReviewKD/blob/master/ImageNet/models/reviewkd.py
+    """
+    def __init__(self, in_channel, mid_channel, out_channel, uses_attention):
+        super().__init__()
+        self.conv1 = nn.Sequential(
+            nn.Conv2d(in_channel, mid_channel, kernel_size=1, bias=False),
+            nn.BatchNorm2d(mid_channel),
+        )
+        self.conv2 = nn.Sequential(
+            nn.Conv2d(mid_channel, out_channel, kernel_size=3, stride=1, padding=1, bias=False),
+            nn.BatchNorm2d(out_channel),
+        )
+        self.attention_conv = None if not uses_attention \
+            else nn.Sequential(nn.Conv2d(mid_channel*2, 2, kernel_size=1), nn.Sigmoid())
+        nn.init.kaiming_uniform_(self.conv1[0].weight, a=1)
+        nn.init.kaiming_uniform_(self.conv2[0].weight, a=1)
+
+    def forward(self, x, y=None, size=None):
+        x = self.conv1(x)
+        if self.attention_conv is not None:
+            n, _, h, w = x.shape
+            # upsample residual features
+            y = functional.interpolate(y, (size, size), mode='nearest')
+            # fusion
+            z = torch.cat([x, y], dim=1)
+            z = self.attention_conv(z)
+            x = (x * z[:, 0].view(n, 1, h, w) + y * z[:, 1].view(n, 1, h, w))
+
+        y = self.conv2(x)
+        return y, x
+
+
+@register_special_module
+class Student4KnowledgeReview(SpecialModule):
+    """
+    Student for knowledge review proposed in "Distilling Knowledge via Knowledge Review"
+    Refactored https://github.com/dvlab-research/ReviewKD/blob/master/ImageNet/models/reviewkd.py
+    """
+    def __init__(self, student_model, abfs, device, device_ids, distributed, sizes=None, **kwargs):
+        super().__init__()
+        self.student_model = wrap_if_distributed(student_model, device, device_ids, distributed)
+        if sizes is None:
+            sizes = [1, 7, 14, 28, 56]
+
+        self.sizes = sizes
+        abf_list = nn.ModuleList()
+        num_abfs = len(abfs)
+        io_path_pairs = list()
+        for idx, abf_config in enumerate(abfs):
+            abf = wrap_if_distributed(AttentionBasedFusion(uses_attention=idx < num_abfs - 1, **abf_config['params']),
+                                      device, device_ids, distributed)
+            abf_list.append(abf)
+            io_path_pairs.append((abf_config['io'], abf_config['path']))
+
+        self.abf_modules = abf_list[::-1]
+        self.io_path_pairs = io_path_pairs[::-1]
+
+    def forward(self, *args):
+        return self.student_model(*args)
+
+    def post_forward(self, io_dict):
+        feature_maps = [io_dict[module_path][io_type] for io_type, module_path in self.io_path_pairs]
+        out_features, res_features = self.abf_modules[0](feature_maps[0])
+        if len(self.sizes) > 1:
+            for features, abf, size in zip(feature_maps[1:], self.abf_modules[1:], self.sizes[1:]):
+                out_features, res_features = abf(features, res_features, size)
 
 
 def get_special_module(class_name, *args, **kwargs):

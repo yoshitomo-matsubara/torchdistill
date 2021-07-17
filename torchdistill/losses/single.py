@@ -2,7 +2,7 @@ import math
 
 import torch
 from torch import nn
-from torch.nn.functional import adaptive_max_pool2d, normalize, cosine_similarity
+from torch.nn.functional import adaptive_avg_pool2d, adaptive_max_pool2d, normalize, cosine_similarity
 
 from torchdistill.common.constant import def_logger
 from torchdistill.losses.registry import get_loss
@@ -803,6 +803,44 @@ class PADL2Loss(nn.Module):
             + log_variances, dim=1
         )
         return squared_losses.mean()
+
+
+@register_single_loss
+class HierarchicalContextLoss(nn.Module):
+    """
+    "Distilling Knowledge via Knowledge Review"
+    Referred to https://github.com/dvlab-research/ReviewKD/blob/master/ImageNet/models/reviewkd.py
+    """
+    def __init__(self, student_module_path, student_module_io, teacher_module_path, teacher_module_io,
+                 reduction='mean', kernel_sizes=None, **kwargs):
+        super().__init__()
+        if kernel_sizes is None:
+            kernel_sizes = [4, 2, 1]
+
+        self.student_module_path = student_module_path
+        self.student_module_io = student_module_io
+        self.teacher_module_path = teacher_module_path
+        self.teacher_module_io = teacher_module_io
+        self.criteria = nn.MSELoss(reduction=reduction)
+        self.kernel_sizes = kernel_sizes
+
+    def forward(self, student_io_dict, teacher_io_dict, *args, **kwargs):
+        student_features = student_io_dict[self.student_module_path][self.student_module_io]
+        teacher_features = teacher_io_dict[self.teacher_module_path][self.teacher_module_io]
+        _, _, h, _ = student_features.shape
+        loss = self.criteria(student_features, teacher_features)
+        weight = 1.0
+        total_weight = 1.0
+        for k in self.kernel_sizes:
+            if k >= h:
+                continue
+
+            proc_student_features = adaptive_avg_pool2d(student_features, k)
+            proc_teacher_features = adaptive_avg_pool2d(teacher_features, k)
+            weight /= 2.0
+            loss += self.criteria(proc_student_features, proc_teacher_features) * weight
+            total_weight += weight
+        return loss / total_weight
 
 
 def get_loss_wrapper(single_loss, params_config, wrapper_config):
