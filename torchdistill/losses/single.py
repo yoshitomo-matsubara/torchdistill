@@ -242,8 +242,8 @@ class PKTLoss(nn.Module):
                           torch.log((teacher_similarity + self.eps) / (student_similarity + self.eps)))
 
     def forward(self, student_io_dict, teacher_io_dict, *args, **kwargs):
-        student_penultimate_outputs = teacher_io_dict[self.student_module_path][self.student_module_io]
-        teacher_penultimate_outputs = student_io_dict[self.teacher_module_path][self.teacher_module_io]
+        student_penultimate_outputs = student_io_dict[self.student_module_path][self.student_module_io]
+        teacher_penultimate_outputs = teacher_io_dict[self.teacher_module_path][self.teacher_module_io]
         return self.cosine_similarity_loss(student_penultimate_outputs, teacher_penultimate_outputs)
 
 
