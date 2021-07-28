@@ -2,7 +2,7 @@ datasets:
   ilsvrc2012:
     name: &dataset_name 'ilsvrc2012'
     type: 'ImageFolder'
-    root: &root_dir !join ['~/dataset/', *dataset_name]
+    root: &root_dir !join ['./resource/dataset/', *dataset_name]
     splits:
       train:
         dataset_id: &imagenet_train !join [*dataset_name, '/train']
@@ -145,8 +145,8 @@ train:
         criterion:
           type: &hcl 'HierarchicalContextLoss'
           params:
-            student_module_path: 'student_model.layer1.-1.relu'
-            student_module_io: 'input'
+            student_module_path: 'abf_modules.4'
+            student_module_io: 'output'
             teacher_module_path: 'layer1.-1.relu'
             teacher_module_io: 'input'
             reduction: 'mean'
@@ -156,8 +156,8 @@ train:
         criterion:
           type: *hcl
           params:
-            student_module_path: 'student_model.layer2.-1.relu'
-            student_module_io: 'input'
+            student_module_path: 'abf_modules.3'
+            student_module_io: 'output'
             teacher_module_path: 'layer2.-1.relu'
             teacher_module_io: 'input'
             reduction: 'mean'
@@ -167,8 +167,8 @@ train:
         criterion:
           type: *hcl
           params:
-            student_module_path: 'student_model.layer3.-1.relu'
-            student_module_io: 'input'
+            student_module_path: 'abf_modules.2'
+            student_module_io: 'output'
             teacher_module_path: 'layer3.-1.relu'
             teacher_module_io: 'input'
             reduction: 'mean'
@@ -178,8 +178,8 @@ train:
         criterion:
           type: *hcl
           params:
-            student_module_path: 'student_model.layer4.-1.relu'
-            student_module_io: 'input'
+            student_module_path: 'abf_modules.1'
+            student_module_io: 'output'
             teacher_module_path: 'layer4.-1.relu'
             teacher_module_io: 'input'
             reduction: 'mean'
@@ -189,7 +189,7 @@ train:
         criterion:
           type: *hcl
           params:
-            student_module_path: 'student_model.avgpool'
+            student_module_path: 'abf_modules.0'
             student_module_io: 'output'
             teacher_module_path: 'avgpool'
             teacher_module_io: 'output'

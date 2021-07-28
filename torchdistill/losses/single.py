@@ -825,7 +825,7 @@ class HierarchicalContextLoss(nn.Module):
         self.kernel_sizes = kernel_sizes
 
     def forward(self, student_io_dict, teacher_io_dict, *args, **kwargs):
-        student_features = student_io_dict[self.student_module_path][self.student_module_io]
+        student_features, _ = student_io_dict[self.student_module_path][self.student_module_io]
         teacher_features = teacher_io_dict[self.teacher_module_path][self.teacher_module_io]
         _, _, h, _ = student_features.shape
         loss = self.criteria(student_features, teacher_features)
@@ -835,10 +835,10 @@ class HierarchicalContextLoss(nn.Module):
             if k >= h:
                 continue
 
-            proc_student_features = adaptive_avg_pool2d(student_features, k)
-            proc_teacher_features = adaptive_avg_pool2d(teacher_features, k)
+            proc_student_features = adaptive_avg_pool2d(student_features, (k, k))
+            proc_teacher_features = adaptive_avg_pool2d(teacher_features, (k, k))
             weight /= 2.0
-            loss += self.criteria(proc_student_features, proc_teacher_features) * weight
+            loss += weight * self.criteria(proc_student_features, proc_teacher_features)
             total_weight += weight
         return loss / total_weight
 
