@@ -26,7 +26,7 @@ Take a look at some configurations available in [configs/](https://github.com/yo
 how they are defined in a PyYAML config file to design an experiment.
 
 ## Top-1 validation accuracy for ILSVRC 2012 (ImageNet)
-<span style="font-size: 75%>
+<span style="font-size: 75%">
 | T: ResNet-34  | Pretrained | KD    | AT    | FT         | CRD   | Tf-KD | SSKD  | L2    | PAD-L2    | KR    |  
 | :---          | ---:       | ---:  | ---:  | ---:       | ---:  | ---:  | ---:  | ---:  | ---:      | ---:  |  
 | S: ResNet-18  | 69.76\*    | 71.37 | 70.90 | 71.56      | 70.93 | 70.52 | 70.09 | 71.08 | 71.71     | 71.64 |  
