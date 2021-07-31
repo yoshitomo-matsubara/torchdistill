@@ -26,14 +26,15 @@ Take a look at some configurations available in [configs/](https://github.com/yo
 how they are defined in a PyYAML config file to design an experiment.
 
 ## Top-1 validation accuracy for ILSVRC 2012 (ImageNet)
-| T: ResNet-34\*  | Pretrained | KD    | AT    | FT         | CRD   | Tf-KD | SSKD  | L2    | PAD-L2    |  
-| :---            | ---:       | ---:  | ---:  | ---:       | ---:  | ---:  | ---:  | ---:  | ---:      |  
-| S: ResNet-18    | 69.76\*    | 71.37 | 70.90 | 71.56      | 70.93 | 70.52 | 70.09 | 71.08 | 71.71     |  
-| Original work   | N/A        | N/A   | 70.70 | 71.43\*\*  | 71.17 | 70.42 | 71.62 | 70.90 | 71.71     |  
+| T: ResNet-34\*  | Pretrained | KD    | AT    | FT         | CRD   | Tf-KD | SSKD  | L2    | PAD-L2    | Knowledge Review |  
+| :---            | ---:       | ---:  | ---:  | ---:       | ---:  | ---:  | ---:  | ---:  | ---:      | ---:             |  
+| S: ResNet-18    | 69.76\*    | 71.37 | 70.90 | 71.56      | 70.93 | 70.52 | 70.09 | 71.08 | 71.71     | 71.64            |  
+| Original work   | N/A        | N/A   | 70.70 | 71.43\*\*  | 71.17 | 70.42 | 71.62 | 70.90 | 71.71     | 71.61            |  
   
 \* The pretrained ResNet-34 and ResNet-18 are provided by torchvision.  
 \*\* FT is assessed with ILSVRC 2015 in the original work.  
-For the 2nd row (S: ResNet-18), the checkpoint (trained weights), configuration and log files are [available](https://github.com/yoshitomo-matsubara/torchdistill/tree/main/configs/official/ilsvrc2012/yoshitomo-matsubara/), 
+For the 2nd row (S: ResNet-18), most of the results are reported in [this paper](https://github.com/yoshitomo-matsubara/torchdistill#citation), 
+and their checkpoints (trained weights), configuration and log files are [available](https://github.com/yoshitomo-matsubara/torchdistill/tree/main/configs/official/ilsvrc2012/yoshitomo-matsubara/), 
 and the configurations reuse the hyperparameters such as number of epochs used in the original work except for KD.
 
 ## Examples
