@@ -8,7 +8,7 @@ description = 'A Modular, Configuration-Driven Framework for Knowledge Distillat
               'Trained models, training logs and configurations are available for ensuring the reproducibiliy.'
 setup(
     name='torchdistill',
-    version='0.2.5-dev',
+    version='0.2.5',
     author='Yoshitomo Matsubara',
     description=description,
     long_description=long_description,
@@ -26,6 +26,6 @@ setup(
         'pycocotools>=2.0.1'
     ],
     extras_require={
-        'test': ['flake8', 'pytest']
+        'test': ['pytest']
     },
 )
