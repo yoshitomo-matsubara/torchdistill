@@ -71,8 +71,8 @@ If you find models on [PyTorch Hub](https://pytorch.org/hub/) or GitHub reposito
 you can import them as teacher/student models simply by editing a yaml config file.  
 
 e.g., If you use a pretrained ResNeSt-50 available in [rwightman/pytorch-image-models](https://github.com/rwightman/pytorch-image-models)
-as a teacher model for ImageNet dataset, you can import the model via PyTorch Hub with the following entry in your yaml
-config file.
+(aka *timm*) as a teacher model for ImageNet dataset, you can import the model via PyTorch Hub with the following entry 
+in your yaml config file.
 
 ```yaml
 models:
