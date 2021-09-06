@@ -66,6 +66,8 @@ def train_one_epoch(training_box, device, epoch, log_freq):
         batch_size = sample_batch.shape[0]
         metric_logger.update(loss=loss.item(), lr=training_box.optimizer.param_groups[0]['lr'])
         metric_logger.meters['img/s'].update(batch_size / (time.time() - start_time))
+        if (torch.isnan(loss) or torch.isinf(loss)) and is_main_process():
+            raise ValueError('The training loop was broken due to loss = {}'.format(loss))
 
 
 @torch.no_grad()
