@@ -85,3 +85,26 @@ c) Use CPU
 ```
 python3 examples/object_detection.py --device cpu --config configs/sample/coco2017/multi_stage/ft/custom_fasterrcnn_resnet18_fpn_from_fasterrcnn_resnet50_fpn.yaml --log log/coco2017/ft/custom_fasterrcnn_resnet18_fpn_from_fasterrcnn_resnet50_fpn.txt
 ```  
+
+
+## 3. COCO 2017: Semantic Segmentation
+### 3.1 Download the datasets
+You can skip this process if you've already finished [2.1](https://github.com/yoshitomo-matsubara/torchdistill/tree/main/examples#21-download-the-datasets).
+
+### 3.2 Unzip and extract files
+You can skip this process if you've already finished [2.2](https://github.com/yoshitomo-matsubara/torchdistill/tree/main/examples#22-unzip-and-extract-files).
+
+### 3.3 Run an experiment
+e.g., Teacher: DeepLabv3 with ResNet-50 backbone, Student: LR-ASPP with MobileNetV3-Large backbone  
+a) Use GPUs for multiple distributed training processes
+```
+python3 -m torch.distributed.launch --nproc_per_node=${NUM_GPUS} --use_env examples/semantic_segmentation.py --world_size ${NUM_GPUS} --config configs/sample/coco2017/multi_stage/ktaad/lraspp_mobilenet_v3_large_from_deeplabv3_resnet50.yaml --log log/coco2017/ktaad/lraspp_mobilenet_v3_large_from_deeplabv3_resnet50.txt
+```
+b) Use GPU(s) for single training process
+```
+python3 examples/semantic_segmentation.py --config configs/sample/coco2017/multi_stage/ktaad/lraspp_mobilenet_v3_large_from_deeplabv3_resnet50.yaml --log log/coco2017/ktaad/lraspp_mobilenet_v3_large_from_deeplabv3_resnet50.txt
+```  
+c) Use CPU
+```
+python3 examples/semantic_segmentation.py --device cpu --config configs/sample/coco2017/multi_stage/ktaad/lraspp_mobilenet_v3_large_from_deeplabv3_resnet50.yaml --log log/coco2017/ktaad/lraspp_mobilenet_v3_large_from_deeplabv3_resnet50.txt
+```  
