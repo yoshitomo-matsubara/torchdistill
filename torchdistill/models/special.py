@@ -489,6 +489,36 @@ class Student4KnowledgeReview(SpecialModule):
                 out_features, res_features = abf(features, res_features, size)
 
 
+@register_special_module
+class Student4KTAAD(SpecialModule):
+    """
+    Student for knowledge translation and adaptation + affinity distillation proposed in
+    "Knowledge Adaptation for Efficient Semantic Segmentation"
+    """
+    def __init__(self, student_model, input_module_path, feature_adapter_params, affinity_adapter_params,
+                 device, device_ids, distributed, **kwargs):
+        super().__init__()
+        self.student_model = wrap_if_distributed(student_model, device, device_ids, distributed)
+        self.input_module_path = input_module_path
+        feature_adapter = nn.Sequential(
+            nn.Conv2d(**feature_adapter_params['conv']),
+            nn.BatchNorm2d(**feature_adapter_params['bn']), nn.ReLU(**feature_adapter_params['relu'])
+        )
+        affinity_adapter = nn.Sequential(
+            nn.Conv2d(**affinity_adapter_params['conv'])
+        )
+        self.feature_adapter = wrap_if_distributed(feature_adapter, device, device_ids, distributed)
+        self.affinity_adapter = wrap_if_distributed(affinity_adapter, device, device_ids, distributed)
+
+    def forward(self, *args):
+        return self.student_model(*args)
+
+    def post_forward(self, io_dict):
+        feature_maps = io_dict[self.input_module_path]['output']
+        self.feature_adapter(feature_maps)
+        self.affinity_adapter(feature_maps)
+
+
 def get_special_module(class_name, *args, **kwargs):
     if class_name not in SPECIAL_CLASS_DICT:
         logger.info('No special module called `{}` is registered.'.format(class_name))
