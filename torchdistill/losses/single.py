@@ -843,6 +843,80 @@ class HierarchicalContextLoss(nn.Module):
         return loss / total_weight
 
 
+@register_single_loss
+class RegularizationLoss(nn.Module):
+    def __init__(self, module_path, io_type='output', is_from_teacher=False, p=1, **kwargs):
+        super().__init__()
+        self.module_path = module_path
+        self.io_type = io_type
+        self.is_from_teacher = is_from_teacher
+        self.norm_p = p
+
+    def forward(self, student_io_dict, teacher_io_dict, *args, **kwargs):
+        io_dict = teacher_io_dict if self.is_from_teacher else student_io_dict
+        z = io_dict[self.module_path][self.io_type]
+        return z.norm(p=self.norm_p)
+
+
+@register_single_loss
+class KTALoss(nn.Module):
+    """
+    "Knowledge Adaptation for Efficient Semantic Segmentation"
+    """
+    def __init__(self, p=1, q=2, reduction='mean', knowledge_translator_path='paraphraser',
+                 feature_adapter_path='feature_adapter', **kwargs):
+        super().__init__()
+        self.norm_p = p
+        self.norm_q = q
+        self.knowledge_translator_path = knowledge_translator_path
+        self.feature_adapter_path = feature_adapter_path
+        self.reduction = reduction
+
+    def forward(self, student_io_dict, teacher_io_dict, *args, **kwargs):
+        knowledge_translator_flat_outputs = teacher_io_dict[self.knowledge_translator_path]['output'].flatten(1)
+        feature_adapter_flat_outputs = student_io_dict[self.feature_adapter_path]['output'].flatten(1)
+        norm_knowledge_translator_flat_outputs = \
+            knowledge_translator_flat_outputs / \
+            knowledge_translator_flat_outputs.norm(p=self.norm_q, dim=1).unsqueeze(1)
+        norm_feature_adapter_flat_outputs = \
+            feature_adapter_flat_outputs / feature_adapter_flat_outputs.norm(p=self.norm_q, dim=1).unsqueeze(1)
+        if self.norm_p == 1:
+            return nn.functional.l1_loss(norm_feature_adapter_flat_outputs, norm_knowledge_translator_flat_outputs,
+                                         reduction=self.reduction)
+        kta_loss = \
+            torch.norm(norm_feature_adapter_flat_outputs - norm_knowledge_translator_flat_outputs, self.norm_p, dim=1)
+        return kta_loss.mean() if self.reduction == 'mean' else kta_loss.sum()
+
+
+@register_single_loss
+class AffinityLoss(nn.Module):
+    """
+    "Knowledge Adaptation for Efficient Semantic Segmentation"
+    """
+    def __init__(self, student_module_path, teacher_module_path,
+                 student_module_io='output', teacher_module_io='output', reduction='mean', **kwargs):
+        super().__init__()
+        self.student_module_path = student_module_path
+        self.teacher_module_path = teacher_module_path
+        self.student_module_io = student_module_io
+        self.teacher_module_io = teacher_module_io
+        self.reduction = reduction
+
+    def forward(self, student_io_dict, teacher_io_dict, *args, **kwargs):
+        student_flat_outputs = student_io_dict[self.student_module_path][self.student_module_io].flatten(2)
+        teacher_flat_outputs = teacher_io_dict[self.teacher_module_path][self.teacher_module_io].flatten(2)
+        batch_size, ch_size, hw = student_flat_outputs.shape
+        student_flat_outputs = student_flat_outputs / student_flat_outputs.norm(p=2, dim=2).unsqueeze(-1)
+        teacher_flat_outputs = teacher_flat_outputs / teacher_flat_outputs.norm(p=2, dim=2).unsqueeze(-1)
+        total_squared_losses = torch.zeros(batch_size).to(student_flat_outputs.device)
+        for i in range(ch_size):
+            total_squared_losses += (
+                (torch.bmm(student_flat_outputs[:, i].unsqueeze(2), student_flat_outputs[:, i].unsqueeze(1))
+                 - torch.bmm(teacher_flat_outputs[:, i].unsqueeze(2), teacher_flat_outputs[:, i].unsqueeze(1))) / hw
+            ).norm(p=2, dim=(1, 2))
+        return total_squared_losses.mean() if self.reduction == 'mean' else total_squared_losses.sum()
+
+
 def get_loss_wrapper(single_loss, params_config, wrapper_config):
     wrapper_type = wrapper_config.get('type', None)
     if wrapper_type in LOSS_WRAPPER_CLASS_DICT:
