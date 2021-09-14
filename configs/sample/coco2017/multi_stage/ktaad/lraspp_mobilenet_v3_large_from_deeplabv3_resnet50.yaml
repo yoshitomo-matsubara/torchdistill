@@ -2,7 +2,7 @@ datasets:
   coco2017:
     name: &dataset_name 'coco2017'
     type: 'cocodetect'
-    root: &root_dir !join ['~/dataset/', *dataset_name]
+    root: &root_dir !join ['./resource/dataset/', *dataset_name]
     splits:
       train:
         dataset_id: &coco_train !join [*dataset_name, '/train']
