@@ -4,14 +4,16 @@
 [![DOI:10.1007/978-3-030-76423-4_3](https://zenodo.org/badge/DOI/10.1007/978-3-030-76423-4_3.svg)](https://doi.org/10.1007/978-3-030-76423-4_3)
 
 
-***torchdistill*** (formerly *kdkit*) offers various knowledge distillation methods 
+***torchdistill*** (formerly *kdkit*) offers various state-of-the-art knowledge distillation methods 
 and enables you to design (new) experiments simply by editing a yaml config file instead of Python code. 
 Even when you need to extract intermediate representations in teacher/student models, 
 you will **NOT** need to reimplement the models, that often change the interface of the forward, but instead 
 specify the module path(s) in the yaml file. Refer to [this paper](https://github.com/yoshitomo-matsubara/torchdistill#citation) for more details.  
 
-In addition to knowledge distillation, this framework enables you to train models without teachers simply by 
-excluding teacher entries from a yaml config file. You can find such examples below and in [configs/sample/](https://github.com/yoshitomo-matsubara/torchdistill/tree/main/configs/sample/).
+In addition to knowledge distillation, this framework helps you design and perform general deep learning experiments
+(**WITHOUT coding**) for reproducible deep learning studies. i.e., it enables you to train models without teachers 
+simply by excluding teacher entries from a yaml config file. 
+You can find such examples below and in [configs/sample/](https://github.com/yoshitomo-matsubara/torchdistill/tree/main/configs/sample/).
 
 ## Forward hook manager
 Using **ForwardHookManager**, you can extract intermediate representations in model without modifying the interface of its forward function.  
