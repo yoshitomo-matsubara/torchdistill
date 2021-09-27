@@ -5,14 +5,14 @@
 
 
 ***torchdistill*** (formerly *kdkit*) offers various state-of-the-art knowledge distillation methods 
-and enables you to design (new) experiments simply by editing a yaml config file instead of Python code. 
+and enables you to design (new) experiments simply by editing a declarative yaml config file instead of Python code. 
 Even when you need to extract intermediate representations in teacher/student models, 
 you will **NOT** need to reimplement the models, that often change the interface of the forward, but instead 
 specify the module path(s) in the yaml file. Refer to [this paper](https://github.com/yoshitomo-matsubara/torchdistill#citation) for more details.  
 
 In addition to knowledge distillation, this framework helps you design and perform general deep learning experiments
 (**WITHOUT coding**) for reproducible deep learning studies. i.e., it enables you to train models without teachers 
-simply by excluding teacher entries from a yaml config file. 
+simply by excluding teacher entries from a declarative yaml config file. 
 You can find such examples below and in [configs/sample/](https://github.com/yoshitomo-matsubara/torchdistill/tree/main/configs/sample/).
 
 ## Forward hook manager
@@ -20,12 +20,12 @@ Using **ForwardHookManager**, you can extract intermediate representations in mo
 [This example notebook](https://github.com/yoshitomo-matsubara/torchdistill/tree/main/demo/extract_intermediate_representations.ipynb) [![Open In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/yoshitomo-matsubara/torchdistill/blob/master/demo/extract_intermediate_representations.ipynb) 
 will give you a better idea of the usage such as knowledge distillation and analysis of intermediate representations.
 
-## 1 experiment → 1 PyYAML config file
+## 1 experiment → 1 declarative PyYAML config file
 In ***torchdistill***, many components and PyTorch modules are abstracted e.g., models, datasets, optimizers, losses, 
-and more! You can define them in a PyYAML config file so that can be seen as a summary of your experiment, and 
-in many cases, you will **NOT need to write Python code at all**. 
+and more! You can define them in a declarative PyYAML config file so that can be seen as a summary of your experiment, 
+and in many cases, you will **NOT need to write Python code at all**. 
 Take a look at some configurations available in [configs/](https://github.com/yoshitomo-matsubara/torchdistill/tree/main/configs/). You'll see what modules are abstracted and 
-how they are defined in a PyYAML config file to design an experiment.
+how they are defined in a declarative PyYAML config file to design an experiment.
 
 ## Top-1 validation accuracy for ILSVRC 2012 (ImageNet)
 | T: ResNet-34\*  | Pretrained | KD    | AT    | FT         | CRD   | Tf-KD | SSKD  | L2    | PAD-L2 | KR    |  
@@ -70,11 +70,11 @@ These examples write out test prediction files for you to see the test performan
 
 ## PyTorch Hub
 If you find models on [PyTorch Hub](https://pytorch.org/hub/) or GitHub repositories supporting PyTorch Hub,
-you can import them as teacher/student models simply by editing a yaml config file.  
+you can import them as teacher/student models simply by editing a declarative yaml config file.  
 
 e.g., If you use a pretrained ResNeSt-50 available in [rwightman/pytorch-image-models](https://github.com/rwightman/pytorch-image-models)
 (aka *timm*) as a teacher model for ImageNet dataset, you can import the model via PyTorch Hub with the following entry 
-in your yaml config file.
+in your declarative yaml config file.
 
 ```yaml
 models:
