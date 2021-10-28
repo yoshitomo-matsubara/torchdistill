@@ -1,7 +1,7 @@
+from torch.hub import load_state_dict_from_url
 from torchvision.models.detection.faster_rcnn import FasterRCNN, model_urls as fasterrcnn_model_urls
 from torchvision.models.detection.keypoint_rcnn import KeypointRCNN, model_urls as keypointrcnn_model_urls
 from torchvision.models.detection.mask_rcnn import MaskRCNN, model_urls as maskrcnn_model_urls
-from torchvision.models.utils import load_state_dict_from_url
 from torchvision.ops import MultiScaleRoIAlign
 
 from torchdistill.models.custom.bottleneck.detection.resnet_backbone import custom_resnet_fpn_backbone
