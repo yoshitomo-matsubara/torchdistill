@@ -1,5 +1,6 @@
 from setuptools import setup, find_packages
 
+import torchdistill
 
 with open('README.md', 'r') as f:
     long_description = f.read()
@@ -8,7 +9,7 @@ description = 'A Modular, Configuration-Driven Framework for Knowledge Distillat
               'Trained models, training logs and configurations are available for ensuring the reproducibiliy.'
 setup(
     name='torchdistill',
-    version='0.2.8-dev',
+    version=torchdistill.__version__,
     author='Yoshitomo Matsubara',
     description=description,
     long_description=long_description,
