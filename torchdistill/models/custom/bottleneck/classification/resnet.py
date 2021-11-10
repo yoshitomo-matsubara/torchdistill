@@ -1,7 +1,7 @@
 from collections import OrderedDict
 
 from torch import nn
-from torchvision.models import resnet152
+from torchvision.models import resnet50, resnet101, resnet152
 
 from torchdistill.models.custom.bottleneck.base import BottleneckBase
 from torchdistill.models.custom.bottleneck.processor import get_bottleneck_processor
@@ -9,7 +9,7 @@ from torchdistill.models.registry import register_model_class, register_model_fu
 
 
 @register_model_class
-class Bottleneck4ResNet152(BottleneckBase):
+class Bottleneck4ResNet(BottleneckBase):
     """
     Head Network Distillation: Splitting Distilled Deep Neural Networks for Resource-constrained Edge Computing Systems
     """
@@ -57,6 +57,40 @@ class CustomResNet(nn.Sequential):
 
 
 @register_model_func
+def custom_resnet50(bottleneck_channel=12, bottleneck_idx=7, compressor=None, decompressor=None,
+                    short_module_names=None, **kwargs):
+    if short_module_names is None:
+        short_module_names = ['layer3', 'layer4', 'avgpool', 'fc']
+
+    if compressor is not None:
+        compressor = get_bottleneck_processor(compressor['name'], **compressor['params'])
+
+    if decompressor is not None:
+        decompressor = get_bottleneck_processor(decompressor['name'], **decompressor['params'])
+
+    bottleneck = Bottleneck4ResNet(bottleneck_channel, bottleneck_idx, compressor, decompressor)
+    org_model = resnet50(**kwargs)
+    return CustomResNet(bottleneck, short_module_names, org_model)
+
+
+@register_model_func
+def custom_resnet101(bottleneck_channel=12, bottleneck_idx=7, compressor=None, decompressor=None,
+                     short_module_names=None, **kwargs):
+    if short_module_names is None:
+        short_module_names = ['layer3', 'layer4', 'avgpool', 'fc']
+
+    if compressor is not None:
+        compressor = get_bottleneck_processor(compressor['name'], **compressor['params'])
+
+    if decompressor is not None:
+        decompressor = get_bottleneck_processor(decompressor['name'], **decompressor['params'])
+
+    bottleneck = Bottleneck4ResNet(bottleneck_channel, bottleneck_idx, compressor, decompressor)
+    org_model = resnet101(**kwargs)
+    return CustomResNet(bottleneck, short_module_names, org_model)
+
+
+@register_model_func
 def custom_resnet152(bottleneck_channel=12, bottleneck_idx=7, compressor=None, decompressor=None,
                      short_module_names=None, **kwargs):
     if short_module_names is None:
@@ -68,6 +102,6 @@ def custom_resnet152(bottleneck_channel=12, bottleneck_idx=7, compressor=None, d
     if decompressor is not None:
         decompressor = get_bottleneck_processor(decompressor['name'], **decompressor['params'])
 
-    bottleneck = Bottleneck4ResNet152(bottleneck_channel, bottleneck_idx, compressor, decompressor)
+    bottleneck = Bottleneck4ResNet(bottleneck_channel, bottleneck_idx, compressor, decompressor)
     org_model = resnet152(**kwargs)
     return CustomResNet(bottleneck, short_module_names, org_model)
