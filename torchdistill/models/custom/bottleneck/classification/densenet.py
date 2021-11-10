@@ -10,7 +10,7 @@ from torchdistill.models.registry import register_model_class, register_model_fu
 
 
 @register_model_class
-class Bottleneck4DenseNets(BottleneckBase):
+class Bottleneck4DenseNet(BottleneckBase):
     """
     Head Network Distillation: Splitting Distilled Deep Neural Networks for Resource-constrained Edge Computing Systems
     """
@@ -84,7 +84,7 @@ def custom_densenet169(bottleneck_channel=12, bottleneck_idx=7, compressor=None,
     if decompressor is not None:
         decompressor = get_bottleneck_processor(decompressor['name'], **decompressor['params'])
 
-    bottleneck = Bottleneck4DenseNets(bottleneck_channel, bottleneck_idx, compressor, decompressor)
+    bottleneck = Bottleneck4DenseNet(bottleneck_channel, bottleneck_idx, compressor, decompressor)
     org_model = densenet169(**kwargs)
     return CustomDenseNet(bottleneck, short_feature_names, org_model)
 
@@ -101,6 +101,6 @@ def custom_densenet201(bottleneck_channel=12, bottleneck_idx=7, compressor=None,
     if decompressor is not None:
         decompressor = get_bottleneck_processor(decompressor['name'], **decompressor['params'])
 
-    bottleneck = Bottleneck4DenseNets(bottleneck_channel, bottleneck_idx, compressor, decompressor)
+    bottleneck = Bottleneck4DenseNet(bottleneck_channel, bottleneck_idx, compressor, decompressor)
     org_model = densenet201(**kwargs)
     return CustomDenseNet(bottleneck, short_feature_names, org_model)
