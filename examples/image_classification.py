@@ -30,7 +30,6 @@ def get_argparser():
     parser.add_argument('--log', help='log file path')
     parser.add_argument('--start_epoch', default=0, type=int, metavar='N', help='start epoch')
     parser.add_argument('--seed', type=int, help='seed in random number generator')
-    parser.add_argument('-sync_bn', action='store_true', help='use sync batch norm')
     parser.add_argument('-test_only', action='store_true', help='only test the models')
     parser.add_argument('-student_only', action='store_true', help='test the student model only')
     parser.add_argument('-log_config', action='store_true', help='log config')
@@ -42,8 +41,8 @@ def get_argparser():
     return parser
 
 
-def load_model(model_config, device, distributed, sync_bn):
-    model = get_image_classification_model(model_config, distributed, sync_bn)
+def load_model(model_config, device, distributed):
+    model = get_image_classification_model(model_config, distributed)
     if model is None:
         repo_or_dir = model_config.get('repo_or_dir', None)
         model = get_model(model_config['name'], repo_or_dir, **model_config['params'])
@@ -156,11 +155,11 @@ def main(args):
     models_config = config['models']
     teacher_model_config = models_config.get('teacher_model', None)
     teacher_model =\
-        load_model(teacher_model_config, device, distributed, False) if teacher_model_config is not None else None
+        load_model(teacher_model_config, device, distributed) if teacher_model_config is not None else None
     student_model_config =\
         models_config['student_model'] if 'student_model' in models_config else models_config['model']
     ckpt_file_path = student_model_config['ckpt']
-    student_model = load_model(student_model_config, device, distributed, args.sync_bn)
+    student_model = load_model(student_model_config, device, distributed)
     if args.log_config:
         logger.info(config)
 
