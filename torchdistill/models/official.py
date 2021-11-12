@@ -7,7 +7,7 @@ OFFICIAL_MODEL_DICT.update(models.detection.__dict__)
 OFFICIAL_MODEL_DICT.update(models.segmentation.__dict__)
 
 
-def get_image_classification_model(model_config, distributed=False, sync_bn=False):
+def get_image_classification_model(model_config, distributed=False):
     model_name = model_config['name']
     quantized = model_config.get('quantized', False)
     if not quantized and model_name in models.__dict__:
@@ -17,6 +17,7 @@ def get_image_classification_model(model_config, distributed=False, sync_bn=Fals
     else:
         return None
 
+    sync_bn = model_config.get('sync_bn', False)
     if distributed and sync_bn:
         model = SyncBatchNorm.convert_sync_batchnorm(model)
     return model
