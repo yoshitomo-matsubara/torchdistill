@@ -9,10 +9,14 @@ OFFICIAL_MODEL_DICT.update(models.segmentation.__dict__)
 
 def get_image_classification_model(model_config, distributed=False, sync_bn=False):
     model_name = model_config['name']
-    if model_name not in models.__dict__:
+    quantized = model_config.get('quantized', False)
+    if not quantized and model_name in models.__dict__:
+        model = models.__dict__[model_name](**model_config['params'])
+    elif quantized and model_name in models.quantization.__dict__:
+        model = models.quantization.__dict__[model_name](**model_config['params'])
+    else:
         return None
 
-    model = models.__dict__[model_name](**model_config['params'])
     if distributed and sync_bn:
         model = SyncBatchNorm.convert_sync_batchnorm(model)
     return model
