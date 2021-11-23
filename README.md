@@ -13,7 +13,11 @@ specify the module path(s) in the yaml file. Refer to [this paper](https://githu
 In addition to knowledge distillation, this framework helps you design and perform general deep learning experiments
 (**WITHOUT coding**) for reproducible deep learning studies. i.e., it enables you to train models without teachers 
 simply by excluding teacher entries from a declarative yaml config file. 
-You can find such examples below and in [configs/sample/](https://github.com/yoshitomo-matsubara/torchdistill/tree/main/configs/sample/).
+You can find such examples below and in [configs/sample/](https://github.com/yoshitomo-matsubara/torchdistill/tree/main/configs/sample/).  
+
+When you refer to ***torchdistill*** in your paper, please cite [this paper](https://github.com/yoshitomo-matsubara/torchdistill#citation) 
+instead of this GitHub repository.  
+**Your citation is appreciated and motivates me to maintain and upgrade this framework!** 
 
 ## Forward hook manager
 Using **ForwardHookManager**, you can extract intermediate representations in model without modifying the interface of its forward function.  
