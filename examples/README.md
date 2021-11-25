@@ -21,6 +21,7 @@ for f in *.tar; do
   (cd $d && tar xf ../$f)
 done
 rm -r *.tar
+cd ../../../../
 
 mv ILSVRC2012_img_val.tar ./resource/dataset/ilsvrc2012/val/
 wget https://raw.githubusercontent.com/soumith/imagenetloader.torch/master/valprep.sh
