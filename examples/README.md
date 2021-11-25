@@ -12,6 +12,7 @@ wget ${VAL_DATASET_URL} ./
 # Go to the root of this repository
 mkdir ./resource/dataset/ilsvrc2012/{train,val} -p
 mv ILSVRC2012_img_train.tar ./resource/dataset/ilsvrc2012/train/
+mv ILSVRC2012_img_val.tar ./resource/dataset/ilsvrc2012/val/
 cd ./resource/dataset/ilsvrc2012/train/
 tar -xvf ILSVRC2012_img_train.tar
 mv ILSVRC2012_img_train.tar ../
@@ -23,7 +24,6 @@ done
 rm -r *.tar
 cd ../../../../
 
-mv ILSVRC2012_img_val.tar ./resource/dataset/ilsvrc2012/val/
 wget https://raw.githubusercontent.com/soumith/imagenetloader.torch/master/valprep.sh
 mv valprep.sh ./resource/dataset/ilsvrc2012/val/
 cd ./resource/dataset/ilsvrc2012/val/
