@@ -5,6 +5,7 @@ import numpy as np
 import torch
 from PIL import Image
 from torchvision import transforms as T
+from torchvision.transforms import Resize
 from torchvision.transforms import functional as F
 from torchvision.transforms.functional import InterpolationMode
 
@@ -117,6 +118,23 @@ class CustomNormalize(object):
     def __call__(self, image, target):
         image = F.normalize(image, mean=self.mean, std=self.std)
         return image, target
+
+
+@register_transform_class
+class WrappedResize(Resize):
+    MODE_DICT = {
+        'nearest': InterpolationMode.NEAREST,
+        'bicubic': InterpolationMode.BICUBIC,
+        'bilinear': InterpolationMode.BILINEAR,
+        'box': InterpolationMode.BOX,
+        'hamming': InterpolationMode.HAMMING,
+        'lanczos': InterpolationMode.LANCZOS
+    }
+
+    def __init__(self, interpolation=None, **kwargs):
+        if isinstance(interpolation, str):
+            interpolation = self.MODE_DICT.get(interpolation, None)
+        super().__init__(**kwargs, interpolation=interpolation)
 
 
 def get_transform(obj_name, *args, **kwargs):
