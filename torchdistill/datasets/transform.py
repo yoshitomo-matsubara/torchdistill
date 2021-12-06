@@ -5,7 +5,7 @@ import numpy as np
 import torch
 from PIL import Image
 from torchvision import transforms as T
-from torchvision.transforms import Resize
+from torchvision.transforms import RandomResizedCrop, Resize
 from torchvision.transforms import functional as F
 from torchvision.transforms.functional import InterpolationMode
 
@@ -14,6 +14,14 @@ from torchdistill.common.constant import def_logger
 logger = def_logger.getChild(__name__)
 
 TRANSFORM_CLASS_DICT = dict()
+INTERPOLATION_MODE_DICT = {
+    'nearest': InterpolationMode.NEAREST,
+    'bicubic': InterpolationMode.BICUBIC,
+    'bilinear': InterpolationMode.BILINEAR,
+    'box': InterpolationMode.BOX,
+    'hamming': InterpolationMode.HAMMING,
+    'lanczos': InterpolationMode.LANCZOS
+}
 
 
 def register_transform_class(cls):
@@ -121,19 +129,18 @@ class CustomNormalize(object):
 
 
 @register_transform_class
-class WrappedResize(Resize):
-    MODE_DICT = {
-        'nearest': InterpolationMode.NEAREST,
-        'bicubic': InterpolationMode.BICUBIC,
-        'bilinear': InterpolationMode.BILINEAR,
-        'box': InterpolationMode.BOX,
-        'hamming': InterpolationMode.HAMMING,
-        'lanczos': InterpolationMode.LANCZOS
-    }
-
+class WrappedRandomResizedCrop(RandomResizedCrop):
     def __init__(self, interpolation=None, **kwargs):
         if isinstance(interpolation, str):
-            interpolation = self.MODE_DICT.get(interpolation, None)
+            interpolation = INTERPOLATION_MODE_DICT.get(interpolation, None)
+        super().__init__(**kwargs, interpolation=interpolation)
+
+
+@register_transform_class
+class WrappedResize(Resize):
+    def __init__(self, interpolation=None, **kwargs):
+        if isinstance(interpolation, str):
+            interpolation = INTERPOLATION_MODE_DICT.get(interpolation, None)
         super().__init__(**kwargs, interpolation=interpolation)
 
 
