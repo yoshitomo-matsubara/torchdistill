@@ -188,10 +188,10 @@ def main(args):
     log_freq = test_config.get('log_freq', 1000)
     num_classes = args.num_classes
     if not args.student_only and teacher_model is not None:
-        evaluate(teacher_model, test_data_loader, device, device_ids, distributed, log_freq=log_freq,
-                 num_classes=num_classes, title='[Teacher: {}]'.format(teacher_model_config['name']))
-    evaluate(student_model, test_data_loader, device, device_ids, distributed, log_freq=log_freq,
-             num_classes=num_classes, title='[Student: {}]'.format(student_model_config['name']))
+        evaluate(teacher_model, test_data_loader, device, device_ids, distributed, num_classes=num_classes,
+                 log_freq=log_freq, title='[Teacher: {}]'.format(teacher_model_config['name']))
+    evaluate(student_model, test_data_loader, device, device_ids, distributed, num_classes=num_classes,
+             log_freq=log_freq, title='[Student: {}]'.format(student_model_config['name']))
 
 
 if __name__ == '__main__':
