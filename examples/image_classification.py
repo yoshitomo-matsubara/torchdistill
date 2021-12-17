@@ -173,10 +173,11 @@ def main(args):
     test_data_loader_config = test_config['test_data_loader']
     test_data_loader = util.build_data_loader(dataset_dict[test_data_loader_config['dataset_id']],
                                               test_data_loader_config, distributed)
+    log_freq = test_config.get('log_freq', 1000)
     if not args.student_only and teacher_model is not None:
-        evaluate(teacher_model, test_data_loader, device, device_ids, distributed,
+        evaluate(teacher_model, test_data_loader, device, device_ids, distributed, log_freq=log_freq,
                  title='[Teacher: {}]'.format(teacher_model_config['name']))
-    evaluate(student_model, test_data_loader, device, device_ids, distributed,
+    evaluate(student_model, test_data_loader, device, device_ids, distributed, log_freq=log_freq,
              title='[Student: {}]'.format(student_model_config['name']))
 
 
