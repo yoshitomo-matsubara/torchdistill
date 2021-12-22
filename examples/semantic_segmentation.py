@@ -91,7 +91,6 @@ def evaluate(model, data_loader, device, device_ids, distributed, num_classes,
     seg_evaluator = SegEvaluator(num_classes)
     for sample_batch, targets in metric_logger.log_every(data_loader, log_freq, header):
         sample_batch, targets = sample_batch.to(device), targets.to(device)
-        torch.cuda.synchronize()
         model_time = time.time()
         outputs = model(sample_batch)
         model_time = time.time() - model_time
