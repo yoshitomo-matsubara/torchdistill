@@ -1,5 +1,7 @@
 from types import BuiltinFunctionType, BuiltinMethodType, FunctionType
 
+import torch
+
 COLLATE_FUNC_DICT = dict()
 
 
@@ -16,6 +18,9 @@ def coco_collate_fn(batch):
 
 
 def cat_list(images, fill_value=0):
+    if len(images) == 1 and not isinstance(images[0], torch.Tensor):
+        return images
+
     max_size = tuple(max(s) for s in zip(*[img.shape for img in images]))
     batch_shape = (len(images),) + max_size
     batched_imgs = images[0].new(*batch_shape).fill_(fill_value)
