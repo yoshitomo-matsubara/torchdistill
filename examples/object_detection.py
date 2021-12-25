@@ -97,7 +97,7 @@ def log_info(*args, **kwargs):
         logger.info(*args, **kwargs)
 
 
-@torch.no_grad()
+@torch.inference_mode()
 def evaluate(model, data_loader, iou_types, device, device_ids, distributed, log_freq=1000, title=None, header='Test:'):
     model.to(device)
     if distributed:
