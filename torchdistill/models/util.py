@@ -93,6 +93,11 @@ def redesign_model(org_model, model_config, model_label, model_type='original'):
 
     module_dict = OrderedDict()
     adaptation_dict = model_config.get('adaptations', dict())
+
+    for frozen_module_path in frozen_module_path_set:
+        module = get_module(org_model, frozen_module_path)
+        freeze_module_params(module)
+
     for module_path in module_paths:
         if module_path.startswith('+'):
             module_path = module_path[1:]
