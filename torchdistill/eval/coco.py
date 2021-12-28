@@ -186,12 +186,10 @@ class SegEvaluator(object):
 
     def __str__(self):
         acc_global, acc, iu = self.compute()
-        return (
-            'Global pixelwise acc: {:.1f}, Average row correct: {}, IoU: {}, mean IoU: {:.1f}').format(
-                acc_global.item(),
-                ['{:.1f}'.format(i) for i in acc.tolist()],
-                ['{:.1f}'.format(i) for i in iu.tolist()],
-                iu.mean().item())
+        return 'mean IoU: {:.1f}, IoU: {}, Global pixelwise acc: {:.1f}, Average row correct: {}'.format(
+            iu.mean().item(), ['{:.1f}'.format(i) for i in iu.tolist()],
+            acc_global.item(), ['{:.1f}'.format(i) for i in acc.tolist()]
+        )
 
 
 def convert_to_xywh(boxes):
