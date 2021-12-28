@@ -105,7 +105,9 @@ def redesign_model(org_model, model_config, model_label, model_type='original'):
             module = get_adaptation_module(adaptation_config['type'], **adaptation_config['params'])
         else:
             module = get_module(org_model, module_path)
+
         if module_path in frozen_module_path_set:
             freeze_module_params(module)
+
         add_submodule(module, module_path, module_dict)
     return build_sequential_container(module_dict)
