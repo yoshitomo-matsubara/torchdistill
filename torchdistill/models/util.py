@@ -73,7 +73,7 @@ def redesign_model(org_model, model_config, model_label, model_type='original'):
     if not isinstance(module_paths, list) or len(module_paths) == 0:
         logger.info('Using the {} {} model'.format(model_type, model_label))
         if len(frozen_module_path_set) > 0:
-            logger.info('Frozen module(s): {}'.format(frozen_module_path_set))
+            logger.info('Freezing module(s): {}'.format(frozen_module_path_set))
 
         isinstance_str = 'instance('
         for frozen_module_path in frozen_module_path_set:
@@ -89,7 +89,7 @@ def redesign_model(org_model, model_config, model_label, model_type='original'):
 
     logger.info('Redesigning the {} model with {}'.format(model_label, module_paths))
     if len(frozen_module_path_set) > 0:
-        logger.info('Frozen module(s): {}'.format(frozen_module_path_set))
+        logger.info('Freezing module(s): {}'.format(frozen_module_path_set))
 
     module_dict = OrderedDict()
     adaptation_dict = model_config.get('adaptations', dict())
