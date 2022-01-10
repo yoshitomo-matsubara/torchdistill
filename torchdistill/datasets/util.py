@@ -1,3 +1,4 @@
+import copy
 import time
 
 import torch
@@ -100,6 +101,10 @@ def split_dataset(org_dataset, random_split_config, dataset_id, dataset_dict):
     manual_seed = random_split_config.get('generator_seed', None)
     sub_datasets = random_split(org_dataset, lengths) if manual_seed is None \
         else random_split(org_dataset, lengths, generator=torch.Generator().manual_seed(manual_seed))
+    # Deep-copy dataset to configure transforms independently as dataset in Subset class is shallow-copied
+    for sub_dataset in sub_datasets:
+        sub_dataset.dataset = copy.deepcopy(sub_dataset.dataset)
+
     sub_splits_config = random_split_config['sub_splits']
     assert len(sub_datasets) == len(sub_splits_config), \
         'len(lengths) `{}` should be equal to len(sub_splits) `{}`'.format(len(sub_datasets), len(sub_splits_config))
