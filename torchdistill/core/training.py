@@ -3,7 +3,7 @@ import sys
 import torch
 from torch import distributed as dist
 from torch import nn
-from torch.optim.lr_scheduler import ReduceLROnPlateau
+from torch.optim.lr_scheduler import ReduceLROnPlateau, LambdaLR
 
 from torchdistill.common.constant import def_logger
 from torchdistill.common.module_util import check_if_wrapped, freeze_module_params, get_module, unfreeze_module_params, \
@@ -226,6 +226,9 @@ class TrainingBox(nn.Module):
             if isinstance(self.lr_scheduler, ReduceLROnPlateau):
                 metrics = kwargs['metrics']
                 self.lr_scheduler.step(metrics)
+            elif isinstance(self.lr_scheduler, LambdaLR):
+                local_epoch = int(self.stage_grad_count / self.scheduling_step)
+                self.lr_scheduler.step(local_epoch)
             else:
                 self.lr_scheduler.step()
 
@@ -235,6 +238,9 @@ class TrainingBox(nn.Module):
             if isinstance(self.lr_scheduler, ReduceLROnPlateau):
                 metrics = kwargs['metrics']
                 self.lr_scheduler.step(metrics)
+            elif isinstance(self.lr_scheduler, LambdaLR):
+                epoch = self.lr_scheduler.last_epoch + 1
+                self.lr_scheduler.step(epoch)
             else:
                 self.lr_scheduler.step()
         if isinstance(self.model, SpecialModule):
