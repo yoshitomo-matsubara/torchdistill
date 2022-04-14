@@ -91,7 +91,7 @@ models:
 ```
 
 ## How to setup
-- Python 3.6 >=
+- Python 3.7 >=
 - pipenv (optional)
 
 ### Install by pip/pipenv
