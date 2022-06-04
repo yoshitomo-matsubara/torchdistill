@@ -113,6 +113,7 @@ pipenv install "-e ."
 ## Issues / Questions / Requests
 The documentation is work-in-progress. In the meantime, feel free to create an issue if you find a bug.  
 If you have either a question or feature request, start a new discussion [here](https://github.com/yoshitomo-matsubara/torchdistill/discussions).
+Please make sure the issue/question/request has not been addressed yet by searching through the issues and discussions.
 
 ## Citation
 If you use ***torchdistill*** in your research, please cite the following paper.  
