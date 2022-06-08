@@ -60,6 +60,7 @@ models:
       dropout_p: 0.0
       num_classes: 10
       pretrained: False
+      progress: True
     experiment: &student_experiment !join [*dataset_name, '-', *student_model_name, *s_depth, '-', *s_k, '_from_', *teacher_model_name]
     ckpt: !join ['./resource/ckpt/', *dataset_name, '/kd/', *student_experiment, '-final_run.pt']
 
