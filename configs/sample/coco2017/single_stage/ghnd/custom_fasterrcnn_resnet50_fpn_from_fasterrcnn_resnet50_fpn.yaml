@@ -38,7 +38,7 @@ models:
         params:
           num_classes: 1000
           pretrained: True
-          trainable_backbone_layers: 5
+          trainable_backbone_layers: 6
           layer1:
             type: 'Bottleneck4LargeResNet'
             bottleneck_channel: 3
