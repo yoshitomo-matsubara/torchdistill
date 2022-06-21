@@ -103,10 +103,10 @@ def custom_resnet_fpn_backbone(backbone_name, backbone_params_config,
     if layer1 is not None:
         backbone.layer1 = layer1
 
-    trainable_layers = backbone_params_config.get('trainable_backbone_layers', 3)
+    trainable_layers = backbone_params_config.get('trainable_backbone_layers', 4)
     # select layers that wont be frozen
-    assert 0 <= trainable_layers <= 5
-    layers_to_train = ['layer4', 'layer3', 'layer2', 'layer1', 'conv1'][:trainable_layers]
+    assert 0 <= trainable_layers <= 6
+    layers_to_train = ['layer4', 'layer3', 'layer2', 'layer1', 'bn1', 'conv1'][:trainable_layers]
     # freeze layers only if pretrained backbone is used
     for name, parameter in backbone.named_parameters():
         if all([not name.startswith(layer) for layer in layers_to_train]):
