@@ -194,7 +194,7 @@ train:
             type: 'FTLoss'
             params:
               p: 1
-              reduction: 'batchmean'
+              reduction: 'mean'
               paraphraser_path: 'paraphraser'
               translator_path: 'translator'
           factor: 1000.0
