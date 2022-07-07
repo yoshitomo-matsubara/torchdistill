@@ -18,6 +18,7 @@ setup(
     packages=find_packages(exclude=('tests', 'examples', 'demo', 'configs')),
     python_requires='>=3.7',
     install_requires=[
+        'setuptools>=63.1.0'
         'torch>=1.11.0',
         'torchvision>=0.12.0',
         'numpy',
