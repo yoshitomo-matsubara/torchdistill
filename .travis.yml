@@ -3,7 +3,7 @@ language: python
 os:
   - linux
 
-dist: bionic
+dist: focal
 
 cache:
   pip: true
