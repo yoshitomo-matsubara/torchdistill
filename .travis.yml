@@ -3,7 +3,7 @@ language: python
 os:
   - linux
 
-dist: bionic
+dist: focal
 
 cache:
   pip: true
@@ -15,6 +15,7 @@ python:
   - "3.9"
 
 install:
+  - pip install setuptools --upgrade
   - pip install .
 
 script:
