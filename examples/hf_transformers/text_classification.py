@@ -124,7 +124,7 @@ def train_one_epoch(training_box, epoch, log_freq):
         metric_logger.meters['sample/s'].update(batch_size / (time.time() - start_time))
 
 
-@torch.no_grad()
+@torch.inference_mode()
 def evaluate(model, data_loader, metric, is_regression, accelerator, title=None, header='Test: '):
     if title is not None:
         logger.info(title)
@@ -170,7 +170,7 @@ def train(teacher_model, student_model, dataset_dict, is_regression, ckpt_dir_pa
         training_box.post_process()
 
 
-@torch.no_grad()
+@torch.inference_mode()
 def predict_private(model, dataset_dict, label_names_dict, is_regression, accelerator,
                     private_configs, private_output_dir_path):
     logger.info('Start prediction for private dataset(s)')
