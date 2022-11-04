@@ -136,9 +136,6 @@ train:
         output: ['student_model.layer1', 'student_model.layer2', 'student_model.layer3', 'student_model.layer4', 'connector_dict.connector1', 'connector_dict.connector2', 'connector_dict.connector3', 'connector_dict.connector4']
       wrapper:
       requires_grad: True
-    apex:
-      requires: False
-      opt_level: '01'
     optimizer:
       type: 'SGD'
       params:
@@ -202,9 +199,6 @@ train:
       wrapper: 'DistributedDataParallel'
       requires_grad: True
       frozen_modules: []
-    apex:
-      requires: False
-      opt_level: '01'
     optimizer:
       type: 'SGD'
       params:
