@@ -102,9 +102,6 @@ train:
         output: []
       wrapper:
       requires_grad: False
-    apex:
-      requires: False
-      opt_level: '01'
     optimizer:
       type: 'SGD'
       params:
@@ -174,9 +171,6 @@ train:
       wrapper:
       requires_grad: True
       frozen_modules: []
-    apex:
-      requires: False
-      opt_level: '01'
     optimizer:
       type: 'SGD'
       params:

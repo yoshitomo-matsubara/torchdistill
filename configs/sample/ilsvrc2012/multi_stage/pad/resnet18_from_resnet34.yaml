@@ -84,9 +84,6 @@ train:
         output: ['avgpool']
       wrapper: 'DistributedDataParallel'
       requires_grad: True
-    apex:
-      requires: False
-      opt_level: '01'
     optimizer: &optimizer
       type: 'SGD'
       params:
@@ -142,9 +139,6 @@ train:
         output: ['student_model.avgpool', 'var_estimator']
       wrapper:
       requires_grad: True
-    apex:
-      requires: False
-      opt_level: '01'
     optimizer: *optimizer
     scheduler: *scheduler
     criterion:

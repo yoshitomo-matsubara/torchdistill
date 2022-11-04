@@ -84,9 +84,6 @@ train:
         output: ['layer1', 'layer2', 'layer3', 'layer4']
       wrapper: 'DistributedDataParallel'
       requires_grad: True
-    apex:
-      requires: False
-      opt_level: '01'
     optimizer:
       type: 'Adam'
       params:
@@ -175,9 +172,6 @@ train:
       wrapper: 'DistributedDataParallel'
       requires_grad: True
       frozen_modules: []
-    apex:
-      requires: False
-      opt_level: '01'
     optimizer:
       type: 'SGD'
       params:

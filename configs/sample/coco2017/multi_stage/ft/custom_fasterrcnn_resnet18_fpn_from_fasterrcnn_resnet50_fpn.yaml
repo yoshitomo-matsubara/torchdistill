@@ -101,9 +101,6 @@ train:
         output: []
       wrapper:
       requires_grad: False
-    apex:
-      requires: False
-      opt_level: '01'
     optimizer:
       type: 'SGD'
       params:
@@ -169,9 +166,6 @@ train:
       wrapper:
       requires_grad: True
       frozen_modules: ['student_model.backbone.body.conv1', 'student_model.backbone.body.bn1', 'student_model.backbone.body.relu', 'student_model.backbone.body.maxpool']
-    apex:
-      requires: False
-      opt_level: '01'
     optimizer:
       type: 'SGD'
       params:
