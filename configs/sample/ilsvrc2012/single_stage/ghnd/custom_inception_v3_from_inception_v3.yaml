@@ -99,9 +99,6 @@ train:
       output: ['bottleneck', 'Mixed_5d', 'Mixed_6e', 'Mixed_7c']
     wrapper: 'DistributedDataParallel'
     requires_grad: True
-  apex:
-    requires: False
-    opt_level: '01'
   optimizer:
     type: 'Adam'
     params:
