@@ -1,13 +1,11 @@
-import sys
-
 import torch
 from torch import distributed as dist
 from torch import nn
 from torch.optim.lr_scheduler import ReduceLROnPlateau, LambdaLR
 
 from torchdistill.common.constant import def_logger
-from torchdistill.common.module_util import check_if_wrapped, freeze_module_params, get_module, unfreeze_module_params, \
-    get_updatable_param_names
+from torchdistill.common.module_util import check_if_wrapped, freeze_module_params, get_module, \
+    unfreeze_module_params, get_updatable_param_names
 from torchdistill.core.forward_proc import get_forward_proc_func
 from torchdistill.core.util import set_hooks, wrap_model, clear_io_dict, extract_io_dict, update_io_dict
 from torchdistill.datasets.util import build_data_loaders
@@ -19,10 +17,6 @@ from torchdistill.models.util import redesign_model
 from torchdistill.optim.registry import get_optimizer, get_scheduler
 
 logger = def_logger.getChild(__name__)
-try:
-    from apex import amp
-except ImportError:
-    amp = None
 
 
 class TrainingBox(nn.Module):
@@ -136,21 +130,10 @@ class TrainingBox(nn.Module):
             self.lr_scheduler = None
             self.scheduling_step = None
 
-        # Set up accelerator/apex if necessary
-        self.apex = False
-        apex_config = train_config.get('apex', None)
+        # Set up accelerator if necessary
         if self.accelerator is not None:
             self.model, self.optimizer, self.train_data_loader, self.val_data_loader = \
                 self.accelerator.prepare(self.model, self.optimizer, self.train_data_loader, self.val_data_loader)
-        elif apex_config is not None and apex_config.get('requires', False):
-            if sys.version_info < (3, 0):
-                raise RuntimeError('Apex currently only supports Python 3. Aborting.')
-            if amp is None:
-                raise RuntimeError('Failed to import apex. Please install apex from https://www.github.com/nvidia/apex '
-                                   'to enable mixed-precision training.')
-            self.model, self.optimizer =\
-                amp.initialize(self.model, self.optimizer, opt_level=apex_config['opt_level'])
-            self.apex = True
 
     def __init__(self, model, dataset_dict, train_config, device, device_ids, distributed, lr_factor, accelerator=None):
         super().__init__()
@@ -174,7 +157,6 @@ class TrainingBox(nn.Module):
         self.max_grad_norm = None
         self.scheduling_step = 0
         self.stage_grad_count = 0
-        self.apex = None
         self.setup(train_config)
         self.num_epochs = train_config['num_epochs']
 
@@ -205,16 +187,12 @@ class TrainingBox(nn.Module):
 
         if self.accelerator is not None:
             self.accelerator.backward(loss)
-        elif self.apex:
-            with amp.scale_loss(loss, self.optimizer) as scaled_loss:
-                scaled_loss.backward()
         else:
             loss.backward()
 
         if self.stage_grad_count % self.grad_accum_step == 0:
             if self.max_grad_norm is not None:
-                target_params = amp.master_params(self.optimizer) if self.apex \
-                    else [p for group in self.optimizer.param_groups for p in group['params']]
+                target_params = [p for group in self.optimizer.param_groups for p in group['params']]
                 torch.nn.utils.clip_grad_norm_(target_params, self.max_grad_norm)
 
             self.optimizer.step()

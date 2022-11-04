@@ -88,9 +88,6 @@ train:
       output: ['features.bottleneck']
     wrapper: 'DistributedDataParallel'
     requires_grad: True
-  apex:
-    requires: False
-    opt_level: '01'
   optimizer:
     type: 'Adam'
     params:

@@ -69,9 +69,6 @@ train:
     wrapper:
     requires_grad: True
     frozen_modules: []
-  apex:
-    requires: False
-    opt_level: '01'
   optimizer:
     type: 'optimizer_no_decay'
     params:
