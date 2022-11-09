@@ -18,7 +18,7 @@ You can find such examples below and in [configs/sample/](https://github.com/yos
 
 When you refer to ***torchdistill*** in your paper, please cite [this paper](https://github.com/yoshitomo-matsubara/torchdistill#citation) 
 instead of this GitHub repository.  
-**Your citation is appreciated and motivates me to maintain and upgrade this framework!** 
+**If you use** ***torchdistill*** **as part of your work, your citation is appreciated and motivates me to maintain and upgrade this framework!** 
 
 ## Forward hook manager
 Using **ForwardHookManager**, you can extract intermediate representations in model without modifying the interface of its forward function.  
@@ -121,7 +121,7 @@ If you use ***torchdistill*** in your research, please cite the following paper.
 [[Paper](https://link.springer.com/chapter/10.1007/978-3-030-76423-4_3)] [[Preprint](https://arxiv.org/abs/2011.12913)]  
 ```bibtex
 @inproceedings{matsubara2021torchdistill,
-  title={torchdistill: A Modular, Configuration-Driven Framework for Knowledge Distillation},
+  title={{torchdistill: A Modular, Configuration-Driven Framework for Knowledge Distillation}},
   author={Matsubara, Yoshitomo},
   booktitle={International Workshop on Reproducible Research in Pattern Recognition},
   pages={24--44},
