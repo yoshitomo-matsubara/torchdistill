@@ -3,6 +3,8 @@ from unittest import TestCase
 from torchdistill.core.forward_proc import register_forward_proc_func, get_forward_proc_func, forward_batch_only
 from torchdistill.datasets.collator import register_collate_func, get_collate_func
 from torchdistill.datasets.registry import register_dataset, DATASET_DICT
+from torchdistill.datasets.sample_loader import register_sample_loader_class, register_sample_loader_func, \
+    get_sample_loader
 from torchdistill.models.registry import get_model
 
 
@@ -63,7 +65,6 @@ class RegistryTest(TestCase):
                and get_forward_proc_func('test_forward_proc2') == forward_batch_only
 
     def test_register_collate_func(self):
-
         @register_collate_func
         def test_collate0(batch, label):
             return batch, label
@@ -83,3 +84,46 @@ class RegistryTest(TestCase):
 
         assert get_collate_func(random_name) == test_collate2 \
                and get_collate_func('test_collate2') is None
+
+    def test_register_sample_loader(self):
+        @register_sample_loader_class
+        class TestSampleLoader0(object):
+            def __init__(self):
+                self.name = 'test0'
+
+        assert get_sample_loader('TestSampleLoader0') is not None
+
+        @register_sample_loader_class()
+        class TestSampleLoader1(object):
+            def __init__(self):
+                self.name = 'test1'
+
+        assert get_sample_loader('TestSampleLoader1') is not None
+        random_name = 'custom_sample_loader_class_name2'
+
+        @register_sample_loader_class(key=random_name)
+        class TestSampleLoader2(object):
+            def __init__(self):
+                self.name = 'test2'
+
+        assert get_sample_loader(random_name) is not None
+
+        @register_sample_loader_func
+        def test_sample_loader0(batch):
+            pass
+
+        assert get_sample_loader('test_sample_loader0') == test_sample_loader0
+
+        @register_sample_loader_func()
+        def test_sample_loader1(batch, label):
+            pass
+
+        assert get_sample_loader('test_sample_loader1') == test_sample_loader1
+        random_name = 'custom_sample_loader_func_name2'
+
+        @register_sample_loader_func(key=random_name)
+        def test_sample_loader2(batch, label):
+            pass
+
+        assert get_sample_loader(random_name) == test_sample_loader2 \
+               and get_sample_loader('test_sample_loader2') is None

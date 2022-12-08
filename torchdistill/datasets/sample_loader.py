@@ -10,17 +10,35 @@ SAMPLE_LOADER_CLASS_DICT = dict()
 SAMPLE_LOADER_FUNC_DICT = dict()
 
 
-def register_sample_loader_class(cls):
-    SAMPLE_LOADER_CLASS_DICT[cls.__name__] = cls
-    return cls
+def register_sample_loader_class(*args, **kwargs):
+    def _register_sample_loader_class(cls):
+        key = kwargs.get('key')
+        if key is None:
+            key = cls.__name__
+
+        SAMPLE_LOADER_CLASS_DICT[key] = cls
+        return cls
+
+    if len(args) > 0 and callable(args[0]):
+        return _register_sample_loader_class(args[0])
+    return _register_sample_loader_class
 
 
-def register_sample_loader_func(func):
-    SAMPLE_LOADER_FUNC_DICT[func.__name__] = func
-    return func
+def register_sample_loader_func(*args, **kwargs):
+    def _register_sample_loader_func(func):
+        key = kwargs.get('key')
+        if key is None:
+            key = func.__name__
+
+        SAMPLE_LOADER_FUNC_DICT[key] = func
+        return func
+
+    if len(args) > 0 and callable(args[0]):
+        return _register_sample_loader_func(args[0])
+    return _register_sample_loader_func
 
 
-@register_sample_loader_class
+@register_sample_loader_class()
 class JpegCompressionLoader(object):
     def __init__(self, jpeg_quality=None):
         self.jpeg_quality = jpeg_quality
