@@ -13,4 +13,6 @@ def register_dataset(*args, **kwargs):
         DATASET_DICT[key] = cls_or_func
         return cls_or_func
 
+    if len(args) > 0 and callable(args[0]):
+        return _register_dataset(args[0])
     return _register_dataset

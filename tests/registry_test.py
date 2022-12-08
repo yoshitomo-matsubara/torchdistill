@@ -16,13 +16,21 @@ class RegistryTest(TestCase):
 
     def test_register_dataset(self):
         default_dataset_dict_size = len(DATASET_DICT)
+        @register_dataset
+        class TestDataset0(object):
+            def __init__(self):
+                self.name = 'test0'
+
+        assert 'TestDataset0' in DATASET_DICT
+        assert len(DATASET_DICT) == default_dataset_dict_size + 1
+
         @register_dataset()
         class TestDataset1(object):
             def __init__(self):
                 self.name = 'test1'
 
         assert 'TestDataset1' in DATASET_DICT
-        assert len(DATASET_DICT) == default_dataset_dict_size + 1
+        assert len(DATASET_DICT) == default_dataset_dict_size + 2
         random_name = 'custom_test_dataset_name2'
 
         @register_dataset(key=random_name)
@@ -30,10 +38,16 @@ class RegistryTest(TestCase):
             def __init__(self):
                 self.name = 'test2'
 
-        assert len(DATASET_DICT) == default_dataset_dict_size + 2
+        assert len(DATASET_DICT) == default_dataset_dict_size + 3
         assert 'TestDataset1' in DATASET_DICT and random_name in DATASET_DICT and 'TestDataset2' not in DATASET_DICT
 
     def test_register_forward_proc_func(self):
+        @register_forward_proc_func()
+        def test_forward_proc0(model, batch):
+            return model(batch)
+
+        assert get_forward_proc_func('test_forward_proc0') == test_forward_proc0
+
         @register_forward_proc_func()
         def test_forward_proc1(model, batch):
             return model(batch)

@@ -10,6 +10,8 @@ def register_forward_proc_func(*args, **kwargs):
         PROC_FUNC_DICT[key] = func
         return func
 
+    if len(args) > 0 and callable(args[0]):
+        return _register_forward_proc_func(args[0])
     return _register_forward_proc_func
 
 
