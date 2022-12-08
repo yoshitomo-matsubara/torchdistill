@@ -1,6 +1,7 @@
 from unittest import TestCase
 
 from torchdistill.core.forward_proc import register_forward_proc_func, get_forward_proc_func, forward_batch_only
+from torchdistill.datasets.collator import register_collate_func, get_collate_func
 from torchdistill.datasets.registry import register_dataset, DATASET_DICT
 from torchdistill.models.registry import get_model
 
@@ -23,6 +24,7 @@ class RegistryTest(TestCase):
         assert 'TestDataset1' in DATASET_DICT
         assert len(DATASET_DICT) == default_dataset_dict_size + 1
         random_name = 'custom_test_dataset_name2'
+
         @register_dataset(key=random_name)
         class TestDataset2(object):
             def __init__(self):
@@ -38,9 +40,32 @@ class RegistryTest(TestCase):
 
         assert get_forward_proc_func('test_forward_proc1') == test_forward_proc1
         random_name = 'custom_forward_proc_name2'
+
         @register_forward_proc_func(key=random_name)
         def test_forward_proc2(model, batch, label):
             return model(batch, label)
 
         assert get_forward_proc_func(random_name) == test_forward_proc2 \
                and get_forward_proc_func('test_forward_proc2') == forward_batch_only
+
+    def test_register_collate_func(self):
+
+        @register_collate_func
+        def test_collate0(batch, label):
+            return batch, label
+
+        assert get_collate_func('test_collate0') == test_collate0
+
+        @register_collate_func()
+        def test_collate1(batch, label):
+            return batch, label
+
+        assert get_collate_func('test_collate1') == test_collate1
+        random_name = 'custom_collate_name2'
+
+        @register_collate_func(key=random_name)
+        def test_collate2(batch, label):
+            return batch, label
+
+        assert get_collate_func(random_name) == test_collate2 \
+               and get_collate_func('test_collate2') is None

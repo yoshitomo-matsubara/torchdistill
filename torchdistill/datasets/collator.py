@@ -5,19 +5,27 @@ import torch
 COLLATE_FUNC_DICT = dict()
 
 
-def register_collate_func(func):
-    key = func.__name__ if isinstance(func, (BuiltinMethodType, BuiltinFunctionType, FunctionType)) \
-        else type(func).__name__
-    COLLATE_FUNC_DICT[key] = func
-    return func
+def register_collate_func(*args, **kwargs):
+    def _register_collate_func(func):
+        key = kwargs.get('key')
+        if key is None:
+            key = func.__name__ if isinstance(func, (BuiltinMethodType, BuiltinFunctionType, FunctionType)) \
+                else type(func).__name__
+
+        COLLATE_FUNC_DICT[key] = func
+        return func
+
+    if len(args) > 0 and callable(args[0]):
+        return _register_collate_func(args[0])
+    return _register_collate_func
 
 
-@register_collate_func
+@register_collate_func()
 def coco_collate_fn(batch):
     return tuple(zip(*batch))
 
 
-def cat_list(images, fill_value=0):
+def _cat_list(images, fill_value=0):
     if len(images) == 1 and not isinstance(images[0], torch.Tensor):
         return images
 
@@ -29,19 +37,19 @@ def cat_list(images, fill_value=0):
     return batched_imgs
 
 
-@register_collate_func
+@register_collate_func()
 def coco_seg_collate_fn(batch):
     images, targets, supp_dicts = list(zip(*batch))
-    batched_imgs = cat_list(images, fill_value=0)
-    batched_targets = cat_list(targets, fill_value=255)
+    batched_imgs = _cat_list(images, fill_value=0)
+    batched_targets = _cat_list(targets, fill_value=255)
     return batched_imgs, batched_targets, supp_dicts
 
 
-@register_collate_func
+@register_collate_func()
 def coco_seg_eval_collate_fn(batch):
     images, targets = list(zip(*batch))
-    batched_imgs = cat_list(images, fill_value=0)
-    batched_targets = cat_list(targets, fill_value=255)
+    batched_imgs = _cat_list(images, fill_value=0)
+    batched_targets = _cat_list(targets, fill_value=255)
     return batched_imgs, batched_targets
 
 
