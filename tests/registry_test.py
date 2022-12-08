@@ -1,8 +1,8 @@
 from unittest import TestCase
 
+from torchdistill.core.forward_proc import register_forward_proc_func, get_forward_proc_func, forward_batch_only
 from torchdistill.datasets.registry import register_dataset, DATASET_DICT
 from torchdistill.models.registry import get_model
-from torchdistill.core.forward_proc import register_forward_proc_func, get_forward_proc_func, forward_batch_only
 
 
 class RegistryTest(TestCase):
