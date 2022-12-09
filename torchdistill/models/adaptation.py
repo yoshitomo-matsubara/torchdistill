@@ -42,10 +42,8 @@ class ConvReg(nn.Sequential):
 
 
 def get_adaptation_module(class_name, *args, **kwargs):
-    if class_name not in ADAPTATION_CLASS_DICT and class_name not in MODULE_CLASS_DICT:
-        logger.info('No adaptation module called `{}` is registered.'.format(class_name))
-        return None
-
     if class_name in ADAPTATION_CLASS_DICT:
         return ADAPTATION_CLASS_DICT[class_name](*args, **kwargs)
-    return MODULE_CLASS_DICT[class_name](*args, **kwargs)
+    elif class_name in MODULE_CLASS_DICT:
+        return MODULE_CLASS_DICT[class_name](*args, **kwargs)
+    raise ValueError('No adaptation module `{}` registered'.format(class_name))

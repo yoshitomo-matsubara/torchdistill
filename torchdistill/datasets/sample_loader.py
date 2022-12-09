@@ -56,10 +56,10 @@ class JpegCompressionLoader(object):
 
 
 def get_sample_loader(obj_name, *args, **kwargs):
-    if obj_name not in SAMPLE_LOADER_CLASS_DICT and obj_name not in SAMPLE_LOADER_FUNC_DICT:
-        logger.info('No sample loader called `{}` is registered.'.format(obj_name))
+    if obj_name is None:
         return None
-
-    if obj_name in SAMPLE_LOADER_CLASS_DICT:
+    elif obj_name in SAMPLE_LOADER_CLASS_DICT:
         return SAMPLE_LOADER_CLASS_DICT[obj_name](*args, **kwargs)
-    return SAMPLE_LOADER_FUNC_DICT[obj_name]
+    elif obj_name in SAMPLE_LOADER_FUNC_DICT:
+        return SAMPLE_LOADER_FUNC_DICT[obj_name]
+    raise ValueError('No sample loader `{}` registered.'.format(obj_name))

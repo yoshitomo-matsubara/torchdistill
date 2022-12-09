@@ -126,8 +126,5 @@ class SSKDDatasetWrapper(BaseDatasetWrapper):
 
 def get_dataset_wrapper(class_name, *args, **kwargs):
     if class_name not in WRAPPER_CLASS_DICT:
-        logger.info('No dataset wrapper called `{}` is registered.'.format(class_name))
-        return None
-
-    instance = WRAPPER_CLASS_DICT[class_name](*args, **kwargs)
-    return instance
+        return WRAPPER_CLASS_DICT[class_name](*args, **kwargs)
+    raise ValueError('No dataset wrapper `{}` registered.'.format(class_name))

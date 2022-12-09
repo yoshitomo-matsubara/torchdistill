@@ -529,20 +529,18 @@ class Student4KTAAD(SpecialModule):
 
 
 def get_special_module(class_name, *args, **kwargs):
-    if class_name not in SPECIAL_CLASS_DICT:
-        logger.info('No special module called `{}` is registered.'.format(class_name))
-        return None
-
-    instance = SPECIAL_CLASS_DICT[class_name](*args, **kwargs)
-    return instance
+    if class_name in SPECIAL_CLASS_DICT:
+        return SPECIAL_CLASS_DICT[class_name](*args, **kwargs)
+    raise ValueError('No special module `{}` registered'.format(class_name))
 
 
 def build_special_module(model_config, **kwargs):
     special_model_config = model_config.get('special', dict())
     special_model_type = special_model_config.get('type', None)
-    if special_model_type is not None:
-        special_model_params_config = special_model_config.get('params', None)
-        if special_model_params_config is None:
-            special_model_params_config = dict()
-        return get_special_module(special_model_type, **kwargs, **special_model_params_config)
-    return None
+    if special_model_type is None:
+        return None
+
+    special_model_params_config = special_model_config.get('params', None)
+    if special_model_params_config is None:
+        special_model_params_config = dict()
+    return get_special_module(special_model_type, **kwargs, **special_model_params_config)

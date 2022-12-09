@@ -946,9 +946,11 @@ class AffinityLoss(nn.Module):
 
 def get_loss_wrapper(single_loss, params_config, wrapper_config):
     wrapper_type = wrapper_config.get('type', None)
-    if wrapper_type in LOSS_WRAPPER_CLASS_DICT:
+    if wrapper_type is None:
+        return SimpleLossWrapper(single_loss, params_config)
+    elif wrapper_type in LOSS_WRAPPER_CLASS_DICT:
         return LOSS_WRAPPER_CLASS_DICT[wrapper_type](single_loss, params_config, **wrapper_config.get('params', dict()))
-    return SimpleLossWrapper(single_loss, params_config)
+    raise ValueError('No loss wrapper `{}` registered'.format(wrapper_type))
 
 
 def get_single_loss(single_criterion_config, params_config=None):
