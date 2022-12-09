@@ -200,3 +200,26 @@ class RegistryTest(TestCase):
                 self.name = 'test2'
 
         assert get_dataset_wrapper(random_name) is not None
+
+    def test_register_custom_loss_class(self):
+        @register_custom_loss
+        class TestCustomLoss0(object):
+            def __init__(self):
+                self.name = 'test0'
+
+        assert 'TestCustomLoss0' in CUSTOM_LOSS_CLASS_DICT
+
+        @register_custom_loss()
+        class TestCustomLoss1(object):
+            def __init__(self):
+                self.name = 'test1'
+
+        assert 'TestCustomLoss1' in CUSTOM_LOSS_CLASS_DICT
+        random_name = 'custom_loss_class_name2'
+
+        @register_custom_loss(key=random_name)
+        class TestCustomLoss2(object):
+            def __init__(self):
+                self.name = 'test2'
+
+        assert random_name in CUSTOM_LOSS_CLASS_DICT
