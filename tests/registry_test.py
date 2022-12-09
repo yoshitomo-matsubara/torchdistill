@@ -11,11 +11,12 @@ from torchdistill.datasets.wrapper import register_dataset_wrapper, get_dataset_
 from torchdistill.losses.custom import register_custom_loss, CUSTOM_LOSS_CLASS_DICT
 from torchdistill.losses.single import register_loss_wrapper, register_single_loss, register_org_loss, \
     LOSS_WRAPPER_CLASS_DICT, SINGLE_LOSS_CLASS_DICT, ORG_LOSS_LIST
-from torchdistill.models.registry import get_model
 from torchdistill.losses.util import register_func2extract_org_output, get_func2extract_org_output
-from torchdistill.optim.registry import register_optimizer, register_scheduler, OPTIM_DICT, SCHEDULER_DICT
 from torchdistill.models.adaptation import register_adaptation_module, ADAPTATION_CLASS_DICT
+from torchdistill.models.registry import get_model
 from torchdistill.models.registry import register_model_class, register_model_func, MODEL_CLASS_DICT, MODEL_FUNC_DICT
+from torchdistill.models.special import register_special_module, SPECIAL_CLASS_DICT
+from torchdistill.optim.registry import register_optimizer, register_scheduler, OPTIM_DICT, SCHEDULER_DICT
 
 
 class RegistryTest(TestCase):
@@ -433,3 +434,26 @@ class RegistryTest(TestCase):
             pass
 
         assert random_name in MODEL_FUNC_DICT
+
+    def test_register_special_module(self):
+        @register_special_module
+        class TestSpecialModule0(object):
+            def __init__(self):
+                self.name = 'test0'
+
+        assert 'TestSpecialModule0' in SPECIAL_CLASS_DICT
+
+        @register_special_module()
+        class TestSpecialModule1(object):
+            def __init__(self):
+                self.name = 'test1'
+
+        assert 'TestSpecialModule1' in SPECIAL_CLASS_DICT
+        random_name = 'custom_special_module_class_name2'
+
+        @register_special_module(key=random_name)
+        class TestSpecialModule2(object):
+            def __init__(self):
+                self.name = 'test2'
+
+        assert random_name in SPECIAL_CLASS_DICT
