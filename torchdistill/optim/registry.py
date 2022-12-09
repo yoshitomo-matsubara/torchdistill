@@ -47,7 +47,7 @@ def get_optimizer(module, optim_type, param_dict=None, filters_params=True, **kw
             updatable_params = [p for p in params if p.requires_grad]
             return optim_cls_or_func(updatable_params, **param_dict, **kwargs)
         return optim_cls_or_func(module, **param_dict, **kwargs)
-    raise ValueError('optim_type `{}` is not expected'.format(optim_type))
+    raise ValueError('No optimizer `{}` registered'.format(optim_type))
 
 
 def get_scheduler(optimizer, scheduler_type, param_dict=None, **kwargs):
@@ -57,4 +57,4 @@ def get_scheduler(optimizer, scheduler_type, param_dict=None, **kwargs):
     lower_scheduler_type = scheduler_type.lower()
     if lower_scheduler_type in SCHEDULER_DICT:
         return SCHEDULER_DICT[lower_scheduler_type](optimizer, **param_dict, **kwargs)
-    raise ValueError('scheduler_type `{}` is not expected'.format(scheduler_type))
+    raise ValueError('No scheduler `{}` registered'.format(scheduler_type))

@@ -79,4 +79,4 @@ def get_custom_loss(criterion_config):
     criterion_type = criterion_config['type']
     if criterion_type in CUSTOM_LOSS_CLASS_DICT:
         return CUSTOM_LOSS_CLASS_DICT[criterion_type](criterion_config)
-    raise ValueError('criterion_type `{}` is not expected'.format(criterion_type))
+    raise ValueError('No custom loss `{}` registered'.format(criterion_type))

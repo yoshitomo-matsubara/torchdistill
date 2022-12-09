@@ -54,6 +54,8 @@ def coco_seg_eval_collate_fn(batch):
 
 
 def get_collate_func(func_name):
-    if func_name not in COLLATE_FUNC_DICT:
+    if func_name is None:
         return None
-    return COLLATE_FUNC_DICT[func_name]
+    elif func_name in COLLATE_FUNC_DICT:
+        return COLLATE_FUNC_DICT[func_name]
+    raise ValueError('No collate function `{}` registered'.format(func_name))

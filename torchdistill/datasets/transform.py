@@ -158,7 +158,6 @@ class WrappedResize(Resize):
 
 
 def get_transform(obj_name, *args, **kwargs):
-    if obj_name not in TRANSFORM_CLASS_DICT:
-        logger.info('No transform called `{}` is registered.'.format(obj_name))
-        return None
-    return TRANSFORM_CLASS_DICT[obj_name](*args, **kwargs)
+    if obj_name in TRANSFORM_CLASS_DICT:
+        return TRANSFORM_CLASS_DICT[obj_name](*args, **kwargs)
+    raise ValueError('No transform `{}` registered.'.format(obj_name))

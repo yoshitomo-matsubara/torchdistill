@@ -9,4 +9,4 @@ def get_loss(loss_type, param_dict=None, **kwargs):
     lower_loss_type = loss_type.lower()
     if lower_loss_type in LOSS_DICT:
         return LOSS_DICT[lower_loss_type](**param_dict, **kwargs)
-    raise ValueError('loss_type `{}` is not expected'.format(loss_type))
+    raise ValueError('No loss `{}` registered'.format(loss_type))

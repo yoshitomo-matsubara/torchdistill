@@ -38,6 +38,8 @@ def forward_batch4sskd(model, sample_batch, targets=None, supp_dict=None):
 
 
 def get_forward_proc_func(func_name):
-    if func_name not in PROC_FUNC_DICT:
+    if func_name is None:
         return forward_batch_only
-    return PROC_FUNC_DICT[func_name]
+    elif func_name in PROC_FUNC_DICT:
+        return PROC_FUNC_DICT[func_name]
+    raise ValueError('No forward process function `{}` registered'.format(func_name))

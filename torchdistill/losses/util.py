@@ -58,6 +58,8 @@ def extract_org_loss_dict(org_criterion, student_outputs, teacher_outputs, targe
 
 
 def get_func2extract_org_output(func_name):
-    if func_name not in FUNC2EXTRACT_ORG_OUTPUT_DICT:
+    if func_name is None:
         return extract_simple_org_loss
-    return FUNC2EXTRACT_ORG_OUTPUT_DICT[func_name]
+    elif func_name in FUNC2EXTRACT_ORG_OUTPUT_DICT:
+        return FUNC2EXTRACT_ORG_OUTPUT_DICT[func_name]
+    raise ValueError('No function to extract original output `{}` registered'.format(func_name))
