@@ -8,8 +8,10 @@ from torchdistill.datasets.sample_loader import register_sample_loader_class, re
 from torchdistill.datasets.sampler import register_batch_sampler_class, BATCH_SAMPLER_CLASS_DICT
 from torchdistill.datasets.transform import register_transform_class, get_transform
 from torchdistill.datasets.wrapper import register_dataset_wrapper, get_dataset_wrapper
-from torchdistill.models.registry import get_model
 from torchdistill.losses.custom import register_custom_loss, CUSTOM_LOSS_CLASS_DICT
+from torchdistill.losses.single import register_loss_wrapper, register_single_loss, register_org_loss, \
+    LOSS_WRAPPER_CLASS_DICT, SINGLE_LOSS_CLASS_DICT, ORG_LOSS_LIST
+from torchdistill.models.registry import get_model
 
 
 class RegistryTest(TestCase):
@@ -223,3 +225,75 @@ class RegistryTest(TestCase):
                 self.name = 'test2'
 
         assert random_name in CUSTOM_LOSS_CLASS_DICT
+
+    def test_register_loss_wrapper_class(self):
+        @register_loss_wrapper
+        class TestLossWrapper0(object):
+            def __init__(self):
+                self.name = 'test0'
+
+        assert 'TestLossWrapper0' in LOSS_WRAPPER_CLASS_DICT
+
+        @register_loss_wrapper()
+        class TestLossWrapper1(object):
+            def __init__(self):
+                self.name = 'test1'
+
+        assert 'TestLossWrapper1' in LOSS_WRAPPER_CLASS_DICT
+        random_name = 'custom_loss_wrapper_class_name2'
+
+        @register_loss_wrapper(key=random_name)
+        class TestLossWrapper2(object):
+            def __init__(self):
+                self.name = 'test2'
+
+        assert random_name in LOSS_WRAPPER_CLASS_DICT
+
+    def test_register_single_loss(self):
+        @register_single_loss
+        class TestSingleLoss0(object):
+            def __init__(self):
+                self.name = 'test0'
+
+        assert 'TestSingleLoss0' in SINGLE_LOSS_CLASS_DICT
+
+        @register_single_loss()
+        class TestSingleLoss1(object):
+            def __init__(self):
+                self.name = 'test1'
+
+        assert 'TestSingleLoss1' in SINGLE_LOSS_CLASS_DICT
+        random_name = 'custom_single_loss_class_name2'
+
+        @register_single_loss(key=random_name)
+        class TestSingleLoss2(object):
+            def __init__(self):
+                self.name = 'test2'
+
+        assert random_name in SINGLE_LOSS_CLASS_DICT
+
+    def test_register_org_loss(self):
+        @register_org_loss
+        class TestOrgLoss0(object):
+            def __init__(self):
+                self.name = 'test0'
+
+        assert 'TestOrgLoss0' in SINGLE_LOSS_CLASS_DICT
+        assert TestOrgLoss0 in ORG_LOSS_LIST
+
+        @register_org_loss()
+        class TestOrgLoss1(object):
+            def __init__(self):
+                self.name = 'test1'
+
+        assert 'TestOrgLoss1' in SINGLE_LOSS_CLASS_DICT
+        assert TestOrgLoss1 in ORG_LOSS_LIST
+        random_name = 'custom_org_loss_class_name2'
+
+        @register_org_loss(key=random_name)
+        class TestOrgLoss2(object):
+            def __init__(self):
+                self.name = 'test2'
+
+        assert random_name in SINGLE_LOSS_CLASS_DICT
+        assert TestOrgLoss2 in ORG_LOSS_LIST
