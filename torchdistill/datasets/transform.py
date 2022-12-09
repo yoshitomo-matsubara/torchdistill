@@ -24,9 +24,18 @@ INTERPOLATION_MODE_DICT = {
 }
 
 
-def register_transform_class(cls):
-    TRANSFORM_CLASS_DICT[cls.__name__] = cls
-    return cls
+def register_transform_class(arg=None, **kwargs):
+    def _register_transform_class(cls):
+        key = kwargs.get('key')
+        if key is None:
+            key = cls.__name__
+
+        TRANSFORM_CLASS_DICT[key] = cls
+        return cls
+
+    if callable(arg):
+        return _register_transform_class(arg)
+    return _register_transform_class
 
 
 def pad_if_smaller(img, size, fill=0):

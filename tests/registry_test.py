@@ -154,3 +154,26 @@ class RegistryTest(TestCase):
                 self.name = 'test2'
 
         assert random_name in BATCH_SAMPLER_CLASS_DICT
+
+    def test_register_transform(self):
+        @register_transform_class()
+        class TestTransform0(object):
+            def __init__(self):
+                self.name = 'test0'
+
+        assert get_transform('TestTransform0') is not None
+
+        @register_transform_class()
+        class TestTransform1(object):
+            def __init__(self):
+                self.name = 'test1'
+
+        assert get_transform('TestTransform1') is not None
+        random_name = 'custom_transform_class_name2'
+
+        @register_transform_class(key=random_name)
+        class TestTransform2(object):
+            def __init__(self):
+                self.name = 'test2'
+
+        assert get_transform(random_name) is not None
