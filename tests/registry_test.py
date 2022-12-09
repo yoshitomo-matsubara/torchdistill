@@ -12,6 +12,7 @@ from torchdistill.losses.custom import register_custom_loss, CUSTOM_LOSS_CLASS_D
 from torchdistill.losses.single import register_loss_wrapper, register_single_loss, register_org_loss, \
     LOSS_WRAPPER_CLASS_DICT, SINGLE_LOSS_CLASS_DICT, ORG_LOSS_LIST
 from torchdistill.models.registry import get_model
+from torchdistill.losses.util import register_func2extract_org_output, get_func2extract_org_output
 
 
 class RegistryTest(TestCase):
@@ -297,3 +298,23 @@ class RegistryTest(TestCase):
 
         assert random_name in SINGLE_LOSS_CLASS_DICT
         assert TestOrgLoss2 in ORG_LOSS_LIST
+
+    def test_func2extract_org_output(self):
+        @register_func2extract_org_output
+        def test_func2extract_org_output0(batch):
+            pass
+
+        assert get_func2extract_org_output('test_func2extract_org_output0') == test_func2extract_org_output0
+
+        @register_func2extract_org_output()
+        def test_func2extract_org_output1(batch, label):
+            pass
+
+        assert get_func2extract_org_output('test_func2extract_org_output1') == test_func2extract_org_output1
+        random_name = 'custom_test_func2extract_org_output_name2'
+
+        @register_func2extract_org_output(key=random_name)
+        def test_func2extract_org_output2(batch, label):
+            pass
+
+        assert get_func2extract_org_output(random_name) == test_func2extract_org_output2
