@@ -5,7 +5,11 @@ from torchdistill.datasets.collator import register_collate_func, get_collate_fu
 from torchdistill.datasets.registry import register_dataset, DATASET_DICT
 from torchdistill.datasets.sample_loader import register_sample_loader_class, register_sample_loader_func, \
     get_sample_loader
+from torchdistill.datasets.sampler import register_batch_sampler_class, BATCH_SAMPLER_CLASS_DICT
+from torchdistill.datasets.transform import register_transform_class, get_transform
+from torchdistill.datasets.wrapper import register_dataset_wrapper, get_dataset_wrapper
 from torchdistill.models.registry import get_model
+from torchdistill.losses.custom import register_custom_loss, CUSTOM_LOSS_CLASS_DICT
 
 
 class RegistryTest(TestCase):
@@ -44,7 +48,7 @@ class RegistryTest(TestCase):
         assert 'TestDataset1' in DATASET_DICT and random_name in DATASET_DICT and 'TestDataset2' not in DATASET_DICT
 
     def test_register_forward_proc_func(self):
-        @register_forward_proc_func()
+        @register_forward_proc_func
         def test_forward_proc0(model, batch):
             return model(batch)
 
@@ -127,3 +131,26 @@ class RegistryTest(TestCase):
 
         assert get_sample_loader(random_name) == test_sample_loader2 \
                and get_sample_loader('test_sample_loader2') is None
+
+    def test_register_sampler(self):
+        @register_batch_sampler_class
+        class TestBatchSampler0(object):
+            def __init__(self):
+                self.name = 'test0'
+
+        assert 'TestBatchSampler0' in BATCH_SAMPLER_CLASS_DICT
+
+        @register_batch_sampler_class()
+        class TestBatchSampler1(object):
+            def __init__(self):
+                self.name = 'test1'
+
+        assert 'TestBatchSampler1' in BATCH_SAMPLER_CLASS_DICT
+        random_name = 'custom_batch_sampler_class_name2'
+
+        @register_batch_sampler_class(key=random_name)
+        class TestBatchSampler2(object):
+            def __init__(self):
+                self.name = 'test2'
+
+        assert random_name in BATCH_SAMPLER_CLASS_DICT
