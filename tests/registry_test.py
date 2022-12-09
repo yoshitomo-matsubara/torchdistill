@@ -13,6 +13,7 @@ from torchdistill.losses.single import register_loss_wrapper, register_single_lo
     LOSS_WRAPPER_CLASS_DICT, SINGLE_LOSS_CLASS_DICT, ORG_LOSS_LIST
 from torchdistill.models.registry import get_model
 from torchdistill.losses.util import register_func2extract_org_output, get_func2extract_org_output
+from torchdistill.optim.registry import register_optimizer, register_scheduler, OPTIM_DICT, SCHEDULER_DICT
 
 
 class RegistryTest(TestCase):
@@ -301,20 +302,66 @@ class RegistryTest(TestCase):
 
     def test_func2extract_org_output(self):
         @register_func2extract_org_output
-        def test_func2extract_org_output0(batch):
+        def test_func2extract_org_output0():
             pass
 
         assert get_func2extract_org_output('test_func2extract_org_output0') == test_func2extract_org_output0
 
         @register_func2extract_org_output()
-        def test_func2extract_org_output1(batch, label):
+        def test_func2extract_org_output1():
             pass
 
         assert get_func2extract_org_output('test_func2extract_org_output1') == test_func2extract_org_output1
         random_name = 'custom_test_func2extract_org_output_name2'
 
         @register_func2extract_org_output(key=random_name)
-        def test_func2extract_org_output2(batch, label):
+        def test_func2extract_org_output2():
             pass
 
         assert get_func2extract_org_output(random_name) == test_func2extract_org_output2
+
+    def test_register_optimizer(self):
+        @register_optimizer
+        class TestOptimizer0(object):
+            def __init__(self):
+                self.name = 'test0'
+
+        assert 'TestOptimizer0' in OPTIM_DICT
+
+        @register_optimizer()
+        class TestOptimizer1(object):
+            def __init__(self):
+                self.name = 'test1'
+
+        assert 'TestOptimizer1' in OPTIM_DICT
+        random_name = 'custom_optimizer_class_name2'
+
+        @register_optimizer(key=random_name)
+        class TestOptimizer2(object):
+            def __init__(self):
+                self.name = 'test2'
+
+        assert random_name in OPTIM_DICT
+
+    def test_register_scheduler(self):
+        @register_scheduler
+        class TestScheduler0(object):
+            def __init__(self):
+                self.name = 'test0'
+
+        assert 'TestScheduler0' in SCHEDULER_DICT
+
+        @register_scheduler()
+        class TestScheduler1(object):
+            def __init__(self):
+                self.name = 'test1'
+
+        assert 'TestScheduler1' in SCHEDULER_DICT
+        random_name = 'custom_scheduler_class_name2'
+
+        @register_scheduler(key=random_name)
+        class TestScheduler2(object):
+            def __init__(self):
+                self.name = 'test2'
+
+        assert random_name in SCHEDULER_DICT
