@@ -1,17 +1,17 @@
 from unittest import TestCase
 
-from torchdistill.core.forward_proc import register_forward_proc_func, get_forward_proc_func, forward_batch_only
-from torchdistill.datasets.collator import register_collate_func, get_collate_func
+from torchdistill.core.forward_proc import register_forward_proc_func, PROC_FUNC_DICT
+from torchdistill.datasets.collator import register_collate_func, COLLATE_FUNC_DICT
 from torchdistill.datasets.registry import register_dataset, DATASET_DICT
 from torchdistill.datasets.sample_loader import register_sample_loader_class, register_sample_loader_func, \
-    get_sample_loader
+    SAMPLE_LOADER_CLASS_DICT, SAMPLE_LOADER_FUNC_DICT
 from torchdistill.datasets.sampler import register_batch_sampler_class, BATCH_SAMPLER_CLASS_DICT
-from torchdistill.datasets.transform import register_transform_class, get_transform
-from torchdistill.datasets.wrapper import register_dataset_wrapper, get_dataset_wrapper
+from torchdistill.datasets.transform import register_transform_class, TRANSFORM_CLASS_DICT
+from torchdistill.datasets.wrapper import register_dataset_wrapper, WRAPPER_CLASS_DICT
 from torchdistill.losses.custom import register_custom_loss, CUSTOM_LOSS_CLASS_DICT
 from torchdistill.losses.single import register_loss_wrapper, register_single_loss, register_org_loss, \
     LOSS_WRAPPER_CLASS_DICT, SINGLE_LOSS_CLASS_DICT, ORG_LOSS_LIST
-from torchdistill.losses.util import register_func2extract_org_output, get_func2extract_org_output
+from torchdistill.losses.util import register_func2extract_org_output, FUNC2EXTRACT_ORG_OUTPUT_DICT
 from torchdistill.models.adaptation import register_adaptation_module, ADAPTATION_CLASS_DICT
 from torchdistill.models.registry import get_model
 from torchdistill.models.registry import register_model_class, register_model_func, MODEL_CLASS_DICT, MODEL_FUNC_DICT
@@ -28,22 +28,19 @@ class RegistryTest(TestCase):
         assert type(mobilenet_v3).__name__ == 'MobileNetV3'
 
     def test_register_dataset(self):
-        default_dataset_dict_size = len(DATASET_DICT)
         @register_dataset
         class TestDataset0(object):
             def __init__(self):
                 self.name = 'test0'
 
-        assert 'TestDataset0' in DATASET_DICT
-        assert len(DATASET_DICT) == default_dataset_dict_size + 1
+        assert DATASET_DICT['TestDataset0'] == TestDataset0
 
         @register_dataset()
         class TestDataset1(object):
             def __init__(self):
                 self.name = 'test1'
 
-        assert 'TestDataset1' in DATASET_DICT
-        assert len(DATASET_DICT) == default_dataset_dict_size + 2
+        assert DATASET_DICT['TestDataset1'] == TestDataset1
         random_name = 'custom_test_dataset_name2'
 
         @register_dataset(key=random_name)
@@ -51,50 +48,47 @@ class RegistryTest(TestCase):
             def __init__(self):
                 self.name = 'test2'
 
-        assert len(DATASET_DICT) == default_dataset_dict_size + 3
-        assert 'TestDataset1' in DATASET_DICT and random_name in DATASET_DICT and 'TestDataset2' not in DATASET_DICT
+        assert DATASET_DICT[random_name] == TestDataset2
 
     def test_register_forward_proc_func(self):
         @register_forward_proc_func
         def test_forward_proc0(model, batch):
             return model(batch)
 
-        assert get_forward_proc_func('test_forward_proc0') == test_forward_proc0
+        assert PROC_FUNC_DICT['test_forward_proc0'] == test_forward_proc0
 
         @register_forward_proc_func()
         def test_forward_proc1(model, batch):
             return model(batch)
 
-        assert get_forward_proc_func('test_forward_proc1') == test_forward_proc1
+        assert PROC_FUNC_DICT['test_forward_proc1'] == test_forward_proc1
         random_name = 'custom_forward_proc_name2'
 
         @register_forward_proc_func(key=random_name)
         def test_forward_proc2(model, batch, label):
             return model(batch, label)
 
-        assert get_forward_proc_func(random_name) == test_forward_proc2 \
-               and get_forward_proc_func('test_forward_proc2') == forward_batch_only
+        assert PROC_FUNC_DICT[random_name] == test_forward_proc2
 
     def test_register_collate_func(self):
         @register_collate_func
         def test_collate0(batch, label):
             return batch, label
 
-        assert get_collate_func('test_collate0') == test_collate0
+        assert COLLATE_FUNC_DICT['test_collate0'] == test_collate0
 
         @register_collate_func()
         def test_collate1(batch, label):
             return batch, label
 
-        assert get_collate_func('test_collate1') == test_collate1
+        assert COLLATE_FUNC_DICT['test_collate1'] == test_collate1
         random_name = 'custom_collate_name2'
 
         @register_collate_func(key=random_name)
         def test_collate2(batch, label):
             return batch, label
 
-        assert get_collate_func(random_name) == test_collate2 \
-               and get_collate_func('test_collate2') is None
+        assert COLLATE_FUNC_DICT[random_name] == test_collate2
 
     def test_register_sample_loader(self):
         @register_sample_loader_class
@@ -102,14 +96,14 @@ class RegistryTest(TestCase):
             def __init__(self):
                 self.name = 'test0'
 
-        assert get_sample_loader('TestSampleLoader0') is not None
+        assert SAMPLE_LOADER_CLASS_DICT['TestSampleLoader0'] == TestSampleLoader0
 
         @register_sample_loader_class()
         class TestSampleLoader1(object):
             def __init__(self):
                 self.name = 'test1'
 
-        assert get_sample_loader('TestSampleLoader1') is not None
+        assert SAMPLE_LOADER_CLASS_DICT['TestSampleLoader1'] == TestSampleLoader1
         random_name = 'custom_sample_loader_class_name2'
 
         @register_sample_loader_class(key=random_name)
@@ -117,27 +111,26 @@ class RegistryTest(TestCase):
             def __init__(self):
                 self.name = 'test2'
 
-        assert get_sample_loader(random_name) is not None
+        assert SAMPLE_LOADER_CLASS_DICT[random_name] == TestSampleLoader2
 
         @register_sample_loader_func
         def test_sample_loader0(batch):
             pass
 
-        assert get_sample_loader('test_sample_loader0') == test_sample_loader0
+        assert SAMPLE_LOADER_FUNC_DICT['test_sample_loader0'] == test_sample_loader0
 
         @register_sample_loader_func()
         def test_sample_loader1(batch, label):
             pass
 
-        assert get_sample_loader('test_sample_loader1') == test_sample_loader1
+        assert SAMPLE_LOADER_FUNC_DICT['test_sample_loader1'] == test_sample_loader1
         random_name = 'custom_sample_loader_func_name2'
 
         @register_sample_loader_func(key=random_name)
         def test_sample_loader2(batch, label):
             pass
 
-        assert get_sample_loader(random_name) == test_sample_loader2 \
-               and get_sample_loader('test_sample_loader2') is None
+        assert SAMPLE_LOADER_FUNC_DICT[random_name] == test_sample_loader2
 
     def test_register_sampler(self):
         @register_batch_sampler_class
@@ -145,14 +138,14 @@ class RegistryTest(TestCase):
             def __init__(self):
                 self.name = 'test0'
 
-        assert 'TestBatchSampler0' in BATCH_SAMPLER_CLASS_DICT
+        assert BATCH_SAMPLER_CLASS_DICT['TestBatchSampler0'] == TestBatchSampler0
 
         @register_batch_sampler_class()
         class TestBatchSampler1(object):
             def __init__(self):
                 self.name = 'test1'
 
-        assert 'TestBatchSampler1' in BATCH_SAMPLER_CLASS_DICT
+        assert BATCH_SAMPLER_CLASS_DICT['TestBatchSampler1'] == TestBatchSampler1
         random_name = 'custom_batch_sampler_class_name2'
 
         @register_batch_sampler_class(key=random_name)
@@ -160,7 +153,7 @@ class RegistryTest(TestCase):
             def __init__(self):
                 self.name = 'test2'
 
-        assert random_name in BATCH_SAMPLER_CLASS_DICT
+        assert BATCH_SAMPLER_CLASS_DICT[random_name] == TestBatchSampler2
 
     def test_register_transform(self):
         @register_transform_class()
@@ -168,14 +161,14 @@ class RegistryTest(TestCase):
             def __init__(self):
                 self.name = 'test0'
 
-        assert get_transform('TestTransform0') is not None
+        assert TRANSFORM_CLASS_DICT['TestTransform0'] == TestTransform0
 
         @register_transform_class()
         class TestTransform1(object):
             def __init__(self):
                 self.name = 'test1'
 
-        assert get_transform('TestTransform1') is not None
+        assert TRANSFORM_CLASS_DICT['TestTransform1'] == TestTransform1
         random_name = 'custom_transform_class_name2'
 
         @register_transform_class(key=random_name)
@@ -183,7 +176,7 @@ class RegistryTest(TestCase):
             def __init__(self):
                 self.name = 'test2'
 
-        assert get_transform(random_name) is not None
+        assert TRANSFORM_CLASS_DICT[random_name] == TestTransform2
 
     def test_register_dataset_wrapper(self):
         @register_dataset_wrapper
@@ -191,22 +184,22 @@ class RegistryTest(TestCase):
             def __init__(self):
                 self.name = 'test0'
 
-        assert get_dataset_wrapper('TestDatasetWrapper0') is not None
+        assert WRAPPER_CLASS_DICT['TestDatasetWrapper0'] == TestDatasetWrapper0
 
         @register_dataset_wrapper()
         class TestDatasetWrapper1(object):
             def __init__(self):
                 self.name = 'test1'
 
-        assert get_dataset_wrapper('TestDatasetWrapper1') is not None
+        assert WRAPPER_CLASS_DICT['TestDatasetWrapper1'] == TestDatasetWrapper1
         random_name = 'custom_dataset_wrapper_class_name2'
 
         @register_dataset_wrapper(key=random_name)
-        class TestTransform2(object):
+        class TestDatasetWrapper2(object):
             def __init__(self):
                 self.name = 'test2'
 
-        assert get_dataset_wrapper(random_name) is not None
+        assert WRAPPER_CLASS_DICT[random_name] == TestDatasetWrapper2
 
     def test_register_custom_loss_class(self):
         @register_custom_loss
@@ -214,14 +207,14 @@ class RegistryTest(TestCase):
             def __init__(self):
                 self.name = 'test0'
 
-        assert 'TestCustomLoss0' in CUSTOM_LOSS_CLASS_DICT
+        assert CUSTOM_LOSS_CLASS_DICT['TestCustomLoss0'] == TestCustomLoss0
 
         @register_custom_loss()
         class TestCustomLoss1(object):
             def __init__(self):
                 self.name = 'test1'
 
-        assert 'TestCustomLoss1' in CUSTOM_LOSS_CLASS_DICT
+        assert CUSTOM_LOSS_CLASS_DICT['TestCustomLoss1'] == TestCustomLoss1
         random_name = 'custom_loss_class_name2'
 
         @register_custom_loss(key=random_name)
@@ -229,7 +222,7 @@ class RegistryTest(TestCase):
             def __init__(self):
                 self.name = 'test2'
 
-        assert random_name in CUSTOM_LOSS_CLASS_DICT
+        assert CUSTOM_LOSS_CLASS_DICT[random_name] == TestCustomLoss2
 
     def test_register_loss_wrapper_class(self):
         @register_loss_wrapper
@@ -237,14 +230,14 @@ class RegistryTest(TestCase):
             def __init__(self):
                 self.name = 'test0'
 
-        assert 'TestLossWrapper0' in LOSS_WRAPPER_CLASS_DICT
+        assert LOSS_WRAPPER_CLASS_DICT['TestLossWrapper0'] == TestLossWrapper0
 
         @register_loss_wrapper()
         class TestLossWrapper1(object):
             def __init__(self):
                 self.name = 'test1'
 
-        assert 'TestLossWrapper1' in LOSS_WRAPPER_CLASS_DICT
+        assert LOSS_WRAPPER_CLASS_DICT['TestLossWrapper1'] == TestLossWrapper1
         random_name = 'custom_loss_wrapper_class_name2'
 
         @register_loss_wrapper(key=random_name)
@@ -252,7 +245,7 @@ class RegistryTest(TestCase):
             def __init__(self):
                 self.name = 'test2'
 
-        assert random_name in LOSS_WRAPPER_CLASS_DICT
+        assert LOSS_WRAPPER_CLASS_DICT[random_name] == TestLossWrapper2
 
     def test_register_single_loss(self):
         @register_single_loss
@@ -260,14 +253,14 @@ class RegistryTest(TestCase):
             def __init__(self):
                 self.name = 'test0'
 
-        assert 'TestSingleLoss0' in SINGLE_LOSS_CLASS_DICT
+        assert SINGLE_LOSS_CLASS_DICT['TestSingleLoss0'] == TestSingleLoss0
 
         @register_single_loss()
         class TestSingleLoss1(object):
             def __init__(self):
                 self.name = 'test1'
 
-        assert 'TestSingleLoss1' in SINGLE_LOSS_CLASS_DICT
+        assert SINGLE_LOSS_CLASS_DICT['TestSingleLoss1'] == TestSingleLoss1
         random_name = 'custom_single_loss_class_name2'
 
         @register_single_loss(key=random_name)
@@ -275,7 +268,7 @@ class RegistryTest(TestCase):
             def __init__(self):
                 self.name = 'test2'
 
-        assert random_name in SINGLE_LOSS_CLASS_DICT
+        assert SINGLE_LOSS_CLASS_DICT[random_name] == TestSingleLoss2
 
     def test_register_org_loss(self):
         @register_org_loss
@@ -283,7 +276,7 @@ class RegistryTest(TestCase):
             def __init__(self):
                 self.name = 'test0'
 
-        assert 'TestOrgLoss0' in SINGLE_LOSS_CLASS_DICT
+        assert SINGLE_LOSS_CLASS_DICT['TestOrgLoss0'] == TestOrgLoss0
         assert TestOrgLoss0 in ORG_LOSS_LIST
 
         @register_org_loss()
@@ -291,7 +284,7 @@ class RegistryTest(TestCase):
             def __init__(self):
                 self.name = 'test1'
 
-        assert 'TestOrgLoss1' in SINGLE_LOSS_CLASS_DICT
+        assert SINGLE_LOSS_CLASS_DICT['TestOrgLoss1'] == TestOrgLoss1
         assert TestOrgLoss1 in ORG_LOSS_LIST
         random_name = 'custom_org_loss_class_name2'
 
@@ -300,7 +293,7 @@ class RegistryTest(TestCase):
             def __init__(self):
                 self.name = 'test2'
 
-        assert random_name in SINGLE_LOSS_CLASS_DICT
+        assert SINGLE_LOSS_CLASS_DICT[random_name] == TestOrgLoss2
         assert TestOrgLoss2 in ORG_LOSS_LIST
 
     def test_func2extract_org_output(self):
@@ -308,20 +301,20 @@ class RegistryTest(TestCase):
         def test_func2extract_org_output0():
             pass
 
-        assert get_func2extract_org_output('test_func2extract_org_output0') == test_func2extract_org_output0
+        assert FUNC2EXTRACT_ORG_OUTPUT_DICT['test_func2extract_org_output0'] == test_func2extract_org_output0
 
         @register_func2extract_org_output()
         def test_func2extract_org_output1():
             pass
 
-        assert get_func2extract_org_output('test_func2extract_org_output1') == test_func2extract_org_output1
+        assert FUNC2EXTRACT_ORG_OUTPUT_DICT['test_func2extract_org_output1'] == test_func2extract_org_output1
         random_name = 'custom_func2extract_org_output_name2'
 
         @register_func2extract_org_output(key=random_name)
         def test_func2extract_org_output2():
             pass
 
-        assert get_func2extract_org_output(random_name) == test_func2extract_org_output2
+        assert FUNC2EXTRACT_ORG_OUTPUT_DICT[random_name] == test_func2extract_org_output2
 
     def test_register_optimizer(self):
         @register_optimizer
@@ -329,14 +322,14 @@ class RegistryTest(TestCase):
             def __init__(self):
                 self.name = 'test0'
 
-        assert 'TestOptimizer0' in OPTIM_DICT
+        assert OPTIM_DICT['TestOptimizer0'] == TestOptimizer0
 
         @register_optimizer()
         class TestOptimizer1(object):
             def __init__(self):
                 self.name = 'test1'
 
-        assert 'TestOptimizer1' in OPTIM_DICT
+        assert OPTIM_DICT['TestOptimizer1'] == TestOptimizer1
         random_name = 'custom_optimizer_class_name2'
 
         @register_optimizer(key=random_name)
@@ -344,7 +337,7 @@ class RegistryTest(TestCase):
             def __init__(self):
                 self.name = 'test2'
 
-        assert random_name in OPTIM_DICT
+        assert OPTIM_DICT[random_name] == TestOptimizer2
 
     def test_register_scheduler(self):
         @register_scheduler
@@ -352,14 +345,14 @@ class RegistryTest(TestCase):
             def __init__(self):
                 self.name = 'test0'
 
-        assert 'TestScheduler0' in SCHEDULER_DICT
+        assert SCHEDULER_DICT['TestScheduler0'] == TestScheduler0
 
         @register_scheduler()
         class TestScheduler1(object):
             def __init__(self):
                 self.name = 'test1'
 
-        assert 'TestScheduler1' in SCHEDULER_DICT
+        assert SCHEDULER_DICT['TestScheduler1'] == TestScheduler1
         random_name = 'custom_scheduler_class_name2'
 
         @register_scheduler(key=random_name)
@@ -367,7 +360,7 @@ class RegistryTest(TestCase):
             def __init__(self):
                 self.name = 'test2'
 
-        assert random_name in SCHEDULER_DICT
+        assert SCHEDULER_DICT[random_name] == TestScheduler2
 
     def test_register_adaptation_module(self):
         @register_adaptation_module
@@ -375,14 +368,14 @@ class RegistryTest(TestCase):
             def __init__(self):
                 self.name = 'test0'
 
-        assert 'TestAdaptationModule0' in ADAPTATION_CLASS_DICT
+        assert ADAPTATION_CLASS_DICT['TestAdaptationModule0'] == TestAdaptationModule0
 
         @register_adaptation_module()
         class TestAdaptationModule1(object):
             def __init__(self):
                 self.name = 'test1'
 
-        assert 'TestAdaptationModule1' in ADAPTATION_CLASS_DICT
+        assert ADAPTATION_CLASS_DICT['TestAdaptationModule1'] == TestAdaptationModule1
         random_name = 'custom_adaptation_module_class_name2'
 
         @register_adaptation_module(key=random_name)
@@ -390,7 +383,7 @@ class RegistryTest(TestCase):
             def __init__(self):
                 self.name = 'test2'
 
-        assert random_name in ADAPTATION_CLASS_DICT
+        assert ADAPTATION_CLASS_DICT[random_name] == TestAdaptationModule2
 
     def test_register_model_class(self):
         @register_model_class
@@ -398,14 +391,14 @@ class RegistryTest(TestCase):
             def __init__(self):
                 self.name = 'test0'
 
-        assert 'TestModel0' in MODEL_CLASS_DICT
+        assert MODEL_CLASS_DICT['TestModel0'] == TestModel0
 
         @register_model_class()
         class TestModel1(object):
             def __init__(self):
                 self.name = 'test1'
 
-        assert 'TestModel1' in MODEL_CLASS_DICT
+        assert MODEL_CLASS_DICT['TestModel1'] == TestModel1
         random_name = 'custom_model_class_name2'
 
         @register_model_class(key=random_name)
@@ -413,27 +406,27 @@ class RegistryTest(TestCase):
             def __init__(self):
                 self.name = 'test2'
 
-        assert random_name in MODEL_CLASS_DICT
+        assert MODEL_CLASS_DICT[random_name] == TestModel2
 
     def test_register_model_func(self):
         @register_model_func
         def test_model_func0():
             pass
 
-        assert 'test_model_func0' in MODEL_FUNC_DICT
+        assert MODEL_FUNC_DICT['test_model_func0'] == test_model_func0
 
         @register_model_func()
         def test_model_func1():
             pass
 
-        assert 'test_model_func1' in MODEL_FUNC_DICT
+        assert MODEL_FUNC_DICT['test_model_func1'] == test_model_func1
         random_name = 'custom_model_func_name2'
 
         @register_model_func(key=random_name)
         def test_model_func2():
             pass
 
-        assert random_name in MODEL_FUNC_DICT
+        assert MODEL_FUNC_DICT[random_name] == test_model_func2
 
     def test_register_special_module(self):
         @register_special_module
@@ -441,14 +434,14 @@ class RegistryTest(TestCase):
             def __init__(self):
                 self.name = 'test0'
 
-        assert 'TestSpecialModule0' in SPECIAL_CLASS_DICT
+        assert SPECIAL_CLASS_DICT['TestSpecialModule0'] == TestSpecialModule0
 
         @register_special_module()
         class TestSpecialModule1(object):
             def __init__(self):
                 self.name = 'test1'
 
-        assert 'TestSpecialModule1' in SPECIAL_CLASS_DICT
+        assert SPECIAL_CLASS_DICT['TestSpecialModule1'] == TestSpecialModule1
         random_name = 'custom_special_module_class_name2'
 
         @register_special_module(key=random_name)
@@ -456,4 +449,4 @@ class RegistryTest(TestCase):
             def __init__(self):
                 self.name = 'test2'
 
-        assert random_name in SPECIAL_CLASS_DICT
+        assert SPECIAL_CLASS_DICT[random_name] == TestSpecialModule2
