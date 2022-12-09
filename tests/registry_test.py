@@ -15,6 +15,7 @@ from torchdistill.models.registry import get_model
 from torchdistill.losses.util import register_func2extract_org_output, get_func2extract_org_output
 from torchdistill.optim.registry import register_optimizer, register_scheduler, OPTIM_DICT, SCHEDULER_DICT
 from torchdistill.models.adaptation import register_adaptation_module, ADAPTATION_CLASS_DICT
+from torchdistill.models.registry import register_model_class, register_model_func, MODEL_CLASS_DICT, MODEL_FUNC_DICT
 
 
 class RegistryTest(TestCase):
@@ -313,7 +314,7 @@ class RegistryTest(TestCase):
             pass
 
         assert get_func2extract_org_output('test_func2extract_org_output1') == test_func2extract_org_output1
-        random_name = 'custom_test_func2extract_org_output_name2'
+        random_name = 'custom_func2extract_org_output_name2'
 
         @register_func2extract_org_output(key=random_name)
         def test_func2extract_org_output2():
@@ -389,3 +390,46 @@ class RegistryTest(TestCase):
                 self.name = 'test2'
 
         assert random_name in ADAPTATION_CLASS_DICT
+
+    def test_register_model_class(self):
+        @register_model_class
+        class TestModel0(object):
+            def __init__(self):
+                self.name = 'test0'
+
+        assert 'TestModel0' in MODEL_CLASS_DICT
+
+        @register_model_class()
+        class TestModel1(object):
+            def __init__(self):
+                self.name = 'test1'
+
+        assert 'TestModel1' in MODEL_CLASS_DICT
+        random_name = 'custom_model_class_name2'
+
+        @register_model_class(key=random_name)
+        class TestModel2(object):
+            def __init__(self):
+                self.name = 'test2'
+
+        assert random_name in MODEL_CLASS_DICT
+
+    def test_register_model_func(self):
+        @register_model_func
+        def test_model_func0():
+            pass
+
+        assert 'test_model_func0' in MODEL_FUNC_DICT
+
+        @register_model_func()
+        def test_model_func1():
+            pass
+
+        assert 'test_model_func1' in MODEL_FUNC_DICT
+        random_name = 'custom_model_func_name2'
+
+        @register_model_func(key=random_name)
+        def test_model_func2():
+            pass
+
+        assert random_name in MODEL_FUNC_DICT
