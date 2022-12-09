@@ -177,3 +177,26 @@ class RegistryTest(TestCase):
                 self.name = 'test2'
 
         assert get_transform(random_name) is not None
+
+    def test_register_dataset_wrapper(self):
+        @register_dataset_wrapper
+        class TestDatasetWrapper0(object):
+            def __init__(self):
+                self.name = 'test0'
+
+        assert get_dataset_wrapper('TestDatasetWrapper0') is not None
+
+        @register_dataset_wrapper()
+        class TestDatasetWrapper1(object):
+            def __init__(self):
+                self.name = 'test1'
+
+        assert get_dataset_wrapper('TestDatasetWrapper1') is not None
+        random_name = 'custom_dataset_wrapper_class_name2'
+
+        @register_dataset_wrapper(key=random_name)
+        class TestTransform2(object):
+            def __init__(self):
+                self.name = 'test2'
+
+        assert get_dataset_wrapper(random_name) is not None
