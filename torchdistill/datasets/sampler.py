@@ -17,9 +17,18 @@ logger = def_logger.getChild(__name__)
 BATCH_SAMPLER_CLASS_DICT = dict()
 
 
-def register_batch_sampler_class(cls):
-    BATCH_SAMPLER_CLASS_DICT[cls.__name__] = cls
-    return cls
+def register_batch_sampler_class(arg=None, **kwargs):
+    def _register_batch_sampler_class(cls):
+        key = kwargs.get('key')
+        if key is None:
+            key = cls.__name__
+
+        BATCH_SAMPLER_CLASS_DICT[key] = cls
+        return cls
+
+    if callable(arg):
+        return _register_batch_sampler_class(arg)
+    return _register_batch_sampler_class
 
 
 @register_batch_sampler_class

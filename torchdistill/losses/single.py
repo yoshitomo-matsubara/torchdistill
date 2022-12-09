@@ -14,20 +14,47 @@ ORG_LOSS_LIST = list()
 logger = def_logger.getChild(__name__)
 
 
-def register_loss_wrapper(cls):
-    LOSS_WRAPPER_CLASS_DICT[cls.__name__] = cls
-    return cls
+def register_loss_wrapper(arg=None, **kwargs):
+    def _register_loss_wrapper(cls):
+        key = kwargs.get('key')
+        if key is None:
+            key = cls.__name__
+
+        LOSS_WRAPPER_CLASS_DICT[key] = cls
+        return cls
+
+    if callable(arg):
+        return _register_loss_wrapper(arg)
+    return _register_loss_wrapper
 
 
-def register_single_loss(cls):
-    SINGLE_LOSS_CLASS_DICT[cls.__name__] = cls
-    return cls
+def register_single_loss(arg=None, **kwargs):
+    def _register_single_loss(cls):
+        key = kwargs.get('key')
+        if key is None:
+            key = cls.__name__
+
+        SINGLE_LOSS_CLASS_DICT[key] = cls
+        return cls
+
+    if callable(arg):
+        return _register_single_loss(arg)
+    return _register_single_loss
 
 
-def register_org_loss(cls):
-    SINGLE_LOSS_CLASS_DICT[cls.__name__] = cls
-    ORG_LOSS_LIST.append(cls)
-    return cls
+def register_org_loss(arg=None, **kwargs):
+    def _register_org_loss(cls):
+        key = kwargs.get('key')
+        if key is None:
+            key = cls.__name__
+
+        SINGLE_LOSS_CLASS_DICT[key] = cls
+        ORG_LOSS_LIST.append(cls)
+        return cls
+
+    if callable(arg):
+        return _register_org_loss(arg)
+    return _register_org_loss
 
 
 def extract_feature_map(io_dict, feature_map_config):

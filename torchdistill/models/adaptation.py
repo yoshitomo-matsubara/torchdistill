@@ -9,9 +9,18 @@ ADAPTATION_CLASS_DICT = dict()
 MODULE_CLASS_DICT = nn.__dict__
 
 
-def register_adaptation_module(cls):
-    ADAPTATION_CLASS_DICT[cls.__name__] = cls
-    return cls
+def register_adaptation_module(arg=None, **kwargs):
+    def _register_adaptation_module(cls):
+        key = kwargs.get('key')
+        if key is None:
+            key = cls.__name__
+
+        ADAPTATION_CLASS_DICT[key] = cls
+        return cls
+
+    if callable(arg):
+        return _register_adaptation_module(arg)
+    return _register_adaptation_module
 
 
 @register_adaptation_module

@@ -10,14 +10,32 @@ SAMPLE_LOADER_CLASS_DICT = dict()
 SAMPLE_LOADER_FUNC_DICT = dict()
 
 
-def register_sample_loader_class(cls):
-    SAMPLE_LOADER_CLASS_DICT[cls.__name__] = cls
-    return cls
+def register_sample_loader_class(arg=None, **kwargs):
+    def _register_sample_loader_class(cls):
+        key = kwargs.get('key')
+        if key is None:
+            key = cls.__name__
+
+        SAMPLE_LOADER_CLASS_DICT[key] = cls
+        return cls
+
+    if callable(arg):
+        return _register_sample_loader_class(arg)
+    return _register_sample_loader_class
 
 
-def register_sample_loader_func(func):
-    SAMPLE_LOADER_FUNC_DICT[func.__name__] = func
-    return func
+def register_sample_loader_func(arg=None, **kwargs):
+    def _register_sample_loader_func(func):
+        key = kwargs.get('key')
+        if key is None:
+            key = func.__name__
+
+        SAMPLE_LOADER_FUNC_DICT[key] = func
+        return func
+
+    if callable(arg):
+        return _register_sample_loader_func(arg)
+    return _register_sample_loader_func
 
 
 @register_sample_loader_class

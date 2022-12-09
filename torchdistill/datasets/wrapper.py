@@ -16,9 +16,18 @@ def default_idx2subpath(index):
     return os.path.join(digits_str[-4:], digits_str)
 
 
-def register_dataset_wrapper(cls):
-    WRAPPER_CLASS_DICT[cls.__name__] = cls
-    return cls
+def register_dataset_wrapper(arg=None, **kwargs):
+    def _register_dataset_wrapper(cls):
+        key = kwargs.get('key')
+        if key is None:
+            key = cls.__name__
+
+        WRAPPER_CLASS_DICT[key] = cls
+        return cls
+
+    if callable(arg):
+        return _register_dataset_wrapper(arg)
+    return _register_dataset_wrapper
 
 
 class BaseDatasetWrapper(Dataset):

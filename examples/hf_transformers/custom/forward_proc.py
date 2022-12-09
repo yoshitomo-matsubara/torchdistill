@@ -9,10 +9,10 @@ def forward_batch_as_kwargs(model, sample_batch, targets=None, supp_dict=None):
 @register_forward_proc_func
 def forward_batch_as_kwargs_for_distillbert(model, sample_batch, targets=None, supp_dict=None):
     inputs = {
-        "input_ids": sample_batch[0],
-        "attention_mask": sample_batch[1],
-        "start_positions": sample_batch[3],
-        "end_positions": sample_batch[4],
+        'input_ids': sample_batch[0],
+        'attentio_mask': sample_batch[1],
+        'start_positions': sample_batch[3],
+        'end_positions': sample_batch[4],
     }
     return model(**inputs)
 

@@ -6,14 +6,32 @@ OPTIM_DICT = misc_util.get_classes_as_dict('torch.optim')
 SCHEDULER_DICT = misc_util.get_classes_as_dict('torch.optim.lr_scheduler')
 
 
-def register_optimizer(cls_or_func):
-    OPTIM_DICT[cls_or_func.__name__] = cls_or_func
-    return cls_or_func
+def register_optimizer(arg=None, **kwargs):
+    def _register_optimizer(cls_or_func):
+        key = kwargs.get('key')
+        if key is None:
+            key = cls_or_func.__name__
+
+        OPTIM_DICT[key] = cls_or_func
+        return cls_or_func
+
+    if callable(arg):
+        return _register_optimizer(arg)
+    return _register_optimizer
 
 
-def register_scheduler(cls_or_func):
-    SCHEDULER_DICT[cls_or_func.__name__] = cls_or_func
-    return cls_or_func
+def register_scheduler(arg=None, **kwargs):
+    def _register_scheduler(cls_or_func):
+        key = kwargs.get('key')
+        if key is None:
+            key = cls_or_func.__name__
+
+        SCHEDULER_DICT[key] = cls_or_func
+        return cls_or_func
+
+    if callable(arg):
+        return _register_scheduler(arg)
+    return _register_scheduler
 
 
 def get_optimizer(module, optim_type, param_dict=None, filters_params=True, **kwargs):

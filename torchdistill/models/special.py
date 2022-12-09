@@ -13,9 +13,18 @@ logger = def_logger.getChild(__name__)
 SPECIAL_CLASS_DICT = dict()
 
 
-def register_special_module(cls):
-    SPECIAL_CLASS_DICT[cls.__name__] = cls
-    return cls
+def register_special_module(arg=None, **kwargs):
+    def _register_special_module(cls):
+        key = kwargs.get('key')
+        if key is None:
+            key = cls.__name__
+
+        SPECIAL_CLASS_DICT[key] = cls
+        return cls
+
+    if callable(arg):
+        return _register_special_module(arg)
+    return _register_special_module
 
 
 class SpecialModule(nn.Module):

@@ -1,9 +1,18 @@
 FUNC2EXTRACT_ORG_OUTPUT_DICT = dict()
 
 
-def register_func2extract_org_output(func):
-    FUNC2EXTRACT_ORG_OUTPUT_DICT[func.__name__] = func
-    return func
+def register_func2extract_org_output(arg=None, **kwargs):
+    def _register_func2extract_org_output(func):
+        key = kwargs.get('key')
+        if key is None:
+            key = func.__name__
+
+        FUNC2EXTRACT_ORG_OUTPUT_DICT[key] = func
+        return func
+
+    if callable(arg):
+        return _register_func2extract_org_output(arg)
+    return _register_func2extract_org_output
 
 
 @register_func2extract_org_output
