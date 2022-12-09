@@ -14,6 +14,7 @@ from torchdistill.losses.single import register_loss_wrapper, register_single_lo
 from torchdistill.models.registry import get_model
 from torchdistill.losses.util import register_func2extract_org_output, get_func2extract_org_output
 from torchdistill.optim.registry import register_optimizer, register_scheduler, OPTIM_DICT, SCHEDULER_DICT
+from torchdistill.models.adaptation import register_adaptation_module, ADAPTATION_CLASS_DICT
 
 
 class RegistryTest(TestCase):
@@ -365,3 +366,26 @@ class RegistryTest(TestCase):
                 self.name = 'test2'
 
         assert random_name in SCHEDULER_DICT
+
+    def test_register_adaptation_module(self):
+        @register_adaptation_module
+        class TestAdaptationModule0(object):
+            def __init__(self):
+                self.name = 'test0'
+
+        assert 'TestAdaptationModule0' in ADAPTATION_CLASS_DICT
+
+        @register_adaptation_module()
+        class TestAdaptationModule1(object):
+            def __init__(self):
+                self.name = 'test1'
+
+        assert 'TestAdaptationModule1' in ADAPTATION_CLASS_DICT
+        random_name = 'custom_adaptation_module_class_name2'
+
+        @register_adaptation_module(key=random_name)
+        class TestAdaptationModule2(object):
+            def __init__(self):
+                self.name = 'test2'
+
+        assert random_name in ADAPTATION_CLASS_DICT
