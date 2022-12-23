@@ -2,6 +2,7 @@ import builtins as __builtin__
 import logging
 import os
 import random
+from importlib import import_module
 
 import numpy as np
 import torch
@@ -12,6 +13,33 @@ from torchdistill.common.file_util import check_if_exists, make_parent_dirs
 from torchdistill.common.module_util import check_if_wrapped
 
 logger = def_logger.getChild(__name__)
+
+
+def import_dependencies(dependencies=None):
+    if dependencies is None:
+        return
+
+    for dependency in dependencies:
+        package = None
+        if isinstance(dependency, dict):
+            import_module(**dependency)
+            name = dependency.get('name', None)
+            package = dependency.get('package', None)
+        elif isinstance(dependency, (list, tuple)):
+            import_module(*dependency)
+            name = dependency[0]
+            if len(dependency) >= 2:
+                package = dependency[1]
+        elif isinstance(dependency, str):
+            import_module(dependency)
+            name = dependency
+        else:
+            raise TypeError(f'Failed to import module with `{dependency}`')
+        if name is None:
+            logger.info(f'Imported `{name}`')
+        else:
+            logger.info(f'Imported `{name}` from package `{package}`')
+
 
 
 def setup_for_distributed(is_master):
