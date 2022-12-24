@@ -42,7 +42,7 @@ from torchdistill.common.main_util import is_main_process, setup_for_distributed
 from torchdistill.core.distillation import get_distillation_box
 from torchdistill.core.training import get_training_box
 from torchdistill.datasets import util
-from torchdistill.datasets.registry import register_collate_func
+from torchdistill.datasets.collator import register_collate_func
 from torchdistill.misc.log import setup_log_file, SmoothedValue, MetricLogger
 
 logger = def_logger.getChild(__name__)
