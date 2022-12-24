@@ -1,23 +1,6 @@
-from types import BuiltinFunctionType, BuiltinMethodType, FunctionType
-
 import torch
 
-COLLATE_FUNC_DICT = dict()
-
-
-def register_collate_func(arg=None, **kwargs):
-    def _register_collate_func(func):
-        key = kwargs.get('key')
-        if key is None:
-            key = func.__name__ if isinstance(func, (BuiltinMethodType, BuiltinFunctionType, FunctionType)) \
-                else type(func).__name__
-
-        COLLATE_FUNC_DICT[key] = func
-        return func
-
-    if callable(arg):
-        return _register_collate_func(arg)
-    return _register_collate_func
+from .registry import register_collate_func
 
 
 @register_collate_func
@@ -51,11 +34,3 @@ def coco_seg_eval_collate_fn(batch):
     batched_imgs = _cat_list(images, fill_value=0)
     batched_targets = _cat_list(targets, fill_value=255)
     return batched_imgs, batched_targets
-
-
-def get_collate_func(func_name):
-    if func_name is None:
-        return None
-    elif func_name in COLLATE_FUNC_DICT:
-        return COLLATE_FUNC_DICT[func_name]
-    raise ValueError('No collate function `{}` registered'.format(func_name))

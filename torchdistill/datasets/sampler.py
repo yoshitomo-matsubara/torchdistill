@@ -10,25 +10,11 @@ from PIL import Image
 from torch.utils.data.sampler import BatchSampler, Sampler
 from torch.utils.model_zoo import tqdm
 
-from torchdistill.common.constant import def_logger
-from torchdistill.datasets.wrapper import BaseDatasetWrapper
+from .registry import register_batch_sampler_class
+from ..common.constant import def_logger
+from ..datasets.wrapper import BaseDatasetWrapper
 
 logger = def_logger.getChild(__name__)
-BATCH_SAMPLER_CLASS_DICT = dict()
-
-
-def register_batch_sampler_class(arg=None, **kwargs):
-    def _register_batch_sampler_class(cls):
-        key = kwargs.get('key')
-        if key is None:
-            key = cls.__name__
-
-        BATCH_SAMPLER_CLASS_DICT[key] = cls
-        return cls
-
-    if callable(arg):
-        return _register_batch_sampler_class(arg)
-    return _register_batch_sampler_class
 
 
 @register_batch_sampler_class
@@ -208,17 +194,3 @@ def create_aspect_ratio_groups(dataset, k=0):
     logger.info('Using {} as bins for aspect ratio quantization'.format(fbins))
     logger.info('Count of instances per bin: {}'.format(counts))
     return groups
-
-
-def get_batch_sampler(dataset, class_name, *args, **kwargs):
-    if class_name is None:
-        return None
-
-    if class_name not in BATCH_SAMPLER_CLASS_DICT and class_name != 'BatchSampler':
-        raise ValueError('No batch sampler `{}` registered.'.format(class_name))
-
-    batch_sampler_cls = BatchSampler if class_name == 'BatchSampler' else BATCH_SAMPLER_CLASS_DICT[class_name]
-    if batch_sampler_cls == GroupedBatchSampler:
-        group_ids = create_aspect_ratio_groups(dataset, k=kwargs.pop('aspect_ratio_group_factor'))
-        return batch_sampler_cls(*args, group_ids, **kwargs)
-    return batch_sampler_cls(*args, **kwargs)
