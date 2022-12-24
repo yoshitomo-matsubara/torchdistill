@@ -4,57 +4,10 @@ import torch
 from torch import nn
 from torch.nn.functional import adaptive_avg_pool2d, adaptive_max_pool2d, normalize, cosine_similarity
 
-from torchdistill.common.constant import def_logger
-from torchdistill.losses.registry import get_loss
-
-LOSS_WRAPPER_CLASS_DICT = dict()
-SINGLE_LOSS_CLASS_DICT = dict()
-ORG_LOSS_LIST = list()
+from .registry import register_loss_wrapper, register_single_loss, register_org_loss
+from ..common.constant import def_logger
 
 logger = def_logger.getChild(__name__)
-
-
-def register_loss_wrapper(arg=None, **kwargs):
-    def _register_loss_wrapper(cls):
-        key = kwargs.get('key')
-        if key is None:
-            key = cls.__name__
-
-        LOSS_WRAPPER_CLASS_DICT[key] = cls
-        return cls
-
-    if callable(arg):
-        return _register_loss_wrapper(arg)
-    return _register_loss_wrapper
-
-
-def register_single_loss(arg=None, **kwargs):
-    def _register_single_loss(cls):
-        key = kwargs.get('key')
-        if key is None:
-            key = cls.__name__
-
-        SINGLE_LOSS_CLASS_DICT[key] = cls
-        return cls
-
-    if callable(arg):
-        return _register_single_loss(arg)
-    return _register_single_loss
-
-
-def register_org_loss(arg=None, **kwargs):
-    def _register_org_loss(cls):
-        key = kwargs.get('key')
-        if key is None:
-            key = cls.__name__
-
-        SINGLE_LOSS_CLASS_DICT[key] = cls
-        ORG_LOSS_LIST.append(cls)
-        return cls
-
-    if callable(arg):
-        return _register_org_loss(arg)
-    return _register_org_loss
 
 
 def extract_feature_map(io_dict, feature_map_config):
@@ -93,21 +46,6 @@ class SimpleLossWrapper(nn.Module):
 
     def __str__(self):
         return self.single_loss.__str__()
-
-
-@register_single_loss
-class OrgDictLoss(nn.Module):
-    def __init__(self, single_loss, factors, **kwargs):
-        super().__init__()
-        self.single_loss = get_single_loss(single_loss)
-        self.factor_dict = factors
-
-    def forward(self, student_output, targets, *args, **kwargs):
-        loss = 0
-        for key, input_batch in student_output.items():
-            factor = self.factor_dict.get(key, 1)
-            loss += factor * self.single_loss(input_batch, targets, *args, **kwargs)
-        return loss
 
 
 @register_org_loss
@@ -942,21 +880,3 @@ class AffinityLoss(nn.Module):
                  - torch.bmm(teacher_flat_outputs[:, i].unsqueeze(2), teacher_flat_outputs[:, i].unsqueeze(1))) / hw
             ).norm(p=2, dim=(1, 2))
         return total_squared_losses.mean() if self.reduction == 'mean' else total_squared_losses.sum()
-
-
-def get_loss_wrapper(single_loss, params_config, wrapper_config):
-    wrapper_type = wrapper_config.get('type', None)
-    if wrapper_type is None:
-        return SimpleLossWrapper(single_loss, params_config)
-    elif wrapper_type in LOSS_WRAPPER_CLASS_DICT:
-        return LOSS_WRAPPER_CLASS_DICT[wrapper_type](single_loss, params_config, **wrapper_config.get('params', dict()))
-    raise ValueError('No loss wrapper `{}` registered'.format(wrapper_type))
-
-
-def get_single_loss(single_criterion_config, params_config=None):
-    loss_type = single_criterion_config['type']
-    single_loss = SINGLE_LOSS_CLASS_DICT[loss_type](**single_criterion_config['params']) \
-        if loss_type in SINGLE_LOSS_CLASS_DICT else get_loss(loss_type, single_criterion_config['params'])
-    if params_config is None:
-        return single_loss
-    return get_loss_wrapper(single_loss, params_config, params_config.get('wrapper', dict()))
