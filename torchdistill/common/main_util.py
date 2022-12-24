@@ -8,9 +8,9 @@ import numpy as np
 import torch
 import torch.distributed as dist
 
-from torchdistill.common.constant import def_logger
-from torchdistill.common.file_util import check_if_exists, make_parent_dirs
-from torchdistill.common.module_util import check_if_wrapped
+from .constant import def_logger
+from .file_util import check_if_exists, make_parent_dirs
+from .module_util import check_if_wrapped
 
 logger = def_logger.getChild(__name__)
 
