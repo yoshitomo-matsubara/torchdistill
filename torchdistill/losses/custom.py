@@ -1,7 +1,6 @@
 from torch import nn
 
-from .registry import register_custom_loss
-from .single import get_single_loss
+from .registry import register_custom_loss, get_single_loss
 from ..common.constant import def_logger
 
 logger = def_logger.getChild(__name__)
