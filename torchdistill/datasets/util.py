@@ -8,14 +8,12 @@ from torch.utils.data.distributed import DistributedSampler
 from torchvision.datasets import PhotoTour, Kinetics400, HMDB51, UCF101, Cityscapes, CocoCaptions, CocoDetection, \
     SBDataset, VOCSegmentation, VOCDetection
 
-from torchdistill.common.constant import def_logger
-from torchdistill.datasets.coco import ImageToTensor, Compose, CocoRandomHorizontalFlip, get_coco
-from torchdistill.datasets.collator import get_collate_func
-from torchdistill.datasets.registry import DATASET_DICT
-from torchdistill.datasets.sample_loader import get_sample_loader
-from torchdistill.datasets.sampler import get_batch_sampler
-from torchdistill.datasets.transform import TRANSFORM_CLASS_DICT, CustomCompose
-from torchdistill.datasets.wrapper import default_idx2subpath, BaseDatasetWrapper, CacheableDataset, get_dataset_wrapper
+from ..common.constant import def_logger
+from ..datasets.coco import ImageToTensor, Compose, CocoRandomHorizontalFlip, get_coco
+from ..datasets.registry import DATASET_DICT, TRANSFORM_CLASS_DICT, \
+    get_collate_func, get_sample_loader, get_batch_sampler, get_dataset_wrapper
+from ..datasets.transform import CustomCompose
+from ..datasets.wrapper import default_idx2subpath, BaseDatasetWrapper, CacheableDataset
 
 logger = def_logger.getChild(__name__)
 
@@ -183,7 +181,7 @@ def build_data_loader(dataset, data_loader_config, distributed, accelerator=None
         else RandomSampler(dataset) if data_loader_config.get('random_sample', False) else SequentialSampler(dataset)
     batch_sampler_config = data_loader_config.get('batch_sampler', None)
     batch_sampler = None if batch_sampler_config is None \
-        else get_batch_sampler(dataset, batch_sampler_config['type'], sampler, **batch_sampler_config['params'])
+        else get_batch_sampler(batch_sampler_config['type'], sampler, **batch_sampler_config['params'])
     collate_fn = get_collate_func(data_loader_config.get('collate_fn', None))
     drop_last = data_loader_config.get('drop_last', False)
     if batch_sampler is not None:

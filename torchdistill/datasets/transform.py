@@ -9,11 +9,11 @@ from torchvision.transforms import RandomResizedCrop, Resize
 from torchvision.transforms import functional as F
 from torchvision.transforms.functional import InterpolationMode
 
-from torchdistill.common.constant import def_logger
+from .registry import register_transform_class
+from ..common.constant import def_logger
 
 logger = def_logger.getChild(__name__)
 
-TRANSFORM_CLASS_DICT = dict()
 INTERPOLATION_MODE_DICT = {
     'nearest': InterpolationMode.NEAREST,
     'bicubic': InterpolationMode.BICUBIC,
@@ -22,20 +22,6 @@ INTERPOLATION_MODE_DICT = {
     'hamming': InterpolationMode.HAMMING,
     'lanczos': InterpolationMode.LANCZOS
 }
-
-
-def register_transform_class(arg=None, **kwargs):
-    def _register_transform_class(cls):
-        key = kwargs.get('key')
-        if key is None:
-            key = cls.__name__
-
-        TRANSFORM_CLASS_DICT[key] = cls
-        return cls
-
-    if callable(arg):
-        return _register_transform_class(arg)
-    return _register_transform_class
 
 
 def pad_if_smaller(img, size, fill=0):
@@ -155,9 +141,3 @@ class WrappedResize(Resize):
         if isinstance(interpolation, str):
             interpolation = INTERPOLATION_MODE_DICT.get(interpolation, None)
         super().__init__(**kwargs, interpolation=interpolation)
-
-
-def get_transform(obj_name, *args, **kwargs):
-    if obj_name in TRANSFORM_CLASS_DICT:
-        return TRANSFORM_CLASS_DICT[obj_name](*args, **kwargs)
-    raise ValueError('No transform `{}` registered.'.format(obj_name))

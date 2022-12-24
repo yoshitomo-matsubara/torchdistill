@@ -6,7 +6,7 @@ from torch.optim.lr_scheduler import ReduceLROnPlateau, LambdaLR
 from torchdistill.common.constant import def_logger
 from torchdistill.common.module_util import check_if_wrapped, freeze_module_params, get_module, \
     unfreeze_module_params, get_updatable_param_names
-from torchdistill.core.forward_proc import get_forward_proc_func
+from torchdistill.core.registry import get_forward_proc_func
 from torchdistill.core.util import set_hooks, wrap_model, clear_io_dict, extract_io_dict, update_io_dict
 from torchdistill.datasets.util import build_data_loaders
 from torchdistill.losses.custom import get_custom_loss

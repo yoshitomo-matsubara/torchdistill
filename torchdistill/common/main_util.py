@@ -41,7 +41,6 @@ def import_dependencies(dependencies=None):
             logger.info(f'Imported `{name}` from package `{package}`')
 
 
-
 def setup_for_distributed(is_master):
     """
     This function disables logging when not in master process

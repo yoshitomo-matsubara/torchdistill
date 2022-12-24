@@ -1,13 +1,10 @@
 from unittest import TestCase
 
-from torchdistill.core.forward_proc import register_forward_proc_func, PROC_FUNC_DICT
-from torchdistill.datasets.collator import register_collate_func, COLLATE_FUNC_DICT
-from torchdistill.datasets.registry import register_dataset, DATASET_DICT
-from torchdistill.datasets.sample_loader import register_sample_loader_class, register_sample_loader_func, \
-    SAMPLE_LOADER_CLASS_DICT, SAMPLE_LOADER_FUNC_DICT
-from torchdistill.datasets.sampler import register_batch_sampler_class, BATCH_SAMPLER_CLASS_DICT
-from torchdistill.datasets.transform import register_transform_class, TRANSFORM_CLASS_DICT
-from torchdistill.datasets.wrapper import register_dataset_wrapper, WRAPPER_CLASS_DICT
+from torchdistill.core.registry import register_forward_proc_func, PROC_FUNC_DICT
+from torchdistill.datasets.registry import register_dataset, register_collate_func, register_sample_loader_class, \
+    register_sample_loader_func, register_batch_sampler_class, register_transform_class, register_dataset_wrapper, \
+    DATASET_DICT, COLLATE_FUNC_DICT, SAMPLE_LOADER_CLASS_DICT, SAMPLE_LOADER_FUNC_DICT, BATCH_SAMPLER_CLASS_DICT, \
+    TRANSFORM_CLASS_DICT, WRAPPER_CLASS_DICT
 from torchdistill.losses.custom import register_custom_loss, CUSTOM_LOSS_CLASS_DICT
 from torchdistill.losses.single import register_loss_wrapper, register_single_loss, register_org_loss, \
     LOSS_WRAPPER_CLASS_DICT, SINGLE_LOSS_CLASS_DICT, ORG_LOSS_LIST

@@ -4,30 +4,16 @@ import numpy as np
 import torch
 from torch.utils.data import Dataset
 
-from torchdistill.common import file_util
-from torchdistill.common.constant import def_logger
+from .registry import register_dataset_wrapper
+from ..common import file_util
+from ..common.constant import def_logger
 
 logger = def_logger.getChild(__name__)
-WRAPPER_CLASS_DICT = dict()
 
 
 def default_idx2subpath(index):
     digits_str = '{:04d}'.format(index)
     return os.path.join(digits_str[-4:], digits_str)
-
-
-def register_dataset_wrapper(arg=None, **kwargs):
-    def _register_dataset_wrapper(cls):
-        key = kwargs.get('key')
-        if key is None:
-            key = cls.__name__
-
-        WRAPPER_CLASS_DICT[key] = cls
-        return cls
-
-    if callable(arg):
-        return _register_dataset_wrapper(arg)
-    return _register_dataset_wrapper
 
 
 class BaseDatasetWrapper(Dataset):
@@ -122,9 +108,3 @@ class SSKDDatasetWrapper(BaseDatasetWrapper):
                               self.transform(sample.rotate(180, expand=True)).detach(),
                               self.transform(sample.rotate(270, expand=True)).detach()])
         return sample, target, supp_dict
-
-
-def get_dataset_wrapper(class_name, *args, **kwargs):
-    if class_name not in WRAPPER_CLASS_DICT:
-        return WRAPPER_CLASS_DICT[class_name](*args, **kwargs)
-    raise ValueError('No dataset wrapper `{}` registered.'.format(class_name))

@@ -11,7 +11,7 @@ from pycocotools.coco import COCO
 from pycocotools.cocoeval import COCOeval
 from torch._six import string_classes
 
-from torchdistill.common.main_util import get_world_size
+from ..common.main_util import get_world_size
 
 
 class CocoEvaluator(object):
