@@ -6,9 +6,9 @@ from logging import FileHandler, Formatter
 import torch
 import torch.distributed as dist
 
-from torchdistill.common.constant import def_logger, LOGGING_FORMAT
-from torchdistill.common.file_util import make_parent_dirs
-from torchdistill.common.main_util import is_dist_avail_and_initialized
+from ..common.constant import def_logger, LOGGING_FORMAT
+from ..common.file_util import make_parent_dirs
+from ..common.main_util import is_dist_avail_and_initialized
 
 logger = def_logger.getChild(__name__)
 
