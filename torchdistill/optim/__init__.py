@@ -1,1 +1,1 @@
-from torchdistill.optim import scheduler
+from . import scheduler
