@@ -1,7 +1,6 @@
-from torchdistill.models.adaptation import ADAPTATION_CLASS_DICT
-from torchdistill.models.classification import CLASSIFICATION_MODEL_FUNC_DICT
-from torchdistill.models.custom import CUSTOM_MODEL_CLASS_DICT, CUSTOM_MODEL_FUNC_DICT
-from torchdistill.models.special import SPECIAL_CLASS_DICT
+from .registry import ADAPTATION_CLASS_DICT, SPECIAL_CLASS_DICT
+from .classification import CLASSIFICATION_MODEL_FUNC_DICT
+from .custom import CUSTOM_MODEL_CLASS_DICT, CUSTOM_MODEL_FUNC_DICT
 
 MODEL_DICT = dict()
 

@@ -2,25 +2,10 @@ from collections import OrderedDict
 
 from torch import nn
 
-from torchdistill.common.constant import def_logger
+from .registry import register_adaptation_module
+from ..common.constant import def_logger
 
 logger = def_logger.getChild(__name__)
-ADAPTATION_CLASS_DICT = dict()
-MODULE_CLASS_DICT = nn.__dict__
-
-
-def register_adaptation_module(arg=None, **kwargs):
-    def _register_adaptation_module(cls):
-        key = kwargs.get('key')
-        if key is None:
-            key = cls.__name__
-
-        ADAPTATION_CLASS_DICT[key] = cls
-        return cls
-
-    if callable(arg):
-        return _register_adaptation_module(arg)
-    return _register_adaptation_module
 
 
 @register_adaptation_module
@@ -39,11 +24,3 @@ class ConvReg(nn.Sequential):
         if uses_relu:
             module_dict['relu'] = nn.ReLU(inplace=True)
         super().__init__(module_dict)
-
-
-def get_adaptation_module(class_name, *args, **kwargs):
-    if class_name in ADAPTATION_CLASS_DICT:
-        return ADAPTATION_CLASS_DICT[class_name](*args, **kwargs)
-    elif class_name in MODULE_CLASS_DICT:
-        return MODULE_CLASS_DICT[class_name](*args, **kwargs)
-    raise ValueError('No adaptation module `{}` registered'.format(class_name))

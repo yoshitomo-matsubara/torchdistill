@@ -3,28 +3,14 @@ import os
 import numpy as np
 import torch
 from torch import nn
-from torch.nn import functional
 from torch.jit.annotations import Tuple, List
+from torch.nn import functional
 
-from torchdistill.common.constant import def_logger
-from torchdistill.models.util import wrap_if_distributed, load_module_ckpt, save_module_ckpt, redesign_model
+from .registry import register_special_module, get_special_module
+from .util import wrap_if_distributed, load_module_ckpt, save_module_ckpt, redesign_model
+from ..common.constant import def_logger
 
 logger = def_logger.getChild(__name__)
-SPECIAL_CLASS_DICT = dict()
-
-
-def register_special_module(arg=None, **kwargs):
-    def _register_special_module(cls):
-        key = kwargs.get('key')
-        if key is None:
-            key = cls.__name__
-
-        SPECIAL_CLASS_DICT[key] = cls
-        return cls
-
-    if callable(arg):
-        return _register_special_module(arg)
-    return _register_special_module
 
 
 class SpecialModule(nn.Module):
@@ -526,12 +512,6 @@ class Student4KTAAD(SpecialModule):
         feature_maps = io_dict[self.input_module_path]['output']
         self.feature_adapter(feature_maps)
         self.affinity_adapter(feature_maps)
-
-
-def get_special_module(class_name, *args, **kwargs):
-    if class_name in SPECIAL_CLASS_DICT:
-        return SPECIAL_CLASS_DICT[class_name](*args, **kwargs)
-    raise ValueError('No special module `{}` registered'.format(class_name))
 
 
 def build_special_module(model_config, **kwargs):

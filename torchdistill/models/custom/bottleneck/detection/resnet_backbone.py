@@ -3,8 +3,8 @@ from torchvision.models import resnet
 from torchvision.models.detection.backbone_utils import BackboneWithFPN
 from torchvision.ops import misc as misc_nn_ops
 
-from torchdistill.models.custom.bottleneck.base import BottleneckBase
-from torchdistill.models.custom.bottleneck.processor import get_bottleneck_processor
+from ..base import BottleneckBase
+from ..registry import get_bottleneck_processor
 
 
 class Bottleneck4SmallResNet(BottleneckBase):

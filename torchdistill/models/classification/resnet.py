@@ -5,7 +5,7 @@ import torch.nn as nn
 from torch import Tensor
 from torchvision.models.resnet import BasicBlock, conv1x1
 
-from torchdistill.models.registry import register_model_func
+from ..registry import register_model_func
 
 """
 Refactored https://github.com/pytorch/vision/blob/master/torchvision/models/resnet.py

@@ -5,11 +5,11 @@ from torch import nn
 from torch.nn import Module, Sequential
 from torch.nn.parallel import DistributedDataParallel
 
-from torchdistill.common.constant import def_logger
-from torchdistill.common.file_util import make_parent_dirs
-from torchdistill.common.main_util import is_main_process, save_on_master
-from torchdistill.common.module_util import check_if_wrapped, get_module, get_frozen_param_names, freeze_module_params
-from torchdistill.models.adaptation import get_adaptation_module
+from .registry import get_adaptation_module
+from ..common.constant import def_logger
+from ..common.file_util import make_parent_dirs
+from ..common.main_util import is_main_process, save_on_master
+from ..common.module_util import check_if_wrapped, get_module, get_frozen_param_names, freeze_module_params
 
 logger = def_logger.getChild(__name__)
 

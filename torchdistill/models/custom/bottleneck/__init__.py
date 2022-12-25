@@ -1,1 +1,1 @@
-from torchdistill.models.custom.bottleneck import classification, detection
+from . import classification, detection, processor

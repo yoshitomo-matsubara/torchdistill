@@ -6,18 +6,12 @@ import torch
 from PIL import Image
 from torchvision.transforms import functional
 
-from torchdistill.common import file_util
-from torchdistill.common import tensor_util
-from torchdistill.common.constant import def_logger
+from .registry import register_bottleneck_processor
+from ....common import file_util, tensor_util
+from ....common.constant import def_logger
 
 logger = def_logger.getChild(__name__)
 JpegCompressedTensor = namedtuple('JpegCompressedTensor', ['tensor_buffer', 'scale', 'zero_point'])
-CLASS_DICT = dict()
-
-
-def register_bottleneck_processor(cls):
-    CLASS_DICT[cls.__name__] = cls
-    return cls
 
 
 @register_bottleneck_processor
@@ -78,12 +72,3 @@ class JpegDecompressor(object):
 
     def __call__(self, jc_tensors):
         return torch.stack([self.decompress(jc_tensor) for jc_tensor in jc_tensors])
-
-
-def get_bottleneck_processor(class_name, *args, **kwargs):
-    if class_name not in CLASS_DICT:
-        logger.info('No bottleneck processor called `{}` is registered.'.format(class_name))
-        return None
-
-    instance = CLASS_DICT[class_name](*args, **kwargs)
-    return instance

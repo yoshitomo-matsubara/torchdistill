@@ -4,9 +4,9 @@ import torch
 from torch import nn
 from torchvision.models import densenet169, densenet201
 
-from torchdistill.models.custom.bottleneck.base import BottleneckBase
-from torchdistill.models.custom.bottleneck.processor import get_bottleneck_processor
-from torchdistill.models.registry import register_model_class, register_model_func
+from ..base import BottleneckBase
+from ..registry import get_bottleneck_processor
+from ....registry import register_model_class, register_model_func
 
 
 @register_model_class
