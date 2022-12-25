@@ -9,9 +9,7 @@ from torchdistill.common.module_util import check_if_wrapped, freeze_module_para
 from torchdistill.core.registry import get_forward_proc_func
 from torchdistill.core.util import set_hooks, wrap_model, clear_io_dict, extract_io_dict, update_io_dict
 from torchdistill.datasets.util import build_data_loaders
-from torchdistill.losses.custom import get_custom_loss
-from torchdistill.losses.single import get_single_loss
-from torchdistill.losses.util import get_func2extract_org_output
+from torchdistill.losses.registry import get_custom_loss, get_single_loss, get_func2extract_org_output
 from torchdistill.models.special import SpecialModule, build_special_module
 from torchdistill.models.util import redesign_model
 from torchdistill.optim.registry import get_optimizer, get_scheduler

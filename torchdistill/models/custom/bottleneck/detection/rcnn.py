@@ -4,8 +4,8 @@ from torchvision.models.detection.keypoint_rcnn import KeypointRCNN, model_urls 
 from torchvision.models.detection.mask_rcnn import MaskRCNN, model_urls as maskrcnn_model_urls
 from torchvision.ops import MultiScaleRoIAlign
 
-from torchdistill.models.custom.bottleneck.detection.resnet_backbone import custom_resnet_fpn_backbone
-from torchdistill.models.registry import register_model_func
+from .resnet_backbone import custom_resnet_fpn_backbone
+from ....registry import register_model_func
 
 
 @register_model_func

@@ -7,7 +7,7 @@ import torch.nn.functional as F
 from torch import Tensor
 from torchvision.models.densenet import _DenseBlock, _Transition
 
-from torchdistill.models.registry import register_model_func
+from ..registry import register_model_func
 
 """
 Refactored https://github.com/pytorch/vision/blob/master/torchvision/models/densenet.py

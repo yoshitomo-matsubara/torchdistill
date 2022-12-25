@@ -1,6 +1,6 @@
 from torch.optim.lr_scheduler import LambdaLR
 
-from torchdistill.optim.registry import register_scheduler
+from .registry import register_scheduler
 
 
 @register_scheduler

@@ -1,25 +1,9 @@
 from torch import nn
 
-from torchdistill.common.constant import def_logger
-from torchdistill.losses.single import get_single_loss
-
-CUSTOM_LOSS_CLASS_DICT = dict()
+from .registry import register_custom_loss, get_single_loss
+from ..common.constant import def_logger
 
 logger = def_logger.getChild(__name__)
-
-
-def register_custom_loss(arg=None, **kwargs):
-    def _register_custom_loss(cls):
-        key = kwargs.get('key')
-        if key is None:
-            key = cls.__name__
-
-        CUSTOM_LOSS_CLASS_DICT[key] = cls
-        return cls
-
-    if callable(arg):
-        return _register_custom_loss(arg)
-    return _register_custom_loss
 
 
 class CustomLoss(nn.Module):
@@ -73,10 +57,3 @@ class GeneralizedCustomLoss(CustomLoss):
         tuple_list.extend([(factor, criterion) for criterion, factor in self.term_dict.values()])
         desc += ' + '.join(['{} * {}'.format(factor, criterion) for factor, criterion in tuple_list])
         return desc
-
-
-def get_custom_loss(criterion_config):
-    criterion_type = criterion_config['type']
-    if criterion_type in CUSTOM_LOSS_CLASS_DICT:
-        return CUSTOM_LOSS_CLASS_DICT[criterion_type](criterion_config)
-    raise ValueError('No custom loss `{}` registered'.format(criterion_type))

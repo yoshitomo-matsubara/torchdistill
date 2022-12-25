@@ -1,18 +1,4 @@
-FUNC2EXTRACT_ORG_OUTPUT_DICT = dict()
-
-
-def register_func2extract_org_output(arg=None, **kwargs):
-    def _register_func2extract_org_output(func):
-        key = kwargs.get('key')
-        if key is None:
-            key = func.__name__
-
-        FUNC2EXTRACT_ORG_OUTPUT_DICT[key] = func
-        return func
-
-    if callable(arg):
-        return _register_func2extract_org_output(arg)
-    return _register_func2extract_org_output
+from .registry import register_func2extract_org_output
 
 
 @register_func2extract_org_output
@@ -55,11 +41,3 @@ def extract_org_loss_dict(org_criterion, student_outputs, teacher_outputs, targe
     if isinstance(student_outputs, dict):
         org_loss_dict.update(student_outputs)
     return org_loss_dict
-
-
-def get_func2extract_org_output(func_name):
-    if func_name is None:
-        return extract_simple_org_loss
-    elif func_name in FUNC2EXTRACT_ORG_OUTPUT_DICT:
-        return FUNC2EXTRACT_ORG_OUTPUT_DICT[func_name]
-    raise ValueError('No function to extract original output `{}` registered'.format(func_name))

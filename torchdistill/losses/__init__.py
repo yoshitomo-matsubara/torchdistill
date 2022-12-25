@@ -1,1 +1,1 @@
-from torchdistill.losses import custom, single
+from . import custom, single, util

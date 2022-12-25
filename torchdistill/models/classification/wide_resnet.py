@@ -4,7 +4,7 @@ import torch
 import torch.nn as nn
 from torch import Tensor
 
-from torchdistill.models.registry import register_model_func
+from ..registry import register_model_func
 
 """
 Refactored https://github.com/pytorch/vision/blob/master/torchvision/models/resnet.py

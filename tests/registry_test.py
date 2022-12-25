@@ -5,14 +5,13 @@ from torchdistill.datasets.registry import register_dataset, register_collate_fu
     register_sample_loader_func, register_batch_sampler_class, register_transform_class, register_dataset_wrapper, \
     DATASET_DICT, COLLATE_FUNC_DICT, SAMPLE_LOADER_CLASS_DICT, SAMPLE_LOADER_FUNC_DICT, BATCH_SAMPLER_CLASS_DICT, \
     TRANSFORM_CLASS_DICT, WRAPPER_CLASS_DICT
-from torchdistill.losses.custom import register_custom_loss, CUSTOM_LOSS_CLASS_DICT
-from torchdistill.losses.single import register_loss_wrapper, register_single_loss, register_org_loss, \
-    LOSS_WRAPPER_CLASS_DICT, SINGLE_LOSS_CLASS_DICT, ORG_LOSS_LIST
-from torchdistill.losses.util import register_func2extract_org_output, FUNC2EXTRACT_ORG_OUTPUT_DICT
-from torchdistill.models.adaptation import register_adaptation_module, ADAPTATION_CLASS_DICT
-from torchdistill.models.registry import get_model
-from torchdistill.models.registry import register_model_class, register_model_func, MODEL_CLASS_DICT, MODEL_FUNC_DICT
-from torchdistill.models.special import register_special_module, SPECIAL_CLASS_DICT
+from torchdistill.losses.registry import register_custom_loss, CUSTOM_LOSS_CLASS_DICT, register_loss_wrapper, \
+    register_single_loss, register_org_loss, \
+    LOSS_WRAPPER_CLASS_DICT, SINGLE_LOSS_CLASS_DICT, ORG_LOSS_LIST, register_func2extract_org_output, \
+    FUNC2EXTRACT_ORG_OUTPUT_DICT
+from torchdistill.models.registry import get_model, register_adaptation_module, ADAPTATION_CLASS_DICT, \
+    register_model_class, register_model_func, MODEL_CLASS_DICT, MODEL_FUNC_DICT, register_special_module, \
+    SPECIAL_CLASS_DICT
 from torchdistill.optim.registry import register_optimizer, register_scheduler, OPTIM_DICT, SCHEDULER_DICT
 
 

@@ -1,6 +1,6 @@
 from torch import nn
 
-from torchdistill.common import misc_util
+from ..common import misc_util
 
 OPTIM_DICT = misc_util.get_classes_as_dict('torch.optim')
 SCHEDULER_DICT = misc_util.get_classes_as_dict('torch.optim.lr_scheduler')
