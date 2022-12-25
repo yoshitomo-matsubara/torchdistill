@@ -34,12 +34,12 @@ def register_scheduler(arg=None, **kwargs):
     return _register_scheduler
 
 
-def get_optimizer(module, optim_type, param_dict=None, filters_params=True, **kwargs):
+def get_optimizer(module, key, param_dict=None, filters_params=True, **kwargs):
     if param_dict is None:
         param_dict = dict()
 
     is_module = isinstance(module, nn.Module)
-    lower_optim_type = optim_type.lower()
+    lower_optim_type = key.lower()
     if lower_optim_type in OPTIM_DICT:
         optim_cls_or_func = OPTIM_DICT[lower_optim_type]
         if is_module and filters_params:
@@ -47,14 +47,14 @@ def get_optimizer(module, optim_type, param_dict=None, filters_params=True, **kw
             updatable_params = [p for p in params if p.requires_grad]
             return optim_cls_or_func(updatable_params, **param_dict, **kwargs)
         return optim_cls_or_func(module, **param_dict, **kwargs)
-    raise ValueError('No optimizer `{}` registered'.format(optim_type))
+    raise ValueError('No optimizer `{}` registered'.format(key))
 
 
-def get_scheduler(optimizer, scheduler_type, param_dict=None, **kwargs):
+def get_scheduler(optimizer, key, param_dict=None, **kwargs):
     if param_dict is None:
         param_dict = dict()
 
-    lower_scheduler_type = scheduler_type.lower()
+    lower_scheduler_type = key.lower()
     if lower_scheduler_type in SCHEDULER_DICT:
         return SCHEDULER_DICT[lower_scheduler_type](optimizer, **param_dict, **kwargs)
-    raise ValueError('No scheduler `{}` registered'.format(scheduler_type))
+    raise ValueError('No scheduler `{}` registered'.format(key))

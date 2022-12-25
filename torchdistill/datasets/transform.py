@@ -9,7 +9,7 @@ from torchvision.transforms import RandomResizedCrop, Resize
 from torchvision.transforms import functional as F
 from torchvision.transforms.functional import InterpolationMode
 
-from .registry import register_transform_class
+from .registry import register_transform
 from ..common.constant import def_logger
 
 logger = def_logger.getChild(__name__)
@@ -34,7 +34,7 @@ def pad_if_smaller(img, size, fill=0):
     return img
 
 
-@register_transform_class
+@register_transform
 class CustomCompose(object):
     def __init__(self, transforms):
         self.transforms = transforms
@@ -45,7 +45,7 @@ class CustomCompose(object):
         return image, target
 
 
-@register_transform_class
+@register_transform
 class CustomRandomResize(object):
     def __init__(self, min_size, max_size=None, square=False, jpeg_quality=None):
         self.min_size = min_size
@@ -71,7 +71,7 @@ class CustomRandomResize(object):
         return image, target
 
 
-@register_transform_class
+@register_transform
 class CustomRandomHorizontalFlip(object):
     def __init__(self, p):
         self.p = p
@@ -83,7 +83,7 @@ class CustomRandomHorizontalFlip(object):
         return image, target
 
 
-@register_transform_class
+@register_transform
 class CustomRandomCrop(object):
     def __init__(self, size):
         self.size = size
@@ -97,7 +97,7 @@ class CustomRandomCrop(object):
         return image, target
 
 
-@register_transform_class
+@register_transform
 class CustomCenterCrop(object):
     def __init__(self, size):
         self.size = size
@@ -108,7 +108,7 @@ class CustomCenterCrop(object):
         return image, target
 
 
-@register_transform_class
+@register_transform
 class CustomToTensor(object):
     def __call__(self, image, target):
         image = F.to_tensor(image)
@@ -116,7 +116,7 @@ class CustomToTensor(object):
         return image, target
 
 
-@register_transform_class
+@register_transform
 class CustomNormalize(object):
     def __init__(self, mean, std):
         self.mean = mean
@@ -127,7 +127,7 @@ class CustomNormalize(object):
         return image, target
 
 
-@register_transform_class
+@register_transform
 class WrappedRandomResizedCrop(RandomResizedCrop):
     def __init__(self, interpolation=None, **kwargs):
         if isinstance(interpolation, str):
@@ -135,7 +135,7 @@ class WrappedRandomResizedCrop(RandomResizedCrop):
         super().__init__(**kwargs, interpolation=interpolation)
 
 
-@register_transform_class
+@register_transform
 class WrappedResize(Resize):
     def __init__(self, interpolation=None, **kwargs):
         if isinstance(interpolation, str):

@@ -1,12 +1,12 @@
 import torch
-from torch import nn
 
+from ..common import misc_util
 
 MODEL_CLASS_DICT = dict()
 MODEL_FUNC_DICT = dict()
-ADAPTATION_CLASS_DICT = dict()
-SPECIAL_CLASS_DICT = dict()
-MODULE_CLASS_DICT = nn.__dict__
+ADAPTATION_MODULE_DICT = dict()
+SPECIAL_MODULE_DICT = dict()
+MODULE_DICT = misc_util.get_classes_as_dict('torch.nn')
 
 
 def register_model_class(arg=None, **kwargs):
@@ -38,13 +38,13 @@ def register_model_func(arg=None, **kwargs):
 
 
 def register_adaptation_module(arg=None, **kwargs):
-    def _register_adaptation_module(cls):
+    def _register_adaptation_module(cls_or_func):
         key = kwargs.get('key')
         if key is None:
-            key = cls.__name__
+            key = cls_or_func.__name__
 
-        ADAPTATION_CLASS_DICT[key] = cls
-        return cls
+        ADAPTATION_MODULE_DICT[key] = cls_or_func
+        return cls_or_func
 
     if callable(arg):
         return _register_adaptation_module(arg)
@@ -52,38 +52,38 @@ def register_adaptation_module(arg=None, **kwargs):
 
 
 def register_special_module(arg=None, **kwargs):
-    def _register_special_module(cls):
+    def _register_special_module(cls_or_func):
         key = kwargs.get('key')
         if key is None:
-            key = cls.__name__
+            key = cls_or_func.__name__
 
-        SPECIAL_CLASS_DICT[key] = cls
-        return cls
+        SPECIAL_MODULE_DICT[key] = cls_or_func
+        return cls_or_func
 
     if callable(arg):
         return _register_special_module(arg)
     return _register_special_module
 
 
-def get_model(model_name, repo_or_dir=None, **kwargs):
-    if model_name in MODEL_CLASS_DICT:
-        return MODEL_CLASS_DICT[model_name](**kwargs)
-    elif model_name in MODEL_FUNC_DICT:
-        return MODEL_FUNC_DICT[model_name](**kwargs)
+def get_model(key, repo_or_dir=None, **kwargs):
+    if key in MODEL_CLASS_DICT:
+        return MODEL_CLASS_DICT[key](**kwargs)
+    elif key in MODEL_FUNC_DICT:
+        return MODEL_FUNC_DICT[key](**kwargs)
     elif repo_or_dir is not None:
-        return torch.hub.load(repo_or_dir, model_name, **kwargs)
-    raise ValueError('model_name `{}` is not expected'.format(model_name))
+        return torch.hub.load(repo_or_dir, key, **kwargs)
+    raise ValueError('model_name `{}` is not expected'.format(key))
 
 
-def get_adaptation_module(class_name, *args, **kwargs):
-    if class_name in ADAPTATION_CLASS_DICT:
-        return ADAPTATION_CLASS_DICT[class_name](*args, **kwargs)
-    elif class_name in MODULE_CLASS_DICT:
-        return MODULE_CLASS_DICT[class_name](*args, **kwargs)
-    raise ValueError('No adaptation module `{}` registered'.format(class_name))
+def get_adaptation_module(key, *args, **kwargs):
+    if key in ADAPTATION_MODULE_DICT:
+        return ADAPTATION_MODULE_DICT[key](*args, **kwargs)
+    elif key in MODULE_DICT:
+        return MODULE_DICT[key](*args, **kwargs)
+    raise ValueError('No adaptation module `{}` registered'.format(key))
 
 
-def get_special_module(class_name, *args, **kwargs):
-    if class_name in SPECIAL_CLASS_DICT:
-        return SPECIAL_CLASS_DICT[class_name](*args, **kwargs)
-    raise ValueError('No special module `{}` registered'.format(class_name))
+def get_special_module(key, *args, **kwargs):
+    if key in SPECIAL_MODULE_DICT:
+        return SPECIAL_MODULE_DICT[key](*args, **kwargs)
+    raise ValueError('No special module `{}` registered'.format(key))
