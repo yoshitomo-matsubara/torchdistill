@@ -5,9 +5,9 @@ from torch.nn import DataParallel
 from torch.nn.parallel import DistributedDataParallel
 from torch.nn.parallel.scatter_gather import gather
 
-from torchdistill.common.constant import def_logger
-from torchdistill.common.module_util import get_module, check_if_wrapped
-from torchdistill.core.forward_hook import register_forward_hook_with_dict
+from ..common.constant import def_logger
+from ..common.module_util import get_module, check_if_wrapped
+from ..core.forward_hook import register_forward_hook_with_dict
 
 logger = def_logger.getChild(__name__)
 

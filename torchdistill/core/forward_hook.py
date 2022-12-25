@@ -4,7 +4,7 @@ import torch
 from torch._six import string_classes
 from torch.nn.parallel.scatter_gather import gather
 
-from torchdistill.common.module_util import check_if_wrapped, get_module
+from ..common.module_util import check_if_wrapped, get_module
 
 
 def get_device_index(data):
