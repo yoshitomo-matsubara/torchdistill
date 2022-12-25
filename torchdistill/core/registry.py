@@ -1,4 +1,4 @@
-PROC_FUNC_DICT = dict()
+FORWARD_PROC_FUNC_DICT = dict()
 
 
 def register_forward_proc_func(arg=None, **kwargs):
@@ -7,7 +7,7 @@ def register_forward_proc_func(arg=None, **kwargs):
         if key is None:
             key = func.__name__
 
-        PROC_FUNC_DICT[key] = func
+        FORWARD_PROC_FUNC_DICT[key] = func
         return func
 
     if callable(arg):
@@ -15,9 +15,9 @@ def register_forward_proc_func(arg=None, **kwargs):
     return _register_forward_proc_func
 
 
-def get_forward_proc_func(func_name):
-    if func_name is None:
-        return PROC_FUNC_DICT['forward_batch_only']
-    elif func_name in PROC_FUNC_DICT:
-        return PROC_FUNC_DICT[func_name]
-    raise ValueError('No forward process function `{}` registered'.format(func_name))
+def get_forward_proc_func(key):
+    if key is None:
+        return FORWARD_PROC_FUNC_DICT['forward_batch_only']
+    elif key in FORWARD_PROC_FUNC_DICT:
+        return FORWARD_PROC_FUNC_DICT[key]
+    raise ValueError('No forward process function `{}` registered'.format(key))

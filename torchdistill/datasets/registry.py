@@ -1,17 +1,17 @@
 from types import BuiltinFunctionType, BuiltinMethodType, FunctionType
 
-import torch
-import torchvision
+from ..common import misc_util
 
 DATASET_DICT = dict()
 COLLATE_FUNC_DICT = dict()
 SAMPLE_LOADER_CLASS_DICT = dict()
 SAMPLE_LOADER_FUNC_DICT = dict()
-BATCH_SAMPLER_CLASS_DICT = dict()
-TRANSFORM_CLASS_DICT = dict()
-WRAPPER_CLASS_DICT = dict()
-DATASET_DICT.update(torchvision.datasets.__dict__)
-BATCH_SAMPLER_CLASS_DICT.update(torch.utils.data.sampler.__dict__)
+BATCH_SAMPLER_DICT = dict()
+TRANSFORM_DICT = dict()
+DATASET_WRAPPER_DICT = dict()
+
+DATASET_DICT.update(misc_util.get_classes_as_dict('torchvision.datasets'))
+BATCH_SAMPLER_DICT.update(misc_util.get_classes_as_dict('torch.utils.data.sampler'))
 
 
 def register_dataset(arg=None, **kwargs):
@@ -71,84 +71,84 @@ def register_sample_loader_func(arg=None, **kwargs):
     return _register_sample_loader_func
 
 
-def register_batch_sampler_class(arg=None, **kwargs):
-    def _register_batch_sampler_class(cls):
+def register_batch_sampler(arg=None, **kwargs):
+    def _register_batch_sampler(cls_or_func):
         key = kwargs.get('key')
         if key is None:
-            key = cls.__name__
+            key = cls_or_func.__name__
 
-        BATCH_SAMPLER_CLASS_DICT[key] = cls
-        return cls
+        BATCH_SAMPLER_DICT[key] = cls_or_func
+        return cls_or_func
 
     if callable(arg):
-        return _register_batch_sampler_class(arg)
-    return _register_batch_sampler_class
+        return _register_batch_sampler(arg)
+    return _register_batch_sampler
 
 
-def register_transform_class(arg=None, **kwargs):
-    def _register_transform_class(cls):
+def register_transform(arg=None, **kwargs):
+    def _register_transform(cls_or_func):
         key = kwargs.get('key')
         if key is None:
-            key = cls.__name__
+            key = cls_or_func.__name__
 
-        TRANSFORM_CLASS_DICT[key] = cls
-        return cls
+        TRANSFORM_DICT[key] = cls_or_func
+        return cls_or_func
 
     if callable(arg):
-        return _register_transform_class(arg)
-    return _register_transform_class
+        return _register_transform(arg)
+    return _register_transform
 
 
 def register_dataset_wrapper(arg=None, **kwargs):
-    def _register_dataset_wrapper(cls):
+    def _register_dataset_wrapper(cls_or_func):
         key = kwargs.get('key')
         if key is None:
-            key = cls.__name__
+            key = cls_or_func.__name__
 
-        WRAPPER_CLASS_DICT[key] = cls
-        return cls
+        DATASET_WRAPPER_DICT[key] = cls_or_func
+        return cls_or_func
 
     if callable(arg):
         return _register_dataset_wrapper(arg)
     return _register_dataset_wrapper
 
 
-def get_collate_func(func_name):
-    if func_name is None:
+def get_collate_func(key):
+    if key is None:
         return None
-    elif func_name in COLLATE_FUNC_DICT:
-        return COLLATE_FUNC_DICT[func_name]
-    raise ValueError('No collate function `{}` registered'.format(func_name))
+    elif key in COLLATE_FUNC_DICT:
+        return COLLATE_FUNC_DICT[key]
+    raise ValueError('No collate function `{}` registered'.format(key))
 
 
-def get_sample_loader(obj_name, *args, **kwargs):
-    if obj_name is None:
+def get_sample_loader(key, *args, **kwargs):
+    if key is None:
         return None
-    elif obj_name in SAMPLE_LOADER_CLASS_DICT:
-        return SAMPLE_LOADER_CLASS_DICT[obj_name](*args, **kwargs)
-    elif obj_name in SAMPLE_LOADER_FUNC_DICT:
-        return SAMPLE_LOADER_FUNC_DICT[obj_name]
-    raise ValueError('No sample loader `{}` registered.'.format(obj_name))
+    elif key in SAMPLE_LOADER_CLASS_DICT:
+        return SAMPLE_LOADER_CLASS_DICT[key](*args, **kwargs)
+    elif key in SAMPLE_LOADER_FUNC_DICT:
+        return SAMPLE_LOADER_FUNC_DICT[key]
+    raise ValueError('No sample loader `{}` registered.'.format(key))
 
 
-def get_batch_sampler(class_name, *args, **kwargs):
-    if class_name is None:
+def get_batch_sampler(key, *args, **kwargs):
+    if key is None:
         return None
 
-    if class_name not in BATCH_SAMPLER_CLASS_DICT and class_name != 'BatchSampler':
-        raise ValueError('No batch sampler `{}` registered.'.format(class_name))
+    if key not in BATCH_SAMPLER_DICT and key != 'BatchSampler':
+        raise ValueError('No batch sampler `{}` registered.'.format(key))
 
-    batch_sampler_cls = BATCH_SAMPLER_CLASS_DICT[class_name]
+    batch_sampler_cls = BATCH_SAMPLER_DICT[key]
     return batch_sampler_cls(*args, **kwargs)
 
 
-def get_transform(obj_name, *args, **kwargs):
-    if obj_name in TRANSFORM_CLASS_DICT:
-        return TRANSFORM_CLASS_DICT[obj_name](*args, **kwargs)
-    raise ValueError('No transform `{}` registered.'.format(obj_name))
+def get_transform(key, *args, **kwargs):
+    if key in TRANSFORM_DICT:
+        return TRANSFORM_DICT[key](*args, **kwargs)
+    raise ValueError('No transform `{}` registered.'.format(key))
 
 
-def get_dataset_wrapper(class_name, *args, **kwargs):
-    if class_name not in WRAPPER_CLASS_DICT:
-        return WRAPPER_CLASS_DICT[class_name](*args, **kwargs)
-    raise ValueError('No dataset wrapper `{}` registered.'.format(class_name))
+def get_dataset_wrapper(key, *args, **kwargs):
+    if key not in DATASET_WRAPPER_DICT:
+        return DATASET_WRAPPER_DICT[key](*args, **kwargs)
+    raise ValueError('No dataset wrapper `{}` registered.'.format(key))

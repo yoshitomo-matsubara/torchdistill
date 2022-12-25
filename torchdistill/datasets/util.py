@@ -10,14 +10,14 @@ from torchvision.datasets import PhotoTour, Kinetics400, HMDB51, UCF101, Citysca
 
 from ..common.constant import def_logger
 from ..datasets.coco import ImageToTensor, Compose, CocoRandomHorizontalFlip, get_coco
-from ..datasets.registry import DATASET_DICT, TRANSFORM_CLASS_DICT, \
+from ..datasets.registry import DATASET_DICT, TRANSFORM_DICT, \
     get_collate_func, get_sample_loader, get_batch_sampler, get_dataset_wrapper
 from ..datasets.transform import CustomCompose
 from ..datasets.wrapper import default_idx2subpath, BaseDatasetWrapper, CacheableDataset
 
 logger = def_logger.getChild(__name__)
 
-TRANSFORM_CLASS_DICT.update(torchvision.transforms.__dict__)
+TRANSFORM_DICT.update(torchvision.transforms.__dict__)
 
 
 def load_coco_dataset(img_dir_path, ann_file_path, annotated_only, random_horizontal_flip=None, is_segment=False,
@@ -36,7 +36,7 @@ def build_transform(transform_params_config, compose_cls=None):
         return None
 
     if isinstance(compose_cls, str):
-        compose_cls = TRANSFORM_CLASS_DICT[compose_cls]
+        compose_cls = TRANSFORM_DICT[compose_cls]
 
     component_list = list()
     if isinstance(transform_params_config, dict):
@@ -46,7 +46,7 @@ def build_transform(transform_params_config, compose_cls=None):
             if params_config is None:
                 params_config = dict()
 
-            component = TRANSFORM_CLASS_DICT[component_config['type']](**params_config)
+            component = TRANSFORM_DICT[component_config['type']](**params_config)
             component_list.append(component)
     else:
         for component_config in transform_params_config:
@@ -54,7 +54,7 @@ def build_transform(transform_params_config, compose_cls=None):
             if params_config is None:
                 params_config = dict()
 
-            component = TRANSFORM_CLASS_DICT[component_config['type']](**params_config)
+            component = TRANSFORM_DICT[component_config['type']](**params_config)
             component_list.append(component)
     return torchvision.transforms.Compose(component_list) if compose_cls is None else compose_cls(component_list)
 
