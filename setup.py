@@ -6,7 +6,7 @@ with open('README.md', 'r') as f:
     long_description = f.read()
 
 description = 'A Modular, Configuration-Driven Framework for Knowledge Distillation. ' \
-              'Trained models, training logs and configurations are available for ensuring the reproducibiliy.'
+              'Trained models, training logs and configurations are available for ensuring the reproducibility.'
 setup(
     name='torchdistill',
     version=torchdistill.__version__,
