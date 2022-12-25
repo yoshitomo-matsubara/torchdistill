@@ -5,18 +5,18 @@ from torch import distributed as dist
 from torch import nn
 from torch.optim.lr_scheduler import ReduceLROnPlateau, LambdaLR
 
-from torchdistill.common.constant import def_logger
-from torchdistill.common.file_util import make_parent_dirs
-from torchdistill.common.module_util import check_if_wrapped, freeze_module_params, get_module, \
-    unfreeze_module_params, get_updatable_param_names
-from torchdistill.core.registry import get_forward_proc_func
-from torchdistill.core.util import set_hooks, wrap_model, change_device, tensor2numpy2tensor, clear_io_dict, \
+from .registry import get_forward_proc_func
+from .util import set_hooks, wrap_model, change_device, tensor2numpy2tensor, clear_io_dict, \
     extract_io_dict, update_io_dict, extract_sub_model_output_dict
-from torchdistill.datasets.util import build_data_loaders
-from torchdistill.losses.registry import ORG_LOSS_LIST, get_custom_loss, get_single_loss, get_func2extract_org_output
-from torchdistill.models.special import SpecialModule, build_special_module
-from torchdistill.models.util import redesign_model
-from torchdistill.optim.registry import get_optimizer, get_scheduler
+from ..common.constant import def_logger
+from ..common.file_util import make_parent_dirs
+from ..common.module_util import check_if_wrapped, freeze_module_params, get_module, \
+    unfreeze_module_params, get_updatable_param_names
+from ..datasets.util import build_data_loaders
+from ..losses.registry import ORG_LOSS_LIST, get_custom_loss, get_single_loss, get_func2extract_org_output
+from ..models.special import SpecialModule, build_special_module
+from ..models.util import redesign_model
+from ..optim.registry import get_optimizer, get_scheduler
 
 logger = def_logger.getChild(__name__)
 
