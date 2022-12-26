@@ -4,7 +4,7 @@ import torch
 from torch import nn
 from torch.nn.functional import adaptive_avg_pool2d, adaptive_max_pool2d, normalize, cosine_similarity
 
-from .registry import register_loss_wrapper, register_single_loss, register_org_loss
+from .registry import register_loss_wrapper, register_single_loss
 from ..common.constant import def_logger
 
 logger = def_logger.getChild(__name__)
@@ -46,29 +46,6 @@ class SimpleLossWrapper(nn.Module):
 
     def __str__(self):
         return self.single_loss.__str__()
-
-
-@register_org_loss
-class KDLoss(nn.KLDivLoss):
-    """
-    "Distilling the Knowledge in a Neural Network"
-    """
-    def __init__(self, temperature, alpha=None, beta=None, reduction='batchmean', **kwargs):
-        super().__init__(reduction=reduction)
-        self.temperature = temperature
-        self.alpha = alpha
-        self.beta = 1 - alpha if beta is None else beta
-        cel_reduction = 'mean' if reduction == 'batchmean' else reduction
-        self.cross_entropy_loss = nn.CrossEntropyLoss(reduction=cel_reduction, **kwargs)
-
-    def forward(self, student_output, teacher_output, targets=None, *args, **kwargs):
-        soft_loss = super().forward(torch.log_softmax(student_output / self.temperature, dim=1),
-                                    torch.softmax(teacher_output / self.temperature, dim=1))
-        if self.alpha is None or self.alpha == 0 or targets is None:
-            return soft_loss
-
-        hard_loss = self.cross_entropy_loss(student_output, targets)
-        return self.alpha * hard_loss + self.beta * (self.temperature ** 2) * soft_loss
 
 
 @register_single_loss

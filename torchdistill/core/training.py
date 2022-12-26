@@ -61,7 +61,6 @@ class TrainingBox(nn.Module):
             else get_single_loss(org_criterion_config)
         self.criterion = get_custom_loss(criterion_config)
         logger.info(self.criterion)
-        self.uses_teacher_output = False
         self.extract_org_loss = get_func2extract_org_output(criterion_config.get('func2extract_org_loss', None))
 
     def setup(self, train_config):
@@ -170,9 +169,8 @@ class TrainingBox(nn.Module):
         if isinstance(self.model, SpecialModule):
             self.model.post_forward(extracted_model_io_dict)
 
-        teacher_outputs = None
-        org_loss_dict = self.extract_org_loss(self.org_criterion, model_outputs, teacher_outputs, targets,
-                                              uses_teacher_output=False, supp_dict=supp_dict)
+        org_loss_dict = self.extract_org_loss(self.org_criterion, model_outputs, targets,
+                                              supp_dict=supp_dict)
         update_io_dict(extracted_model_io_dict, extract_io_dict(self.model_io_dict, self.device))
         io_dict = {'student': extracted_model_io_dict, 'teacher': dict()}
         total_loss = self.criterion(io_dict, org_loss_dict, targets)

@@ -4,7 +4,6 @@ LOSS_DICT = misc_util.get_classes_as_dict('torch.nn.modules.loss')
 CUSTOM_LOSS_DICT = dict()
 LOSS_WRAPPER_DICT = dict()
 SINGLE_LOSS_DICT = dict()
-ORG_LOSS_LIST = list()
 FUNC2EXTRACT_ORG_OUTPUT_DICT = dict()
 
 
@@ -48,21 +47,6 @@ def register_single_loss(arg=None, **kwargs):
     if callable(arg):
         return _register_single_loss(arg)
     return _register_single_loss
-
-
-def register_org_loss(arg=None, **kwargs):
-    def _register_org_loss(cls_or_func):
-        key = kwargs.get('key')
-        if key is None:
-            key = cls_or_func.__name__
-
-        SINGLE_LOSS_DICT[key] = cls_or_func
-        ORG_LOSS_LIST.append(cls_or_func)
-        return cls_or_func
-
-    if callable(arg):
-        return _register_org_loss(arg)
-    return _register_org_loss
 
 
 def register_func2extract_org_output(arg=None, **kwargs):

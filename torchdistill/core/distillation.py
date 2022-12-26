@@ -13,7 +13,7 @@ from ..common.file_util import make_parent_dirs
 from ..common.module_util import check_if_wrapped, freeze_module_params, get_module, \
     unfreeze_module_params, get_updatable_param_names
 from ..datasets.util import build_data_loaders
-from ..losses.registry import ORG_LOSS_LIST, get_custom_loss, get_single_loss, get_func2extract_org_output
+from ..losses.registry import get_custom_loss, get_single_loss, get_func2extract_org_output
 from ..models.special import SpecialModule, build_special_module
 from ..models.util import redesign_model
 from ..optim.registry import get_optimizer, get_scheduler
@@ -84,8 +84,6 @@ class DistillationBox(nn.Module):
             else get_single_loss(org_criterion_config)
         self.criterion = get_custom_loss(criterion_config)
         logger.info(self.criterion)
-        self.uses_teacher_output = \
-            self.org_criterion is not None and isinstance(self.org_criterion, tuple(ORG_LOSS_LIST))
         self.extract_org_loss = get_func2extract_org_output(criterion_config.get('func2extract_org_loss', None))
 
     def setup(self, train_config):
@@ -204,7 +202,7 @@ class DistillationBox(nn.Module):
         self.target_teacher_pairs, self.target_student_pairs = list(), list()
         self.teacher_io_dict, self.student_io_dict = dict(), dict()
         self.train_data_loader, self.val_data_loader, self.optimizer, self.lr_scheduler = None, None, None, None
-        self.org_criterion, self.criterion, self.uses_teacher_output, self.extract_org_loss = None, None, None, None
+        self.org_criterion, self.criterion, self.extract_org_loss = None, None, None
         self.teacher_updatable, self.teacher_any_frozen, self.student_any_frozen = None, None, None
         self.grad_accum_step = None
         self.max_grad_norm = None
@@ -288,8 +286,7 @@ class DistillationBox(nn.Module):
         if isinstance(self.student_model, SpecialModule):
             self.student_model.post_forward(extracted_student_io_dict)
 
-        org_loss_dict = self.extract_org_loss(self.org_criterion, student_outputs, teacher_outputs, targets,
-                                              uses_teacher_output=self.uses_teacher_output, supp_dict=supp_dict)
+        org_loss_dict = self.extract_org_loss(self.org_criterion, student_outputs, targets, supp_dict=supp_dict)
         update_io_dict(extracted_student_io_dict, extract_io_dict(self.student_io_dict, self.device))
         io_dict = {'teacher': extracted_teacher_io_dict, 'student': extracted_student_io_dict}
         total_loss = self.criterion(io_dict, org_loss_dict, targets)
