@@ -174,8 +174,8 @@ class TrainingBox(nn.Module):
         org_loss_dict = self.extract_org_loss(self.org_criterion, model_outputs, teacher_outputs, targets,
                                               uses_teacher_output=False, supp_dict=supp_dict)
         update_io_dict(extracted_model_io_dict, extract_io_dict(self.model_io_dict, self.device))
-        output_dict = {'student': extracted_model_io_dict, 'teacher': dict()}
-        total_loss = self.criterion(output_dict, org_loss_dict, targets)
+        io_dict = {'student': extracted_model_io_dict, 'teacher': dict()}
+        total_loss = self.criterion(io_dict, org_loss_dict, targets)
         return total_loss
 
     def update_params(self, loss, **kwargs):
