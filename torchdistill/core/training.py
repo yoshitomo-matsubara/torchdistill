@@ -5,7 +5,7 @@ from torch.optim.lr_scheduler import ReduceLROnPlateau, LambdaLR
 
 from .registry import get_forward_proc_func
 from .util import set_hooks, wrap_model, clear_io_dict, extract_io_dict, update_io_dict
-from ..common.constant import def_logger
+from ..common.constant import SELF_MODULE_PATH, def_logger
 from ..common.module_util import check_if_wrapped, freeze_module_params, get_module, \
     unfreeze_module_params, get_updatable_param_names
 from ..datasets.util import build_data_loaders
@@ -166,6 +166,7 @@ class TrainingBox(nn.Module):
     def forward(self, sample_batch, targets, supp_dict):
         model_outputs = self.model_forward_proc(self.model, sample_batch, targets, supp_dict)
         extracted_model_io_dict = extract_io_dict(self.model_io_dict, self.device)
+        extracted_model_io_dict[SELF_MODULE_PATH]['output'] = model_outputs
         if isinstance(self.model, SpecialModule):
             self.model.post_forward(extracted_model_io_dict)
 

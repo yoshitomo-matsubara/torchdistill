@@ -8,7 +8,7 @@ from torch.optim.lr_scheduler import ReduceLROnPlateau, LambdaLR
 from .registry import get_forward_proc_func
 from .util import set_hooks, wrap_model, change_device, tensor2numpy2tensor, clear_io_dict, \
     extract_io_dict, update_io_dict, extract_sub_model_output_dict
-from ..common.constant import def_logger
+from ..common.constant import SELF_MODULE_PATH, def_logger
 from ..common.file_util import make_parent_dirs
 from ..common.module_util import check_if_wrapped, freeze_module_params, get_module, \
     unfreeze_module_params, get_updatable_param_names
@@ -260,6 +260,7 @@ class DistillationBox(nn.Module):
         teacher_io_dict4cache = copy.deepcopy(self.teacher_io_dict) \
             if self.teacher_updatable and isinstance(cache_file_paths, (list, tuple)) is not None else None
         extracted_teacher_io_dict = extract_io_dict(self.teacher_io_dict, self.device)
+        extracted_teacher_io_dict[SELF_MODULE_PATH]['output'] = teacher_outputs
         if isinstance(self.teacher_model, SpecialModule):
             self.teacher_model.post_forward(extracted_teacher_io_dict)
 
@@ -283,6 +284,7 @@ class DistillationBox(nn.Module):
             self.get_teacher_output(sample_batch, targets, supp_dict=supp_dict)
         student_outputs = self.student_forward_proc(self.student_model, sample_batch, targets, supp_dict)
         extracted_student_io_dict = extract_io_dict(self.student_io_dict, self.device)
+        extracted_student_io_dict[SELF_MODULE_PATH]['output'] = student_outputs
         if isinstance(self.student_model, SpecialModule):
             self.student_model.post_forward(extracted_student_io_dict)
 
