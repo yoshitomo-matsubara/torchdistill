@@ -156,7 +156,7 @@ class TrainingBox(nn.Module):
             self.model, self.optimizer, self.train_data_loader, self.val_data_loader = \
                 self.accelerator.prepare(self.model, self.optimizer, self.train_data_loader, self.val_data_loader)
 
-        # Set up post-forward and post-epoch processes
+        # Set up {pre,post}-{epoch,forward} processes
         self.setup_pre_post_processes(train_config)
 
     def __init__(self, model, dataset_dict, train_config, device, device_ids, distributed, lr_factor, accelerator=None):

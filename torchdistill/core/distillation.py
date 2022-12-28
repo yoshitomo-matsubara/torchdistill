@@ -206,7 +206,7 @@ class DistillationBox(nn.Module):
                     self.accelerator.prepare(self.student_model, self.optimizer,
                                              self.train_data_loader, self.val_data_loader)
 
-        # Set up post-forward and post-epoch processes
+        # Set up {pre,post}-{epoch,forward} processes
         self.setup_pre_post_processes(train_config)
 
 
