@@ -6,8 +6,7 @@ from torchdistill.datasets.registry import register_dataset, register_collate_fu
     DATASET_DICT, COLLATE_FUNC_DICT, SAMPLE_LOADER_CLASS_DICT, SAMPLE_LOADER_FUNC_DICT, BATCH_SAMPLER_DICT, \
     TRANSFORM_DICT, DATASET_WRAPPER_DICT
 from torchdistill.losses.registry import register_custom_loss, CUSTOM_LOSS_DICT, register_loss_wrapper, \
-    register_single_loss, register_org_loss, \
-    LOSS_WRAPPER_DICT, SINGLE_LOSS_DICT, ORG_LOSS_LIST, register_func2extract_org_output, \
+    register_single_loss, LOSS_WRAPPER_DICT, SINGLE_LOSS_DICT, register_func2extract_org_output, \
     FUNC2EXTRACT_ORG_OUTPUT_DICT
 from torchdistill.models.registry import get_model, register_adaptation_module, ADAPTATION_MODULE_DICT, \
     register_model_class, register_model_func, MODEL_CLASS_DICT, MODEL_FUNC_DICT, register_special_module, \
@@ -265,32 +264,6 @@ class RegistryTest(TestCase):
                 self.name = 'test2'
 
         assert SINGLE_LOSS_DICT[random_name] == TestSingleLoss2
-
-    def test_register_org_loss(self):
-        @register_org_loss
-        class TestOrgLoss0(object):
-            def __init__(self):
-                self.name = 'test0'
-
-        assert SINGLE_LOSS_DICT['TestOrgLoss0'] == TestOrgLoss0
-        assert TestOrgLoss0 in ORG_LOSS_LIST
-
-        @register_org_loss()
-        class TestOrgLoss1(object):
-            def __init__(self):
-                self.name = 'test1'
-
-        assert SINGLE_LOSS_DICT['TestOrgLoss1'] == TestOrgLoss1
-        assert TestOrgLoss1 in ORG_LOSS_LIST
-        random_name = 'custom_org_loss_class_name2'
-
-        @register_org_loss(key=random_name)
-        class TestOrgLoss2(object):
-            def __init__(self):
-                self.name = 'test2'
-
-        assert SINGLE_LOSS_DICT[random_name] == TestOrgLoss2
-        assert TestOrgLoss2 in ORG_LOSS_LIST
 
     def test_func2extract_org_output(self):
         @register_func2extract_org_output
