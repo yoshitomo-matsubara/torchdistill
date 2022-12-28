@@ -66,7 +66,7 @@ def train_one_epoch(training_box, device, epoch, log_freq):
         sample_batch, targets = sample_batch.to(device), targets.to(device)
         supp_dict = default_collate(supp_dict)
         loss = training_box(sample_batch, targets, supp_dict)
-        training_box.update_params(loss)
+        training_box.update_params(loss=loss)
         batch_size = len(sample_batch)
         metric_logger.update(loss=loss.item(), lr=training_box.optimizer.param_groups[0]['lr'])
         metric_logger.meters['img/s'].update(batch_size / (time.time() - start_time))

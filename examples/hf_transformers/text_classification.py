@@ -118,7 +118,7 @@ def train_one_epoch(training_box, epoch, log_freq):
             metric_logger.log_every(training_box.train_data_loader, log_freq, header):
         start_time = time.time()
         loss = training_box(sample_batch, targets=None, supp_dict=None)
-        training_box.update_params(loss)
+        training_box.update_params(loss=loss)
         batch_size = len(sample_batch)
         metric_logger.update(loss=loss.item(), lr=training_box.optimizer.param_groups[0]['lr'])
         metric_logger.meters['sample/s'].update(batch_size / (time.time() - start_time))
