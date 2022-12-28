@@ -17,7 +17,7 @@ class SpecialModule(nn.Module):
     def __init__(self):
         super().__init__()
 
-    def post_forward(self, *args, **kwargs):
+    def secondary_forward(self, *args, **kwargs):
         pass
 
     def post_process(self, *args, **kwargs):
@@ -135,7 +135,7 @@ class Teacher4FactorTransfer(SpecialModule):
         with torch.no_grad():
             return self.teacher_model(*args)
 
-    def post_forward(self, io_dict):
+    def secondary_forward(self, io_dict):
         if self.uses_decoder and not self.paraphraser.training:
             self.paraphraser.train()
         self.paraphraser(io_dict[self.input_module_path]['output'])
@@ -159,7 +159,7 @@ class Student4FactorTransfer(SpecialModule):
     def forward(self, *args):
         return self.student_model(*args)
 
-    def post_forward(self, io_dict):
+    def secondary_forward(self, io_dict):
         self.translator(io_dict[self.input_module_path]['output'])
 
 
@@ -189,7 +189,7 @@ class Connector4DAB(SpecialModule):
     def forward(self, x):
         return self.student_model(x)
 
-    def post_forward(self, io_dict):
+    def secondary_forward(self, io_dict):
         for connector_key, io_type, module_path in self.io_path_pairs:
             self.connector_dict[connector_key](io_dict[module_path][io_type])
 
@@ -235,7 +235,7 @@ class VariationalDistributor4VID(SpecialModule):
     def forward(self, x):
         return self.student_model(x)
 
-    def post_forward(self, io_dict):
+    def secondary_forward(self, io_dict):
         for regressor_key, io_type, module_path in self.io_path_pairs:
             self.regressor_dict[regressor_key](io_dict[module_path][io_type])
 
@@ -265,7 +265,7 @@ class Linear4CCKD(SpecialModule):
                 return self.model(x)
         return self.model(x)
 
-    def post_forward(self, io_dict):
+    def secondary_forward(self, io_dict):
         flat_outputs = torch.flatten(io_dict[self.input_module_path][self.input_module_io], 1)
         self.linear(flat_outputs)
 
@@ -311,7 +311,7 @@ class Linear4CRD(SpecialModule):
                 return self.model(x)
         return self.model(x)
 
-    def post_forward(self, io_dict):
+    def secondary_forward(self, io_dict):
         flat_outputs = torch.flatten(io_dict[self.input_module_path]['output'], 1)
         self.normalizer(flat_outputs)
 
@@ -373,7 +373,7 @@ class SSWrapper4SSKD(SpecialModule):
                 return self.model(x)
         return self.model(x)
 
-    def post_forward(self, io_dict):
+    def secondary_forward(self, io_dict):
         flat_outputs = torch.flatten(io_dict[self.input_module_path][self.input_module_io], 1)
         self.ss_module(flat_outputs)
 
@@ -405,7 +405,7 @@ class VarianceBranch4PAD(SpecialModule):
     def forward(self, x):
         return self.student_model(x)
 
-    def post_forward(self, io_dict):
+    def secondary_forward(self, io_dict):
         embed_outputs = io_dict[self.input_module_path][self.input_module_io].flatten(1)
         self.var_estimator(embed_outputs)
 
@@ -476,7 +476,7 @@ class Student4KnowledgeReview(SpecialModule):
     def forward(self, *args):
         return self.student_model(*args)
 
-    def post_forward(self, io_dict):
+    def secondary_forward(self, io_dict):
         feature_maps = [io_dict[module_path][io_type] for io_type, module_path in self.io_path_pairs]
         out_features, res_features = self.abf_modules[0](feature_maps[0])
         if len(self.sizes) > 1:
@@ -508,7 +508,7 @@ class Student4KTAAD(SpecialModule):
     def forward(self, *args):
         return self.student_model(*args)
 
-    def post_forward(self, io_dict):
+    def secondary_forward(self, io_dict):
         feature_maps = io_dict[self.input_module_path]['output']
         self.feature_adapter(feature_maps)
         self.affinity_adapter(feature_maps)

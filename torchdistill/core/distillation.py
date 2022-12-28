@@ -251,7 +251,7 @@ class DistillationBox(nn.Module):
                     (check_if_wrapped(self.teacher_model) and isinstance(self.teacher_model.module, SpecialModule)):
                 self.teacher_io_dict.update(cached_extracted_teacher_output_dict)
                 if isinstance(self.teacher_model, SpecialModule):
-                    self.teacher_model.post_forward(self.teacher_io_dict)
+                    self.teacher_model.secondary_forward(self.teacher_io_dict)
 
             extracted_teacher_io_dict = extract_io_dict(self.teacher_io_dict, self.device)
             return teacher_outputs, extracted_teacher_io_dict
@@ -262,7 +262,7 @@ class DistillationBox(nn.Module):
         extracted_teacher_io_dict = extract_io_dict(self.teacher_io_dict, self.device)
         extracted_teacher_io_dict[SELF_MODULE_PATH]['output'] = teacher_outputs
         if isinstance(self.teacher_model, SpecialModule):
-            self.teacher_model.post_forward(extracted_teacher_io_dict)
+            self.teacher_model.secondary_forward(extracted_teacher_io_dict)
 
         update_io_dict(extracted_teacher_io_dict, extract_io_dict(self.teacher_io_dict, self.device))
         # Write cache files if output file paths (cache_file_paths) are given
@@ -286,7 +286,7 @@ class DistillationBox(nn.Module):
         extracted_student_io_dict = extract_io_dict(self.student_io_dict, self.device)
         extracted_student_io_dict[SELF_MODULE_PATH]['output'] = student_outputs
         if isinstance(self.student_model, SpecialModule):
-            self.student_model.post_forward(extracted_student_io_dict)
+            self.student_model.secondary_forward(extracted_student_io_dict)
 
         org_loss_dict = self.extract_org_loss(self.org_criterion, student_outputs, targets, supp_dict=supp_dict)
         update_io_dict(extracted_student_io_dict, extract_io_dict(self.student_io_dict, self.device))
