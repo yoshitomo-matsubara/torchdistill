@@ -168,7 +168,7 @@ class TrainingBox(nn.Module):
         extracted_model_io_dict = extract_io_dict(self.model_io_dict, self.device)
         extracted_model_io_dict[SELF_MODULE_PATH]['output'] = model_outputs
         if isinstance(self.model, SpecialModule):
-            self.model.post_forward(extracted_model_io_dict)
+            self.model.secondary_forward(extracted_model_io_dict)
 
         org_loss_dict = self.extract_org_loss(self.org_criterion, model_outputs, targets,
                                               supp_dict=supp_dict)
