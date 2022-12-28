@@ -1,6 +1,8 @@
 from unittest import TestCase
 
-from torchdistill.core.registry import register_forward_proc_func, FORWARD_PROC_FUNC_DICT
+from torchdistill.core.registry import register_forward_proc_func, get_forward_proc_func, register_pre_epoch_proc_func, \
+    register_pre_forward_proc_func, register_post_forward_proc_func, register_post_epoch_proc_func, \
+    get_pre_epoch_proc_func, get_pre_forward_proc_func, get_post_forward_proc_func, get_post_epoch_proc_func
 from torchdistill.datasets.registry import register_dataset, register_collate_func, register_sample_loader_class, \
     register_sample_loader_func, register_batch_sampler, register_transform, register_dataset_wrapper, \
     DATASET_DICT, COLLATE_FUNC_DICT, SAMPLE_LOADER_CLASS_DICT, SAMPLE_LOADER_FUNC_DICT, BATCH_SAMPLER_DICT, \
@@ -50,20 +52,20 @@ class RegistryTest(TestCase):
         def test_forward_proc0(model, batch):
             return model(batch)
 
-        assert FORWARD_PROC_FUNC_DICT['test_forward_proc0'] == test_forward_proc0
+        assert get_forward_proc_func('test_forward_proc0') == test_forward_proc0
 
         @register_forward_proc_func()
         def test_forward_proc1(model, batch):
             return model(batch)
 
-        assert FORWARD_PROC_FUNC_DICT['test_forward_proc1'] == test_forward_proc1
+        assert get_forward_proc_func('test_forward_proc1') == test_forward_proc1
         random_name = 'custom_forward_proc_name2'
 
         @register_forward_proc_func(key=random_name)
         def test_forward_proc2(model, batch, label):
             return model(batch, label)
 
-        assert FORWARD_PROC_FUNC_DICT[random_name] == test_forward_proc2
+        assert get_forward_proc_func(random_name) == test_forward_proc2
 
     def test_register_collate_func(self):
         @register_collate_func
@@ -419,3 +421,83 @@ class RegistryTest(TestCase):
                 self.name = 'test2'
 
         assert SPECIAL_MODULE_DICT[random_name] == TestSpecialModule2
+
+    def test_register_pre_epoch_proc_func(self):
+        @register_pre_epoch_proc_func
+        def test_pre_epoch_proc_func0():
+            pass
+
+        assert get_pre_epoch_proc_func('test_pre_epoch_proc_func0') == test_pre_epoch_proc_func0
+
+        @register_pre_epoch_proc_func()
+        def test_pre_epoch_proc_func1():
+            pass
+
+        assert get_pre_epoch_proc_func('test_pre_epoch_proc_func1') == test_pre_epoch_proc_func1
+        random_name = 'custom_pre_epoch_proc_func_name2'
+
+        @register_pre_epoch_proc_func(key=random_name)
+        def test_pre_epoch_proc_func2():
+            pass
+
+        assert get_pre_epoch_proc_func(random_name) == test_pre_epoch_proc_func2
+
+    def test_register_pre_forward_proc_func(self):
+        @register_pre_forward_proc_func
+        def test_pre_forward_proc_func0():
+            pass
+
+        assert get_pre_forward_proc_func('test_pre_forward_proc_func0') == test_pre_forward_proc_func0
+
+        @register_pre_forward_proc_func()
+        def test_pre_forward_proc_func1():
+            pass
+
+        assert get_pre_forward_proc_func('test_pre_forward_proc_func1') == test_pre_forward_proc_func1
+        random_name = 'custom_pre_forward_proc_func_name2'
+
+        @register_pre_forward_proc_func(key=random_name)
+        def test_pre_forward_proc_func2():
+            pass
+
+        assert get_pre_forward_proc_func(random_name) == test_pre_forward_proc_func2
+
+    def test_register_post_forward_proc_func(self):
+        @register_post_forward_proc_func
+        def test_post_forward_proc_func0():
+            pass
+
+        assert get_post_forward_proc_func('test_post_forward_proc_func0') == test_post_forward_proc_func0
+
+        @register_post_forward_proc_func()
+        def test_post_forward_proc_func1():
+            pass
+
+        assert get_post_forward_proc_func('test_post_forward_proc_func1') == test_post_forward_proc_func1
+        random_name = 'custom_post_forward_proc_func_name2'
+
+        @register_post_forward_proc_func(key=random_name)
+        def test_post_forward_proc_func2():
+            pass
+
+        assert get_post_forward_proc_func(random_name) == test_post_forward_proc_func2
+
+    def test_register_post_epoch_proc_func(self):
+        @register_post_epoch_proc_func
+        def test_post_epoch_proc_func0():
+            pass
+
+        assert get_post_epoch_proc_func('test_post_epoch_proc_func0') == test_post_epoch_proc_func0
+
+        @register_post_epoch_proc_func()
+        def test_post_epoch_proc_func1():
+            pass
+
+        assert get_post_epoch_proc_func('test_post_epoch_proc_func1') == test_post_epoch_proc_func1
+        random_name = 'custom_post_epoch_proc_func_name2'
+
+        @register_post_epoch_proc_func(key=random_name)
+        def test_post_epoch_proc_func2():
+            pass
+
+        assert get_post_epoch_proc_func(random_name) == test_post_epoch_proc_func2
