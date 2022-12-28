@@ -2,6 +2,11 @@ from .registry import register_forward_proc_func
 
 
 @register_forward_proc_func
+def forward_default(model, supp_dict=None, *args, **kwargs):
+    return model(*args, **kwargs)
+
+
+@register_forward_proc_func
 def forward_batch_only(model, sample_batch, targets=None, supp_dict=None):
     return model(sample_batch)
 
