@@ -3,7 +3,12 @@ from torch import distributed as dist
 from torch import nn
 from torch.optim.lr_scheduler import ReduceLROnPlateau, LambdaLR
 
-from .registry import get_forward_proc_func
+from .post_epoch_proc import default_post_epoch_process_with_teacher
+from .post_forward_proc import default_post_forward_process
+from .pre_epoch_proc import default_pre_epoch_process_without_teacher
+from .pre_forward_proc import default_pre_forward_process
+from .registry import get_pre_epoch_proc_func, get_pre_forward_proc_func, get_forward_proc_func, \
+    get_post_forward_proc_func, get_post_epoch_proc_func
 from .util import set_hooks, wrap_model, clear_io_dict, extract_io_dict, update_io_dict
 from ..common.constant import SELF_MODULE_PATH, def_logger
 from ..common.module_util import check_if_wrapped, freeze_module_params, get_module, \
@@ -62,6 +67,25 @@ class TrainingBox(nn.Module):
         self.criterion = get_custom_loss(criterion_config)
         logger.info(self.criterion)
         self.extract_org_loss = get_func2extract_org_output(criterion_config.get('func2extract_org_loss', None))
+
+    def setup_pre_post_processes(self, train_config):
+        pre_epoch_process = default_pre_epoch_process_without_teacher
+        if 'pre_epoch_process' in train_config:
+            pre_epoch_process = get_pre_epoch_proc_func(train_config['pre_epoch_process'])
+        setattr(TrainingBox, 'pre_epoch_process', pre_epoch_process)
+        pre_forward_process = default_pre_forward_process
+        if 'pre_forward_process' in train_config:
+            pre_forward_process = get_pre_forward_proc_func(train_config['pre_forward_process'])
+        setattr(TrainingBox, 'pre_forward_process', pre_forward_process)
+        post_forward_process = default_post_forward_process
+        if 'post_forward_process' in train_config:
+            post_forward_process = get_post_forward_proc_func(train_config['post_forward_process'])
+
+        setattr(TrainingBox, 'post_forward_process', post_forward_process)
+        post_epoch_process = default_post_epoch_process_with_teacher
+        if 'post_epoch_process' in train_config:
+            post_epoch_process = get_post_epoch_proc_func(train_config['post_epoch_process'])
+        setattr(TrainingBox, 'post_epoch_process', post_epoch_process)
 
     def setup(self, train_config):
         # Set up train and val data loaders
@@ -131,6 +155,9 @@ class TrainingBox(nn.Module):
         if self.accelerator is not None:
             self.model, self.optimizer, self.train_data_loader, self.val_data_loader = \
                 self.accelerator.prepare(self.model, self.optimizer, self.train_data_loader, self.val_data_loader)
+
+        # Set up {pre,post}-{epoch,forward} processes
+        self.setup_pre_post_processes(train_config)
 
     def __init__(self, model, dataset_dict, train_config, device, device_ids, distributed, lr_factor, accelerator=None):
         super().__init__()
