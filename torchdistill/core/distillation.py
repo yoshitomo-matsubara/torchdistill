@@ -19,7 +19,7 @@ from ..common.module_util import check_if_wrapped, freeze_module_params, get_mod
     unfreeze_module_params, get_updatable_param_names
 from ..datasets.util import build_data_loaders
 from ..losses.registry import get_custom_loss, get_single_loss, get_func2extract_org_output
-from ..models.special import SpecialModule, build_special_module
+from ..models.special import AuxiliaryModelWrapper, build_auxiliary_model_wrapper
 from ..models.util import redesign_model
 from ..optim.registry import get_optimizer, get_scheduler
 
@@ -53,7 +53,7 @@ class DistillationBox(nn.Module):
         if len(teacher_config) > 0 or (len(teacher_config) == 0 and self.teacher_model is None):
             model_type = 'original'
             special_teacher_model = \
-                build_special_module(teacher_config, teacher_model=unwrapped_org_teacher_model, device=self.device,
+                build_auxiliary_model_wrapper(teacher_config, teacher_model=unwrapped_org_teacher_model, device=self.device,
                                      device_ids=self.device_ids, distributed=self.distributed)
             if special_teacher_model is not None:
                 teacher_ref_model = special_teacher_model
@@ -63,7 +63,7 @@ class DistillationBox(nn.Module):
         if len(student_config) > 0 or (len(student_config) == 0 and self.student_model is None):
             model_type = 'original'
             special_student_model = \
-                build_special_module(student_config, student_model=unwrapped_org_student_model, device=self.device,
+                build_auxiliary_model_wrapper(student_config, student_model=unwrapped_org_student_model, device=self.device,
                                      device_ids=self.device_ids, distributed=self.distributed)
             if special_student_model is not None:
                 student_ref_model = special_student_model
@@ -274,10 +274,10 @@ class DistillationBox(nn.Module):
                     teacher_outputs = self.teacher_forward_proc(self.teacher_model, sample_batch, targets, supp_dict)
 
         if cached_extracted_teacher_output_dict is not None:
-            if isinstance(self.teacher_model, SpecialModule) or \
-                    (check_if_wrapped(self.teacher_model) and isinstance(self.teacher_model.module, SpecialModule)):
+            if isinstance(self.teacher_model, AuxiliaryModelWrapper) or \
+                    (check_if_wrapped(self.teacher_model) and isinstance(self.teacher_model.module, AuxiliaryModelWrapper)):
                 self.teacher_io_dict.update(cached_extracted_teacher_output_dict)
-                if isinstance(self.teacher_model, SpecialModule):
+                if isinstance(self.teacher_model, AuxiliaryModelWrapper):
                     self.teacher_model.secondary_forward(self.teacher_io_dict)
 
             extracted_teacher_io_dict = extract_io_dict(self.teacher_io_dict, self.device)
@@ -288,7 +288,7 @@ class DistillationBox(nn.Module):
             if self.teacher_updatable and isinstance(cache_file_paths, (list, tuple)) is not None else None
         extracted_teacher_io_dict = extract_io_dict(self.teacher_io_dict, self.device)
         extracted_teacher_io_dict[SELF_MODULE_PATH]['output'] = teacher_outputs
-        if isinstance(self.teacher_model, SpecialModule):
+        if isinstance(self.teacher_model, AuxiliaryModelWrapper):
             self.teacher_model.secondary_forward(extracted_teacher_io_dict)
 
         update_io_dict(extracted_teacher_io_dict, extract_io_dict(self.teacher_io_dict, self.device))
@@ -312,7 +312,7 @@ class DistillationBox(nn.Module):
         student_outputs = self.student_forward_proc(self.student_model, sample_batch, targets, supp_dict)
         extracted_student_io_dict = extract_io_dict(self.student_io_dict, self.device)
         extracted_student_io_dict[SELF_MODULE_PATH]['output'] = student_outputs
-        if isinstance(self.student_model, SpecialModule):
+        if isinstance(self.student_model, AuxiliaryModelWrapper):
             self.student_model.secondary_forward(extracted_student_io_dict)
 
         org_loss_dict = self.extract_org_loss(self.org_criterion, student_outputs, targets, supp_dict=supp_dict)
@@ -362,9 +362,9 @@ class DistillationBox(nn.Module):
                 self.lr_scheduler.step(epoch)
             else:
                 self.lr_scheduler.step()
-        if isinstance(self.teacher_model, SpecialModule):
+        if isinstance(self.teacher_model, AuxiliaryModelWrapper):
             self.teacher_model.post_process()
-        if isinstance(self.student_model, SpecialModule):
+        if isinstance(self.student_model, AuxiliaryModelWrapper):
             self.student_model.post_process()
         if self.distributed:
             dist.barrier()
