@@ -19,8 +19,8 @@ from ..common.module_util import check_if_wrapped, freeze_module_params, get_mod
     unfreeze_module_params, get_updatable_param_names
 from ..datasets.util import build_data_loaders
 from ..losses.registry import get_custom_loss, get_single_loss, get_func2extract_org_output
-from ..models.special import AuxiliaryModelWrapper, build_auxiliary_model_wrapper
 from ..models.util import redesign_model
+from ..models.wrapper import AuxiliaryModelWrapper, build_auxiliary_model_wrapper
 from ..optim.registry import get_optimizer, get_scheduler
 
 logger = def_logger.getChild(__name__)
