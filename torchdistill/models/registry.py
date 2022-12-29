@@ -86,4 +86,4 @@ def get_adaptation_module(key, *args, **kwargs):
 def get_auxiliary_model_wrapper(key, *args, **kwargs):
     if key in AUXILIARY_MODEL_WRAPPER_DICT:
         return AUXILIARY_MODEL_WRAPPER_DICT[key](*args, **kwargs)
-    raise ValueError('No special module `{}` registered'.format(key))
+    raise ValueError('No auxiliary model wrapper `{}` registered'.format(key))

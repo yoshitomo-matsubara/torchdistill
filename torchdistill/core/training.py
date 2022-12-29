@@ -45,11 +45,11 @@ class TrainingBox(nn.Module):
 
         if len(model_config) > 0 or (len(model_config) == 0 and self.model is None):
             model_type = 'original'
-            special_model = \
+            auxiliary_model_wrapper = \
                 build_auxiliary_model_wrapper(model_config, student_model=unwrapped_org_model, device=self.device,
-                                     device_ids=self.device_ids, distributed=self.distributed)
-            if special_model is not None:
-                ref_model = special_model
+                                              device_ids=self.device_ids, distributed=self.distributed)
+            if auxiliary_model_wrapper is not None:
+                ref_model = auxiliary_model_wrapper
                 model_type = type(ref_model).__name__
             self.model = redesign_model(ref_model, model_config, 'student', model_type)
 

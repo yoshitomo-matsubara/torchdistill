@@ -52,21 +52,23 @@ class DistillationBox(nn.Module):
         student_ref_model = unwrapped_org_student_model
         if len(teacher_config) > 0 or (len(teacher_config) == 0 and self.teacher_model is None):
             model_type = 'original'
-            special_teacher_model = \
-                build_auxiliary_model_wrapper(teacher_config, teacher_model=unwrapped_org_teacher_model, device=self.device,
-                                     device_ids=self.device_ids, distributed=self.distributed)
-            if special_teacher_model is not None:
-                teacher_ref_model = special_teacher_model
+            auxiliary_teacher_model_wrapper = \
+                build_auxiliary_model_wrapper(teacher_config, teacher_model=unwrapped_org_teacher_model,
+                                              device=self.device, device_ids=self.device_ids,
+                                              distributed=self.distributed)
+            if auxiliary_teacher_model_wrapper is not None:
+                teacher_ref_model = auxiliary_teacher_model_wrapper
                 model_type = type(teacher_ref_model).__name__
             self.teacher_model = redesign_model(teacher_ref_model, teacher_config, 'teacher', model_type)
 
         if len(student_config) > 0 or (len(student_config) == 0 and self.student_model is None):
             model_type = 'original'
-            special_student_model = \
-                build_auxiliary_model_wrapper(student_config, student_model=unwrapped_org_student_model, device=self.device,
-                                     device_ids=self.device_ids, distributed=self.distributed)
-            if special_student_model is not None:
-                student_ref_model = special_student_model
+            auxiliary_student_model_wrapper = \
+                build_auxiliary_model_wrapper(student_config, student_model=unwrapped_org_student_model,
+                                              device=self.device, device_ids=self.device_ids,
+                                              distributed=self.distributed)
+            if auxiliary_student_model_wrapper is not None:
+                student_ref_model = auxiliary_student_model_wrapper
                 model_type = type(student_ref_model).__name__
             self.student_model = redesign_model(student_ref_model, student_config, 'student', model_type)
 
@@ -283,7 +285,7 @@ class DistillationBox(nn.Module):
             extracted_teacher_io_dict = extract_io_dict(self.teacher_io_dict, self.device)
             return teacher_outputs, extracted_teacher_io_dict
 
-        # Deep copy of teacher info dict if teacher special module contains trainable module(s)
+        # Deep copy of teacher info dict if auxiliary teacher model wrapper contains trainable module(s)
         teacher_io_dict4cache = copy.deepcopy(self.teacher_io_dict) \
             if self.teacher_updatable and isinstance(cache_file_paths, (list, tuple)) is not None else None
         extracted_teacher_io_dict = extract_io_dict(self.teacher_io_dict, self.device)

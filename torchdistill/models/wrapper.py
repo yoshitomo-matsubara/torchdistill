@@ -114,11 +114,11 @@ class Teacher4FactorTransfer(AuxiliaryModelWrapper):
         if minimal is None:
             minimal = dict()
         
-        special_teacher_model = build_auxiliary_model_wrapper(minimal, teacher_model=teacher_model)
+        auxiliary_teacher_model_wrapper = build_auxiliary_model_wrapper(minimal, teacher_model=teacher_model)
         model_type = 'original'
         teacher_ref_model = teacher_model
-        if special_teacher_model is not None:
-            teacher_ref_model = special_teacher_model
+        if auxiliary_teacher_model_wrapper is not None:
+            teacher_ref_model = auxiliary_teacher_model_wrapper
             model_type = type(teacher_ref_model).__name__
 
         self.teacher_model = redesign_model(teacher_ref_model, minimal, 'teacher', model_type)
@@ -515,12 +515,12 @@ class Student4KTAAD(AuxiliaryModelWrapper):
 
 
 def build_auxiliary_model_wrapper(model_config, **kwargs):
-    special_model_config = model_config.get('special', dict())
-    special_model_type = special_model_config.get('type', None)
-    if special_model_type is None:
+    auxiliary_model_wrapper_config = model_config.get('auxiliary_model_wrapper', dict())
+    auxiliary_model_wrapper_type = auxiliary_model_wrapper_config.get('type', None)
+    if auxiliary_model_wrapper_type is None:
         return None
 
-    special_model_params_config = special_model_config.get('params', None)
-    if special_model_params_config is None:
-        special_model_params_config = dict()
-    return get_auxiliary_model_wrapper(special_model_type, **kwargs, **special_model_params_config)
+    auxiliary_model_wrapper_params_config = auxiliary_model_wrapper_config.get('params', None)
+    if auxiliary_model_wrapper_params_config is None:
+        auxiliary_model_wrapper_params_config = dict()
+    return get_auxiliary_model_wrapper(auxiliary_model_wrapper_type, **kwargs, **auxiliary_model_wrapper_params_config)
