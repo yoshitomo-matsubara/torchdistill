@@ -6,14 +6,14 @@ from torch import nn
 from torch.jit.annotations import Tuple, List
 from torch.nn import functional
 
-from .registry import register_special_module, get_special_module
+from .registry import register_auxiliary_model_wrapper, get_auxiliary_model_wrapper
 from .util import wrap_if_distributed, load_module_ckpt, save_module_ckpt, redesign_model
 from ..common.constant import def_logger
 
 logger = def_logger.getChild(__name__)
 
 
-class SpecialModule(nn.Module):
+class AuxiliaryModelWrapper(nn.Module):
     def __init__(self):
         super().__init__()
 
@@ -24,8 +24,8 @@ class SpecialModule(nn.Module):
         pass
 
 
-@register_special_module
-class EmptyModule(SpecialModule):
+@register_auxiliary_model_wrapper
+class EmptyModule(AuxiliaryModelWrapper):
     def __init__(self, **kwargs):
         super().__init__()
 
@@ -103,8 +103,8 @@ class Translator4FactorTransfer(nn.Sequential):
         )
 
 
-@register_special_module
-class Teacher4FactorTransfer(SpecialModule):
+@register_auxiliary_model_wrapper
+class Teacher4FactorTransfer(AuxiliaryModelWrapper):
     """
     Teacher for factor transfer proposed in "Paraphrasing Complex Network: Network Compression via Factor Transfer"
     """
@@ -114,11 +114,11 @@ class Teacher4FactorTransfer(SpecialModule):
         if minimal is None:
             minimal = dict()
         
-        special_teacher_model = build_special_module(minimal, teacher_model=teacher_model)
+        auxiliary_teacher_model_wrapper = build_auxiliary_model_wrapper(minimal, teacher_model=teacher_model)
         model_type = 'original'
         teacher_ref_model = teacher_model
-        if special_teacher_model is not None:
-            teacher_ref_model = special_teacher_model
+        if auxiliary_teacher_model_wrapper is not None:
+            teacher_ref_model = auxiliary_teacher_model_wrapper
             model_type = type(teacher_ref_model).__name__
 
         self.teacher_model = redesign_model(teacher_ref_model, minimal, 'teacher', model_type)
@@ -144,8 +144,8 @@ class Teacher4FactorTransfer(SpecialModule):
         save_module_ckpt(self.paraphraser, self.ckpt_file_path)
 
 
-@register_special_module
-class Student4FactorTransfer(SpecialModule):
+@register_auxiliary_model_wrapper
+class Student4FactorTransfer(AuxiliaryModelWrapper):
     """
     Student for factor transfer proposed in "Paraphrasing Complex Network: Network Compression via Factor Transfer"
     """
@@ -163,8 +163,8 @@ class Student4FactorTransfer(SpecialModule):
         self.translator(io_dict[self.input_module_path]['output'])
 
 
-@register_special_module
-class Connector4DAB(SpecialModule):
+@register_auxiliary_model_wrapper
+class Connector4DAB(AuxiliaryModelWrapper):
     """
     Connector proposed in "Knowledge Transfer via Distillation of Activation Boundaries Formed by Hidden Neurons"
     """
@@ -216,8 +216,8 @@ class Regressor4VID(nn.Module):
         return pred_mean, pred_var
 
 
-@register_special_module
-class VariationalDistributor4VID(SpecialModule):
+@register_auxiliary_model_wrapper
+class VariationalDistributor4VID(AuxiliaryModelWrapper):
     """
     "Variational Information Distillation for Knowledge Transfer"
     """
@@ -240,8 +240,8 @@ class VariationalDistributor4VID(SpecialModule):
             self.regressor_dict[regressor_key](io_dict[module_path][io_type])
 
 
-@register_special_module
-class Linear4CCKD(SpecialModule):
+@register_auxiliary_model_wrapper
+class Linear4CCKD(AuxiliaryModelWrapper):
     """
     Fully-connected layer to cope with a mismatch of feature representations of teacher and student network for
     "Correlation Congruence for Knowledge Distillation"
@@ -283,8 +283,8 @@ class Normalizer4CRD(nn.Module):
         return out
 
 
-@register_special_module
-class Linear4CRD(SpecialModule):
+@register_auxiliary_model_wrapper
+class Linear4CRD(AuxiliaryModelWrapper):
     """
     "Contrastive Representation Distillation"
     Refactored https://github.com/HobbitLong/RepDistiller/blob/master/crd/memory.py
@@ -316,8 +316,8 @@ class Linear4CRD(SpecialModule):
         self.normalizer(flat_outputs)
 
 
-@register_special_module
-class HeadRCNN(SpecialModule):
+@register_auxiliary_model_wrapper
+class HeadRCNN(AuxiliaryModelWrapper):
     def __init__(self, head_rcnn, **kwargs):
         super().__init__()
         tmp_ref_model = kwargs.get('teacher_model', None)
@@ -339,8 +339,8 @@ class HeadRCNN(SpecialModule):
         return self.seq(images.tensors)
 
 
-@register_special_module
-class SSWrapper4SSKD(SpecialModule):
+@register_auxiliary_model_wrapper
+class SSWrapper4SSKD(AuxiliaryModelWrapper):
     """
     Semi-supervision wrapper for "Knowledge Distillation Meets Self-Supervision"
     """
@@ -381,8 +381,8 @@ class SSWrapper4SSKD(SpecialModule):
         save_module_ckpt(self.ss_module, self.ckpt_file_path)
 
 
-@register_special_module
-class VarianceBranch4PAD(SpecialModule):
+@register_auxiliary_model_wrapper
+class VarianceBranch4PAD(AuxiliaryModelWrapper):
     """
     Variance branch wrapper for "Prime-Aware Adaptive Distillation"
     """
@@ -448,8 +448,8 @@ class AttentionBasedFusion(nn.Module):
         return y, x
 
 
-@register_special_module
-class Student4KnowledgeReview(SpecialModule):
+@register_auxiliary_model_wrapper
+class Student4KnowledgeReview(AuxiliaryModelWrapper):
     """
     Student for knowledge review proposed in "Distilling Knowledge via Knowledge Review"
     Refactored https://github.com/dvlab-research/ReviewKD/blob/master/ImageNet/models/reviewkd.py
@@ -484,8 +484,8 @@ class Student4KnowledgeReview(SpecialModule):
                 out_features, res_features = abf(features, res_features, size)
 
 
-@register_special_module
-class Student4KTAAD(SpecialModule):
+@register_auxiliary_model_wrapper
+class Student4KTAAD(AuxiliaryModelWrapper):
     """
     Student for knowledge translation and adaptation + affinity distillation proposed in
     "Knowledge Adaptation for Efficient Semantic Segmentation"
@@ -514,13 +514,13 @@ class Student4KTAAD(SpecialModule):
         self.affinity_adapter(feature_maps)
 
 
-def build_special_module(model_config, **kwargs):
-    special_model_config = model_config.get('special', dict())
-    special_model_type = special_model_config.get('type', None)
-    if special_model_type is None:
+def build_auxiliary_model_wrapper(model_config, **kwargs):
+    auxiliary_model_wrapper_config = model_config.get('auxiliary_model_wrapper', dict())
+    auxiliary_model_wrapper_type = auxiliary_model_wrapper_config.get('type', None)
+    if auxiliary_model_wrapper_type is None:
         return None
 
-    special_model_params_config = special_model_config.get('params', None)
-    if special_model_params_config is None:
-        special_model_params_config = dict()
-    return get_special_module(special_model_type, **kwargs, **special_model_params_config)
+    auxiliary_model_wrapper_params_config = auxiliary_model_wrapper_config.get('params', None)
+    if auxiliary_model_wrapper_params_config is None:
+        auxiliary_model_wrapper_params_config = dict()
+    return get_auxiliary_model_wrapper(auxiliary_model_wrapper_type, **kwargs, **auxiliary_model_wrapper_params_config)

@@ -15,8 +15,8 @@ from ..common.module_util import check_if_wrapped, freeze_module_params, get_mod
     unfreeze_module_params, get_updatable_param_names
 from ..datasets.util import build_data_loaders
 from ..losses.registry import get_custom_loss, get_single_loss, get_func2extract_org_output
-from ..models.special import SpecialModule, build_special_module
 from ..models.util import redesign_model
+from ..models.wrapper import AuxiliaryModelWrapper, build_auxiliary_model_wrapper
 from ..optim.registry import get_optimizer, get_scheduler
 
 logger = def_logger.getChild(__name__)
@@ -45,11 +45,11 @@ class TrainingBox(nn.Module):
 
         if len(model_config) > 0 or (len(model_config) == 0 and self.model is None):
             model_type = 'original'
-            special_model = \
-                build_special_module(model_config, student_model=unwrapped_org_model, device=self.device,
-                                     device_ids=self.device_ids, distributed=self.distributed)
-            if special_model is not None:
-                ref_model = special_model
+            auxiliary_model_wrapper = \
+                build_auxiliary_model_wrapper(model_config, student_model=unwrapped_org_model, device=self.device,
+                                              device_ids=self.device_ids, distributed=self.distributed)
+            if auxiliary_model_wrapper is not None:
+                ref_model = auxiliary_model_wrapper
                 model_type = type(ref_model).__name__
             self.model = redesign_model(ref_model, model_config, 'student', model_type)
 
@@ -194,7 +194,7 @@ class TrainingBox(nn.Module):
         model_outputs = self.model_forward_proc(self.model, sample_batch, targets, supp_dict)
         extracted_model_io_dict = extract_io_dict(self.model_io_dict, self.device)
         extracted_model_io_dict[SELF_MODULE_PATH]['output'] = model_outputs
-        if isinstance(self.model, SpecialModule):
+        if isinstance(self.model, AuxiliaryModelWrapper):
             self.model.secondary_forward(extracted_model_io_dict)
 
         org_loss_dict = self.extract_org_loss(self.org_criterion, model_outputs, targets,
@@ -245,7 +245,7 @@ class TrainingBox(nn.Module):
                 self.lr_scheduler.step(epoch)
             else:
                 self.lr_scheduler.step()
-        if isinstance(self.model, SpecialModule):
+        if isinstance(self.model, AuxiliaryModelWrapper):
             self.model.post_process()
         if self.distributed:
             dist.barrier()

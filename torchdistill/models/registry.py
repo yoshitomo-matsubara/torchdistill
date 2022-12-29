@@ -5,7 +5,7 @@ from ..common import misc_util
 MODEL_CLASS_DICT = dict()
 MODEL_FUNC_DICT = dict()
 ADAPTATION_MODULE_DICT = dict()
-SPECIAL_MODULE_DICT = dict()
+AUXILIARY_MODEL_WRAPPER_DICT = dict()
 MODULE_DICT = misc_util.get_classes_as_dict('torch.nn')
 
 
@@ -51,18 +51,18 @@ def register_adaptation_module(arg=None, **kwargs):
     return _register_adaptation_module
 
 
-def register_special_module(arg=None, **kwargs):
-    def _register_special_module(cls_or_func):
+def register_auxiliary_model_wrapper(arg=None, **kwargs):
+    def _register_auxiliary_model_wrapper(cls_or_func):
         key = kwargs.get('key')
         if key is None:
             key = cls_or_func.__name__
 
-        SPECIAL_MODULE_DICT[key] = cls_or_func
+        AUXILIARY_MODEL_WRAPPER_DICT[key] = cls_or_func
         return cls_or_func
 
     if callable(arg):
-        return _register_special_module(arg)
-    return _register_special_module
+        return _register_auxiliary_model_wrapper(arg)
+    return _register_auxiliary_model_wrapper
 
 
 def get_model(key, repo_or_dir=None, **kwargs):
@@ -83,7 +83,7 @@ def get_adaptation_module(key, *args, **kwargs):
     raise ValueError('No adaptation module `{}` registered'.format(key))
 
 
-def get_special_module(key, *args, **kwargs):
-    if key in SPECIAL_MODULE_DICT:
-        return SPECIAL_MODULE_DICT[key](*args, **kwargs)
-    raise ValueError('No special module `{}` registered'.format(key))
+def get_auxiliary_model_wrapper(key, *args, **kwargs):
+    if key in AUXILIARY_MODEL_WRAPPER_DICT:
+        return AUXILIARY_MODEL_WRAPPER_DICT[key](*args, **kwargs)
+    raise ValueError('No auxiliary model wrapper `{}` registered'.format(key))

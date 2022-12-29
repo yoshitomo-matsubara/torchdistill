@@ -3,7 +3,7 @@ from torch.optim.lr_scheduler import ReduceLROnPlateau, LambdaLR
 
 from .registry import register_post_epoch_proc_func
 from ..common.constant import def_logger
-from ..models.special import SpecialModule
+from ..models.wrapper import AuxiliaryModelWrapper
 
 logger = def_logger.getChild(__name__)
 
@@ -20,9 +20,9 @@ def default_post_epoch_process_with_teacher(self, **kwargs):
             self.lr_scheduler.step(epoch)
         else:
             self.lr_scheduler.step()
-    if isinstance(self.teacher_model, SpecialModule):
+    if isinstance(self.teacher_model, AuxiliaryModelWrapper):
         self.teacher_model.post_process()
-    if isinstance(self.student_model, SpecialModule):
+    if isinstance(self.student_model, AuxiliaryModelWrapper):
         self.student_model.post_process()
     if self.distributed:
         dist.barrier()
@@ -40,7 +40,7 @@ def default_post_epoch_process_without_teacher(self, **kwargs):
             self.lr_scheduler.step(epoch)
         else:
             self.lr_scheduler.step()
-    if isinstance(self.model, SpecialModule):
+    if isinstance(self.model, AuxiliaryModelWrapper):
         self.model.post_process()
     if self.distributed:
         dist.barrier()

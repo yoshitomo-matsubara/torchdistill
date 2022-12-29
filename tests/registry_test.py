@@ -11,8 +11,8 @@ from torchdistill.losses.registry import register_custom_loss, CUSTOM_LOSS_DICT,
     register_single_loss, LOSS_WRAPPER_DICT, SINGLE_LOSS_DICT, register_func2extract_org_output, \
     FUNC2EXTRACT_ORG_OUTPUT_DICT
 from torchdistill.models.registry import get_model, register_adaptation_module, ADAPTATION_MODULE_DICT, \
-    register_model_class, register_model_func, MODEL_CLASS_DICT, MODEL_FUNC_DICT, register_special_module, \
-    SPECIAL_MODULE_DICT
+    register_model_class, register_model_func, MODEL_CLASS_DICT, MODEL_FUNC_DICT, register_auxiliary_model_wrapper, \
+    AUXILIARY_MODEL_WRAPPER_DICT
 from torchdistill.optim.registry import register_optimizer, register_scheduler, OPTIM_DICT, SCHEDULER_DICT
 
 
@@ -399,28 +399,28 @@ class RegistryTest(TestCase):
 
         assert MODEL_FUNC_DICT[random_name] == test_model_func2
 
-    def test_register_special_module(self):
-        @register_special_module
-        class TestSpecialModule0(object):
+    def test_register_auxiliary_model_wrapper(self):
+        @register_auxiliary_model_wrapper
+        class TestAuxiliaryModelWrapper0(object):
             def __init__(self):
                 self.name = 'test0'
 
-        assert SPECIAL_MODULE_DICT['TestSpecialModule0'] == TestSpecialModule0
+        assert AUXILIARY_MODEL_WRAPPER_DICT['TestAuxiliaryModelWrapper0'] == TestAuxiliaryModelWrapper0
 
-        @register_special_module()
-        class TestSpecialModule1(object):
+        @register_auxiliary_model_wrapper()
+        class TestAuxiliaryModelWrapper1(object):
             def __init__(self):
                 self.name = 'test1'
 
-        assert SPECIAL_MODULE_DICT['TestSpecialModule1'] == TestSpecialModule1
-        random_name = 'custom_special_module_class_name2'
+        assert AUXILIARY_MODEL_WRAPPER_DICT['TestAuxiliaryModelWrapper1'] == TestAuxiliaryModelWrapper1
+        random_name = 'custom_auxiliary_model_wrapper_class_name2'
 
-        @register_special_module(key=random_name)
-        class TestSpecialModule2(object):
+        @register_auxiliary_model_wrapper(key=random_name)
+        class TestAuxiliaryModelWrapper2(object):
             def __init__(self):
                 self.name = 'test2'
 
-        assert SPECIAL_MODULE_DICT[random_name] == TestSpecialModule2
+        assert AUXILIARY_MODEL_WRAPPER_DICT[random_name] == TestAuxiliaryModelWrapper2
 
     def test_register_pre_epoch_proc_func(self):
         @register_pre_epoch_proc_func
