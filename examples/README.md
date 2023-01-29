@@ -125,7 +125,7 @@ wget http://host.robots.ox.ac.uk/pascal/VOC/voc2012/VOCtrainval_11-May-2012.tar
 mkdir ./resource/dataset/ -p
 mv VOCtrainval_11-May-2012.tar ./resource/dataset/
 cd ./resource/dataset/
-tar -xvf ILSVRC2012_img_val.tar
+tar -xvf VOCtrainval_11-May-2012.tar
 cd ../../
 ```
 
