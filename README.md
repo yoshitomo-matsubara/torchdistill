@@ -20,6 +20,12 @@ When you refer to ***torchdistill*** in your paper, please cite [this paper](htt
 instead of this GitHub repository.  
 **If you use** ***torchdistill*** **as part of your work, your citation is appreciated and motivates me to maintain and upgrade this framework!** 
 
+## Important Notice
+To run the scripts in `examples/`, please use a PyPI packages (i.e., `pip3 install torchdistill`) instead of local package files in `torchdistill/` because 
+I am preparing for next major release, and the example scripts have not been synced with the local package files in `torchdistill/`  
+On top of that, you can add your modules (models, loss functions, datasets, etc) without editing code in the local package `torchdistill/`
+(See [Discussions](https://github.com/yoshitomo-matsubara/torchdistill/discussions) for more details)
+
 ## Forward hook manager
 Using **ForwardHookManager**, you can extract intermediate representations in model without modifying the interface of its forward function.  
 [This example notebook](https://github.com/yoshitomo-matsubara/torchdistill/tree/main/demo/extract_intermediate_representations.ipynb) [![Open In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/yoshitomo-matsubara/torchdistill/blob/master/demo/extract_intermediate_representations.ipynb) 
@@ -102,7 +108,7 @@ pip3 install torchdistill
 pipenv install torchdistill
 ```
 
-### Install from this repository 
+### Install from this repository (not recommended)
 ```
 git clone https://github.com/yoshitomo-matsubara/torchdistill.git
 cd torchdistill/
