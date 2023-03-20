@@ -75,7 +75,7 @@ train:
   teacher:
     forward_proc: 'forward_batch_supp_dict'
     sequential: []
-    special:
+    auxiliary_model_wrapper:
       type: 'Linear4CRD'
       params:
         input_module_path: 'model.avgpool'
@@ -94,7 +94,7 @@ train:
     forward_proc: 'forward_batch_supp_dict'
     adaptations:
     sequential: []
-    special:
+    auxiliary_model_wrapper:
       type: 'Linear4CRD'
       params:
         input_module_path: 'model.avgpool'

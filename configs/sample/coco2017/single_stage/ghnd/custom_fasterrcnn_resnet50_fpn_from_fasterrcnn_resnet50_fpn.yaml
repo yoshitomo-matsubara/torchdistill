@@ -70,7 +70,7 @@ train:
   teacher:
     forward_proc: 'forward_batch'
     sequential: []
-    special:
+    auxiliary_model_wrapper:
       type: 'HeadRCNN'
       params:
         head_rcnn:
@@ -85,7 +85,7 @@ train:
     forward_proc: 'forward_batch'
     adaptations:
     sequential: []
-    special:
+    auxiliary_model_wrapper:
       type: 'HeadRCNN'
       params:
         head_rcnn:

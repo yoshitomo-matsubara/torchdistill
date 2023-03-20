@@ -73,7 +73,7 @@ train:
     teacher:
       forward_proc: 'forward_batch4sskd'
       sequential: []
-      special:
+      auxiliary_model_wrapper:
         type: 'SSWrapper4SSKD'
         params:
           input_module: &teacher4sskd_in_module
@@ -90,7 +90,7 @@ train:
       frozen_modules: ['model']
     student:
       adaptations:
-      special:
+      auxiliary_model_wrapper:
         type: 'EmptyModule'
         params:
       sequential: []
@@ -128,7 +128,7 @@ train:
     teacher:
       forward_proc: 'forward_batch4sskd'
       sequential: []
-      special:
+      auxiliary_model_wrapper:
         type: 'SSWrapper4SSKD'
         params:
           input_module: *teacher4sskd_in_module
@@ -144,7 +144,7 @@ train:
       forward_proc: 'forward_batch4sskd'
       adaptations:
       sequential: []
-      special:
+      auxiliary_model_wrapper:
         type: 'SSWrapper4SSKD'
         params:
           input_module:

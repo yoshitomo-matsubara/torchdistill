@@ -70,7 +70,7 @@ train:
       num_workers: 16
     teacher:
       sequential: []
-      special:
+      auxiliary_model_wrapper:
         type: &teacher4ft 'Teacher4FactorTransfer'
         params:
           minimal:
@@ -93,7 +93,7 @@ train:
       frozen_modules: ['teacher_model']
     student:
       adaptations:
-      special:
+      auxiliary_model_wrapper:
         type: 'EmptyModule'
         params:
       sequential: []
@@ -138,7 +138,7 @@ train:
       cache_output:
     teacher:
       sequential: []
-      special:
+      auxiliary_model_wrapper:
         type: *teacher4ft
         params:
           minimal:
@@ -154,7 +154,7 @@ train:
     student:
       adaptations:
       sequential: []
-      special:
+      auxiliary_model_wrapper:
         type: 'Student4FactorTransfer'
         params:
           input_module_path: 'student_model.layer4'

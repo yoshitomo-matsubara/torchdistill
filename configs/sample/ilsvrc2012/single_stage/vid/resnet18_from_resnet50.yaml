@@ -77,7 +77,7 @@ train:
   student:
     adaptations:
     sequential: []
-    special:
+    auxiliary_model_wrapper:
       type: 'VariationalDistributor4VID'
       params:
         regressors:
