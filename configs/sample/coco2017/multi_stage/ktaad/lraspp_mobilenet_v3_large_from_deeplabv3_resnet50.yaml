@@ -82,7 +82,7 @@ train:
       collate_fn: 'coco_seg_eval_collate_fn'
     teacher:
       sequential: []
-      special:
+      auxiliary_model_wrapper:
         type: &teacher4ft 'Teacher4FactorTransfer'
         params:
           minimal:
@@ -104,7 +104,7 @@ train:
       frozen_modules: ['teacher_model']
     student:
       adaptations:
-      special:
+      auxiliary_model_wrapper:
         type: 'EmptyModule'
         params:
       sequential: []
@@ -160,7 +160,7 @@ train:
       cache_output:
     teacher:
       sequential: []
-      special:
+      auxiliary_model_wrapper:
         type: *teacher4ft
         params:
           minimal:
@@ -176,7 +176,7 @@ train:
     student:
       adaptations:
       sequential: []
-      special:
+      auxiliary_model_wrapper:
         type: 'Student4KTAAD'
         params:
           input_module_path: 'student_model.classifier.high_classifier'

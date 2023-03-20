@@ -78,7 +78,7 @@ train:
     student:
       adaptations:
       sequential: []
-      special:
+      auxiliary_model_wrapper:
         type: 'Connector4DAB'
         params:
           connectors:

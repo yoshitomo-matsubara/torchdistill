@@ -65,11 +65,11 @@ train:
       collate_fn: 'coco_collate_fn'
     teacher:
       sequential: []
-      special:
+      auxiliary_model_wrapper:
         type: &teacher4ft 'Teacher4FactorTransfer'
         params:
           minimal:
-            special:
+            auxiliary_model_wrapper:
               type: 'HeadRCNN'
               params:
                 head_rcnn:
@@ -92,7 +92,7 @@ train:
       frozen_modules: ['teacher_model']
     student:
       adaptations:
-      special:
+      auxiliary_model_wrapper:
         type: 'EmptyModule'
         params:
       sequential: []
@@ -132,7 +132,7 @@ train:
     teacher:
       forward_proc: 'forward_batch_target'
       sequential: []
-      special:
+      auxiliary_model_wrapper:
         type: *teacher4ft
         params:
           minimal:
@@ -149,7 +149,7 @@ train:
       forward_proc: 'forward_batch_target'
       adaptations:
       sequential: []
-      special:
+      auxiliary_model_wrapper:
         type: 'Student4FactorTransfer'
         params:
           input_module_path: 'student_model.backbone.body.layer4'

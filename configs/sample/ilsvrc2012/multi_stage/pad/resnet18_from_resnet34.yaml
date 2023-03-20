@@ -125,7 +125,7 @@ train:
     student:
       adaptations:
       sequential: []
-      special:
+      auxiliary_model_wrapper:
         type: 'VarianceBranch4PAD'
         params:
           input_module:
