@@ -26,6 +26,11 @@ I am preparing for next major release, and the example scripts have not been syn
 On top of that, you can add your modules (models, loss functions, datasets, etc) without editing code in the local package `torchdistill/`
 (See [Discussions](https://github.com/yoshitomo-matsubara/torchdistill/discussions) for more details)
 
+While waiting for the next major release of ***torchdistill***, I strongly suggest that you
+- use torchdistill v0.3.3 (`pip install torchdistill`) with torchvision=<v0.13.1
+- use executable scripts under [`examples/legacy/`](https://github.com/yoshitomo-matsubara/torchdistill/tree/main/examples/legacy)
+- refer to [`configs/legacy/`](https://github.com/yoshitomo-matsubara/torchdistill/tree/main/configs/legacy)
+
 ## Forward hook manager
 Using **ForwardHookManager**, you can extract intermediate representations in model without modifying the interface of its forward function.  
 [This example notebook](https://github.com/yoshitomo-matsubara/torchdistill/tree/main/demo/extract_intermediate_representations.ipynb) [![Open In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/yoshitomo-matsubara/torchdistill/blob/master/demo/extract_intermediate_representations.ipynb) 

@@ -1,0 +1,256 @@
+datasets:
+  coco2017:
+    name: &dataset_name 'coco2017'
+    type: 'cocodetect'
+    root: &root_dir !join ['~/dataset/', *dataset_name]
+    splits:
+      train:
+        dataset_id: &coco_train !join [*dataset_name, '/train']
+        images: !join [*root_dir, '/train2017']
+        annotations: !join [*root_dir, '/annotations/instances_train2017.json']
+        annotated_only: True
+        is_segment: True
+        transforms_params:
+          - type: 'CustomRandomResize'
+            params:
+              min_size: 260
+              max_size: 1040
+          - type: 'CustomRandomHorizontalFlip'
+            params:
+              p: 0.5
+          - type: 'CustomRandomCrop'
+            params:
+              size: 480
+          - &totensor
+            type: 'CustomToTensor'
+            params:
+          - &normalize
+            type: 'CustomNormalize'
+            params:
+              mean: [0.485, 0.456, 0.406]
+              std: [0.229, 0.224, 0.225]
+      val:
+        dataset_id: &coco_val !join [*dataset_name, '/val']
+        images: !join [*root_dir, '/val2017']
+        annotations: !join [*root_dir, '/annotations/instances_val2017.json']
+        annotated_only: False
+        is_segment: True
+        transforms_params:
+          - type: 'CustomRandomResize'
+            params:
+              min_size: 520
+              max_size: 520
+          - *totensor
+          - *normalize
+
+models:
+  teacher_model:
+    name: &teacher_model_name 'deeplabv3_resnet101'
+    params:
+      pretrained: True
+      pretrained_backbone: True
+      num_classes: 21
+      aux_loss: False
+    experiment: &teacher_experiment !join [*dataset_name, '-', *teacher_model_name]
+    ckpt: !join ['./resource/ckpt/coco2017/teacher/', *teacher_experiment, '.pt']
+  student_model:
+    name: &student_model_name 'deeplabv3_mobilenet_v3_large'
+    params:
+      pretrained: False
+      pretrained_backbone: True
+      num_classes: 21
+      aux_loss: True
+    experiment: &student_experiment !join [*dataset_name, '-', *student_model_name, '_from_', *teacher_model_name]
+    ckpt: !join ['./resource/ckpt/coco2017/ktaad/', *student_experiment, '.pt']
+
+train:
+  log_freq: 1000
+  stage1:
+    num_epochs: 1
+    train_data_loader:
+      dataset_id: *coco_train
+      random_sample: True
+      num_workers: 16
+      batch_size: 16
+      collate_fn: 'coco_seg_collate_fn'
+      drop_last: True
+      cache_output:
+    val_data_loader:
+      dataset_id: *coco_val
+      random_sample: False
+      batch_size: 1
+      num_workers: 4
+      collate_fn: 'coco_seg_eval_collate_fn'
+    teacher:
+      sequential: []
+      special:
+        type: &teacher4ft 'Teacher4FactorTransfer'
+        params:
+          minimal:
+          input_module_path: &teacher4ft_in_module 'teacher_model.classifier.-1'
+          paraphraser_params: &teacher4ft_paraphraser_params
+            k: 0.5
+            num_input_channels: 21
+            kernel_size: 3
+            stride: 1
+            padding: 1
+            uses_bn: True
+          paraphraser_ckpt: &teacher4ft_paraphraser_ckpt !join ['./resource/ckpt/coco2017/ktaad/', *student_experiment, '_paraphraser.pt']
+          uses_decoder: True
+      forward_hook:
+        input: []
+        output: ['teacher_model.classifier.-1', 'paraphraser.encoder', 'paraphraser']
+      wrapper:
+      requires_grad: True
+      frozen_modules: ['teacher_model']
+    student:
+      adaptations:
+      special:
+        type: 'EmptyModule'
+        params:
+      sequential: []
+      forward_hook:
+        input: []
+        output: []
+      wrapper:
+      requires_grad: False
+    optimizer:
+      type: 'SGD'
+      params:
+        lr: 0.1
+        momentum: 0.9
+        weight_decay: 0.0001
+    criterion:
+      type: 'GeneralizedCustomLoss'
+      org_term:
+        factor: 0.0
+      sub_terms:
+        reconst:
+          criterion:
+            type: 'MSELoss'
+            params:
+              reduction: 'mean'
+          params:
+            input:
+              is_from_teacher: True
+              module_path: 'paraphraser'
+              io: 'output'
+            target:
+              is_from_teacher: True
+              module_path: 'teacher_model.classifier.-1'
+              io: 'output'
+          factor: 1.0
+        regularization:
+          criterion:
+            type: 'RegularizationLoss'
+            params:
+              is_from_teacher: True
+              module_path: 'paraphraser.encoder'
+              io: 'output'
+              p: 1
+          factor: 1.0e-7
+  stage2:
+    num_epochs: &num_epochs 30
+    train_data_loader:
+      dataset_id: *coco_train
+      random_sample: True
+      num_workers: 16
+      batch_size: 4
+      collate_fn: 'coco_seg_collate_fn'
+      drop_last: True
+      cache_output:
+    teacher:
+      sequential: []
+      special:
+        type: *teacher4ft
+        params:
+          minimal:
+          input_module_path: *teacher4ft_in_module
+          paraphraser_params: *teacher4ft_paraphraser_params
+          paraphraser_ckpt: *teacher4ft_paraphraser_ckpt
+          uses_decoder: False
+      forward_hook:
+        input: []
+        output: ['teacher_model.classifier.-1', 'paraphraser.encoder']
+      wrapper:
+      requires_grad: False
+    student:
+      adaptations:
+      sequential: []
+      special:
+        type: 'Student4KTAAD'
+        params:
+          input_module_path: 'student_model.classifier.-1'
+          feature_adapter_params:
+            conv: &adapter_conv
+              in_channels: 21
+              out_channels: &adapt_ch 10
+              kernel_size: 3
+              stride: 1
+              padding: 1
+            bn:
+              num_features: *adapt_ch
+            relu:
+              inplace: True
+          affinity_adapter_params:
+            conv: *adapter_conv
+      forward_hook:
+        input: []
+        output: ['student_model.classifier.-1', 'feature_adapter', 'affinity_adapter']
+      wrapper:
+      requires_grad: True
+      frozen_modules: []
+    optimizer:
+      type: 'SGD'
+      params:
+        lr: 0.00125
+        momentum: 0.9
+        weight_decay: 1.0e-6
+    scheduler:
+      type: 'poly_lr_scheduler'
+      params:
+        num_iterations: None
+        num_epochs: *num_epochs
+        power: 0.9
+      scheduling_step: 1
+    criterion:
+      type: 'GeneralizedCustomLoss'
+      func2extract_org_loss: 'extract_simple_org_loss_dict'
+      org_term:
+        criterion:
+          type: 'CrossEntropyLoss'
+          params:
+            reduction: 'mean'
+            ignore_index: 255
+        factor:
+          out: 1.0
+          aux: 0.5
+      sub_terms:
+        adapt:
+          criterion:
+            type: 'KTALoss'
+            params:
+              p: 1
+              q: 2
+              reduction: 'mean'
+              knowledge_translator_path: 'paraphraser.encoder'
+              feature_adapter_path: 'feature_adapter'
+          factor: 50.0
+        aff:
+          criterion:
+            type: 'AffinityLoss'
+            params:
+              student_module_path: 'affinity_adapter'
+              student_module_io: 'output'
+              teacher_module_path: 'paraphraser.encoder'
+              teacher_module_io: 'output'
+              reduction: 'mean'
+          factor: 1.0
+
+test:
+  test_data_loader:
+    dataset_id: *coco_val
+    random_sample: False
+    batch_size: 1
+    num_workers: 16
+    collate_fn: 'coco_seg_eval_collate_fn'

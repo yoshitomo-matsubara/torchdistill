@@ -1,0 +1,1200 @@
+2020-10-09 10:21:20,523	INFO	kdkit.common.main_util	| distributed init (rank 0): env://
+2020-10-09 10:21:24,615	INFO	__main__	Namespace(adjust_lr=False, config='imagenet/crd.yaml', device='cuda', dist_url='env://', log='imagenet/crd.log', start_epoch=0, student_only=False, sync_bn=True, test_only=False, world_size=3)
+2020-10-09 10:21:24,630	INFO	kdkit.datasets.util	Loading train data
+2020-10-09 10:21:27,719	INFO	kdkit.datasets.util	3.0893332958221436 sec
+2020-10-09 10:21:27,719	INFO	kdkit.datasets.util	Loading val data
+2020-10-09 10:21:27,868	INFO	kdkit.datasets.util	0.14940857887268066 sec
+2020-10-09 10:21:28,279	INFO	kdkit.common.main_util	ckpt file is not found at `./resource/ckpt/image_classification/teacher/ilsvrc2012-resnet34.pt`
+2020-10-09 10:21:28,435	INFO	kdkit.common.main_util	ckpt file is not found at `./imagenet/crd/ilsvrc2012-resnet18_from_resnet34.pt`
+2020-10-09 10:21:28,446	INFO	__main__	Start distillation
+2020-10-09 10:22:46,834	INFO	kdkit.models.util	[teacher model]
+2020-10-09 10:22:46,834	INFO	kdkit.models.util	Using the Linear4CRD teacher model
+2020-10-09 10:22:46,834	INFO	kdkit.models.util	Frozen module(s): {'model'}
+2020-10-09 10:22:47,963	INFO	kdkit.models.util	[student model]
+2020-10-09 10:22:47,964	INFO	kdkit.models.util	Using the Linear4CRD student model
+2020-10-09 10:23:15,805	INFO	kdkit.core.distillation	Note that you are training some/all of the modules in the teacher model
+2020-10-09 10:23:41,400	INFO	kdkit.losses.single	normalization constant z_v1 is set to 2836260.2
+2020-10-09 10:23:41,401	INFO	kdkit.losses.single	normalization constant z_v2 is set to 2823774.2
+2020-10-09 10:23:42,108	INFO	kdkit.misc.log	Epoch: [0]  [   0/5025]  eta: 1 day, 12:42:42  lr: 0.1  img/s: 30.22086443937913  loss: 25.7650 (25.7650)  time: 26.3009  data: 23.4883  max mem: 4693
+2020-10-09 10:44:48,706	INFO	kdkit.misc.log	Epoch: [0]  [1000/5025]  eta: 1:26:38  lr: 0.1  img/s: 26.82548251932835  loss: 24.0828 (24.7214)  time: 1.2513  data: 0.0805  max mem: 4760
+2020-10-09 11:06:14,562	INFO	kdkit.misc.log	Epoch: [0]  [2000/5025]  eta: 1:04:58  lr: 0.1  img/s: 10.677270986831003  loss: 23.2791 (24.1883)  time: 1.5167  data: 0.2199  max mem: 4760
+2020-10-09 11:27:39,792	INFO	kdkit.misc.log	Epoch: [0]  [3000/5025]  eta: 0:43:27  lr: 0.1  img/s: 159.9407819208999  loss: 22.6800 (23.7948)  time: 1.1352  data: 0.2117  max mem: 4760
+2020-10-09 11:48:58,716	INFO	kdkit.misc.log	Epoch: [0]  [4000/5025]  eta: 0:21:57  lr: 0.1  img/s: 170.68791114090104  loss: 22.2821 (23.4724)  time: 1.1104  data: 0.4513  max mem: 4760
+2020-10-09 12:10:25,360	INFO	kdkit.misc.log	Epoch: [0]  [5000/5025]  eta: 0:00:32  lr: 0.1  img/s: 210.4263171718543  loss: 21.8012 (23.1950)  time: 1.0420  data: 0.1975  max mem: 4760
+2020-10-09 12:10:34,155	INFO	kdkit.misc.log	Epoch: [0] Total time: 1:47:18
+2020-10-09 12:10:42,498	INFO	kdkit.misc.log	Validation:  [  0/131]  eta: 0:18:10  acc1: 17.1875 (17.1875)  acc5: 35.1562 (35.1562)  time: 8.3236  data: 7.8149  max mem: 4760
+2020-10-09 12:11:05,959	INFO	kdkit.misc.log	Validation: Total time: 0:00:31
+2020-10-09 12:11:06,086	INFO	__main__	 * Acc@1 21.4836	Acc@5 44.6371
+
+2020-10-09 12:11:06,086	INFO	__main__	Updating ckpt (Best top1 accuracy: 0.0000 -> 21.4836)
+2020-10-09 12:11:31,705	INFO	kdkit.misc.log	Epoch: [1]  [   0/5025]  eta: 1 day, 11:34:39  lr: 0.1  img/s: 137.1584569532016  loss: 24.0554 (24.0554)  time: 25.4884  data: 24.8686  max mem: 4760
+2020-10-09 12:33:21,449	INFO	kdkit.misc.log	Epoch: [1]  [1000/5025]  eta: 1:29:28  lr: 0.1  img/s: 419.7800520904471  loss: 22.0948 (22.1886)  time: 1.9036  data: 0.0011  max mem: 4760
+2020-10-09 12:54:50,972	INFO	kdkit.misc.log	Epoch: [1]  [2000/5025]  eta: 1:06:07  lr: 0.1  img/s: 295.2761558326252  loss: 21.5846 (21.9994)  time: 1.0874  data: 0.0002  max mem: 4760
+2020-10-09 13:16:37,030	INFO	kdkit.misc.log	Epoch: [1]  [3000/5025]  eta: 0:44:12  lr: 0.1  img/s: 404.2326780103792  loss: 21.3820 (21.8341)  time: 1.8855  data: 0.0007  max mem: 4760
+2020-10-09 13:38:04,108	INFO	kdkit.misc.log	Epoch: [1]  [4000/5025]  eta: 0:22:16  lr: 0.1  img/s: 177.96028142930948  loss: 21.1300 (21.6906)  time: 1.1045  data: 0.0010  max mem: 4760
+2020-10-09 13:59:42,872	INFO	kdkit.misc.log	Epoch: [1]  [5000/5025]  eta: 0:00:32  lr: 0.1  img/s: 446.30309706817553  loss: 21.0478 (21.5600)  time: 1.5535  data: 0.0008  max mem: 4760
+2020-10-09 13:59:49,138	INFO	kdkit.misc.log	Epoch: [1] Total time: 1:48:42
+2020-10-09 13:59:56,837	INFO	kdkit.misc.log	Validation:  [  0/131]  eta: 0:16:45  acc1: 28.1250 (28.1250)  acc5: 46.8750 (46.8750)  time: 7.6744  data: 7.6229  max mem: 4760
+2020-10-09 14:00:20,965	INFO	kdkit.misc.log	Validation: Total time: 0:00:31
+2020-10-09 14:00:21,016	INFO	__main__	 * Acc@1 31.8494	Acc@5 57.2469
+
+2020-10-09 14:00:21,016	INFO	__main__	Updating ckpt (Best top1 accuracy: 21.4836 -> 31.8494)
+2020-10-09 14:00:46,236	INFO	kdkit.misc.log	Epoch: [2]  [   0/5025]  eta: 1 day, 10:56:27  lr: 0.1  img/s: 183.47389948856028  loss: 22.2932 (22.2932)  time: 25.0324  data: 24.5691  max mem: 4760
+2020-10-09 14:21:38,340	INFO	kdkit.misc.log	Epoch: [2]  [1000/5025]  eta: 1:25:35  lr: 0.1  img/s: 253.13392142049747  loss: 20.4188 (20.5538)  time: 1.0718  data: 0.3421  max mem: 4760
+2020-10-09 14:42:43,333	INFO	kdkit.misc.log	Epoch: [2]  [2000/5025]  eta: 1:04:03  lr: 0.1  img/s: 20.323299978759817  loss: 20.1598 (20.4009)  time: 1.4615  data: 0.3320  max mem: 4760
+2020-10-09 15:03:47,407	INFO	kdkit.misc.log	Epoch: [2]  [3000/5025]  eta: 0:42:48  lr: 0.1  img/s: 185.5371934804138  loss: 19.9996 (20.2913)  time: 1.1039  data: 0.2031  max mem: 4760
+2020-10-09 15:25:05,652	INFO	kdkit.misc.log	Epoch: [2]  [4000/5025]  eta: 0:21:42  lr: 0.1  img/s: 11.960860970613117  loss: 19.7987 (20.1986)  time: 1.4476  data: 0.0020  max mem: 4760
+2020-10-09 15:46:30,543	INFO	kdkit.misc.log	Epoch: [2]  [5000/5025]  eta: 0:00:31  lr: 0.1  img/s: 300.495893124302  loss: 19.9245 (20.1092)  time: 1.0503  data: 0.0021  max mem: 4760
+2020-10-09 15:46:41,854	INFO	kdkit.misc.log	Epoch: [2] Total time: 1:46:20
+2020-10-09 15:46:48,287	INFO	kdkit.misc.log	Validation:  [  0/131]  eta: 0:14:00  acc1: 32.8125 (32.8125)  acc5: 54.6875 (54.6875)  time: 6.4137  data: 6.3612  max mem: 4760
+2020-10-09 15:47:13,603	INFO	kdkit.misc.log	Validation: Total time: 0:00:31
+2020-10-09 15:47:13,778	INFO	__main__	 * Acc@1 38.4652	Acc@5 65.2127
+
+2020-10-09 15:47:13,779	INFO	__main__	Updating ckpt (Best top1 accuracy: 31.8494 -> 38.4652)
+2020-10-09 15:47:39,457	INFO	kdkit.misc.log	Epoch: [3]  [   0/5025]  eta: 1 day, 11:33:51  lr: 0.1  img/s: 171.0558692106878  loss: 19.7744 (19.7744)  time: 25.4788  data: 24.9819  max mem: 4760
+2020-10-09 16:08:38,428	INFO	kdkit.misc.log	Epoch: [3]  [1000/5025]  eta: 1:26:04  lr: 0.1  img/s: 169.1986037582727  loss: 18.4666 (18.3545)  time: 1.0921  data: 0.2941  max mem: 4760
+2020-10-09 16:30:08,310	INFO	kdkit.misc.log	Epoch: [3]  [2000/5025]  eta: 1:04:51  lr: 0.1  img/s: 6.376847502151352  loss: 18.3505 (18.3268)  time: 1.7859  data: 0.0380  max mem: 4760
+2020-10-09 16:51:32,300	INFO	kdkit.misc.log	Epoch: [3]  [3000/5025]  eta: 0:43:23  lr: 0.1  img/s: 168.76121987402877  loss: 17.9426 (18.2956)  time: 1.2650  data: 0.3279  max mem: 4760
+2020-10-09 17:12:49,236	INFO	kdkit.misc.log	Epoch: [3]  [4000/5025]  eta: 0:21:55  lr: 0.1  img/s: 181.6965267691053  loss: 18.0255 (18.2480)  time: 1.1844  data: 0.6976  max mem: 4760
+2020-10-09 17:34:12,758	INFO	kdkit.misc.log	Epoch: [3]  [5000/5025]  eta: 0:00:32  lr: 0.1  img/s: 253.2423453532272  loss: 18.1760 (18.2013)  time: 1.6041  data: 1.1782  max mem: 4760
+2020-10-09 17:34:20,739	INFO	kdkit.misc.log	Epoch: [3] Total time: 1:47:06
+2020-10-09 17:34:27,808	INFO	kdkit.misc.log	Validation:  [  0/131]  eta: 0:15:22  acc1: 34.3750 (34.3750)  acc5: 67.1875 (67.1875)  time: 7.0448  data: 6.9940  max mem: 4760
+2020-10-09 17:34:52,583	INFO	kdkit.misc.log	Validation: Total time: 0:00:31
+2020-10-09 17:34:52,584	INFO	__main__	 * Acc@1 41.3832	Acc@5 68.2246
+
+2020-10-09 17:34:52,585	INFO	__main__	Updating ckpt (Best top1 accuracy: 38.4652 -> 41.3832)
+2020-10-09 17:35:17,952	INFO	kdkit.misc.log	Epoch: [4]  [   0/5025]  eta: 1 day, 11:06:44  lr: 0.1  img/s: 149.2410560857715  loss: 15.8818 (15.8818)  time: 25.1552  data: 24.5856  max mem: 4760
+2020-10-09 17:56:12,085	INFO	kdkit.misc.log	Epoch: [4]  [1000/5025]  eta: 1:25:43  lr: 0.1  img/s: 168.5419804528354  loss: 16.1508 (16.2535)  time: 1.1448  data: 0.2410  max mem: 4760
+2020-10-09 18:17:29,038	INFO	kdkit.misc.log	Epoch: [4]  [2000/5025]  eta: 1:04:24  lr: 0.1  img/s: 6.341047617604399  loss: 16.3041 (16.2503)  time: 1.7404  data: 0.0244  max mem: 4760
+2020-10-09 18:38:29,956	INFO	kdkit.misc.log	Epoch: [4]  [3000/5025]  eta: 0:42:55  lr: 0.1  img/s: 208.33187634109512  loss: 16.2727 (16.2535)  time: 1.0794  data: 0.0234  max mem: 4760
+2020-10-09 18:59:45,993	INFO	kdkit.misc.log	Epoch: [4]  [4000/5025]  eta: 0:21:44  lr: 0.1  img/s: 7.616674850222554  loss: 16.2965 (16.2538)  time: 1.7174  data: 0.0252  max mem: 4760
+2020-10-09 19:21:05,089	INFO	kdkit.misc.log	Epoch: [4]  [5000/5025]  eta: 0:00:31  lr: 0.1  img/s: 325.34962351466015  loss: 16.2251 (16.2352)  time: 1.2909  data: 0.3297  max mem: 4760
+2020-10-09 19:21:12,180	INFO	kdkit.misc.log	Epoch: [4] Total time: 1:46:19
+2020-10-09 19:21:19,864	INFO	kdkit.misc.log	Validation:  [  0/131]  eta: 0:16:42  acc1: 31.2500 (31.2500)  acc5: 60.9375 (60.9375)  time: 7.6552  data: 7.6039  max mem: 4760
+2020-10-09 19:21:44,141	INFO	kdkit.misc.log	Validation: Total time: 0:00:31
+2020-10-09 19:21:44,184	INFO	__main__	 * Acc@1 42.8231	Acc@5 69.5926
+
+2020-10-09 19:21:44,184	INFO	__main__	Updating ckpt (Best top1 accuracy: 41.3832 -> 42.8231)
+2020-10-09 19:22:09,322	INFO	kdkit.misc.log	Epoch: [5]  [   0/5025]  eta: 1 day, 10:49:39  lr: 0.1  img/s: 129.16487117961597  loss: 15.0739 (15.0739)  time: 24.9512  data: 24.2931  max mem: 4760
+2020-10-09 19:43:05,848	INFO	kdkit.misc.log	Epoch: [5]  [1000/5025]  eta: 1:25:52  lr: 0.1  img/s: 231.1492632728244  loss: 14.5584 (14.4191)  time: 1.0798  data: 0.2266  max mem: 4760
+2020-10-09 20:04:23,656	INFO	kdkit.misc.log	Epoch: [5]  [2000/5025]  eta: 1:04:28  lr: 0.1  img/s: 8.936510953607682  loss: 14.6499 (14.4343)  time: 1.5400  data: 0.1843  max mem: 4760
+2020-10-09 20:25:40,400	INFO	kdkit.misc.log	Epoch: [5]  [3000/5025]  eta: 0:43:08  lr: 0.1  img/s: 154.03033463493625  loss: 14.5745 (14.4440)  time: 1.1180  data: 0.1949  max mem: 4760
+2020-10-09 20:46:56,437	INFO	kdkit.misc.log	Epoch: [5]  [4000/5025]  eta: 0:21:49  lr: 0.1  img/s: 141.44075105867566  loss: 14.5136 (14.4498)  time: 1.1273  data: 0.6633  max mem: 4760
+2020-10-09 21:08:22,504	INFO	kdkit.misc.log	Epoch: [5]  [5000/5025]  eta: 0:00:31  lr: 0.1  img/s: 300.4928538135611  loss: 14.2689 (14.4550)  time: 1.0544  data: 0.6262  max mem: 4760
+2020-10-09 21:08:29,938	INFO	kdkit.misc.log	Epoch: [5] Total time: 1:46:45
+2020-10-09 21:08:37,792	INFO	kdkit.misc.log	Validation:  [  0/131]  eta: 0:17:06  acc1: 38.2812 (38.2812)  acc5: 60.9375 (60.9375)  time: 7.8362  data: 7.6941  max mem: 4760
+2020-10-09 21:09:01,793	INFO	kdkit.misc.log	Validation: Total time: 0:00:31
+2020-10-09 21:09:01,797	INFO	__main__	 * Acc@1 45.1511	Acc@5 71.9526
+
+2020-10-09 21:09:01,797	INFO	__main__	Updating ckpt (Best top1 accuracy: 42.8231 -> 45.1511)
+2020-10-09 21:09:26,700	INFO	kdkit.misc.log	Epoch: [6]  [   0/5025]  eta: 1 day, 10:25:01  lr: 0.1  img/s: 70.1893749229723  loss: 13.1518 (13.1518)  time: 24.6569  data: 23.4459  max mem: 4760
+2020-10-09 21:30:22,605	INFO	kdkit.misc.log	Epoch: [6]  [1000/5025]  eta: 1:25:49  lr: 0.1  img/s: 167.7551081866502  loss: 12.8643 (12.9364)  time: 1.1067  data: 0.5330  max mem: 4760
+2020-10-09 21:51:45,966	INFO	kdkit.misc.log	Epoch: [6]  [2000/5025]  eta: 1:04:35  lr: 0.1  img/s: 15.349476993577056  loss: 12.8114 (12.9384)  time: 1.4135  data: 0.1215  max mem: 4760
+2020-10-09 22:13:20,469	INFO	kdkit.misc.log	Epoch: [6]  [3000/5025]  eta: 0:43:23  lr: 0.1  img/s: 167.00527179193145  loss: 12.9495 (12.9558)  time: 1.1710  data: 0.0010  max mem: 4760
+2020-10-09 22:34:41,539	INFO	kdkit.misc.log	Epoch: [6]  [4000/5025]  eta: 0:21:56  lr: 0.1  img/s: 171.118513384569  loss: 12.7658 (12.9620)  time: 1.1288  data: 0.0010  max mem: 4760
+2020-10-09 22:56:14,181	INFO	kdkit.misc.log	Epoch: [6]  [5000/5025]  eta: 0:00:32  lr: 0.1  img/s: 210.11392206622685  loss: 12.8061 (12.9717)  time: 1.0133  data: 0.0046  max mem: 4760
+2020-10-09 22:56:22,539	INFO	kdkit.misc.log	Epoch: [6] Total time: 1:47:20
+2020-10-09 22:56:29,390	INFO	kdkit.misc.log	Validation:  [  0/131]  eta: 0:14:55  acc1: 39.8438 (39.8438)  acc5: 64.0625 (64.0625)  time: 6.8339  data: 6.7758  max mem: 4760
+2020-10-09 22:56:54,239	INFO	kdkit.misc.log	Validation: Total time: 0:00:31
+2020-10-09 22:56:54,369	INFO	__main__	 * Acc@1 45.7651	Acc@5 72.5825
+
+2020-10-09 22:56:54,370	INFO	__main__	Updating ckpt (Best top1 accuracy: 45.1511 -> 45.7651)
+2020-10-09 22:57:20,208	INFO	kdkit.misc.log	Epoch: [7]  [   0/5025]  eta: 1 day, 11:49:16  lr: 0.1  img/s: 135.60050860292802  loss: 10.1726 (10.1726)  time: 25.6629  data: 25.0360  max mem: 4760
+2020-10-09 23:18:09,580	INFO	kdkit.misc.log	Epoch: [7]  [1000/5025]  eta: 1:25:26  lr: 0.1  img/s: 183.38037572532332  loss: 11.6729 (11.7592)  time: 1.1486  data: 0.5610  max mem: 4760
+2020-10-09 23:39:20,656	INFO	kdkit.misc.log	Epoch: [7]  [2000/5025]  eta: 1:04:09  lr: 0.1  img/s: 184.01225936885308  loss: 11.6520 (11.7450)  time: 1.6920  data: 1.2038  max mem: 4760
+2020-10-10 00:00:25,008	INFO	kdkit.misc.log	Epoch: [7]  [3000/5025]  eta: 0:42:51  lr: 0.1  img/s: 209.8322123160445  loss: 11.6428 (11.7510)  time: 1.0988  data: 0.5236  max mem: 4760
+2020-10-10 00:21:38,072	INFO	kdkit.misc.log	Epoch: [7]  [4000/5025]  eta: 0:21:42  lr: 0.1  img/s: 97.59458246841183  loss: 11.7706 (11.7617)  time: 1.7278  data: 1.0412  max mem: 4760
+2020-10-10 00:42:51,208	INFO	kdkit.misc.log	Epoch: [7]  [5000/5025]  eta: 0:00:31  lr: 0.1  img/s: 279.7084570978458  loss: 11.6952 (11.7715)  time: 1.1380  data: 0.6148  max mem: 4760
+2020-10-10 00:43:02,811	INFO	kdkit.misc.log	Epoch: [7] Total time: 1:46:08
+2020-10-10 00:43:10,333	INFO	kdkit.misc.log	Validation:  [  0/131]  eta: 0:16:22  acc1: 39.8438 (39.8438)  acc5: 69.5312 (69.5312)  time: 7.4981  data: 7.4468  max mem: 4760
+2020-10-10 00:43:34,806	INFO	kdkit.misc.log	Validation: Total time: 0:00:31
+2020-10-10 00:43:34,808	INFO	__main__	 * Acc@1 46.6931	Acc@5 73.1865
+
+2020-10-10 00:43:34,808	INFO	__main__	Updating ckpt (Best top1 accuracy: 45.7651 -> 46.6931)
+2020-10-10 00:43:59,972	INFO	kdkit.misc.log	Epoch: [8]  [   0/5025]  eta: 1 day, 10:50:49  lr: 0.1  img/s: 130.35533321584202  loss: 11.8594 (11.8594)  time: 24.9650  data: 24.3129  max mem: 4760
+2020-10-10 01:05:43,217	INFO	kdkit.misc.log	Epoch: [8]  [1000/5025]  eta: 1:29:00  lr: 0.1  img/s: 313.54814311231735  loss: 11.1881 (10.7789)  time: 1.1031  data: 0.0007  max mem: 4760
+2020-10-10 01:27:28,409	INFO	kdkit.misc.log	Epoch: [8]  [2000/5025]  eta: 1:06:21  lr: 0.1  img/s: 313.8614422723087  loss: 10.8020 (10.7946)  time: 1.9035  data: 0.0002  max mem: 4760
+2020-10-10 01:48:59,469	INFO	kdkit.misc.log	Epoch: [8]  [3000/5025]  eta: 0:44:08  lr: 0.1  img/s: 325.44792973193046  loss: 10.5447 (10.8024)  time: 1.1009  data: 0.0027  max mem: 4760
+2020-10-10 02:10:45,651	INFO	kdkit.misc.log	Epoch: [8]  [4000/5025]  eta: 0:22:20  lr: 0.1  img/s: 387.84562145555856  loss: 10.8786 (10.8110)  time: 1.9153  data: 0.0013  max mem: 4760
+2020-10-10 02:32:13,126	INFO	kdkit.misc.log	Epoch: [8]  [5000/5025]  eta: 0:00:32  lr: 0.1  img/s: 442.72777735693944  loss: 10.8461 (10.8170)  time: 1.0501  data: 0.0017  max mem: 4760
+2020-10-10 02:32:21,704	INFO	kdkit.misc.log	Epoch: [8] Total time: 1:48:46
+2020-10-10 02:32:29,207	INFO	kdkit.misc.log	Validation:  [  0/131]  eta: 0:16:18  acc1: 39.8438 (39.8438)  acc5: 67.9688 (67.9688)  time: 7.4679  data: 7.4165  max mem: 4760
+2020-10-10 02:32:53,473	INFO	kdkit.misc.log	Validation: Total time: 0:00:31
+2020-10-10 02:32:53,591	INFO	__main__	 * Acc@1 48.0130	Acc@5 74.4525
+
+2020-10-10 02:32:53,592	INFO	__main__	Updating ckpt (Best top1 accuracy: 46.6931 -> 48.0130)
+2020-10-10 02:33:18,869	INFO	kdkit.misc.log	Epoch: [9]  [   0/5025]  eta: 1 day, 11:02:09  lr: 0.1  img/s: 187.84209320031297  loss: 10.4491 (10.4491)  time: 25.1003  data: 24.6478  max mem: 4760
+2020-10-10 02:54:14,436	INFO	kdkit.misc.log	Epoch: [9]  [1000/5025]  eta: 1:25:49  lr: 0.1  img/s: 221.4547783345477  loss: 10.1373 (10.0288)  time: 1.1263  data: 0.1964  max mem: 4760
+2020-10-10 03:15:28,788	INFO	kdkit.misc.log	Epoch: [9]  [2000/5025]  eta: 1:04:22  lr: 0.1  img/s: 14.787998469250915  loss: 9.8295 (10.0367)  time: 1.7187  data: 0.7493  max mem: 4760
+2020-10-10 03:36:24,076	INFO	kdkit.misc.log	Epoch: [9]  [3000/5025]  eta: 0:42:51  lr: 0.1  img/s: 138.03949264125382  loss: 10.1637 (10.0388)  time: 1.2976  data: 0.3723  max mem: 4760
+2020-10-10 03:57:40,793	INFO	kdkit.misc.log	Epoch: [9]  [4000/5025]  eta: 0:21:43  lr: 0.1  img/s: 27.727213054371855  loss: 10.1505 (10.0455)  time: 1.3742  data: 0.2717  max mem: 4760
+2020-10-10 04:19:06,310	INFO	kdkit.misc.log	Epoch: [9]  [5000/5025]  eta: 0:00:31  lr: 0.1  img/s: 307.85956010420995  loss: 10.3316 (10.0491)  time: 1.4085  data: 0.0016  max mem: 4760
+2020-10-10 04:19:13,144	INFO	kdkit.misc.log	Epoch: [9] Total time: 1:46:19
+2020-10-10 04:19:20,800	INFO	kdkit.misc.log	Validation:  [  0/131]  eta: 0:16:39  acc1: 35.1562 (35.1562)  acc5: 64.8438 (64.8438)  time: 7.6291  data: 7.5730  max mem: 4760
+2020-10-10 04:19:44,783	INFO	kdkit.misc.log	Validation: Total time: 0:00:31
+2020-10-10 04:19:45,109	INFO	__main__	 * Acc@1 45.6171	Acc@5 72.3086
+
+2020-10-10 04:20:10,124	INFO	kdkit.misc.log	Epoch: [10]  [   0/5025]  eta: 1 day, 10:54:53  lr: 0.1  img/s: 137.45628872172102  loss: 9.2639 (9.2639)  time: 25.0136  data: 24.3952  max mem: 4760
+2020-10-10 04:41:09,688	INFO	kdkit.misc.log	Epoch: [10]  [1000/5025]  eta: 1:26:05  lr: 0.1  img/s: 175.68267550116616  loss: 9.0856 (9.4176)  time: 1.1676  data: 0.5760  max mem: 4760
+2020-10-10 05:02:26,744	INFO	kdkit.misc.log	Epoch: [10]  [2000/5025]  eta: 1:04:32  lr: 0.1  img/s: 29.60032207704825  loss: 9.3310 (9.4178)  time: 1.3424  data: 0.2206  max mem: 4760
+2020-10-10 05:23:57,185	INFO	kdkit.misc.log	Epoch: [10]  [3000/5025]  eta: 0:43:19  lr: 0.1  img/s: 172.56917707763574  loss: 9.2881 (9.4173)  time: 1.1106  data: 0.0014  max mem: 4760
+2020-10-10 05:45:27,110	INFO	kdkit.misc.log	Epoch: [10]  [4000/5025]  eta: 0:21:57  lr: 0.1  img/s: 14.064769310356295  loss: 9.6326 (9.4249)  time: 1.3961  data: 0.0018  max mem: 4760
+2020-10-10 06:06:54,400	INFO	kdkit.misc.log	Epoch: [10]  [5000/5025]  eta: 0:00:32  lr: 0.1  img/s: 244.3613233993845  loss: 9.3529 (9.4263)  time: 1.1090  data: 0.1116  max mem: 4760
+2020-10-10 06:07:04,197	INFO	kdkit.misc.log	Epoch: [10] Total time: 1:47:19
+2020-10-10 06:07:12,044	INFO	kdkit.misc.log	Validation:  [  0/131]  eta: 0:17:05  acc1: 38.2812 (38.2812)  acc5: 64.0625 (64.0625)  time: 7.8285  data: 7.7574  max mem: 4760
+2020-10-10 06:07:36,165	INFO	kdkit.misc.log	Validation: Total time: 0:00:31
+2020-10-10 06:07:36,219	INFO	__main__	 * Acc@1 50.6150	Acc@5 76.2865
+
+2020-10-10 06:07:36,219	INFO	__main__	Updating ckpt (Best top1 accuracy: 48.0130 -> 50.6150)
+2020-10-10 06:08:00,868	INFO	kdkit.misc.log	Epoch: [11]  [   0/5025]  eta: 1 day, 10:07:22  lr: 0.1  img/s: 171.1335449566809  loss: 9.4248 (9.4248)  time: 24.4462  data: 23.9495  max mem: 4760
+2020-10-10 06:28:56,024	INFO	kdkit.misc.log	Epoch: [11]  [1000/5025]  eta: 1:25:45  lr: 0.1  img/s: 193.31943736511622  loss: 8.8604 (8.9259)  time: 1.3134  data: 0.7116  max mem: 4760
+2020-10-10 06:50:11,709	INFO	kdkit.misc.log	Epoch: [11]  [2000/5025]  eta: 1:04:22  lr: 0.1  img/s: 11.56757303957005  loss: 8.8955 (8.9219)  time: 1.7064  data: 0.4321  max mem: 4760
+2020-10-10 07:11:26,105	INFO	kdkit.misc.log	Epoch: [11]  [3000/5025]  eta: 0:43:04  lr: 0.1  img/s: 193.48751586092962  loss: 8.8217 (8.9344)  time: 1.1318  data: 0.3279  max mem: 4760
+2020-10-10 07:32:47,323	INFO	kdkit.misc.log	Epoch: [11]  [4000/5025]  eta: 0:21:49  lr: 0.1  img/s: 182.96909986794992  loss: 8.8984 (8.9336)  time: 1.5260  data: 1.0135  max mem: 4760
+2020-10-10 07:54:06,660	INFO	kdkit.misc.log	Epoch: [11]  [5000/5025]  eta: 0:00:31  lr: 0.1  img/s: 228.32517952990798  loss: 8.8296 (8.9349)  time: 1.1622  data: 0.2383  max mem: 4760
+2020-10-10 07:54:18,080	INFO	kdkit.misc.log	Epoch: [11] Total time: 1:46:41
+2020-10-10 07:54:25,456	INFO	kdkit.misc.log	Validation:  [  0/131]  eta: 0:16:00  acc1: 39.8438 (39.8438)  acc5: 70.3125 (70.3125)  time: 7.3288  data: 7.2485  max mem: 4760
+2020-10-10 07:54:49,550	INFO	kdkit.misc.log	Validation: Total time: 0:00:31
+2020-10-10 07:54:49,981	INFO	__main__	 * Acc@1 48.5030	Acc@5 74.7685
+
+2020-10-10 07:55:18,854	INFO	kdkit.misc.log	Epoch: [12]  [   0/5025]  eta: 1 day, 16:17:54  lr: 0.1  img/s: 13.55917928964467  loss: 9.1525 (9.1525)  time: 28.8705  data: 22.6017  max mem: 4760
+2020-10-10 08:16:59,960	INFO	kdkit.misc.log	Epoch: [12]  [1000/5025]  eta: 1:29:07  lr: 0.1  img/s: 332.4008249514241  loss: 8.2679 (8.4998)  time: 1.0654  data: 0.0021  max mem: 4760
+2020-10-10 08:38:47,524	INFO	kdkit.misc.log	Epoch: [12]  [2000/5025]  eta: 1:06:27  lr: 0.1  img/s: 5.077289648726554  loss: 8.5226 (8.5258)  time: 1.9273  data: 0.0004  max mem: 4760
+2020-10-10 09:00:16,030	INFO	kdkit.misc.log	Epoch: [12]  [3000/5025]  eta: 0:44:09  lr: 0.1  img/s: 444.4464612289116  loss: 8.3277 (8.5214)  time: 1.0962  data: 0.0020  max mem: 4760
+2020-10-10 09:22:01,847	INFO	kdkit.misc.log	Epoch: [12]  [4000/5025]  eta: 0:22:20  lr: 0.1  img/s: 5.033531928053425  loss: 8.5871 (8.5258)  time: 1.9123  data: 0.0002  max mem: 4760
+2020-10-10 09:43:28,918	INFO	kdkit.misc.log	Epoch: [12]  [5000/5025]  eta: 0:00:32  lr: 0.1  img/s: 443.88811279361926  loss: 8.5165 (8.5325)  time: 1.0222  data: 0.0028  max mem: 4760
+2020-10-10 09:43:35,644	INFO	kdkit.misc.log	Epoch: [12] Total time: 1:48:45
+2020-10-10 09:43:42,485	INFO	kdkit.misc.log	Validation:  [  0/131]  eta: 0:14:54  acc1: 41.4062 (41.4062)  acc5: 71.8750 (71.8750)  time: 6.8245  data: 6.7437  max mem: 4760
+2020-10-10 09:44:07,504	INFO	kdkit.misc.log	Validation: Total time: 0:00:31
+2020-10-10 09:44:07,572	INFO	__main__	 * Acc@1 50.0010	Acc@5 76.2725
+
+2020-10-10 09:44:31,087	INFO	kdkit.misc.log	Epoch: [13]  [   0/5025]  eta: 1 day, 8:49:11  lr: 0.1  img/s: 145.7851520841648  loss: 8.4681 (8.4681)  time: 23.5126  data: 22.9296  max mem: 4760
+2020-10-10 10:05:49,529	INFO	kdkit.misc.log	Epoch: [13]  [1000/5025]  eta: 1:27:15  lr: 0.1  img/s: 178.44609140338486  loss: 8.2919 (8.1642)  time: 1.1184  data: 0.1267  max mem: 4760
+2020-10-10 10:27:22,948	INFO	kdkit.misc.log	Epoch: [13]  [2000/5025]  eta: 1:05:23  lr: 0.1  img/s: 13.421412032444568  loss: 7.9660 (8.1793)  time: 1.4260  data: 0.0014  max mem: 4760
+2020-10-10 10:48:56,229	INFO	kdkit.misc.log	Epoch: [13]  [3000/5025]  eta: 0:43:43  lr: 0.1  img/s: 198.14746740994138  loss: 8.0199 (8.1892)  time: 1.7641  data: 0.0003  max mem: 4760
+2020-10-10 11:10:17,168	INFO	kdkit.misc.log	Epoch: [13]  [4000/5025]  eta: 0:22:04  lr: 0.1  img/s: 183.23852638568943  loss: 8.1991 (8.1968)  time: 1.1082  data: 0.0010  max mem: 4760
+2020-10-10 11:31:49,283	INFO	kdkit.misc.log	Epoch: [13]  [5000/5025]  eta: 0:00:32  lr: 0.1  img/s: 350.61981715472615  loss: 8.2877 (8.2028)  time: 1.5635  data: 0.0030  max mem: 4760
+2020-10-10 11:31:56,175	INFO	kdkit.misc.log	Epoch: [13] Total time: 1:47:48
+2020-10-10 11:32:03,831	INFO	kdkit.misc.log	Validation:  [  0/131]  eta: 0:16:37  acc1: 39.0625 (39.0625)  acc5: 71.0938 (71.0938)  time: 7.6182  data: 7.5588  max mem: 4760
+2020-10-10 11:32:28,068	INFO	kdkit.misc.log	Validation: Total time: 0:00:31
+2020-10-10 11:32:28,098	INFO	__main__	 * Acc@1 51.2950	Acc@5 77.0985
+
+2020-10-10 11:32:28,099	INFO	__main__	Updating ckpt (Best top1 accuracy: 50.6150 -> 51.2950)
+2020-10-10 11:32:53,428	INFO	kdkit.misc.log	Epoch: [14]  [   0/5025]  eta: 1 day, 11:03:16  lr: 0.1  img/s: 130.48309907198248  loss: 7.9488 (7.9488)  time: 25.1137  data: 24.4622  max mem: 4760
+2020-10-10 11:54:01,418	INFO	kdkit.misc.log	Epoch: [14]  [1000/5025]  eta: 1:26:39  lr: 0.1  img/s: 194.1896252333985  loss: 7.9476 (7.9055)  time: 1.1244  data: 0.2634  max mem: 4760
+2020-10-10 12:15:32,192	INFO	kdkit.misc.log	Epoch: [14]  [2000/5025]  eta: 1:05:06  lr: 0.1  img/s: 20.25251405470549  loss: 7.7564 (7.9327)  time: 1.2889  data: 0.4456  max mem: 4760
+2020-10-10 12:36:50,148	INFO	kdkit.misc.log	Epoch: [14]  [3000/5025]  eta: 0:43:25  lr: 0.1  img/s: 177.14333414158116  loss: 7.9752 (7.9352)  time: 1.1160  data: 0.2565  max mem: 4760
+2020-10-10 12:58:14,234	INFO	kdkit.misc.log	Epoch: [14]  [4000/5025]  eta: 0:21:58  lr: 0.1  img/s: 48.29635766815225  loss: 7.9865 (7.9381)  time: 1.2885  data: 0.7460  max mem: 4760
+2020-10-10 13:19:29,117	INFO	kdkit.misc.log	Epoch: [14]  [5000/5025]  eta: 0:00:32  lr: 0.1  img/s: 157.2707654356714  loss: 7.8938 (7.9427)  time: 1.1056  data: 0.6204  max mem: 4760
+2020-10-10 13:19:40,367	INFO	kdkit.misc.log	Epoch: [14] Total time: 1:47:12
+2020-10-10 13:19:48,308	INFO	kdkit.misc.log	Validation:  [  0/131]  eta: 0:17:17  acc1: 42.1875 (42.1875)  acc5: 71.0938 (71.0938)  time: 7.9213  data: 7.8516  max mem: 4760
+2020-10-10 13:20:12,302	INFO	kdkit.misc.log	Validation: Total time: 0:00:31
+2020-10-10 13:20:12,312	INFO	__main__	 * Acc@1 48.4110	Acc@5 74.9405
+
+2020-10-10 13:20:37,297	INFO	kdkit.misc.log	Epoch: [15]  [   0/5025]  eta: 1 day, 10:51:57  lr: 0.1  img/s: 97.10253463124465  loss: 7.3950 (7.3950)  time: 24.9787  data: 24.1033  max mem: 4760
+2020-10-10 13:41:44,360	INFO	kdkit.misc.log	Epoch: [15]  [1000/5025]  eta: 1:26:35  lr: 0.1  img/s: 141.71539962563358  loss: 7.6667 (7.7082)  time: 1.0904  data: 0.5677  max mem: 4760
+2020-10-10 14:03:10,595	INFO	kdkit.misc.log	Epoch: [15]  [2000/5025]  eta: 1:04:57  lr: 0.1  img/s: 6.894965829081256  loss: 7.9485 (7.7140)  time: 1.7489  data: 0.0409  max mem: 4760
+2020-10-10 14:24:32,574	INFO	kdkit.misc.log	Epoch: [15]  [3000/5025]  eta: 0:43:24  lr: 0.1  img/s: 154.55437861495952  loss: 7.8616 (7.7134)  time: 1.2061  data: 0.0371  max mem: 4760
+2020-10-10 14:46:01,851	INFO	kdkit.misc.log	Epoch: [15]  [4000/5025]  eta: 0:21:59  lr: 0.1  img/s: 6.803958533232483  loss: 7.7994 (7.7195)  time: 1.5843  data: 0.0331  max mem: 4760
+2020-10-10 15:07:20,816	INFO	kdkit.misc.log	Epoch: [15]  [5000/5025]  eta: 0:00:32  lr: 0.1  img/s: 233.36693929783564  loss: 7.7447 (7.7219)  time: 0.9794  data: 0.5688  max mem: 4760
+2020-10-10 15:07:29,488	INFO	kdkit.misc.log	Epoch: [15] Total time: 1:47:17
+2020-10-10 15:07:37,260	INFO	kdkit.misc.log	Validation:  [  0/131]  eta: 0:16:55  acc1: 41.4062 (41.4062)  acc5: 71.8750 (71.8750)  time: 7.7545  data: 7.6873  max mem: 4760
+2020-10-10 15:08:01,327	INFO	kdkit.misc.log	Validation: Total time: 0:00:31
+2020-10-10 15:08:01,422	INFO	__main__	 * Acc@1 49.0150	Acc@5 75.2365
+
+2020-10-10 15:08:25,932	INFO	kdkit.misc.log	Epoch: [16]  [   0/5025]  eta: 1 day, 10:11:09  lr: 0.1  img/s: 73.28252911129611  loss: 7.5012 (7.5012)  time: 24.4915  data: 23.3316  max mem: 4760
+2020-10-10 15:29:33,260	INFO	kdkit.misc.log	Epoch: [16]  [1000/5025]  eta: 1:26:34  lr: 0.1  img/s: 193.26819066184774  loss: 7.4470 (7.5179)  time: 1.0838  data: 0.1386  max mem: 4760
+2020-10-10 15:50:53,212	INFO	kdkit.misc.log	Epoch: [16]  [2000/5025]  eta: 1:04:47  lr: 0.1  img/s: 7.898981019115594  loss: 7.5962 (7.5173)  time: 1.7688  data: 0.2901  max mem: 4760
+2020-10-10 16:11:57,838	INFO	kdkit.misc.log	Epoch: [16]  [3000/5025]  eta: 0:43:08  lr: 0.1  img/s: 217.87273986172877  loss: 7.4765 (7.5319)  time: 1.0805  data: 0.2100  max mem: 4760
+2020-10-10 16:33:07,670	INFO	kdkit.misc.log	Epoch: [16]  [4000/5025]  eta: 0:21:48  lr: 0.1  img/s: 8.278711705780275  loss: 7.7551 (7.5388)  time: 1.6787  data: 0.2525  max mem: 4760
+2020-10-10 16:54:12,193	INFO	kdkit.misc.log	Epoch: [16]  [5000/5025]  eta: 0:00:31  lr: 0.1  img/s: 232.4133736382583  loss: 7.5565 (7.5363)  time: 1.0366  data: 0.0049  max mem: 4760
+2020-10-10 16:54:23,909	INFO	kdkit.misc.log	Epoch: [16] Total time: 1:46:22
+2020-10-10 16:54:31,050	INFO	kdkit.misc.log	Validation:  [  0/131]  eta: 0:15:33  acc1: 42.9688 (42.9688)  acc5: 71.8750 (71.8750)  time: 7.1223  data: 7.0698  max mem: 4760
+2020-10-10 16:54:55,794	INFO	kdkit.misc.log	Validation: Total time: 0:00:31
+2020-10-10 16:54:55,795	INFO	__main__	 * Acc@1 49.8310	Acc@5 75.5365
+
+2020-10-10 16:55:20,948	INFO	kdkit.misc.log	Epoch: [17]  [   0/5025]  eta: 1 day, 11:06:18  lr: 0.1  img/s: 40.42913535390648  loss: 7.4933 (7.4933)  time: 25.1500  data: 23.0475  max mem: 4760
+2020-10-10 17:17:09,066	INFO	kdkit.misc.log	Epoch: [17]  [1000/5025]  eta: 1:29:20  lr: 0.1  img/s: 380.89014291559783  loss: 7.2309 (7.3642)  time: 1.9059  data: 0.0007  max mem: 4760
+2020-10-10 17:38:34,300	INFO	kdkit.misc.log	Epoch: [17]  [2000/5025]  eta: 1:05:58  lr: 0.1  img/s: 354.9088128952105  loss: 7.3529 (7.3850)  time: 1.0776  data: 0.0002  max mem: 4760
+2020-10-10 18:00:16,609	INFO	kdkit.misc.log	Epoch: [17]  [3000/5025]  eta: 0:44:05  lr: 0.1  img/s: 367.3186824508804  loss: 7.3371 (7.3901)  time: 1.9280  data: 0.0031  max mem: 4760
+2020-10-10 18:21:40,556	INFO	kdkit.misc.log	Epoch: [17]  [4000/5025]  eta: 0:22:13  lr: 0.1  img/s: 314.53098588070054  loss: 7.3798 (7.3941)  time: 1.0813  data: 0.0004  max mem: 4760
+2020-10-10 18:43:13,709	INFO	kdkit.misc.log	Epoch: [17]  [5000/5025]  eta: 0:00:32  lr: 0.1  img/s: 405.0685745514619  loss: 7.3923 (7.3963)  time: 1.4691  data: 0.0016  max mem: 4760
+2020-10-10 18:43:19,825	INFO	kdkit.misc.log	Epoch: [17] Total time: 1:48:24
+2020-10-10 18:43:27,604	INFO	kdkit.misc.log	Validation:  [  0/131]  eta: 0:16:56  acc1: 46.8750 (46.8750)  acc5: 71.0938 (71.0938)  time: 7.7584  data: 7.6983  max mem: 4760
+2020-10-10 18:43:51,821	INFO	kdkit.misc.log	Validation: Total time: 0:00:31
+2020-10-10 18:43:51,822	INFO	__main__	 * Acc@1 50.6030	Acc@5 76.5885
+
+2020-10-10 18:44:16,894	INFO	kdkit.misc.log	Epoch: [18]  [   0/5025]  eta: 1 day, 10:58:46  lr: 0.1  img/s: 48.30872633638155  loss: 7.0462 (7.0462)  time: 25.0599  data: 23.3004  max mem: 4760
+2020-10-10 19:05:16,112	INFO	kdkit.misc.log	Epoch: [18]  [1000/5025]  eta: 1:26:04  lr: 0.1  img/s: 173.56464521116743  loss: 7.2591 (7.2644)  time: 1.1186  data: 0.4516  max mem: 4760
+2020-10-10 19:26:25,958	INFO	kdkit.misc.log	Epoch: [18]  [2000/5025]  eta: 1:04:21  lr: 0.1  img/s: 179.7337135217269  loss: 7.2180 (7.2716)  time: 1.6483  data: 0.7615  max mem: 4760
+2020-10-10 19:47:52,052	INFO	kdkit.misc.log	Epoch: [18]  [3000/5025]  eta: 0:43:11  lr: 0.1  img/s: 196.83088202817896  loss: 7.1820 (7.2680)  time: 1.1340  data: 0.3849  max mem: 4760
+2020-10-10 20:09:13,425	INFO	kdkit.misc.log	Epoch: [18]  [4000/5025]  eta: 0:21:52  lr: 0.1  img/s: 173.99257892396838  loss: 7.4921 (7.2740)  time: 1.1405  data: 0.0002  max mem: 4760
+2020-10-10 20:30:47,592	INFO	kdkit.misc.log	Epoch: [18]  [5000/5025]  eta: 0:00:32  lr: 0.1  img/s: 221.40155551746665  loss: 7.2660 (7.2712)  time: 1.0755  data: 0.0034  max mem: 4760
+2020-10-10 20:30:56,674	INFO	kdkit.misc.log	Epoch: [18] Total time: 1:47:04
+2020-10-10 20:31:04,226	INFO	kdkit.misc.log	Validation:  [  0/131]  eta: 0:16:27  acc1: 42.1875 (42.1875)  acc5: 68.7500 (68.7500)  time: 7.5345  data: 7.4308  max mem: 4760
+2020-10-10 20:31:28,550	INFO	kdkit.misc.log	Validation: Total time: 0:00:31
+2020-10-10 20:31:28,552	INFO	__main__	 * Acc@1 52.7369	Acc@5 77.8724
+
+2020-10-10 20:31:28,553	INFO	__main__	Updating ckpt (Best top1 accuracy: 51.2950 -> 52.7369)
+2020-10-10 20:31:52,317	INFO	kdkit.misc.log	Epoch: [19]  [   0/5025]  eta: 1 day, 8:54:06  lr: 0.1  img/s: 66.82274316446829  loss: 6.6005 (6.6005)  time: 23.5714  data: 22.2994  max mem: 4760
+2020-10-10 20:52:40,788	INFO	kdkit.misc.log	Epoch: [19]  [1000/5025]  eta: 1:25:14  lr: 0.1  img/s: 206.4141520287033  loss: 7.3311 (7.1340)  time: 1.1490  data: 0.6863  max mem: 4760
+2020-10-10 21:13:51,968	INFO	kdkit.misc.log	Epoch: [19]  [2000/5025]  eta: 1:04:04  lr: 0.1  img/s: 176.65661610333134  loss: 7.0871 (7.1580)  time: 1.8125  data: 1.3596  max mem: 4760
+2020-10-10 21:34:57,472	INFO	kdkit.misc.log	Epoch: [19]  [3000/5025]  eta: 0:42:50  lr: 0.1  img/s: 180.17707612635994  loss: 7.0721 (7.1661)  time: 1.1036  data: 0.6441  max mem: 4760
+2020-10-10 21:56:23,277	INFO	kdkit.misc.log	Epoch: [19]  [4000/5025]  eta: 0:21:45  lr: 0.1  img/s: 9.565849144433853  loss: 6.9268 (7.1734)  time: 1.7325  data: 0.3553  max mem: 4760
+2020-10-10 22:17:45,320	INFO	kdkit.misc.log	Epoch: [19]  [5000/5025]  eta: 0:00:31  lr: 0.1  img/s: 276.13575826298575  loss: 7.1576 (7.1722)  time: 1.0865  data: 0.0027  max mem: 4760
+2020-10-10 22:17:52,913	INFO	kdkit.misc.log	Epoch: [19] Total time: 1:46:24
+2020-10-10 22:17:59,852	INFO	kdkit.misc.log	Validation:  [  0/131]  eta: 0:15:05  acc1: 47.6562 (47.6562)  acc5: 70.3125 (70.3125)  time: 6.9158  data: 6.8493  max mem: 4760
+2020-10-10 22:18:24,674	INFO	kdkit.misc.log	Validation: Total time: 0:00:31
+2020-10-10 22:18:24,805	INFO	__main__	 * Acc@1 50.9450	Acc@5 76.8385
+
+2020-10-10 22:18:47,870	INFO	kdkit.misc.log	Epoch: [20]  [   0/5025]  eta: 1 day, 8:11:29  lr: 0.1  img/s: 228.69353477141925  loss: 6.7692 (6.7692)  time: 23.0625  data: 22.6908  max mem: 4760
+2020-10-10 22:39:46,920	INFO	kdkit.misc.log	Epoch: [20]  [1000/5025]  eta: 1:25:55  lr: 0.1  img/s: 200.5448728045109  loss: 7.1691 (7.0798)  time: 1.1148  data: 0.2319  max mem: 4760
+2020-10-10 23:00:58,660	INFO	kdkit.misc.log	Epoch: [20]  [2000/5025]  eta: 1:04:20  lr: 0.1  img/s: 11.321311407526112  loss: 7.1628 (7.0752)  time: 1.5716  data: 0.3427  max mem: 4760
+2020-10-10 23:22:03,496	INFO	kdkit.misc.log	Epoch: [20]  [3000/5025]  eta: 0:42:56  lr: 0.1  img/s: 191.4121454603244  loss: 6.9450 (7.0789)  time: 1.1328  data: 0.0075  max mem: 4760
+2020-10-10 23:43:18,048	INFO	kdkit.misc.log	Epoch: [20]  [4000/5025]  eta: 0:21:44  lr: 0.1  img/s: 6.479271206153162  loss: 7.0633 (7.0794)  time: 1.7390  data: 0.0535  max mem: 4760
+2020-10-11 00:04:39,088	INFO	kdkit.misc.log	Epoch: [20]  [5000/5025]  eta: 0:00:31  lr: 0.1  img/s: 213.54187031606386  loss: 6.8364 (7.0856)  time: 1.0704  data: 0.1382  max mem: 4760
+2020-10-11 00:04:50,324	INFO	kdkit.misc.log	Epoch: [20] Total time: 1:46:25
+2020-10-11 00:04:57,582	INFO	kdkit.misc.log	Validation:  [  0/131]  eta: 0:15:45  acc1: 46.8750 (46.8750)  acc5: 73.4375 (73.4375)  time: 7.2199  data: 7.1685  max mem: 4760
+2020-10-11 00:05:22,200	INFO	kdkit.misc.log	Validation: Total time: 0:00:31
+2020-10-11 00:05:22,201	INFO	__main__	 * Acc@1 52.6669	Acc@5 77.9284
+
+2020-10-11 00:05:47,065	INFO	kdkit.misc.log	Epoch: [21]  [   0/5025]  eta: 1 day, 10:41:04  lr: 0.1  img/s: 30.75155708960528  loss: 7.4928 (7.4928)  time: 24.8487  data: 22.0846  max mem: 4760
+2020-10-11 00:26:44,384	INFO	kdkit.misc.log	Epoch: [21]  [1000/5025]  eta: 1:25:55  lr: 0.1  img/s: 222.10735313998495  loss: 7.0809 (7.0006)  time: 1.1416  data: 0.2785  max mem: 4760
+2020-10-11 00:47:53,976	INFO	kdkit.misc.log	Epoch: [21]  [2000/5025]  eta: 1:04:17  lr: 0.1  img/s: 23.016413233752765  loss: 7.1770 (7.0049)  time: 1.2848  data: 0.0262  max mem: 4760
+2020-10-11 01:09:13,133	INFO	kdkit.misc.log	Epoch: [21]  [3000/5025]  eta: 0:43:04  lr: 0.1  img/s: 157.3685093339878  loss: 6.7880 (7.0100)  time: 1.1476  data: 0.0443  max mem: 4760
+2020-10-11 01:30:42,781	INFO	kdkit.misc.log	Epoch: [21]  [4000/5025]  eta: 0:21:51  lr: 0.1  img/s: 17.582915669277142  loss: 7.0166 (7.0130)  time: 1.3473  data: 0.0018  max mem: 4760
+2020-10-11 01:52:10,840	INFO	kdkit.misc.log	Epoch: [21]  [5000/5025]  eta: 0:00:32  lr: 0.1  img/s: 259.2668999601481  loss: 6.9945 (7.0123)  time: 1.0976  data: 0.0038  max mem: 4760
+2020-10-11 01:52:19,688	INFO	kdkit.misc.log	Epoch: [21] Total time: 1:46:57
+2020-10-11 01:52:27,280	INFO	kdkit.misc.log	Validation:  [  0/131]  eta: 0:16:31  acc1: 42.1875 (42.1875)  acc5: 70.3125 (70.3125)  time: 7.5673  data: 7.4835  max mem: 4760
+2020-10-11 01:52:51,681	INFO	kdkit.misc.log	Validation: Total time: 0:00:31
+2020-10-11 01:52:51,683	INFO	__main__	 * Acc@1 51.4010	Acc@5 77.3685
+
+2020-10-11 01:53:15,342	INFO	kdkit.misc.log	Epoch: [22]  [   0/5025]  eta: 1 day, 9:01:10  lr: 0.1  img/s: 82.90925293593853  loss: 6.6480 (6.6480)  time: 23.6557  data: 22.6305  max mem: 4760
+2020-10-11 02:14:12,047	INFO	kdkit.misc.log	Epoch: [22]  [1000/5025]  eta: 1:25:48  lr: 0.1  img/s: 149.89204888491997  loss: 7.0401 (6.9012)  time: 1.2269  data: 0.1965  max mem: 4760
+2020-10-11 02:35:20,840	INFO	kdkit.misc.log	Epoch: [22]  [2000/5025]  eta: 1:04:13  lr: 0.1  img/s: 26.925293070492724  loss: 6.9618 (6.9220)  time: 1.6503  data: 0.7991  max mem: 4760
+2020-10-11 02:56:22,067	INFO	kdkit.misc.log	Epoch: [22]  [3000/5025]  eta: 0:42:51  lr: 0.1  img/s: 170.4739922756956  loss: 6.8940 (6.9308)  time: 1.1288  data: 0.6378  max mem: 4760
+2020-10-11 03:17:35,953	INFO	kdkit.misc.log	Epoch: [22]  [4000/5025]  eta: 0:21:42  lr: 0.1  img/s: 44.47669967360668  loss: 6.8631 (6.9351)  time: 1.6417  data: 0.9455  max mem: 4760
+2020-10-11 03:38:52,534	INFO	kdkit.misc.log	Epoch: [22]  [5000/5025]  eta: 0:00:31  lr: 0.1  img/s: 254.89267814883928  loss: 6.9583 (6.9442)  time: 1.0723  data: 0.2406  max mem: 4760
+2020-10-11 03:39:03,231	INFO	kdkit.misc.log	Epoch: [22] Total time: 1:46:11
+2020-10-11 03:39:10,528	INFO	kdkit.misc.log	Validation:  [  0/131]  eta: 0:15:51  acc1: 46.0938 (46.0938)  acc5: 71.8750 (71.8750)  time: 7.2665  data: 7.1946  max mem: 4760
+2020-10-11 03:39:35,250	INFO	kdkit.misc.log	Validation: Total time: 0:00:31
+2020-10-11 03:39:35,256	INFO	__main__	 * Acc@1 52.5009	Acc@5 78.1264
+
+2020-10-11 03:40:00,776	INFO	kdkit.misc.log	Epoch: [23]  [   0/5025]  eta: 1 day, 11:36:56  lr: 0.1  img/s: 149.50209000087224  loss: 7.0232 (7.0232)  time: 25.5156  data: 24.9470  max mem: 4760
+2020-10-11 04:01:37,048	INFO	kdkit.misc.log	Epoch: [23]  [1000/5025]  eta: 1:28:34  lr: 0.1  img/s: 218.94434823194175  loss: 6.8103 (6.8717)  time: 1.1093  data: 0.0004  max mem: 4760
+2020-10-11 04:23:17,761	INFO	kdkit.misc.log	Epoch: [23]  [2000/5025]  eta: 1:06:04  lr: 0.1  img/s: 422.6860773510794  loss: 6.8839 (6.8793)  time: 1.0702  data: 0.0009  max mem: 4760
+2020-10-11 04:44:42,496	INFO	kdkit.misc.log	Epoch: [23]  [3000/5025]  eta: 0:43:56  lr: 0.1  img/s: 291.72753122736964  loss: 6.7938 (6.8817)  time: 1.0886  data: 0.0010  max mem: 4760
+2020-10-11 05:06:23,450	INFO	kdkit.misc.log	Epoch: [23]  [4000/5025]  eta: 0:22:14  lr: 0.1  img/s: 423.04569877162004  loss: 6.7802 (6.8859)  time: 1.0794  data: 0.0007  max mem: 4760
+2020-10-11 05:27:47,402	INFO	kdkit.misc.log	Epoch: [23]  [5000/5025]  eta: 0:00:32  lr: 0.1  img/s: 439.3029133176185  loss: 6.9725 (6.8876)  time: 1.0695  data: 0.0037  max mem: 4760
+2020-10-11 05:27:57,905	INFO	kdkit.misc.log	Epoch: [23] Total time: 1:48:22
+2020-10-11 05:28:04,760	INFO	kdkit.misc.log	Validation:  [  0/131]  eta: 0:14:54  acc1: 52.3438 (52.3438)  acc5: 75.0000 (75.0000)  time: 6.8262  data: 6.7571  max mem: 4760
+2020-10-11 05:28:29,784	INFO	kdkit.misc.log	Validation: Total time: 0:00:31
+2020-10-11 05:28:29,785	INFO	__main__	 * Acc@1 52.1490	Acc@5 77.8244
+
+2020-10-11 05:28:55,804	INFO	kdkit.misc.log	Epoch: [24]  [   0/5025]  eta: 1 day, 12:18:56  lr: 0.1  img/s: 31.63107227498664  loss: 6.9906 (6.9906)  time: 26.0172  data: 23.3300  max mem: 4760
+2020-10-11 05:49:46,942	INFO	kdkit.misc.log	Epoch: [24]  [1000/5025]  eta: 1:25:35  lr: 0.1  img/s: 188.8602512127044  loss: 6.7757 (6.8207)  time: 1.0697  data: 0.5316  max mem: 4760
+2020-10-11 06:10:58,637	INFO	kdkit.misc.log	Epoch: [24]  [2000/5025]  eta: 1:04:13  lr: 0.1  img/s: 223.41850850801293  loss: 6.8361 (6.8382)  time: 1.4350  data: 0.9630  max mem: 4760
+2020-10-11 06:32:18,988	INFO	kdkit.misc.log	Epoch: [24]  [3000/5025]  eta: 0:43:03  lr: 0.1  img/s: 162.40411180741594  loss: 6.9219 (6.8381)  time: 1.1308  data: 0.1500  max mem: 4760
+2020-10-11 06:53:56,881	INFO	kdkit.misc.log	Epoch: [24]  [4000/5025]  eta: 0:21:53  lr: 0.1  img/s: 6.284674835852115  loss: 6.8523 (6.8408)  time: 1.7980  data: 0.0017  max mem: 4760
+2020-10-11 07:15:15,440	INFO	kdkit.misc.log	Epoch: [24]  [5000/5025]  eta: 0:00:32  lr: 0.1  img/s: 189.6608015406263  loss: 7.0774 (6.8457)  time: 1.0566  data: 0.0029  max mem: 4760
+2020-10-11 07:15:25,519	INFO	kdkit.misc.log	Epoch: [24] Total time: 1:46:55
+2020-10-11 07:15:33,200	INFO	kdkit.misc.log	Validation:  [  0/131]  eta: 0:16:44  acc1: 43.7500 (43.7500)  acc5: 70.3125 (70.3125)  time: 7.6641  data: 7.5870  max mem: 4760
+2020-10-11 07:15:57,536	INFO	kdkit.misc.log	Validation: Total time: 0:00:32
+2020-10-11 07:15:57,539	INFO	__main__	 * Acc@1 50.1950	Acc@5 76.4125
+
+2020-10-11 07:16:26,372	INFO	kdkit.misc.log	Epoch: [25]  [   0/5025]  eta: 1 day, 16:14:22  lr: 0.1  img/s: 211.01180548239358  loss: 7.0147 (7.0147)  time: 28.8283  data: 28.4255  max mem: 4760
+2020-10-11 07:38:00,008	INFO	kdkit.misc.log	Epoch: [25]  [1000/5025]  eta: 1:28:37  lr: 0.1  img/s: 342.98210896245064  loss: 6.8970 (6.8050)  time: 1.0810  data: 0.8091  max mem: 4760
+2020-10-11 07:59:37,553	INFO	kdkit.misc.log	Epoch: [25]  [2000/5025]  eta: 1:06:00  lr: 0.1  img/s: 251.0793396589839  loss: 6.7027 (6.7987)  time: 1.8936  data: 1.5753  max mem: 4760
+2020-10-11 08:20:57,340	INFO	kdkit.misc.log	Epoch: [25]  [3000/5025]  eta: 0:43:51  lr: 0.1  img/s: 302.8473521784078  loss: 6.8111 (6.8001)  time: 1.0763  data: 0.8163  max mem: 4760
+2020-10-11 08:42:34,201	INFO	kdkit.misc.log	Epoch: [25]  [4000/5025]  eta: 0:22:11  lr: 0.1  img/s: 209.201794185094  loss: 6.8163 (6.8023)  time: 1.9085  data: 1.6049  max mem: 4760
+2020-10-11 09:03:53,551	INFO	kdkit.misc.log	Epoch: [25]  [5000/5025]  eta: 0:00:32  lr: 0.1  img/s: 444.31075695225087  loss: 6.6625 (6.8024)  time: 1.0410  data: 0.7757  max mem: 4760
+2020-10-11 09:03:59,818	INFO	kdkit.misc.log	Epoch: [25] Total time: 1:48:02
+2020-10-11 09:04:07,505	INFO	kdkit.misc.log	Validation:  [  0/131]  eta: 0:16:44  acc1: 41.4062 (41.4062)  acc5: 67.9688 (67.9688)  time: 7.6644  data: 7.5997  max mem: 4760
+2020-10-11 09:04:31,701	INFO	kdkit.misc.log	Validation: Total time: 0:00:31
+2020-10-11 09:04:31,702	INFO	__main__	 * Acc@1 51.4510	Acc@5 77.3765
+
+2020-10-11 09:04:56,509	INFO	kdkit.misc.log	Epoch: [26]  [   0/5025]  eta: 1 day, 10:36:06  lr: 0.1  img/s: 32.64196541130849  loss: 7.0109 (7.0109)  time: 24.7893  data: 22.1852  max mem: 4760
+2020-10-11 09:25:47,913	INFO	kdkit.misc.log	Epoch: [26]  [1000/5025]  eta: 1:25:31  lr: 0.1  img/s: 189.47462853462102  loss: 6.5221 (6.7243)  time: 1.0982  data: 0.4369  max mem: 4760
+2020-10-11 09:46:59,633	INFO	kdkit.misc.log	Epoch: [26]  [2000/5025]  eta: 1:04:11  lr: 0.1  img/s: 158.08500826528368  loss: 6.7566 (6.7362)  time: 1.6497  data: 1.0824  max mem: 4760
+2020-10-11 10:08:02,792	INFO	kdkit.misc.log	Epoch: [26]  [3000/5025]  eta: 0:42:51  lr: 0.1  img/s: 220.25546027021332  loss: 6.7768 (6.7466)  time: 1.1342  data: 0.6128  max mem: 4760
+2020-10-11 10:29:23,217	INFO	kdkit.misc.log	Epoch: [26]  [4000/5025]  eta: 0:21:44  lr: 0.1  img/s: 178.65999431721087  loss: 6.7067 (6.7519)  time: 1.5084  data: 0.7508  max mem: 4760
+2020-10-11 10:50:34,992	INFO	kdkit.misc.log	Epoch: [26]  [5000/5025]  eta: 0:00:31  lr: 0.1  img/s: 287.30216317231964  loss: 6.7315 (6.7568)  time: 1.0622  data: 0.6057  max mem: 4760
+2020-10-11 10:50:43,448	INFO	kdkit.misc.log	Epoch: [26] Total time: 1:46:11
+2020-10-11 10:50:51,343	INFO	kdkit.misc.log	Validation:  [  0/131]  eta: 0:17:11  acc1: 47.6562 (47.6562)  acc5: 68.7500 (68.7500)  time: 7.8729  data: 7.8175  max mem: 4760
+2020-10-11 10:51:15,363	INFO	kdkit.misc.log	Validation: Total time: 0:00:31
+2020-10-11 10:51:15,374	INFO	__main__	 * Acc@1 49.6870	Acc@5 76.0105
+
+2020-10-11 10:51:40,206	INFO	kdkit.misc.log	Epoch: [27]  [   0/5025]  eta: 1 day, 10:39:33  lr: 0.1  img/s: 62.613855119206036  loss: 6.4475 (6.4475)  time: 24.8305  data: 23.4729  max mem: 4760
+2020-10-11 11:12:34,095	INFO	kdkit.misc.log	Epoch: [27]  [1000/5025]  eta: 1:25:41  lr: 0.1  img/s: 227.03214352124263  loss: 6.8398 (6.6981)  time: 1.1189  data: 0.6953  max mem: 4760
+2020-10-11 11:33:53,696	INFO	kdkit.misc.log	Epoch: [27]  [2000/5025]  eta: 1:04:27  lr: 0.1  img/s: 135.29745902547654  loss: 6.7417 (6.7194)  time: 1.7671  data: 1.2771  max mem: 4760
+2020-10-11 11:55:07,696	INFO	kdkit.misc.log	Epoch: [27]  [3000/5025]  eta: 0:43:05  lr: 0.1  img/s: 161.04247899539254  loss: 6.5948 (6.7177)  time: 1.0795  data: 0.6260  max mem: 4760
+2020-10-11 12:16:31,756	INFO	kdkit.misc.log	Epoch: [27]  [4000/5025]  eta: 0:21:50  lr: 0.1  img/s: 170.13734938264122  loss: 6.5765 (6.7261)  time: 1.6795  data: 1.1766  max mem: 4760
+2020-10-11 12:37:40,292	INFO	kdkit.misc.log	Epoch: [27]  [5000/5025]  eta: 0:00:31  lr: 0.1  img/s: 259.2882073108026  loss: 6.6112 (6.7311)  time: 1.0959  data: 0.1156  max mem: 4760
+2020-10-11 12:37:52,910	INFO	kdkit.misc.log	Epoch: [27] Total time: 1:46:37
+2020-10-11 12:38:00,669	INFO	kdkit.misc.log	Validation:  [  0/131]  eta: 0:16:53  acc1: 46.8750 (46.8750)  acc5: 69.5312 (69.5312)  time: 7.7375  data: 7.6834  max mem: 4760
+2020-10-11 12:38:24,771	INFO	kdkit.misc.log	Validation: Total time: 0:00:31
+2020-10-11 12:38:24,773	INFO	__main__	 * Acc@1 52.1290	Acc@5 78.2664
+
+2020-10-11 12:38:49,189	INFO	kdkit.misc.log	Epoch: [28]  [   0/5025]  eta: 1 day, 10:04:35  lr: 0.1  img/s: 33.3371615598555  loss: 6.3494 (6.3494)  time: 24.4131  data: 21.8634  max mem: 4760
+2020-10-11 12:59:48,109	INFO	kdkit.misc.log	Epoch: [28]  [1000/5025]  eta: 1:26:00  lr: 0.1  img/s: 181.15780354016925  loss: 6.5995 (6.6774)  time: 1.1902  data: 0.3641  max mem: 4760
+2020-10-11 13:20:56,816	INFO	kdkit.misc.log	Epoch: [28]  [2000/5025]  eta: 1:04:18  lr: 0.1  img/s: 11.167743551635112  loss: 6.5623 (6.6781)  time: 1.7140  data: 0.5539  max mem: 4760
+2020-10-11 13:41:55,288	INFO	kdkit.misc.log	Epoch: [28]  [3000/5025]  eta: 0:42:51  lr: 0.1  img/s: 164.6319888138342  loss: 6.7207 (6.6900)  time: 1.1268  data: 0.1561  max mem: 4760
+2020-10-11 14:03:05,440	INFO	kdkit.misc.log	Epoch: [28]  [4000/5025]  eta: 0:21:41  lr: 0.1  img/s: 10.386675393611286  loss: 6.8209 (6.6962)  time: 1.6622  data: 0.3792  max mem: 4760
+2020-10-11 14:24:13,088	INFO	kdkit.misc.log	Epoch: [28]  [5000/5025]  eta: 0:00:31  lr: 0.1  img/s: 200.51746392955147  loss: 6.5828 (6.6911)  time: 1.1287  data: 0.2987  max mem: 4760
+2020-10-11 14:24:24,039	INFO	kdkit.misc.log	Epoch: [28] Total time: 1:45:59
+2020-10-11 14:24:31,305	INFO	kdkit.misc.log	Validation:  [  0/131]  eta: 0:15:49  acc1: 46.8750 (46.8750)  acc5: 69.5312 (69.5312)  time: 7.2492  data: 7.1583  max mem: 4760
+2020-10-11 14:24:55,902	INFO	kdkit.misc.log	Validation: Total time: 0:00:31
+2020-10-11 14:24:55,935	INFO	__main__	 * Acc@1 51.9910	Acc@5 77.7124
+
+2020-10-11 14:25:20,556	INFO	kdkit.misc.log	Epoch: [29]  [   0/5025]  eta: 1 day, 10:21:49  lr: 0.1  img/s: 40.67298535917442  loss: 6.7316 (6.7316)  time: 24.6188  data: 22.5289  max mem: 4760
+2020-10-11 14:46:41,136	INFO	kdkit.misc.log	Epoch: [29]  [1000/5025]  eta: 1:27:28  lr: 0.1  img/s: 204.4266817433008  loss: 6.7165 (6.6614)  time: 1.0899  data: 0.1020  max mem: 4760
+2020-10-11 15:07:59,917	INFO	kdkit.misc.log	Epoch: [29]  [2000/5025]  eta: 1:05:06  lr: 0.1  img/s: 50.113624255884396  loss: 6.7425 (6.6602)  time: 1.2061  data: 0.1490  max mem: 4760
+2020-10-11 15:29:19,000	INFO	kdkit.misc.log	Epoch: [29]  [3000/5025]  eta: 0:43:26  lr: 0.1  img/s: 154.03359554605615  loss: 6.5519 (6.6620)  time: 1.0850  data: 0.1230  max mem: 4760
+2020-10-11 15:50:38,223	INFO	kdkit.misc.log	Epoch: [29]  [4000/5025]  eta: 0:21:57  lr: 0.1  img/s: 13.192026671501678  loss: 6.6814 (6.6643)  time: 1.4221  data: 0.1963  max mem: 4760
+2020-10-11 16:12:03,161	INFO	kdkit.misc.log	Epoch: [29]  [5000/5025]  eta: 0:00:32  lr: 0.1  img/s: 319.7709590908683  loss: 6.6221 (6.6660)  time: 1.0322  data: 0.0031  max mem: 4760
+2020-10-11 16:12:12,088	INFO	kdkit.misc.log	Epoch: [29] Total time: 1:47:16
+2020-10-11 16:12:19,356	INFO	kdkit.misc.log	Validation:  [  0/131]  eta: 0:15:46  acc1: 44.5312 (44.5312)  acc5: 65.6250 (65.6250)  time: 7.2247  data: 7.1734  max mem: 4760
+2020-10-11 16:12:44,047	INFO	kdkit.misc.log	Validation: Total time: 0:00:31
+2020-10-11 16:12:44,109	INFO	__main__	 * Acc@1 52.2930	Acc@5 77.9864
+
+2020-10-11 16:13:08,926	INFO	kdkit.misc.log	Epoch: [30]  [   0/5025]  eta: 1 day, 10:38:18  lr: 0.010000000000000002  img/s: 86.92412945633994  loss: 6.5648 (6.5648)  time: 24.8157  data: 23.8378  max mem: 4760
+2020-10-11 16:34:46,360	INFO	kdkit.misc.log	Epoch: [30]  [1000/5025]  eta: 1:28:36  lr: 0.010000000000000002  img/s: 231.10341304804405  loss: 5.8818 (6.0583)  time: 1.1033  data: 0.0002  max mem: 4760
+2020-10-11 16:56:27,404	INFO	kdkit.misc.log	Epoch: [30]  [2000/5025]  eta: 1:06:05  lr: 0.010000000000000002  img/s: 437.8714864370267  loss: 5.8295 (5.9956)  time: 1.0866  data: 0.0015  max mem: 4760
+2020-10-11 17:17:53,562	INFO	kdkit.misc.log	Epoch: [30]  [3000/5025]  eta: 0:43:57  lr: 0.010000000000000002  img/s: 219.1273648108766  loss: 5.8213 (5.9605)  time: 1.0974  data: 0.0008  max mem: 4760
+2020-10-11 17:39:35,572	INFO	kdkit.misc.log	Epoch: [30]  [4000/5025]  eta: 0:22:15  lr: 0.010000000000000002  img/s: 437.7102082008393  loss: 5.8199 (5.9341)  time: 1.1051  data: 0.0007  max mem: 4760
+2020-10-11 18:00:58,887	INFO	kdkit.misc.log	Epoch: [30]  [5000/5025]  eta: 0:00:32  lr: 0.010000000000000002  img/s: 439.097851040979  loss: 5.9308 (5.9146)  time: 1.0662  data: 0.0009  max mem: 4760
+2020-10-11 18:01:09,688	INFO	kdkit.misc.log	Epoch: [30] Total time: 1:48:25
+2020-10-11 18:01:17,513	INFO	kdkit.misc.log	Validation:  [  0/131]  eta: 0:17:02  acc1: 54.6875 (54.6875)  acc5: 78.9062 (78.9062)  time: 7.8073  data: 7.7461  max mem: 4760
+2020-10-11 18:01:41,248	INFO	kdkit.misc.log	Validation: Total time: 0:00:31
+2020-10-11 18:01:41,507	INFO	__main__	 * Acc@1 64.2787	Acc@5 86.0123
+
+2020-10-11 18:01:41,507	INFO	__main__	Updating ckpt (Best top1 accuracy: 52.7369 -> 64.2787)
+2020-10-11 18:02:07,468	INFO	kdkit.misc.log	Epoch: [31]  [   0/5025]  eta: 1 day, 11:59:19  lr: 0.010000000000000002  img/s: 172.36176861907856  loss: 5.1406 (5.1406)  time: 25.7830  data: 25.2898  max mem: 4760
+2020-10-11 18:22:56,960	INFO	kdkit.misc.log	Epoch: [31]  [1000/5025]  eta: 1:25:27  lr: 0.010000000000000002  img/s: 193.71733848006295  loss: 5.6183 (5.7277)  time: 1.0864  data: 0.5950  max mem: 4760
+2020-10-11 18:44:03,132	INFO	kdkit.misc.log	Epoch: [31]  [2000/5025]  eta: 1:04:02  lr: 0.010000000000000002  img/s: 151.53540840484723  loss: 5.7057 (5.7329)  time: 1.7518  data: 1.2757  max mem: 4760
+2020-10-11 19:05:16,276	INFO	kdkit.misc.log	Epoch: [31]  [3000/5025]  eta: 0:42:53  lr: 0.010000000000000002  img/s: 155.32665727051125  loss: 5.6185 (5.7274)  time: 1.1104  data: 0.6158  max mem: 4760
+2020-10-11 19:26:44,269	INFO	kdkit.misc.log	Epoch: [31]  [4000/5025]  eta: 0:21:47  lr: 0.010000000000000002  img/s: 184.03790651083247  loss: 5.5082 (5.7234)  time: 1.7710  data: 1.2672  max mem: 4760
+2020-10-11 19:47:59,564	INFO	kdkit.misc.log	Epoch: [31]  [5000/5025]  eta: 0:00:31  lr: 0.010000000000000002  img/s: 201.81554595614145  loss: 5.6561 (5.7199)  time: 1.0909  data: 0.6247  max mem: 4760
+2020-10-11 19:48:07,871	INFO	kdkit.misc.log	Epoch: [31] Total time: 1:46:26
+2020-10-11 19:48:14,998	INFO	kdkit.misc.log	Validation:  [  0/131]  eta: 0:15:31  acc1: 59.3750 (59.3750)  acc5: 80.4688 (80.4688)  time: 7.1081  data: 7.0567  max mem: 4760
+2020-10-11 19:48:39,718	INFO	kdkit.misc.log	Validation: Total time: 0:00:31
+2020-10-11 19:48:39,812	INFO	__main__	 * Acc@1 65.3067	Acc@5 86.6023
+
+2020-10-11 19:48:39,812	INFO	__main__	Updating ckpt (Best top1 accuracy: 64.2787 -> 65.3067)
+2020-10-11 19:49:04,750	INFO	kdkit.misc.log	Epoch: [32]  [   0/5025]  eta: 1 day, 10:32:07  lr: 0.010000000000000002  img/s: 82.60666792714439  loss: 5.6259 (5.6259)  time: 24.7419  data: 23.7129  max mem: 4760
+2020-10-11 20:10:06,681	INFO	kdkit.misc.log	Epoch: [32]  [1000/5025]  eta: 1:26:13  lr: 0.010000000000000002  img/s: 218.47314584901082  loss: 5.4640 (5.6310)  time: 1.1001  data: 0.3009  max mem: 4760
+2020-10-11 20:31:25,328	INFO	kdkit.misc.log	Epoch: [32]  [2000/5025]  eta: 1:04:38  lr: 0.010000000000000002  img/s: 168.89001319320585  loss: 5.7013 (5.6389)  time: 1.1462  data: 0.6789  max mem: 4760
+2020-10-11 20:52:50,391	INFO	kdkit.misc.log	Epoch: [32]  [3000/5025]  eta: 0:43:18  lr: 0.010000000000000002  img/s: 183.87502623906406  loss: 5.5653 (5.6374)  time: 1.1241  data: 0.6475  max mem: 4760
+2020-10-11 21:14:08,286	INFO	kdkit.misc.log	Epoch: [32]  [4000/5025]  eta: 0:21:53  lr: 0.010000000000000002  img/s: 209.31331842861707  loss: 5.3612 (5.6341)  time: 1.1113  data: 0.6281  max mem: 4760
+2020-10-11 21:35:33,280	INFO	kdkit.misc.log	Epoch: [32]  [5000/5025]  eta: 0:00:32  lr: 0.010000000000000002  img/s: 297.6782462395264  loss: 5.6046 (5.6308)  time: 1.0276  data: 0.5706  max mem: 4760
+2020-10-11 21:35:41,378	INFO	kdkit.misc.log	Epoch: [32] Total time: 1:47:01
+2020-10-11 21:35:49,268	INFO	kdkit.misc.log	Validation:  [  0/131]  eta: 0:17:08  acc1: 60.1562 (60.1562)  acc5: 78.9062 (78.9062)  time: 7.8535  data: 7.7807  max mem: 4760
+2020-10-11 21:36:13,388	INFO	kdkit.misc.log	Validation: Total time: 0:00:31
+2020-10-11 21:36:13,392	INFO	__main__	 * Acc@1 65.4027	Acc@5 86.8463
+
+2020-10-11 21:36:13,392	INFO	__main__	Updating ckpt (Best top1 accuracy: 65.3067 -> 65.4027)
+2020-10-11 21:36:36,920	INFO	kdkit.misc.log	Epoch: [33]  [   0/5025]  eta: 1 day, 8:34:08  lr: 0.010000000000000002  img/s: 76.13247957700837  loss: 5.3644 (5.3644)  time: 23.3330  data: 22.2165  max mem: 4760
+2020-10-11 21:57:33,760	INFO	kdkit.misc.log	Epoch: [33]  [1000/5025]  eta: 1:25:47  lr: 0.010000000000000002  img/s: 161.0314225421328  loss: 5.4662 (5.5489)  time: 1.0871  data: 0.4830  max mem: 4760
+2020-10-11 22:18:51,661	INFO	kdkit.misc.log	Epoch: [33]  [2000/5025]  eta: 1:04:27  lr: 0.010000000000000002  img/s: 205.39643784081187  loss: 5.5799 (5.5472)  time: 1.1792  data: 0.4843  max mem: 4760
+2020-10-11 22:40:22,175	INFO	kdkit.misc.log	Epoch: [33]  [3000/5025]  eta: 0:43:16  lr: 0.010000000000000002  img/s: 166.603582869333  loss: 5.4788 (5.5554)  time: 1.0994  data: 0.1758  max mem: 4760
+2020-10-11 23:01:42,888	INFO	kdkit.misc.log	Epoch: [33]  [4000/5025]  eta: 0:21:54  lr: 0.010000000000000002  img/s: 219.0957187587381  loss: 5.6698 (5.5549)  time: 1.1671  data: 0.0695  max mem: 4760
+2020-10-11 23:23:12,731	INFO	kdkit.misc.log	Epoch: [33]  [5000/5025]  eta: 0:00:32  lr: 0.010000000000000002  img/s: 191.1035161484677  loss: 5.4485 (5.5558)  time: 1.0598  data: 0.4216  max mem: 4760
+2020-10-11 23:23:20,993	INFO	kdkit.misc.log	Epoch: [33] Total time: 1:47:07
+2020-10-11 23:23:28,452	INFO	kdkit.misc.log	Validation:  [  0/131]  eta: 0:16:14  acc1: 60.9375 (60.9375)  acc5: 80.4688 (80.4688)  time: 7.4363  data: 7.3650  max mem: 4760
+2020-10-11 23:23:52,979	INFO	kdkit.misc.log	Validation: Total time: 0:00:31
+2020-10-11 23:23:52,981	INFO	__main__	 * Acc@1 65.9307	Acc@5 87.0563
+
+2020-10-11 23:23:52,981	INFO	__main__	Updating ckpt (Best top1 accuracy: 65.4027 -> 65.9307)
+2020-10-11 23:24:17,832	INFO	kdkit.misc.log	Epoch: [34]  [   0/5025]  eta: 1 day, 10:20:52  lr: 0.010000000000000002  img/s: 54.636006271597694  loss: 5.9204 (5.9204)  time: 24.6074  data: 23.0517  max mem: 4760
+2020-10-11 23:45:11,988	INFO	kdkit.misc.log	Epoch: [34]  [1000/5025]  eta: 1:25:41  lr: 0.010000000000000002  img/s: 180.10334896517162  loss: 5.4521 (5.4804)  time: 1.1578  data: 0.4982  max mem: 4760
+2020-10-12 00:06:33,740	INFO	kdkit.misc.log	Epoch: [34]  [2000/5025]  eta: 1:04:30  lr: 0.010000000000000002  img/s: 11.33349906316023  loss: 5.4178 (5.4904)  time: 1.5024  data: 0.3265  max mem: 4760
+2020-10-12 00:27:56,292	INFO	kdkit.misc.log	Epoch: [34]  [3000/5025]  eta: 0:43:13  lr: 0.010000000000000002  img/s: 178.82918984696613  loss: 5.4180 (5.4890)  time: 1.1057  data: 0.2324  max mem: 4760
+2020-10-12 00:49:18,685	INFO	kdkit.misc.log	Epoch: [34]  [4000/5025]  eta: 0:21:53  lr: 0.010000000000000002  img/s: 11.76023887826886  loss: 5.3740 (5.4927)  time: 1.4065  data: 0.3221  max mem: 4760
+2020-10-12 01:10:39,332	INFO	kdkit.misc.log	Epoch: [34]  [5000/5025]  eta: 0:00:32  lr: 0.010000000000000002  img/s: 166.07483609863988  loss: 5.5295 (5.4911)  time: 1.0831  data: 0.0949  max mem: 4760
+2020-10-12 01:10:48,724	INFO	kdkit.misc.log	Epoch: [34] Total time: 1:46:55
+2020-10-12 01:10:56,392	INFO	kdkit.misc.log	Validation:  [  0/131]  eta: 0:16:42  acc1: 59.3750 (59.3750)  acc5: 81.2500 (81.2500)  time: 7.6535  data: 7.5857  max mem: 4760
+2020-10-12 01:11:20,220	INFO	kdkit.misc.log	Validation: Total time: 0:00:31
+2020-10-12 01:11:20,603	INFO	__main__	 * Acc@1 66.0247	Acc@5 87.2163
+
+2020-10-12 01:11:20,603	INFO	__main__	Updating ckpt (Best top1 accuracy: 65.9307 -> 66.0247)
+2020-10-12 01:11:45,830	INFO	kdkit.misc.log	Epoch: [35]  [   0/5025]  eta: 1 day, 10:57:50  lr: 0.010000000000000002  img/s: 122.20922523822027  loss: 5.2127 (5.2127)  time: 25.0488  data: 24.3532  max mem: 4760
+2020-10-12 01:32:39,364	INFO	kdkit.misc.log	Epoch: [35]  [1000/5025]  eta: 1:25:41  lr: 0.010000000000000002  img/s: 155.1742052299871  loss: 5.3464 (5.4488)  time: 1.0988  data: 0.5009  max mem: 4760
+2020-10-12 01:53:48,822	INFO	kdkit.misc.log	Epoch: [35]  [2000/5025]  eta: 1:04:11  lr: 0.010000000000000002  img/s: 15.08011031974716  loss: 5.3384 (5.4523)  time: 1.4891  data: 0.6341  max mem: 4760
+2020-10-12 02:15:14,032	INFO	kdkit.misc.log	Epoch: [35]  [3000/5025]  eta: 0:43:06  lr: 0.010000000000000002  img/s: 210.32005573676295  loss: 5.4267 (5.4535)  time: 1.1290  data: 0.2823  max mem: 4760
+2020-10-12 02:36:31,260	INFO	kdkit.misc.log	Epoch: [35]  [4000/5025]  eta: 0:21:49  lr: 0.010000000000000002  img/s: 268.49044284269416  loss: 5.5627 (5.4571)  time: 1.1170  data: 0.6447  max mem: 4760
+2020-10-12 02:57:59,036	INFO	kdkit.misc.log	Epoch: [35]  [5000/5025]  eta: 0:00:31  lr: 0.010000000000000002  img/s: 141.40910991184236  loss: 5.5333 (5.4576)  time: 1.0774  data: 0.6130  max mem: 4760
+2020-10-12 02:58:06,535	INFO	kdkit.misc.log	Epoch: [35] Total time: 1:46:45
+2020-10-12 02:58:14,152	INFO	kdkit.misc.log	Validation:  [  0/131]  eta: 0:16:35  acc1: 55.4688 (55.4688)  acc5: 82.8125 (82.8125)  time: 7.5986  data: 7.5178  max mem: 4760
+2020-10-12 02:58:38,413	INFO	kdkit.misc.log	Validation: Total time: 0:00:31
+2020-10-12 02:58:38,480	INFO	__main__	 * Acc@1 65.8607	Acc@5 87.1043
+
+2020-10-12 02:59:03,702	INFO	kdkit.misc.log	Epoch: [36]  [   0/5025]  eta: 1 day, 11:11:03  lr: 0.010000000000000002  img/s: 51.45678882624702  loss: 5.7666 (5.7666)  time: 25.2067  data: 23.5548  max mem: 4760
+2020-10-12 03:20:06,608	INFO	kdkit.misc.log	Epoch: [36]  [1000/5025]  eta: 1:26:19  lr: 0.010000000000000002  img/s: 243.1799014772949  loss: 5.4598 (5.4068)  time: 1.1425  data: 0.6581  max mem: 4760
+2020-10-12 03:41:23,620	INFO	kdkit.misc.log	Epoch: [36]  [2000/5025]  eta: 1:04:37  lr: 0.010000000000000002  img/s: 181.78611582906848  loss: 5.4541 (5.4190)  time: 1.8003  data: 1.3589  max mem: 4760
+2020-10-12 04:02:28,600	INFO	kdkit.misc.log	Epoch: [36]  [3000/5025]  eta: 0:43:04  lr: 0.010000000000000002  img/s: 188.13034188597962  loss: 5.4072 (5.4212)  time: 1.1079  data: 0.6085  max mem: 4760
+2020-10-12 04:23:50,756	INFO	kdkit.misc.log	Epoch: [36]  [4000/5025]  eta: 0:21:49  lr: 0.010000000000000002  img/s: 206.0355266906732  loss: 5.4509 (5.4222)  time: 1.7616  data: 1.3055  max mem: 4760
+2020-10-12 04:45:04,896	INFO	kdkit.misc.log	Epoch: [36]  [5000/5025]  eta: 0:00:31  lr: 0.010000000000000002  img/s: 200.77651159974883  loss: 5.3250 (5.4231)  time: 1.0636  data: 0.6012  max mem: 4760
+2020-10-12 04:45:13,581	INFO	kdkit.misc.log	Epoch: [36] Total time: 1:46:35
+2020-10-12 04:45:20,308	INFO	kdkit.misc.log	Validation:  [  0/131]  eta: 0:14:37  acc1: 61.7188 (61.7188)  acc5: 78.1250 (78.1250)  time: 6.6977  data: 6.6188  max mem: 4760
+2020-10-12 04:45:45,518	INFO	kdkit.misc.log	Validation: Total time: 0:00:31
+2020-10-12 04:45:45,520	INFO	__main__	 * Acc@1 65.8527	Acc@5 87.1303
+
+2020-10-12 04:46:11,312	INFO	kdkit.misc.log	Epoch: [37]  [   0/5025]  eta: 1 day, 11:59:51  lr: 0.010000000000000002  img/s: 166.72247529553928  loss: 4.9304 (4.9304)  time: 25.7893  data: 25.2795  max mem: 4760
+2020-10-12 05:07:05,736	INFO	kdkit.misc.log	Epoch: [37]  [1000/5025]  eta: 1:25:47  lr: 0.010000000000000002  img/s: 244.77051295166393  loss: 5.5152 (5.3658)  time: 1.1328  data: 0.4603  max mem: 4760
+2020-10-12 05:28:30,757	INFO	kdkit.misc.log	Epoch: [37]  [2000/5025]  eta: 1:04:37  lr: 0.010000000000000002  img/s: 9.363149986139739  loss: 5.3760 (5.3769)  time: 1.5782  data: 0.0138  max mem: 4760
+2020-10-12 05:49:51,876	INFO	kdkit.misc.log	Epoch: [37]  [3000/5025]  eta: 0:43:15  lr: 0.010000000000000002  img/s: 146.98344417412787  loss: 5.3807 (5.3820)  time: 1.1944  data: 0.0017  max mem: 4760
+2020-10-12 06:11:25,627	INFO	kdkit.misc.log	Epoch: [37]  [4000/5025]  eta: 0:21:56  lr: 0.010000000000000002  img/s: 6.917128546376956  loss: 5.4325 (5.3873)  time: 1.7001  data: 0.0017  max mem: 4760
+2020-10-12 06:32:43,737	INFO	kdkit.misc.log	Epoch: [37]  [5000/5025]  eta: 0:00:32  lr: 0.010000000000000002  img/s: 283.81584394245283  loss: 5.3972 (5.3885)  time: 1.1010  data: 0.0023  max mem: 4760
+2020-10-12 06:32:53,813	INFO	kdkit.misc.log	Epoch: [37] Total time: 1:47:08
+2020-10-12 06:33:01,176	INFO	kdkit.misc.log	Validation:  [  0/131]  eta: 0:15:58  acc1: 58.5938 (58.5938)  acc5: 78.1250 (78.1250)  time: 7.3143  data: 7.2463  max mem: 4760
+2020-10-12 06:33:25,750	INFO	kdkit.misc.log	Validation: Total time: 0:00:31
+2020-10-12 06:33:25,855	INFO	__main__	 * Acc@1 65.8807	Acc@5 87.0843
+
+2020-10-12 06:33:49,720	INFO	kdkit.misc.log	Epoch: [38]  [   0/5025]  eta: 1 day, 9:18:32  lr: 0.010000000000000002  img/s: 58.11562784503297  loss: 5.3650 (5.3650)  time: 23.8631  data: 22.4005  max mem: 4760
+2020-10-12 06:54:45,956	INFO	kdkit.misc.log	Epoch: [38]  [1000/5025]  eta: 1:25:47  lr: 0.010000000000000002  img/s: 193.27479147308424  loss: 5.3241 (5.3482)  time: 1.0932  data: 0.4234  max mem: 4760
+2020-10-12 07:16:00,340	INFO	kdkit.misc.log	Epoch: [38]  [2000/5025]  eta: 1:04:21  lr: 0.010000000000000002  img/s: 208.45575935041873  loss: 5.4387 (5.3580)  time: 1.6412  data: 1.1240  max mem: 4760
+2020-10-12 07:37:23,116	INFO	kdkit.misc.log	Epoch: [38]  [3000/5025]  eta: 0:43:09  lr: 0.010000000000000002  img/s: 179.34204264780598  loss: 5.2315 (5.3683)  time: 1.1080  data: 0.0029  max mem: 4760
+2020-10-12 07:58:44,672	INFO	kdkit.misc.log	Epoch: [38]  [4000/5025]  eta: 0:21:51  lr: 0.010000000000000002  img/s: 181.70180516417926  loss: 5.3535 (5.3726)  time: 1.3314  data: 0.2805  max mem: 4760
+2020-10-12 08:20:11,852	INFO	kdkit.misc.log	Epoch: [38]  [5000/5025]  eta: 0:00:32  lr: 0.010000000000000002  img/s: 197.84902986138974  loss: 5.1229 (5.3726)  time: 1.3012  data: 0.5853  max mem: 4760
+2020-10-12 08:20:20,698	INFO	kdkit.misc.log	Epoch: [38] Total time: 1:46:54
+2020-10-12 08:20:27,333	INFO	kdkit.misc.log	Validation:  [  0/131]  eta: 0:14:26  acc1: 59.3750 (59.3750)  acc5: 80.4688 (80.4688)  time: 6.6170  data: 6.5499  max mem: 4760
+2020-10-12 08:20:52,500	INFO	kdkit.misc.log	Validation: Total time: 0:00:31
+2020-10-12 08:20:52,502	INFO	__main__	 * Acc@1 65.3667	Acc@5 86.8183
+
+2020-10-12 08:21:17,354	INFO	kdkit.misc.log	Epoch: [39]  [   0/5025]  eta: 1 day, 10:40:34  lr: 0.010000000000000002  img/s: 151.7064795150034  loss: 5.1767 (5.1767)  time: 24.8428  data: 24.2825  max mem: 4760
+2020-10-12 08:42:21,769	INFO	kdkit.misc.log	Epoch: [39]  [1000/5025]  eta: 1:26:24  lr: 0.010000000000000002  img/s: 182.7306173201452  loss: 5.4490 (5.3343)  time: 1.1692  data: 0.5778  max mem: 4760
+2020-10-12 09:03:41,556	INFO	kdkit.misc.log	Epoch: [39]  [2000/5025]  eta: 1:04:43  lr: 0.010000000000000002  img/s: 197.39966701013975  loss: 5.3798 (5.3367)  time: 1.5615  data: 1.0578  max mem: 4760
+2020-10-12 09:24:59,626	INFO	kdkit.misc.log	Epoch: [39]  [3000/5025]  eta: 0:43:15  lr: 0.010000000000000002  img/s: 200.43956439361995  loss: 5.3874 (5.3444)  time: 1.1055  data: 0.0016  max mem: 4760
+2020-10-12 09:46:34,519	INFO	kdkit.misc.log	Epoch: [39]  [4000/5025]  eta: 0:21:57  lr: 0.010000000000000002  img/s: 7.436251007812326  loss: 5.3834 (5.3473)  time: 1.8377  data: 0.3463  max mem: 4760
+2020-10-12 10:07:54,165	INFO	kdkit.misc.log	Epoch: [39]  [5000/5025]  eta: 0:00:32  lr: 0.010000000000000002  img/s: 251.7063307154214  loss: 5.2154 (5.3536)  time: 1.0999  data: 0.0043  max mem: 4760
+2020-10-12 10:08:02,035	INFO	kdkit.misc.log	Epoch: [39] Total time: 1:47:09
+2020-10-12 10:08:09,076	INFO	kdkit.misc.log	Validation:  [  0/131]  eta: 0:15:20  acc1: 61.7188 (61.7188)  acc5: 80.4688 (80.4688)  time: 7.0245  data: 6.9344  max mem: 4760
+2020-10-12 10:08:33,877	INFO	kdkit.misc.log	Validation: Total time: 0:00:31
+2020-10-12 10:08:33,884	INFO	__main__	 * Acc@1 66.0807	Acc@5 87.3843
+
+2020-10-12 10:08:33,885	INFO	__main__	Updating ckpt (Best top1 accuracy: 66.0247 -> 66.0807)
+2020-10-12 10:08:57,552	INFO	kdkit.misc.log	Epoch: [40]  [   0/5025]  eta: 1 day, 8:44:22  lr: 0.010000000000000002  img/s: 207.8774411394793  loss: 5.2597 (5.2597)  time: 23.4552  data: 23.0463  max mem: 4760
+2020-10-12 10:30:02,272	INFO	kdkit.misc.log	Epoch: [40]  [1000/5025]  eta: 1:26:19  lr: 0.010000000000000002  img/s: 190.63570573785307  loss: 5.1483 (5.3161)  time: 1.0849  data: 0.2707  max mem: 4760
+2020-10-12 10:51:22,136	INFO	kdkit.misc.log	Epoch: [40]  [2000/5025]  eta: 1:04:42  lr: 0.010000000000000002  img/s: 39.215750633666474  loss: 5.1979 (5.3203)  time: 1.1926  data: 0.1779  max mem: 4760
+2020-10-12 11:12:50,104	INFO	kdkit.misc.log	Epoch: [40]  [3000/5025]  eta: 0:43:21  lr: 0.010000000000000002  img/s: 198.78140425434637  loss: 5.3038 (5.3283)  time: 1.1251  data: 0.0008  max mem: 4760
+2020-10-12 11:34:15,820	INFO	kdkit.misc.log	Epoch: [40]  [4000/5025]  eta: 0:21:57  lr: 0.010000000000000002  img/s: 200.5667601665671  loss: 5.3301 (5.3315)  time: 1.0940  data: 0.0017  max mem: 4760
+2020-10-12 11:56:01,958	INFO	kdkit.misc.log	Epoch: [40]  [5000/5025]  eta: 0:00:32  lr: 0.010000000000000002  img/s: 341.02707242461867  loss: 5.3435 (5.3367)  time: 1.0088  data: 0.0026  max mem: 4760
+2020-10-12 11:56:08,623	INFO	kdkit.misc.log	Epoch: [40] Total time: 1:47:34
+2020-10-12 11:56:16,495	INFO	kdkit.misc.log	Validation:  [  0/131]  eta: 0:17:07  acc1: 61.7188 (61.7188)  acc5: 80.4688 (80.4688)  time: 7.8418  data: 7.7904  max mem: 4760
+2020-10-12 11:56:40,602	INFO	kdkit.misc.log	Validation: Total time: 0:00:31
+2020-10-12 11:56:40,707	INFO	__main__	 * Acc@1 65.9887	Acc@5 87.0943
+
+2020-10-12 11:57:05,436	INFO	kdkit.misc.log	Epoch: [41]  [   0/5025]  eta: 1 day, 10:30:55  lr: 0.010000000000000002  img/s: 160.5499074120775  loss: 4.5621 (4.5621)  time: 24.7275  data: 24.1981  max mem: 4760
+2020-10-12 12:18:15,167	INFO	kdkit.misc.log	Epoch: [41]  [1000/5025]  eta: 1:26:44  lr: 0.010000000000000002  img/s: 182.65010712606036  loss: 5.3191 (5.3152)  time: 1.1308  data: 0.1366  max mem: 4760
+2020-10-12 12:39:36,457	INFO	kdkit.misc.log	Epoch: [41]  [2000/5025]  eta: 1:04:53  lr: 0.010000000000000002  img/s: 24.845743015694563  loss: 5.2924 (5.3195)  time: 1.2259  data: 0.0046  max mem: 4760
+2020-10-12 13:01:05,664	INFO	kdkit.misc.log	Epoch: [41]  [3000/5025]  eta: 0:43:27  lr: 0.010000000000000002  img/s: 148.78862228691932  loss: 5.5547 (5.3268)  time: 1.1352  data: 0.0022  max mem: 4760
+2020-10-12 13:22:28,963	INFO	kdkit.misc.log	Epoch: [41]  [4000/5025]  eta: 0:21:58  lr: 0.010000000000000002  img/s: 6.572708215988511  loss: 5.1298 (5.3307)  time: 1.7230  data: 0.0021  max mem: 4760
+2020-10-12 13:43:48,600	INFO	kdkit.misc.log	Epoch: [41]  [5000/5025]  eta: 0:00:32  lr: 0.010000000000000002  img/s: 219.17532263141328  loss: 5.3443 (5.3336)  time: 1.0997  data: 0.0605  max mem: 4760
+2020-10-12 13:44:00,112	INFO	kdkit.misc.log	Epoch: [41] Total time: 1:47:19
+2020-10-12 13:44:07,492	INFO	kdkit.misc.log	Validation:  [  0/131]  eta: 0:16:04  acc1: 56.2500 (56.2500)  acc5: 78.9062 (78.9062)  time: 7.3638  data: 7.2828  max mem: 4760
+2020-10-12 13:44:32,009	INFO	kdkit.misc.log	Validation: Total time: 0:00:31
+2020-10-12 13:44:32,178	INFO	__main__	 * Acc@1 66.0247	Acc@5 87.2303
+
+2020-10-12 13:44:57,000	INFO	kdkit.misc.log	Epoch: [42]  [   0/5025]  eta: 1 day, 10:38:43  lr: 0.010000000000000002  img/s: 30.450022800203172  loss: 5.5764 (5.5764)  time: 24.8206  data: 22.0291  max mem: 4760
+2020-10-12 14:06:03,500	INFO	kdkit.misc.log	Epoch: [42]  [1000/5025]  eta: 1:26:32  lr: 0.010000000000000002  img/s: 204.4162498251215  loss: 5.0223 (5.2920)  time: 1.1837  data: 0.2916  max mem: 4760
+2020-10-12 14:27:29,474	INFO	kdkit.misc.log	Epoch: [42]  [2000/5025]  eta: 1:04:56  lr: 0.010000000000000002  img/s: 13.2596380640405  loss: 5.2696 (5.3089)  time: 1.4423  data: 0.0020  max mem: 4760
+2020-10-12 14:49:00,900	INFO	kdkit.misc.log	Epoch: [42]  [3000/5025]  eta: 0:43:30  lr: 0.010000000000000002  img/s: 168.72248443113233  loss: 5.1792 (5.3107)  time: 1.1425  data: 0.0025  max mem: 4760
+2020-10-12 15:10:24,111	INFO	kdkit.misc.log	Epoch: [42]  [4000/5025]  eta: 0:21:59  lr: 0.010000000000000002  img/s: 193.6822936614649  loss: 5.4138 (5.3168)  time: 1.1287  data: 0.0009  max mem: 4760
+2020-10-12 15:31:58,009	INFO	kdkit.misc.log	Epoch: [42]  [5000/5025]  eta: 0:00:32  lr: 0.010000000000000002  img/s: 196.73128252612713  loss: 5.3912 (5.3174)  time: 1.0970  data: 0.0023  max mem: 4760
+2020-10-12 15:32:07,191	INFO	kdkit.misc.log	Epoch: [42] Total time: 1:47:35
+2020-10-12 15:32:13,695	INFO	kdkit.misc.log	Validation:  [  0/131]  eta: 0:14:09  acc1: 57.0312 (57.0312)  acc5: 82.0312 (82.0312)  time: 6.4823  data: 6.4251  max mem: 4760
+2020-10-12 15:32:38,939	INFO	kdkit.misc.log	Validation: Total time: 0:00:31
+2020-10-12 15:32:39,062	INFO	__main__	 * Acc@1 65.7827	Acc@5 87.0823
+
+2020-10-12 15:33:02,768	INFO	kdkit.misc.log	Epoch: [43]  [   0/5025]  eta: 1 day, 9:05:15  lr: 0.010000000000000002  img/s: 74.64679189043133  loss: 4.9222 (4.9222)  time: 23.7045  data: 22.5658  max mem: 4760
+2020-10-12 15:53:56,684	INFO	kdkit.misc.log	Epoch: [43]  [1000/5025]  eta: 1:25:37  lr: 0.010000000000000002  img/s: 226.88347235294754  loss: 5.1445 (5.2901)  time: 1.1404  data: 0.5187  max mem: 4760
+2020-10-12 16:15:12,535	INFO	kdkit.misc.log	Epoch: [43]  [2000/5025]  eta: 1:04:20  lr: 0.010000000000000002  img/s: 30.74328086511974  loss: 5.1437 (5.3036)  time: 1.6058  data: 0.6968  max mem: 4760
+2020-10-12 16:36:34,364	INFO	kdkit.misc.log	Epoch: [43]  [3000/5025]  eta: 0:43:07  lr: 0.010000000000000002  img/s: 253.20169797397926  loss: 5.4019 (5.3118)  time: 1.0804  data: 0.0002  max mem: 4760
+2020-10-12 16:58:09,708	INFO	kdkit.misc.log	Epoch: [43]  [4000/5025]  eta: 0:21:54  lr: 0.010000000000000002  img/s: 196.04616915860612  loss: 5.1228 (5.3139)  time: 1.1524  data: 0.0287  max mem: 4760
+2020-10-12 17:19:35,380	INFO	kdkit.misc.log	Epoch: [43]  [5000/5025]  eta: 0:00:32  lr: 0.010000000000000002  img/s: 258.8164952794404  loss: 5.2306 (5.3139)  time: 1.0703  data: 0.0021  max mem: 4760
+2020-10-12 17:19:43,903	INFO	kdkit.misc.log	Epoch: [43] Total time: 1:47:04
+2020-10-12 17:19:51,595	INFO	kdkit.misc.log	Validation:  [  0/131]  eta: 0:16:43  acc1: 57.8125 (57.8125)  acc5: 82.8125 (82.8125)  time: 7.6571  data: 7.6060  max mem: 4760
+2020-10-12 17:20:15,475	INFO	kdkit.misc.log	Validation: Total time: 0:00:31
+2020-10-12 17:20:15,813	INFO	__main__	 * Acc@1 64.4967	Acc@5 86.3743
+
+2020-10-12 17:20:40,186	INFO	kdkit.misc.log	Epoch: [44]  [   0/5025]  eta: 1 day, 10:01:01  lr: 0.010000000000000002  img/s: 160.5827385504865  loss: 5.3548 (5.3548)  time: 24.3705  data: 23.8411  max mem: 4760
+2020-10-12 17:41:33,691	INFO	kdkit.misc.log	Epoch: [44]  [1000/5025]  eta: 1:25:38  lr: 0.010000000000000002  img/s: 199.12914333589333  loss: 5.1629 (5.2926)  time: 1.1264  data: 0.5032  max mem: 4760
+2020-10-12 18:02:42,340	INFO	kdkit.misc.log	Epoch: [44]  [2000/5025]  eta: 1:04:09  lr: 0.010000000000000002  img/s: 64.55452206516766  loss: 5.2968 (5.2902)  time: 1.5608  data: 0.8857  max mem: 4760
+2020-10-12 18:23:55,665	INFO	kdkit.misc.log	Epoch: [44]  [3000/5025]  eta: 0:42:57  lr: 0.010000000000000002  img/s: 204.00031127977186  loss: 5.2951 (5.2931)  time: 1.0886  data: 0.1422  max mem: 4760
+2020-10-12 18:45:21,225	INFO	kdkit.misc.log	Epoch: [44]  [4000/5025]  eta: 0:21:47  lr: 0.010000000000000002  img/s: 166.97750423513884  loss: 5.2473 (5.2992)  time: 1.2449  data: 0.2318  max mem: 4760
+2020-10-12 19:06:40,740	INFO	kdkit.misc.log	Epoch: [44]  [5000/5025]  eta: 0:00:31  lr: 0.010000000000000002  img/s: 322.0803023897026  loss: 5.3267 (5.3050)  time: 1.0136  data: 0.2980  max mem: 4760
+2020-10-12 19:06:50,818	INFO	kdkit.misc.log	Epoch: [44] Total time: 1:46:35
+2020-10-12 19:06:58,400	INFO	kdkit.misc.log	Validation:  [  0/131]  eta: 0:16:27  acc1: 57.0312 (57.0312)  acc5: 80.4688 (80.4688)  time: 7.5349  data: 7.4540  max mem: 4760
+2020-10-12 19:07:22,662	INFO	kdkit.misc.log	Validation: Total time: 0:00:31
+2020-10-12 19:07:22,687	INFO	__main__	 * Acc@1 65.3007	Acc@5 86.8523
+
+2020-10-12 19:07:46,644	INFO	kdkit.misc.log	Epoch: [45]  [   0/5025]  eta: 1 day, 9:26:16  lr: 0.010000000000000002  img/s: 71.3545861147543  loss: 5.4602 (5.4602)  time: 23.9556  data: 22.7643  max mem: 4760
+2020-10-12 19:28:45,156	INFO	kdkit.misc.log	Epoch: [45]  [1000/5025]  eta: 1:25:56  lr: 0.010000000000000002  img/s: 184.6400972826225  loss: 5.3792 (5.2610)  time: 1.2036  data: 0.6046  max mem: 4760
+2020-10-12 19:50:07,732	INFO	kdkit.misc.log	Epoch: [45]  [2000/5025]  eta: 1:04:37  lr: 0.010000000000000002  img/s: 191.91879584784772  loss: 5.3259 (5.2847)  time: 1.6709  data: 1.1920  max mem: 4760
+2020-10-12 20:11:20,004	INFO	kdkit.misc.log	Epoch: [45]  [3000/5025]  eta: 0:43:09  lr: 0.010000000000000002  img/s: 159.24950139030028  loss: 5.2739 (5.2901)  time: 1.0829  data: 0.5850  max mem: 4760
+2020-10-12 20:32:31,889	INFO	kdkit.misc.log	Epoch: [45]  [4000/5025]  eta: 0:21:48  lr: 0.010000000000000002  img/s: 235.55347652234124  loss: 5.4431 (5.2947)  time: 1.0840  data: 0.0004  max mem: 4760
+2020-10-12 20:53:47,000	INFO	kdkit.misc.log	Epoch: [45]  [5000/5025]  eta: 0:00:31  lr: 0.010000000000000002  img/s: 210.78811148747124  loss: 5.3528 (5.3014)  time: 1.0479  data: 0.0013  max mem: 4760
+2020-10-12 20:53:56,726	INFO	kdkit.misc.log	Epoch: [45] Total time: 1:46:34
+2020-10-12 20:54:03,901	INFO	kdkit.misc.log	Validation:  [  0/131]  eta: 0:15:35  acc1: 55.4688 (55.4688)  acc5: 84.3750 (84.3750)  time: 7.1376  data: 7.0659  max mem: 4760
+2020-10-12 20:54:28,529	INFO	kdkit.misc.log	Validation: Total time: 0:00:31
+2020-10-12 20:54:28,734	INFO	__main__	 * Acc@1 65.7027	Acc@5 86.9623
+
+2020-10-12 20:54:53,260	INFO	kdkit.misc.log	Epoch: [46]  [   0/5025]  eta: 1 day, 10:13:53  lr: 0.010000000000000002  img/s: 60.44108332734318  loss: 5.3071 (5.3071)  time: 24.5240  data: 23.1177  max mem: 4760
+2020-10-12 21:16:03,897	INFO	kdkit.misc.log	Epoch: [46]  [1000/5025]  eta: 1:26:47  lr: 0.010000000000000002  img/s: 191.44637350091799  loss: 5.2382 (5.2499)  time: 1.1220  data: 0.1729  max mem: 4760
+2020-10-12 21:37:22,720	INFO	kdkit.misc.log	Epoch: [46]  [2000/5025]  eta: 1:04:51  lr: 0.010000000000000002  img/s: 20.259061251019016  loss: 5.2644 (5.2698)  time: 1.6961  data: 0.8097  max mem: 4760
+2020-10-12 21:58:35,406	INFO	kdkit.misc.log	Epoch: [46]  [3000/5025]  eta: 0:43:15  lr: 0.010000000000000002  img/s: 170.44831892356032  loss: 5.1969 (5.2795)  time: 1.1407  data: 0.3790  max mem: 4760
+2020-10-12 22:19:46,128	INFO	kdkit.misc.log	Epoch: [46]  [4000/5025]  eta: 0:21:50  lr: 0.010000000000000002  img/s: 36.122619343983615  loss: 5.3437 (5.2855)  time: 1.6214  data: 0.8947  max mem: 4760
+2020-10-12 22:41:10,090	INFO	kdkit.misc.log	Epoch: [46]  [5000/5025]  eta: 0:00:32  lr: 0.010000000000000002  img/s: 227.0369146258133  loss: 5.3509 (5.2918)  time: 1.0815  data: 0.0021  max mem: 4760
+2020-10-12 22:41:18,283	INFO	kdkit.misc.log	Epoch: [46] Total time: 1:46:49
+2020-10-12 22:41:25,645	INFO	kdkit.misc.log	Validation:  [  0/131]  eta: 0:16:01  acc1: 59.3750 (59.3750)  acc5: 81.2500 (81.2500)  time: 7.3433  data: 7.2739  max mem: 4760
+2020-10-12 22:41:50,166	INFO	kdkit.misc.log	Validation: Total time: 0:00:31
+2020-10-12 22:41:50,173	INFO	__main__	 * Acc@1 65.3287	Acc@5 86.8943
+
+2020-10-12 22:42:14,929	INFO	kdkit.misc.log	Epoch: [47]  [   0/5025]  eta: 1 day, 10:33:02  lr: 0.010000000000000002  img/s: 169.33152404424558  loss: 5.0447 (5.0447)  time: 24.7526  data: 24.2506  max mem: 4760
+2020-10-12 23:03:09,516	INFO	kdkit.misc.log	Epoch: [47]  [1000/5025]  eta: 1:25:44  lr: 0.010000000000000002  img/s: 225.15472147103813  loss: 5.2173 (5.2616)  time: 1.0926  data: 0.5192  max mem: 4760
+2020-10-12 23:24:14,409	INFO	kdkit.misc.log	Epoch: [47]  [2000/5025]  eta: 1:04:06  lr: 0.010000000000000002  img/s: 22.213314860651757  loss: 5.1932 (5.2685)  time: 1.7538  data: 1.0125  max mem: 4760
+2020-10-12 23:45:16,117	INFO	kdkit.misc.log	Epoch: [47]  [3000/5025]  eta: 0:42:48  lr: 0.010000000000000002  img/s: 193.22859526071693  loss: 5.2795 (5.2674)  time: 1.1298  data: 0.0619  max mem: 4760
+2020-10-13 00:06:39,198	INFO	kdkit.misc.log	Epoch: [47]  [4000/5025]  eta: 0:21:43  lr: 0.010000000000000002  img/s: 8.235286535622938  loss: 5.1760 (5.2787)  time: 1.6385  data: 0.0181  max mem: 4760
+2020-10-13 00:28:02,018	INFO	kdkit.misc.log	Epoch: [47]  [5000/5025]  eta: 0:00:31  lr: 0.010000000000000002  img/s: 235.4248387593101  loss: 5.2576 (5.2837)  time: 1.0774  data: 0.0028  max mem: 4760
+2020-10-13 00:28:11,180	INFO	kdkit.misc.log	Epoch: [47] Total time: 1:46:21
+2020-10-13 00:28:18,463	INFO	kdkit.misc.log	Validation:  [  0/131]  eta: 0:15:49  acc1: 56.2500 (56.2500)  acc5: 82.0312 (82.0312)  time: 7.2496  data: 7.1917  max mem: 4760
+2020-10-13 00:28:43,081	INFO	kdkit.misc.log	Validation: Total time: 0:00:31
+2020-10-13 00:28:43,088	INFO	__main__	 * Acc@1 65.9767	Acc@5 87.2323
+
+2020-10-13 00:29:07,361	INFO	kdkit.misc.log	Epoch: [48]  [   0/5025]  eta: 1 day, 9:52:39  lr: 0.010000000000000002  img/s: 46.90528841852657  loss: 6.0692 (6.0692)  time: 24.2705  data: 22.4583  max mem: 4760
+2020-10-13 00:50:06,444	INFO	kdkit.misc.log	Epoch: [48]  [1000/5025]  eta: 1:26:00  lr: 0.010000000000000002  img/s: 173.51176591114938  loss: 5.2379 (5.2382)  time: 1.1006  data: 0.4335  max mem: 4760
+2020-10-13 01:11:19,380	INFO	kdkit.misc.log	Epoch: [48]  [2000/5025]  eta: 1:04:24  lr: 0.010000000000000002  img/s: 11.82366939716624  loss: 5.0834 (5.2554)  time: 1.5120  data: 0.0682  max mem: 4760
+2020-10-13 01:32:37,139	INFO	kdkit.misc.log	Epoch: [48]  [3000/5025]  eta: 0:43:07  lr: 0.010000000000000002  img/s: 159.29717544921817  loss: 5.2545 (5.2706)  time: 1.0756  data: 0.0027  max mem: 4760
+2020-10-13 01:54:04,972	INFO	kdkit.misc.log	Epoch: [48]  [4000/5025]  eta: 0:21:52  lr: 0.010000000000000002  img/s: 8.715799098144338  loss: 5.3987 (5.2803)  time: 1.6106  data: 0.0004  max mem: 4760
+2020-10-13 02:15:24,504	INFO	kdkit.misc.log	Epoch: [48]  [5000/5025]  eta: 0:00:32  lr: 0.010000000000000002  img/s: 281.1781036266815  loss: 5.1996 (5.2815)  time: 1.0329  data: 0.0033  max mem: 4760
+2020-10-13 02:15:35,715	INFO	kdkit.misc.log	Epoch: [48] Total time: 1:46:52
+2020-10-13 02:15:42,636	INFO	kdkit.misc.log	Validation:  [  0/131]  eta: 0:15:02  acc1: 53.9062 (53.9062)  acc5: 76.5625 (76.5625)  time: 6.8864  data: 6.8163  max mem: 4760
+2020-10-13 02:16:07,466	INFO	kdkit.misc.log	Validation: Total time: 0:00:31
+2020-10-13 02:16:07,471	INFO	__main__	 * Acc@1 64.6027	Acc@5 86.3843
+
+2020-10-13 02:16:32,256	INFO	kdkit.misc.log	Epoch: [49]  [   0/5025]  eta: 1 day, 10:35:33  lr: 0.010000000000000002  img/s: 51.14870585176889  loss: 4.9073 (4.9073)  time: 24.7828  data: 23.1210  max mem: 4760
+2020-10-13 02:37:26,318	INFO	kdkit.misc.log	Epoch: [49]  [1000/5025]  eta: 1:25:42  lr: 0.010000000000000002  img/s: 200.71931453317802  loss: 5.2435 (5.2583)  time: 1.0769  data: 0.5580  max mem: 4760
+2020-10-13 02:58:35,860	INFO	kdkit.misc.log	Epoch: [49]  [2000/5025]  eta: 1:04:12  lr: 0.010000000000000002  img/s: 13.871056111628988  loss: 5.4605 (5.2561)  time: 1.5216  data: 0.2880  max mem: 4760
+2020-10-13 03:19:35,628	INFO	kdkit.misc.log	Epoch: [49]  [3000/5025]  eta: 0:42:49  lr: 0.010000000000000002  img/s: 247.0153967244373  loss: 5.3100 (5.2622)  time: 1.1250  data: 0.5226  max mem: 4760
+2020-10-13 03:40:45,306	INFO	kdkit.misc.log	Epoch: [49]  [4000/5025]  eta: 0:21:40  lr: 0.010000000000000002  img/s: 36.61230930224558  loss: 5.2933 (5.2722)  time: 1.7405  data: 1.0365  max mem: 4760
+2020-10-13 04:01:36,492	INFO	kdkit.misc.log	Epoch: [49]  [5000/5025]  eta: 0:00:31  lr: 0.010000000000000002  img/s: 249.34246452710263  loss: 5.2755 (5.2727)  time: 1.0794  data: 0.6056  max mem: 4760
+2020-10-13 04:01:47,155	INFO	kdkit.misc.log	Epoch: [49] Total time: 1:45:39
+2020-10-13 04:01:55,069	INFO	kdkit.misc.log	Validation:  [  0/131]  eta: 0:17:14  acc1: 56.2500 (56.2500)  acc5: 82.8125 (82.8125)  time: 7.8962  data: 7.8414  max mem: 4760
+2020-10-13 04:02:18,755	INFO	kdkit.misc.log	Validation: Total time: 0:00:31
+2020-10-13 04:02:19,047	INFO	__main__	 * Acc@1 65.5687	Acc@5 87.0023
+
+2020-10-13 04:02:43,340	INFO	kdkit.misc.log	Epoch: [50]  [   0/5025]  eta: 1 day, 9:54:24  lr: 0.010000000000000002  img/s: 78.53238849006439  loss: 5.4933 (5.4933)  time: 24.2914  data: 23.2090  max mem: 4760
+2020-10-13 04:23:33,140	INFO	kdkit.misc.log	Epoch: [50]  [1000/5025]  eta: 1:25:23  lr: 0.010000000000000002  img/s: 151.14205322761916  loss: 5.0442 (5.2571)  time: 1.2300  data: 0.7151  max mem: 4760
+2020-10-13 04:45:05,784	INFO	kdkit.misc.log	Epoch: [50]  [2000/5025]  eta: 1:04:40  lr: 0.010000000000000002  img/s: 148.67054819255503  loss: 5.1666 (5.2639)  time: 1.7436  data: 0.0027  max mem: 4760
+2020-10-13 05:06:34,485	INFO	kdkit.misc.log	Epoch: [50]  [3000/5025]  eta: 0:43:21  lr: 0.010000000000000002  img/s: 171.18613516333505  loss: 5.0560 (5.2610)  time: 1.1176  data: 0.0021  max mem: 4760
+2020-10-13 05:28:11,786	INFO	kdkit.misc.log	Epoch: [50]  [4000/5025]  eta: 0:22:00  lr: 0.010000000000000002  img/s: 164.66673902751637  loss: 5.2328 (5.2620)  time: 1.7411  data: 0.0028  max mem: 4760
+2020-10-13 05:49:31,932	INFO	kdkit.misc.log	Epoch: [50]  [5000/5025]  eta: 0:00:32  lr: 0.010000000000000002  img/s: 210.73764948999616  loss: 5.4792 (5.2695)  time: 1.1222  data: 0.0013  max mem: 4760
+2020-10-13 05:49:41,270	INFO	kdkit.misc.log	Epoch: [50] Total time: 1:47:22
+2020-10-13 05:49:48,752	INFO	kdkit.misc.log	Validation:  [  0/131]  eta: 0:16:07  acc1: 57.0312 (57.0312)  acc5: 80.4688 (80.4688)  time: 7.3839  data: 7.3004  max mem: 4760
+2020-10-13 05:50:13,185	INFO	kdkit.misc.log	Validation: Total time: 0:00:31
+2020-10-13 05:50:13,220	INFO	__main__	 * Acc@1 65.2987	Acc@5 86.7783
+
+2020-10-13 05:50:38,041	INFO	kdkit.misc.log	Epoch: [51]  [   0/5025]  eta: 1 day, 10:38:34  lr: 0.010000000000000002  img/s: 22.87216605442769  loss: 5.3944 (5.3944)  time: 24.8188  data: 21.1025  max mem: 4760
+2020-10-13 06:11:38,500	INFO	kdkit.misc.log	Epoch: [51]  [1000/5025]  eta: 1:26:08  lr: 0.010000000000000002  img/s: 225.45486739542585  loss: 5.2539 (5.2374)  time: 1.1160  data: 0.6686  max mem: 4760
+2020-10-13 06:33:10,052	INFO	kdkit.misc.log	Epoch: [51]  [2000/5025]  eta: 1:04:55  lr: 0.010000000000000002  img/s: 219.1043363523115  loss: 5.2393 (5.2461)  time: 1.2930  data: 0.2965  max mem: 4760
+2020-10-13 06:54:32,050	INFO	kdkit.misc.log	Epoch: [51]  [3000/5025]  eta: 0:43:23  lr: 0.010000000000000002  img/s: 159.40978522442023  loss: 5.1549 (5.2457)  time: 1.1182  data: 0.0007  max mem: 4760
+2020-10-13 07:16:10,479	INFO	kdkit.misc.log	Epoch: [51]  [4000/5025]  eta: 0:22:01  lr: 0.010000000000000002  img/s: 224.91339168835265  loss: 5.2722 (5.2539)  time: 1.1733  data: 0.0022  max mem: 4760
+2020-10-13 07:37:32,767	INFO	kdkit.misc.log	Epoch: [51]  [5000/5025]  eta: 0:00:32  lr: 0.010000000000000002  img/s: 437.4556305952568  loss: 5.3447 (5.2564)  time: 1.0684  data: 0.0023  max mem: 4760
+2020-10-13 07:37:41,102	INFO	kdkit.misc.log	Epoch: [51] Total time: 1:47:27
+2020-10-13 07:37:48,741	INFO	kdkit.misc.log	Validation:  [  0/131]  eta: 0:16:38  acc1: 58.5938 (58.5938)  acc5: 82.0312 (82.0312)  time: 7.6222  data: 7.5372  max mem: 4760
+2020-10-13 07:38:13,055	INFO	kdkit.misc.log	Validation: Total time: 0:00:31
+2020-10-13 07:38:13,074	INFO	__main__	 * Acc@1 65.9547	Acc@5 87.0423
+
+2020-10-13 07:38:37,737	INFO	kdkit.misc.log	Epoch: [52]  [   0/5025]  eta: 1 day, 10:25:16  lr: 0.010000000000000002  img/s: 35.3713298791019  loss: 4.7897 (4.7897)  time: 24.6599  data: 22.2568  max mem: 4760
+2020-10-13 07:59:32,212	INFO	kdkit.misc.log	Epoch: [52]  [1000/5025]  eta: 1:25:43  lr: 0.010000000000000002  img/s: 159.83809770179616  loss: 5.3575 (5.2477)  time: 1.1972  data: 0.1322  max mem: 4760
+2020-10-13 08:21:01,058	INFO	kdkit.misc.log	Epoch: [52]  [2000/5025]  eta: 1:04:42  lr: 0.010000000000000002  img/s: 6.37497495944203  loss: 5.1514 (5.2490)  time: 1.6747  data: 0.0010  max mem: 4760
+2020-10-13 08:42:16,615	INFO	kdkit.misc.log	Epoch: [52]  [3000/5025]  eta: 0:43:13  lr: 0.010000000000000002  img/s: 189.2598807583012  loss: 5.2603 (5.2484)  time: 1.1031  data: 0.0181  max mem: 4760
+2020-10-13 09:03:48,320	INFO	kdkit.misc.log	Epoch: [52]  [4000/5025]  eta: 0:21:55  lr: 0.010000000000000002  img/s: 6.311341701181003  loss: 5.2476 (5.2502)  time: 1.7802  data: 0.0022  max mem: 4760
+2020-10-13 09:25:12,088	INFO	kdkit.misc.log	Epoch: [52]  [5000/5025]  eta: 0:00:32  lr: 0.010000000000000002  img/s: 200.6471300011819  loss: 5.2838 (5.2547)  time: 1.1087  data: 0.0247  max mem: 4760
+2020-10-13 09:25:20,810	INFO	kdkit.misc.log	Epoch: [52] Total time: 1:47:07
+2020-10-13 09:25:28,052	INFO	kdkit.misc.log	Validation:  [  0/131]  eta: 0:15:44  acc1: 58.5938 (58.5938)  acc5: 82.8125 (82.8125)  time: 7.2084  data: 7.1412  max mem: 4760
+2020-10-13 09:25:52,741	INFO	kdkit.misc.log	Validation: Total time: 0:00:31
+2020-10-13 09:25:52,743	INFO	__main__	 * Acc@1 65.1227	Acc@5 86.5923
+
+2020-10-13 09:26:17,784	INFO	kdkit.misc.log	Epoch: [53]  [   0/5025]  eta: 1 day, 10:56:55  lr: 0.010000000000000002  img/s: 150.7643773771293  loss: 4.6827 (4.6827)  time: 25.0379  data: 24.4741  max mem: 4760
+2020-10-13 09:47:55,124	INFO	kdkit.misc.log	Epoch: [53]  [1000/5025]  eta: 1:28:37  lr: 0.010000000000000002  img/s: 341.8475053911703  loss: 5.2820 (5.2205)  time: 1.0737  data: 0.8182  max mem: 4760
+2020-10-13 10:09:15,648	INFO	kdkit.misc.log	Epoch: [53]  [2000/5025]  eta: 1:05:34  lr: 0.010000000000000002  img/s: 191.5508806919381  loss: 5.2518 (5.2335)  time: 1.1232  data: 0.8261  max mem: 4760
+2020-10-13 10:30:50,813	INFO	kdkit.misc.log	Epoch: [53]  [3000/5025]  eta: 0:43:50  lr: 0.010000000000000002  img/s: 411.0090660075442  loss: 5.3141 (5.2424)  time: 1.0741  data: 0.7949  max mem: 4760
+2020-10-13 10:52:11,740	INFO	kdkit.misc.log	Epoch: [53]  [4000/5025]  eta: 0:22:06  lr: 0.010000000000000002  img/s: 174.33707909123805  loss: 5.2477 (5.2431)  time: 1.1149  data: 0.8011  max mem: 4760
+2020-10-13 11:13:45,365	INFO	kdkit.misc.log	Epoch: [53]  [5000/5025]  eta: 0:00:32  lr: 0.010000000000000002  img/s: 443.86711221557664  loss: 5.2524 (5.2453)  time: 0.9919  data: 0.7349  max mem: 4760
+2020-10-13 11:13:51,750	INFO	kdkit.misc.log	Epoch: [53] Total time: 1:47:59
+2020-10-13 11:13:58,988	INFO	kdkit.misc.log	Validation:  [  0/131]  eta: 0:15:46  acc1: 57.0312 (57.0312)  acc5: 78.9062 (78.9062)  time: 7.2217  data: 7.1546  max mem: 4760
+2020-10-13 11:14:23,485	INFO	kdkit.misc.log	Validation: Total time: 0:00:31
+2020-10-13 11:14:23,589	INFO	__main__	 * Acc@1 65.7087	Acc@5 87.2483
+
+2020-10-13 11:14:49,088	INFO	kdkit.misc.log	Epoch: [54]  [   0/5025]  eta: 1 day, 11:35:22  lr: 0.010000000000000002  img/s: 26.817566508371073  loss: 5.2689 (5.2689)  time: 25.4970  data: 22.3275  max mem: 4760
+2020-10-13 11:35:42,608	INFO	kdkit.misc.log	Epoch: [54]  [1000/5025]  eta: 1:25:42  lr: 0.010000000000000002  img/s: 154.03998467013793  loss: 5.1111 (5.2236)  time: 1.1054  data: 0.3582  max mem: 4760
+2020-10-13 11:56:56,009	INFO	kdkit.misc.log	Epoch: [54]  [2000/5025]  eta: 1:04:18  lr: 0.010000000000000002  img/s: 16.96280908766504  loss: 5.2400 (5.2370)  time: 1.6486  data: 0.6427  max mem: 4760
+2020-10-13 12:18:06,156	INFO	kdkit.misc.log	Epoch: [54]  [3000/5025]  eta: 0:42:59  lr: 0.010000000000000002  img/s: 265.8104248229811  loss: 5.2184 (5.2434)  time: 1.1218  data: 0.4027  max mem: 4760
+2020-10-13 12:39:21,555	INFO	kdkit.misc.log	Epoch: [54]  [4000/5025]  eta: 0:21:46  lr: 0.010000000000000002  img/s: 178.4117108947913  loss: 5.2406 (5.2446)  time: 1.1978  data: 0.0936  max mem: 4760
+2020-10-13 13:00:52,188	INFO	kdkit.misc.log	Epoch: [54]  [5000/5025]  eta: 0:00:31  lr: 0.010000000000000002  img/s: 255.25420112564606  loss: 5.3188 (5.2441)  time: 1.0456  data: 0.0047  max mem: 4760
+2020-10-13 13:01:01,267	INFO	kdkit.misc.log	Epoch: [54] Total time: 1:46:37
+2020-10-13 13:01:08,403	INFO	kdkit.misc.log	Validation:  [  0/131]  eta: 0:15:32  acc1: 53.1250 (53.1250)  acc5: 82.0312 (82.0312)  time: 7.1189  data: 7.0679  max mem: 4760
+2020-10-13 13:01:32,991	INFO	kdkit.misc.log	Validation: Total time: 0:00:31
+2020-10-13 13:01:33,010	INFO	__main__	 * Acc@1 65.6087	Acc@5 87.1063
+
+2020-10-13 13:01:57,309	INFO	kdkit.misc.log	Epoch: [55]  [   0/5025]  eta: 1 day, 9:54:50  lr: 0.010000000000000002  img/s: 141.44726056800158  loss: 5.1710 (5.1710)  time: 24.2966  data: 23.6956  max mem: 4760
+2020-10-13 13:22:55,982	INFO	kdkit.misc.log	Epoch: [55]  [1000/5025]  eta: 1:25:58  lr: 0.010000000000000002  img/s: 164.14301585233403  loss: 5.1070 (5.2127)  time: 1.1071  data: 0.4344  max mem: 4760
+2020-10-13 13:44:12,072	INFO	kdkit.misc.log	Epoch: [55]  [2000/5025]  eta: 1:04:28  lr: 0.010000000000000002  img/s: 142.52105140284053  loss: 5.2040 (5.2110)  time: 1.5038  data: 1.0492  max mem: 4760
+2020-10-13 14:05:28,772	INFO	kdkit.misc.log	Epoch: [55]  [3000/5025]  eta: 0:43:08  lr: 0.010000000000000002  img/s: 206.41451055591065  loss: 5.2102 (5.2227)  time: 1.1294  data: 0.6224  max mem: 4760
+2020-10-13 14:26:43,444	INFO	kdkit.misc.log	Epoch: [55]  [4000/5025]  eta: 0:21:49  lr: 0.010000000000000002  img/s: 160.93917491753643  loss: 5.2678 (5.2313)  time: 1.1308  data: 0.6611  max mem: 4760
+2020-10-13 14:48:13,961	INFO	kdkit.misc.log	Epoch: [55]  [5000/5025]  eta: 0:00:31  lr: 0.010000000000000002  img/s: 281.34319029791857  loss: 5.0809 (5.2377)  time: 1.4766  data: 0.2043  max mem: 4760
+2020-10-13 14:48:21,966	INFO	kdkit.misc.log	Epoch: [55] Total time: 1:46:48
+2020-10-13 14:48:29,552	INFO	kdkit.misc.log	Validation:  [  0/131]  eta: 0:16:30  acc1: 57.0312 (57.0312)  acc5: 79.6875 (79.6875)  time: 7.5575  data: 7.4736  max mem: 4760
+2020-10-13 14:48:53,413	INFO	kdkit.misc.log	Validation: Total time: 0:00:31
+2020-10-13 14:48:53,702	INFO	__main__	 * Acc@1 65.8287	Acc@5 87.2283
+
+2020-10-13 14:49:17,345	INFO	kdkit.misc.log	Epoch: [56]  [   0/5025]  eta: 1 day, 8:59:53  lr: 0.010000000000000002  img/s: 111.50514308304747  loss: 5.0192 (5.0192)  time: 23.6406  data: 22.8782  max mem: 4760
+2020-10-13 15:10:17,891	INFO	kdkit.misc.log	Epoch: [56]  [1000/5025]  eta: 1:26:03  lr: 0.010000000000000002  img/s: 231.78388949243208  loss: 5.1781 (5.1869)  time: 1.1211  data: 0.2455  max mem: 4760
+2020-10-13 15:31:39,232	INFO	kdkit.misc.log	Epoch: [56]  [2000/5025]  eta: 1:04:38  lr: 0.010000000000000002  img/s: 182.54910173447223  loss: 5.2765 (5.1993)  time: 1.3084  data: 0.4092  max mem: 4760
+2020-10-13 15:53:04,856	INFO	kdkit.misc.log	Epoch: [56]  [3000/5025]  eta: 0:43:18  lr: 0.010000000000000002  img/s: 239.0952207223641  loss: 5.2139 (5.2074)  time: 1.0998  data: 0.0008  max mem: 4760
+2020-10-13 16:14:18,836	INFO	kdkit.misc.log	Epoch: [56]  [4000/5025]  eta: 0:21:52  lr: 0.010000000000000002  img/s: 236.25027500563266  loss: 5.1887 (5.2134)  time: 1.1148  data: 0.0009  max mem: 4760
+2020-10-13 16:35:33,339	INFO	kdkit.misc.log	Epoch: [56]  [5000/5025]  eta: 0:00:31  lr: 0.010000000000000002  img/s: 239.32457750851697  loss: 5.0363 (5.2223)  time: 1.0048  data: 0.0029  max mem: 4760
+2020-10-13 16:35:41,295	INFO	kdkit.misc.log	Epoch: [56] Total time: 1:46:47
+2020-10-13 16:35:48,664	INFO	kdkit.misc.log	Validation:  [  0/131]  eta: 0:16:02  acc1: 53.1250 (53.1250)  acc5: 80.4688 (80.4688)  time: 7.3492  data: 7.2910  max mem: 4760
+2020-10-13 16:36:13,087	INFO	kdkit.misc.log	Validation: Total time: 0:00:31
+2020-10-13 16:36:13,089	INFO	__main__	 * Acc@1 64.9007	Acc@5 86.6263
+
+2020-10-13 16:36:36,524	INFO	kdkit.misc.log	Epoch: [57]  [   0/5025]  eta: 1 day, 8:42:31  lr: 0.010000000000000002  img/s: 114.29665476730524  loss: 5.7798 (5.7798)  time: 23.4332  data: 22.6895  max mem: 4760
+2020-10-13 16:57:40,089	INFO	kdkit.misc.log	Epoch: [57]  [1000/5025]  eta: 1:26:14  lr: 0.010000000000000002  img/s: 191.0328604787987  loss: 5.2935 (5.1890)  time: 1.3534  data: 0.4536  max mem: 4760
+2020-10-13 17:18:52,702	INFO	kdkit.misc.log	Epoch: [57]  [2000/5025]  eta: 1:04:29  lr: 0.010000000000000002  img/s: 188.23791793297022  loss: 5.2364 (5.1921)  time: 1.6229  data: 1.0183  max mem: 4760
+2020-10-13 17:39:49,469	INFO	kdkit.misc.log	Epoch: [57]  [3000/5025]  eta: 0:42:55  lr: 0.010000000000000002  img/s: 218.36181404362387  loss: 5.3111 (5.2107)  time: 1.0797  data: 0.4449  max mem: 4760
+2020-10-13 18:01:07,724	INFO	kdkit.misc.log	Epoch: [57]  [4000/5025]  eta: 0:21:45  lr: 0.010000000000000002  img/s: 40.787669285618264  loss: 5.3493 (5.2201)  time: 1.2248  data: 0.0035  max mem: 4760
+2020-10-13 18:22:35,090	INFO	kdkit.misc.log	Epoch: [57]  [5000/5025]  eta: 0:00:31  lr: 0.010000000000000002  img/s: 251.6839413718954  loss: 5.2025 (5.2211)  time: 1.0831  data: 0.0025  max mem: 4760
+2020-10-13 18:22:44,622	INFO	kdkit.misc.log	Epoch: [57] Total time: 1:46:31
+2020-10-13 18:22:52,368	INFO	kdkit.misc.log	Validation:  [  0/131]  eta: 0:16:51  acc1: 54.6875 (54.6875)  acc5: 81.2500 (81.2500)  time: 7.7226  data: 7.6539  max mem: 4760
+2020-10-13 18:23:16,364	INFO	kdkit.misc.log	Validation: Total time: 0:00:31
+2020-10-13 18:23:16,375	INFO	__main__	 * Acc@1 65.6167	Acc@5 87.0023
+
+2020-10-13 18:23:41,048	INFO	kdkit.misc.log	Epoch: [58]  [   0/5025]  eta: 1 day, 10:26:10  lr: 0.010000000000000002  img/s: 174.667626928485  loss: 5.1592 (5.1592)  time: 24.6707  data: 24.1841  max mem: 4760
+2020-10-13 18:44:56,077	INFO	kdkit.misc.log	Epoch: [58]  [1000/5025]  eta: 1:27:06  lr: 0.010000000000000002  img/s: 162.3816249556488  loss: 5.3322 (5.1863)  time: 1.0868  data: 0.6330  max mem: 4760
+2020-10-13 19:06:06,173	INFO	kdkit.misc.log	Epoch: [58]  [2000/5025]  eta: 1:04:44  lr: 0.010000000000000002  img/s: 145.71543713915062  loss: 5.1961 (5.2041)  time: 1.6786  data: 1.1698  max mem: 4760
+2020-10-13 19:27:10,784	INFO	kdkit.misc.log	Epoch: [58]  [3000/5025]  eta: 0:43:07  lr: 0.010000000000000002  img/s: 144.0962334150179  loss: 5.1002 (5.2087)  time: 1.0953  data: 0.5746  max mem: 4760
+2020-10-13 19:48:26,745	INFO	kdkit.misc.log	Epoch: [58]  [4000/5025]  eta: 0:21:49  lr: 0.010000000000000002  img/s: 160.40088992668677  loss: 5.0724 (5.2139)  time: 1.7060  data: 1.2521  max mem: 4760
+2020-10-13 20:09:29,411	INFO	kdkit.misc.log	Epoch: [58]  [5000/5025]  eta: 0:00:31  lr: 0.010000000000000002  img/s: 206.88561329719235  loss: 5.2133 (5.2163)  time: 1.0987  data: 0.6479  max mem: 4760
+2020-10-13 20:09:38,333	INFO	kdkit.misc.log	Epoch: [58] Total time: 1:46:21
+2020-10-13 20:09:46,397	INFO	kdkit.misc.log	Validation:  [  0/131]  eta: 0:17:33  acc1: 57.0312 (57.0312)  acc5: 81.2500 (81.2500)  time: 8.0404  data: 7.9891  max mem: 4760
+2020-10-13 20:10:10,083	INFO	kdkit.misc.log	Validation: Total time: 0:00:31
+2020-10-13 20:10:10,085	INFO	__main__	 * Acc@1 65.9527	Acc@5 87.3603
+
+2020-10-13 20:10:34,276	INFO	kdkit.misc.log	Epoch: [59]  [   0/5025]  eta: 1 day, 9:45:46  lr: 0.010000000000000002  img/s: 151.4732144374539  loss: 5.3395 (5.3395)  time: 24.1883  data: 23.6271  max mem: 4760
+2020-10-13 20:31:26,970	INFO	kdkit.misc.log	Epoch: [59]  [1000/5025]  eta: 1:25:34  lr: 0.010000000000000002  img/s: 151.80078830713236  loss: 5.0316 (5.2058)  time: 1.1363  data: 0.1709  max mem: 4760
+2020-10-13 20:52:38,924	INFO	kdkit.misc.log	Epoch: [59]  [2000/5025]  eta: 1:04:13  lr: 0.010000000000000002  img/s: 15.365855981735226  loss: 5.1622 (5.2130)  time: 1.3686  data: 0.2466  max mem: 4760
+2020-10-13 21:14:10,248	INFO	kdkit.misc.log	Epoch: [59]  [3000/5025]  eta: 0:43:11  lr: 0.010000000000000002  img/s: 171.4512208083001  loss: 5.1055 (5.2181)  time: 1.1454  data: 0.0020  max mem: 4760
+2020-10-13 21:35:28,092	INFO	kdkit.misc.log	Epoch: [59]  [4000/5025]  eta: 0:21:51  lr: 0.010000000000000002  img/s: 186.39382402486117  loss: 4.9578 (5.2165)  time: 1.1108  data: 0.0014  max mem: 4760
+2020-10-13 21:57:00,527	INFO	kdkit.misc.log	Epoch: [59]  [5000/5025]  eta: 0:00:32  lr: 0.010000000000000002  img/s: 253.3456411918157  loss: 5.1293 (5.2151)  time: 1.0149  data: 0.0026  max mem: 4760
+2020-10-13 21:57:07,830	INFO	kdkit.misc.log	Epoch: [59] Total time: 1:46:57
+2020-10-13 21:57:15,851	INFO	kdkit.misc.log	Validation:  [  0/131]  eta: 0:17:27  acc1: 56.2500 (56.2500)  acc5: 82.0312 (82.0312)  time: 7.9948  data: 7.9403  max mem: 4760
+2020-10-13 21:57:39,705	INFO	kdkit.misc.log	Validation: Total time: 0:00:31
+2020-10-13 21:57:39,706	INFO	__main__	 * Acc@1 65.5927	Acc@5 86.9823
+
+2020-10-13 21:58:04,784	INFO	kdkit.misc.log	Epoch: [60]  [   0/5025]  eta: 1 day, 11:00:08  lr: 0.0010000000000000002  img/s: 42.010063349303515  loss: 5.5698 (5.5698)  time: 25.0763  data: 23.0529  max mem: 4760
+2020-10-13 22:19:10,940	INFO	kdkit.misc.log	Epoch: [60]  [1000/5025]  eta: 1:26:31  lr: 0.0010000000000000002  img/s: 195.07419329598363  loss: 5.0074 (5.0068)  time: 1.1502  data: 0.6987  max mem: 4760
+2020-10-13 22:40:31,572	INFO	kdkit.misc.log	Epoch: [60]  [2000/5025]  eta: 1:04:47  lr: 0.0010000000000000002  img/s: 183.97171347717406  loss: 4.9720 (4.9826)  time: 1.5214  data: 1.0387  max mem: 4760
+2020-10-13 23:01:54,137	INFO	kdkit.misc.log	Epoch: [60]  [3000/5025]  eta: 0:43:20  lr: 0.0010000000000000002  img/s: 150.49853961692753  loss: 4.7721 (4.9719)  time: 1.1292  data: 0.6679  max mem: 4760
+2020-10-13 23:23:04,668	INFO	kdkit.misc.log	Epoch: [60]  [4000/5025]  eta: 0:21:52  lr: 0.0010000000000000002  img/s: 185.56056318381755  loss: 4.7283 (4.9620)  time: 1.1514  data: 0.6854  max mem: 4760
+2020-10-13 23:44:22,112	INFO	kdkit.misc.log	Epoch: [60]  [5000/5025]  eta: 0:00:32  lr: 0.0010000000000000002  img/s: 276.36372656632744  loss: 4.8814 (4.9553)  time: 1.0304  data: 0.1906  max mem: 4760
+2020-10-13 23:44:30,963	INFO	kdkit.misc.log	Epoch: [60] Total time: 1:46:51
+2020-10-13 23:44:37,990	INFO	kdkit.misc.log	Validation:  [  0/131]  eta: 0:15:16  acc1: 58.5938 (58.5938)  acc5: 82.8125 (82.8125)  time: 6.9936  data: 6.9288  max mem: 4760
+2020-10-13 23:45:02,309	INFO	kdkit.misc.log	Validation: Total time: 0:00:31
+2020-10-13 23:45:02,703	INFO	__main__	 * Acc@1 69.3166	Acc@5 89.0822
+
+2020-10-13 23:45:02,711	INFO	__main__	Updating ckpt (Best top1 accuracy: 66.0807 -> 69.3166)
+2020-10-13 23:45:28,140	INFO	kdkit.misc.log	Epoch: [61]  [   0/5025]  eta: 1 day, 11:14:06  lr: 0.0010000000000000002  img/s: 57.420212401860496  loss: 5.2058 (5.2058)  time: 25.2430  data: 23.7627  max mem: 4760
+2020-10-14 00:06:29,597	INFO	kdkit.misc.log	Epoch: [61]  [1000/5025]  eta: 1:26:13  lr: 0.0010000000000000002  img/s: 182.0456528765765  loss: 4.9289 (4.8832)  time: 1.1268  data: 0.1055  max mem: 4760
+2020-10-14 00:27:40,608	INFO	kdkit.misc.log	Epoch: [61]  [2000/5025]  eta: 1:04:26  lr: 0.0010000000000000002  img/s: 9.84358126100641  loss: 4.9736 (4.8912)  time: 1.5917  data: 0.1850  max mem: 4760
+2020-10-14 00:48:58,220	INFO	kdkit.misc.log	Epoch: [61]  [3000/5025]  eta: 0:43:07  lr: 0.0010000000000000002  img/s: 180.15777380364636  loss: 4.7466 (4.8863)  time: 1.1422  data: 0.0012  max mem: 4760
+2020-10-14 01:10:08,432	INFO	kdkit.misc.log	Epoch: [61]  [4000/5025]  eta: 0:21:47  lr: 0.0010000000000000002  img/s: 180.95275896285432  loss: 4.8617 (4.8890)  time: 1.0602  data: 0.0019  max mem: 4760
+2020-10-14 01:31:42,321	INFO	kdkit.misc.log	Epoch: [61]  [5000/5025]  eta: 0:00:31  lr: 0.0010000000000000002  img/s: 388.33060116134556  loss: 4.7776 (4.8875)  time: 1.0165  data: 0.0014  max mem: 4760
+2020-10-14 01:31:49,772	INFO	kdkit.misc.log	Epoch: [61] Total time: 1:46:46
+2020-10-14 01:31:57,664	INFO	kdkit.misc.log	Validation:  [  0/131]  eta: 0:17:10  acc1: 57.8125 (57.8125)  acc5: 84.3750 (84.3750)  time: 7.8693  data: 7.7837  max mem: 4760
+2020-10-14 01:32:21,053	INFO	kdkit.misc.log	Validation: Total time: 0:00:31
+2020-10-14 01:32:21,624	INFO	__main__	 * Acc@1 69.5126	Acc@5 89.1222
+
+2020-10-14 01:32:21,625	INFO	__main__	Updating ckpt (Best top1 accuracy: 69.3166 -> 69.5126)
+2020-10-14 01:32:45,928	INFO	kdkit.misc.log	Epoch: [62]  [   0/5025]  eta: 1 day, 9:40:29  lr: 0.0010000000000000002  img/s: 118.54371608229262  loss: 5.3883 (5.3883)  time: 24.1253  data: 23.4083  max mem: 4760
+2020-10-14 01:53:37,781	INFO	kdkit.misc.log	Epoch: [62]  [1000/5025]  eta: 1:25:30  lr: 0.0010000000000000002  img/s: 234.56023390504714  loss: 4.8600 (4.8751)  time: 1.0501  data: 0.4564  max mem: 4760
+2020-10-14 02:15:03,120	INFO	kdkit.misc.log	Epoch: [62]  [2000/5025]  eta: 1:04:32  lr: 0.0010000000000000002  img/s: 100.56574958915145  loss: 4.8624 (4.8726)  time: 1.7478  data: 0.0830  max mem: 4760
+2020-10-14 02:36:32,385	INFO	kdkit.misc.log	Epoch: [62]  [3000/5025]  eta: 0:43:18  lr: 0.0010000000000000002  img/s: 169.9286950818672  loss: 4.6315 (4.8708)  time: 1.0048  data: 0.0012  max mem: 4760
+2020-10-14 02:58:09,560	INFO	kdkit.misc.log	Epoch: [62]  [4000/5025]  eta: 0:21:58  lr: 0.0010000000000000002  img/s: 177.7162408977437  loss: 4.8498 (4.8692)  time: 1.7882  data: 0.0030  max mem: 4760
+2020-10-14 03:19:31,237	INFO	kdkit.misc.log	Epoch: [62]  [5000/5025]  eta: 0:00:32  lr: 0.0010000000000000002  img/s: 275.78010975019225  loss: 4.7022 (4.8677)  time: 1.0763  data: 0.0049  max mem: 4760
+2020-10-14 03:19:39,009	INFO	kdkit.misc.log	Epoch: [62] Total time: 1:47:17
+2020-10-14 03:19:46,100	INFO	kdkit.misc.log	Validation:  [  0/131]  eta: 0:15:26  acc1: 58.5938 (58.5938)  acc5: 83.5938 (83.5938)  time: 7.0725  data: 6.9967  max mem: 4760
+2020-10-14 03:20:10,773	INFO	kdkit.misc.log	Validation: Total time: 0:00:31
+2020-10-14 03:20:10,777	INFO	__main__	 * Acc@1 69.6106	Acc@5 89.2562
+
+2020-10-14 03:20:10,778	INFO	__main__	Updating ckpt (Best top1 accuracy: 69.5126 -> 69.6106)
+2020-10-14 03:20:34,908	INFO	kdkit.misc.log	Epoch: [63]  [   0/5025]  eta: 1 day, 9:24:26  lr: 0.0010000000000000002  img/s: 63.59860413955893  loss: 4.5290 (4.5290)  time: 23.9337  data: 22.5971  max mem: 4760
+2020-10-14 03:41:38,160	INFO	kdkit.misc.log	Epoch: [63]  [1000/5025]  eta: 1:26:15  lr: 0.0010000000000000002  img/s: 171.42904403102415  loss: 4.7104 (4.8356)  time: 1.3927  data: 0.2814  max mem: 4760
+2020-10-14 04:02:56,423	INFO	kdkit.misc.log	Epoch: [63]  [2000/5025]  eta: 1:04:38  lr: 0.0010000000000000002  img/s: 29.37259787725881  loss: 5.0265 (4.8362)  time: 1.3685  data: 0.3063  max mem: 4760
+2020-10-14 04:24:26,813	INFO	kdkit.misc.log	Epoch: [63]  [3000/5025]  eta: 0:43:21  lr: 0.0010000000000000002  img/s: 194.40193117332302  loss: 4.7473 (4.8367)  time: 1.1043  data: 0.0007  max mem: 4760
+2020-10-14 04:45:51,680	INFO	kdkit.misc.log	Epoch: [63]  [4000/5025]  eta: 0:21:56  lr: 0.0010000000000000002  img/s: 180.0385007726414  loss: 4.6866 (4.8362)  time: 1.1024  data: 0.0010  max mem: 4760
+2020-10-14 05:07:21,108	INFO	kdkit.misc.log	Epoch: [63]  [5000/5025]  eta: 0:00:32  lr: 0.0010000000000000002  img/s: 382.88842922839325  loss: 4.6992 (4.8384)  time: 1.3004  data: 0.0031  max mem: 4760
+2020-10-14 05:07:29,209	INFO	kdkit.misc.log	Epoch: [63] Total time: 1:47:18
+2020-10-14 05:07:36,949	INFO	kdkit.misc.log	Validation:  [  0/131]  eta: 0:16:47  acc1: 58.5938 (58.5938)  acc5: 83.5938 (83.5938)  time: 7.6920  data: 7.6177  max mem: 4760
+2020-10-14 05:08:00,813	INFO	kdkit.misc.log	Validation: Total time: 0:00:31
+2020-10-14 05:08:01,023	INFO	__main__	 * Acc@1 69.6166	Acc@5 89.3602
+
+2020-10-14 05:08:01,024	INFO	__main__	Updating ckpt (Best top1 accuracy: 69.6106 -> 69.6166)
+2020-10-14 05:08:26,309	INFO	kdkit.misc.log	Epoch: [64]  [   0/5025]  eta: 1 day, 11:02:38  lr: 0.0010000000000000002  img/s: 43.69285666401662  loss: 5.0954 (5.0954)  time: 25.1062  data: 23.1608  max mem: 4760
+2020-10-14 05:29:17,444	INFO	kdkit.misc.log	Epoch: [64]  [1000/5025]  eta: 1:25:31  lr: 0.0010000000000000002  img/s: 177.171416289604  loss: 4.8383 (4.8054)  time: 1.0724  data: 0.6308  max mem: 4760
+2020-10-14 05:50:40,194	INFO	kdkit.misc.log	Epoch: [64]  [2000/5025]  eta: 1:04:28  lr: 0.0010000000000000002  img/s: 10.823419491210773  loss: 4.8994 (4.8076)  time: 1.7119  data: 0.4923  max mem: 4760
+2020-10-14 06:11:50,053	INFO	kdkit.misc.log	Epoch: [64]  [3000/5025]  eta: 0:43:03  lr: 0.0010000000000000002  img/s: 240.80203439972712  loss: 4.8023 (4.8103)  time: 1.1112  data: 0.1604  max mem: 4760
+2020-10-14 06:33:12,533	INFO	kdkit.misc.log	Epoch: [64]  [4000/5025]  eta: 0:21:49  lr: 0.0010000000000000002  img/s: 17.47921414199257  loss: 4.7767 (4.8167)  time: 1.7597  data: 0.8672  max mem: 4760
+2020-10-14 06:54:12,373	INFO	kdkit.misc.log	Epoch: [64]  [5000/5025]  eta: 0:00:31  lr: 0.0010000000000000002  img/s: 218.31260731440273  loss: 4.8807 (4.8165)  time: 1.0834  data: 0.6436  max mem: 4760
+2020-10-14 06:54:21,889	INFO	kdkit.misc.log	Epoch: [64] Total time: 1:46:20
+2020-10-14 06:54:29,276	INFO	kdkit.misc.log	Validation:  [  0/131]  eta: 0:16:03  acc1: 57.8125 (57.8125)  acc5: 83.5938 (83.5938)  time: 7.3552  data: 7.3040  max mem: 4760
+2020-10-14 06:54:53,626	INFO	kdkit.misc.log	Validation: Total time: 0:00:31
+2020-10-14 06:54:53,711	INFO	__main__	 * Acc@1 69.7806	Acc@5 89.4762
+
+2020-10-14 06:54:53,712	INFO	__main__	Updating ckpt (Best top1 accuracy: 69.6166 -> 69.7806)
+2020-10-14 06:55:18,055	INFO	kdkit.misc.log	Epoch: [65]  [   0/5025]  eta: 1 day, 9:43:09  lr: 0.0010000000000000002  img/s: 149.35753558028586  loss: 4.8333 (4.8333)  time: 24.1571  data: 23.5880  max mem: 4760
+2020-10-14 07:16:15,516	INFO	kdkit.misc.log	Epoch: [65]  [1000/5025]  eta: 1:25:53  lr: 0.0010000000000000002  img/s: 179.96370598719966  loss: 4.7258 (4.7992)  time: 1.0819  data: 0.4622  max mem: 4760
+2020-10-14 07:37:19,384	INFO	kdkit.misc.log	Epoch: [65]  [2000/5025]  eta: 1:04:08  lr: 0.0010000000000000002  img/s: 12.168065983278373  loss: 4.8499 (4.7968)  time: 1.5692  data: 0.4658  max mem: 4760
+2020-10-14 07:58:27,420	INFO	kdkit.misc.log	Epoch: [65]  [3000/5025]  eta: 0:42:53  lr: 0.0010000000000000002  img/s: 181.80576867276466  loss: 4.7511 (4.8039)  time: 1.1376  data: 0.1198  max mem: 4760
+2020-10-14 08:19:44,177	INFO	kdkit.misc.log	Epoch: [65]  [4000/5025]  eta: 0:21:44  lr: 0.0010000000000000002  img/s: 12.915891430616142  loss: 4.8189 (4.8053)  time: 1.4529  data: 0.3128  max mem: 4760
+2020-10-14 08:41:00,306	INFO	kdkit.misc.log	Epoch: [65]  [5000/5025]  eta: 0:00:31  lr: 0.0010000000000000002  img/s: 205.37928094522118  loss: 4.7283 (4.8037)  time: 1.5307  data: 0.9070  max mem: 4760
+2020-10-14 08:41:09,463	INFO	kdkit.misc.log	Epoch: [65] Total time: 1:46:15
+2020-10-14 08:41:16,876	INFO	kdkit.misc.log	Validation:  [  0/131]  eta: 0:16:08  acc1: 57.8125 (57.8125)  acc5: 85.1562 (85.1562)  time: 7.3932  data: 7.3246  max mem: 4760
+2020-10-14 08:41:41,225	INFO	kdkit.misc.log	Validation: Total time: 0:00:31
+2020-10-14 08:41:41,226	INFO	__main__	 * Acc@1 69.7466	Acc@5 89.3942
+
+2020-10-14 08:42:06,305	INFO	kdkit.misc.log	Epoch: [66]  [   0/5025]  eta: 1 day, 11:00:10  lr: 0.0010000000000000002  img/s: 48.07881932836401  loss: 5.2727 (5.2727)  time: 25.0766  data: 23.3087  max mem: 4760
+2020-10-14 09:03:11,748	INFO	kdkit.misc.log	Epoch: [66]  [1000/5025]  eta: 1:26:29  lr: 0.0010000000000000002  img/s: 13.005315307976806  loss: 4.7449 (4.8017)  time: 1.4453  data: 0.0110  max mem: 4760
+2020-10-14 09:24:43,745	INFO	kdkit.misc.log	Epoch: [66]  [2000/5025]  eta: 1:05:04  lr: 0.0010000000000000002  img/s: 45.18897468427112  loss: 4.6513 (4.7923)  time: 1.2197  data: 0.0028  max mem: 4760
+2020-10-14 09:46:20,944	INFO	kdkit.misc.log	Epoch: [66]  [3000/5025]  eta: 0:43:37  lr: 0.0010000000000000002  img/s: 5.972752558515506  loss: 4.8815 (4.7908)  time: 1.8177  data: 0.0012  max mem: 4760
+2020-10-14 10:07:43,024	INFO	kdkit.misc.log	Epoch: [66]  [4000/5025]  eta: 0:22:02  lr: 0.0010000000000000002  img/s: 204.3200684971938  loss: 4.8528 (4.7906)  time: 1.1268  data: 0.0036  max mem: 4760
+2020-10-14 10:29:12,819	INFO	kdkit.misc.log	Epoch: [66]  [5000/5025]  eta: 0:00:32  lr: 0.0010000000000000002  img/s: 12.025770638029357  loss: 4.8264 (4.7881)  time: 1.4842  data: 0.0030  max mem: 4760
+2020-10-14 10:29:18,545	INFO	kdkit.misc.log	Epoch: [66] Total time: 1:47:37
+2020-10-14 10:29:25,566	INFO	kdkit.misc.log	Validation:  [  0/131]  eta: 0:15:16  acc1: 60.1562 (60.1562)  acc5: 83.5938 (83.5938)  time: 6.9943  data: 6.9287  max mem: 4760
+2020-10-14 10:29:50,350	INFO	kdkit.misc.log	Validation: Total time: 0:00:31
+2020-10-14 10:29:50,377	INFO	__main__	 * Acc@1 69.8866	Acc@5 89.5062
+
+2020-10-14 10:29:50,378	INFO	__main__	Updating ckpt (Best top1 accuracy: 69.7806 -> 69.8866)
+2020-10-14 10:30:15,865	INFO	kdkit.misc.log	Epoch: [67]  [   0/5025]  eta: 1 day, 11:19:19  lr: 0.0010000000000000002  img/s: 154.1732120702099  loss: 4.8366 (4.8366)  time: 25.3054  data: 24.7540  max mem: 4760
+2020-10-14 10:51:15,609	INFO	kdkit.misc.log	Epoch: [67]  [1000/5025]  eta: 1:26:07  lr: 0.0010000000000000002  img/s: 182.97088403086707  loss: 4.8300 (4.7608)  time: 1.0956  data: 0.4332  max mem: 4760
+2020-10-14 11:12:32,136	INFO	kdkit.misc.log	Epoch: [67]  [2000/5025]  eta: 1:04:32  lr: 0.0010000000000000002  img/s: 21.118920124151224  loss: 4.8912 (4.7750)  time: 1.2730  data: 0.1495  max mem: 4760
+2020-10-14 11:34:08,824	INFO	kdkit.misc.log	Epoch: [67]  [3000/5025]  eta: 0:43:23  lr: 0.0010000000000000002  img/s: 195.36067238347513  loss: 4.6477 (4.7738)  time: 1.1166  data: 0.5341  max mem: 4760
+2020-10-14 11:55:23,022	INFO	kdkit.misc.log	Epoch: [67]  [4000/5025]  eta: 0:21:54  lr: 0.0010000000000000002  img/s: 244.1653511544433  loss: 4.6581 (4.7762)  time: 1.1462  data: 0.3951  max mem: 4760
+2020-10-14 12:16:47,104	INFO	kdkit.misc.log	Epoch: [67]  [5000/5025]  eta: 0:00:32  lr: 0.0010000000000000002  img/s: 228.92908329694603  loss: 4.7736 (4.7779)  time: 1.0351  data: 0.0622  max mem: 4760
+2020-10-14 12:16:57,704	INFO	kdkit.misc.log	Epoch: [67] Total time: 1:47:07
+2020-10-14 12:17:04,908	INFO	kdkit.misc.log	Validation:  [  0/131]  eta: 0:15:40  acc1: 60.1562 (60.1562)  acc5: 83.5938 (83.5938)  time: 7.1803  data: 7.0575  max mem: 4760
+2020-10-14 12:17:29,478	INFO	kdkit.misc.log	Validation: Total time: 0:00:31
+2020-10-14 12:17:29,498	INFO	__main__	 * Acc@1 69.8526	Acc@5 89.5262
+
+2020-10-14 12:17:55,104	INFO	kdkit.misc.log	Epoch: [68]  [   0/5025]  eta: 1 day, 11:44:17  lr: 0.0010000000000000002  img/s: 98.07831170846204  loss: 4.8692 (4.8692)  time: 25.6035  data: 24.7368  max mem: 4760
+2020-10-14 12:38:53,812	INFO	kdkit.misc.log	Epoch: [68]  [1000/5025]  eta: 1:26:04  lr: 0.0010000000000000002  img/s: 188.33069294691953  loss: 4.7798 (4.7584)  time: 1.1206  data: 0.6892  max mem: 4760
+2020-10-14 13:00:02,644	INFO	kdkit.misc.log	Epoch: [68]  [2000/5025]  eta: 1:04:19  lr: 0.0010000000000000002  img/s: 136.19337147851678  loss: 4.7717 (4.7651)  time: 1.6996  data: 1.2312  max mem: 4760
+2020-10-14 13:21:08,868	INFO	kdkit.misc.log	Epoch: [68]  [3000/5025]  eta: 0:42:57  lr: 0.0010000000000000002  img/s: 159.8338698252441  loss: 4.6105 (4.7648)  time: 1.1398  data: 0.6727  max mem: 4760
+2020-10-14 13:42:36,540	INFO	kdkit.misc.log	Epoch: [68]  [4000/5025]  eta: 0:21:48  lr: 0.0010000000000000002  img/s: 153.38091587355262  loss: 4.6446 (4.7684)  time: 1.7754  data: 1.2953  max mem: 4760
+2020-10-14 14:03:50,203	INFO	kdkit.misc.log	Epoch: [68]  [5000/5025]  eta: 0:00:31  lr: 0.0010000000000000002  img/s: 221.8041801853367  loss: 4.7427 (4.7634)  time: 1.1273  data: 0.6637  max mem: 4760
+2020-10-14 14:03:59,961	INFO	kdkit.misc.log	Epoch: [68] Total time: 1:46:30
+2020-10-14 14:04:07,555	INFO	kdkit.misc.log	Validation:  [  0/131]  eta: 0:16:32  acc1: 61.7188 (61.7188)  acc5: 82.8125 (82.8125)  time: 7.5742  data: 7.4838  max mem: 4760
+2020-10-14 14:04:31,458	INFO	kdkit.misc.log	Validation: Total time: 0:00:31
+2020-10-14 14:04:31,710	INFO	__main__	 * Acc@1 70.0066	Acc@5 89.5542
+
+2020-10-14 14:04:31,711	INFO	__main__	Updating ckpt (Best top1 accuracy: 69.8866 -> 70.0066)
+2020-10-14 14:04:56,688	INFO	kdkit.misc.log	Epoch: [69]  [   0/5025]  eta: 1 day, 10:33:35  lr: 0.0010000000000000002  img/s: 164.52327058653054  loss: 4.5150 (4.5150)  time: 24.7593  data: 24.2426  max mem: 4760
+2020-10-14 14:26:37,433	INFO	kdkit.misc.log	Epoch: [69]  [1000/5025]  eta: 1:28:49  lr: 0.0010000000000000002  img/s: 223.4369913743992  loss: 4.6745 (4.7533)  time: 1.1122  data: 0.0004  max mem: 4760
+2020-10-14 14:48:23,064	INFO	kdkit.misc.log	Epoch: [69]  [2000/5025]  eta: 1:06:17  lr: 0.0010000000000000002  img/s: 430.18762104145424  loss: 4.7911 (4.7522)  time: 1.0845  data: 0.0007  max mem: 4760
+2020-10-14 15:09:53,176	INFO	kdkit.misc.log	Epoch: [69]  [3000/5025]  eta: 0:44:05  lr: 0.0010000000000000002  img/s: 233.68648467242085  loss: 4.7168 (4.7482)  time: 1.1062  data: 0.0007  max mem: 4760
+2020-10-14 15:31:39,262	INFO	kdkit.misc.log	Epoch: [69]  [4000/5025]  eta: 0:22:19  lr: 0.0010000000000000002  img/s: 440.4681975087781  loss: 4.9078 (4.7480)  time: 1.0806  data: 0.0002  max mem: 4760
+2020-10-14 15:53:08,678	INFO	kdkit.misc.log	Epoch: [69]  [5000/5025]  eta: 0:00:32  lr: 0.0010000000000000002  img/s: 440.2598714473595  loss: 4.8175 (4.7501)  time: 1.0919  data: 0.0014  max mem: 4760
+2020-10-14 15:53:19,209	INFO	kdkit.misc.log	Epoch: [69] Total time: 1:48:47
+2020-10-14 15:53:26,192	INFO	kdkit.misc.log	Validation:  [  0/131]  eta: 0:15:11  acc1: 57.8125 (57.8125)  acc5: 82.8125 (82.8125)  time: 6.9592  data: 6.8943  max mem: 4760
+2020-10-14 15:53:50,897	INFO	kdkit.misc.log	Validation: Total time: 0:00:31
+2020-10-14 15:53:50,970	INFO	__main__	 * Acc@1 70.0226	Acc@5 89.4502
+
+2020-10-14 15:53:50,970	INFO	__main__	Updating ckpt (Best top1 accuracy: 70.0066 -> 70.0226)
+2020-10-14 15:54:15,964	INFO	kdkit.misc.log	Epoch: [70]  [   0/5025]  eta: 1 day, 10:37:09  lr: 0.0010000000000000002  img/s: 137.2598454056955  loss: 4.4634 (4.4634)  time: 24.8018  data: 24.1826  max mem: 4760
+2020-10-14 16:15:11,312	INFO	kdkit.misc.log	Epoch: [70]  [1000/5025]  eta: 1:25:47  lr: 0.0010000000000000002  img/s: 191.4726952733319  loss: 4.7464 (4.7426)  time: 1.2120  data: 0.5830  max mem: 4760
+2020-10-14 16:36:33,524	INFO	kdkit.misc.log	Epoch: [70]  [2000/5025]  eta: 1:04:33  lr: 0.0010000000000000002  img/s: 83.02784558019214  loss: 4.5898 (4.7409)  time: 1.0977  data: 0.4770  max mem: 4760
+2020-10-14 16:58:02,284	INFO	kdkit.misc.log	Epoch: [70]  [3000/5025]  eta: 0:43:18  lr: 0.0010000000000000002  img/s: 196.85033579021822  loss: 4.7235 (4.7383)  time: 1.3498  data: 0.4241  max mem: 4760
+2020-10-14 17:19:18,652	INFO	kdkit.misc.log	Epoch: [70]  [4000/5025]  eta: 0:21:53  lr: 0.0010000000000000002  img/s: 200.4580473723451  loss: 4.6433 (4.7412)  time: 1.0900  data: 0.0005  max mem: 4760
+2020-10-14 17:40:54,069	INFO	kdkit.misc.log	Epoch: [70]  [5000/5025]  eta: 0:00:32  lr: 0.0010000000000000002  img/s: 331.1673012596803  loss: 4.6559 (4.7446)  time: 1.0202  data: 0.0037  max mem: 4760
+2020-10-14 17:41:01,050	INFO	kdkit.misc.log	Epoch: [70] Total time: 1:47:09
+2020-10-14 17:41:08,828	INFO	kdkit.misc.log	Validation:  [  0/131]  eta: 0:16:55  acc1: 60.1562 (60.1562)  acc5: 83.5938 (83.5938)  time: 7.7533  data: 7.6487  max mem: 4760
+2020-10-14 17:41:32,746	INFO	kdkit.misc.log	Validation: Total time: 0:00:31
+2020-10-14 17:41:32,787	INFO	__main__	 * Acc@1 69.9606	Acc@5 89.5042
+
+2020-10-14 17:41:57,100	INFO	kdkit.misc.log	Epoch: [71]  [   0/5025]  eta: 1 day, 9:56:03  lr: 0.0010000000000000002  img/s: 32.4732515183417  loss: 4.4609 (4.4609)  time: 24.3112  data: 21.6937  max mem: 4760
+2020-10-14 18:02:57,664	INFO	kdkit.misc.log	Epoch: [71]  [1000/5025]  eta: 1:26:06  lr: 0.0010000000000000002  img/s: 185.64404687082612  loss: 4.6951 (4.7240)  time: 1.2422  data: 0.2694  max mem: 4760
+2020-10-14 18:24:20,036	INFO	kdkit.misc.log	Epoch: [71]  [2000/5025]  eta: 1:04:41  lr: 0.0010000000000000002  img/s: 161.48291346621602  loss: 4.7611 (4.7333)  time: 1.6216  data: 0.9560  max mem: 4760
+2020-10-14 18:45:35,971	INFO	kdkit.misc.log	Epoch: [71]  [3000/5025]  eta: 0:43:13  lr: 0.0010000000000000002  img/s: 180.0802420090102  loss: 4.6591 (4.7313)  time: 1.1670  data: 0.5466  max mem: 4760
+2020-10-14 19:06:58,527	INFO	kdkit.misc.log	Epoch: [71]  [4000/5025]  eta: 0:21:53  lr: 0.0010000000000000002  img/s: 137.01055107307354  loss: 4.7955 (4.7260)  time: 1.4805  data: 0.7247  max mem: 4760
+2020-10-14 19:28:25,252	INFO	kdkit.misc.log	Epoch: [71]  [5000/5025]  eta: 0:00:32  lr: 0.0010000000000000002  img/s: 281.0812276830238  loss: 4.6507 (4.7292)  time: 1.3114  data: 0.0013  max mem: 4760
+2020-10-14 19:28:32,978	INFO	kdkit.misc.log	Epoch: [71] Total time: 1:47:00
+2020-10-14 19:28:40,689	INFO	kdkit.misc.log	Validation:  [  0/131]  eta: 0:16:45  acc1: 58.5938 (58.5938)  acc5: 82.8125 (82.8125)  time: 7.6776  data: 7.6014  max mem: 4760
+2020-10-14 19:29:04,482	INFO	kdkit.misc.log	Validation: Total time: 0:00:31
+2020-10-14 19:29:04,749	INFO	__main__	 * Acc@1 70.0986	Acc@5 89.6062
+
+2020-10-14 19:29:04,749	INFO	__main__	Updating ckpt (Best top1 accuracy: 70.0226 -> 70.0986)
+2020-10-14 19:29:29,111	INFO	kdkit.misc.log	Epoch: [72]  [   0/5025]  eta: 1 day, 9:43:53  lr: 0.0010000000000000002  img/s: 123.98205000514685  loss: 4.5769 (4.5769)  time: 24.1659  data: 23.4803  max mem: 4760
+2020-10-14 19:50:23,936	INFO	kdkit.misc.log	Epoch: [72]  [1000/5025]  eta: 1:25:42  lr: 0.0010000000000000002  img/s: 191.5334892036859  loss: 4.6285 (4.7073)  time: 1.0716  data: 0.5832  max mem: 4760
+2020-10-14 20:11:35,424	INFO	kdkit.misc.log	Epoch: [72]  [2000/5025]  eta: 1:04:15  lr: 0.0010000000000000002  img/s: 158.32011393212832  loss: 4.6201 (4.7150)  time: 1.6401  data: 1.0595  max mem: 4760
+2020-10-14 20:32:40,379	INFO	kdkit.misc.log	Epoch: [72]  [3000/5025]  eta: 0:42:54  lr: 0.0010000000000000002  img/s: 174.75033134915967  loss: 4.7320 (4.7214)  time: 1.1241  data: 0.6571  max mem: 4760
+2020-10-14 20:54:05,836	INFO	kdkit.misc.log	Epoch: [72]  [4000/5025]  eta: 0:21:46  lr: 0.0010000000000000002  img/s: 211.76797913420742  loss: 4.6730 (4.7252)  time: 1.6200  data: 1.0236  max mem: 4760
+2020-10-14 21:15:20,512	INFO	kdkit.misc.log	Epoch: [72]  [5000/5025]  eta: 0:00:31  lr: 0.0010000000000000002  img/s: 221.33860135119195  loss: 4.6313 (4.7249)  time: 1.0922  data: 0.2711  max mem: 4760
+2020-10-14 21:15:31,219	INFO	kdkit.misc.log	Epoch: [72] Total time: 1:46:26
+2020-10-14 21:15:38,879	INFO	kdkit.misc.log	Validation:  [  0/131]  eta: 0:16:41  acc1: 60.1562 (60.1562)  acc5: 84.3750 (84.3750)  time: 7.6415  data: 7.5819  max mem: 4760
+2020-10-14 21:16:02,882	INFO	kdkit.misc.log	Validation: Total time: 0:00:31
+2020-10-14 21:16:03,011	INFO	__main__	 * Acc@1 70.0246	Acc@5 89.5322
+
+2020-10-14 21:16:26,888	INFO	kdkit.misc.log	Epoch: [73]  [   0/5025]  eta: 1 day, 9:19:27  lr: 0.0010000000000000002  img/s: 141.85778086194767  loss: 4.2823 (4.2823)  time: 23.8742  data: 23.2750  max mem: 4760
+2020-10-14 21:37:30,856	INFO	kdkit.misc.log	Epoch: [73]  [1000/5025]  eta: 1:26:18  lr: 0.0010000000000000002  img/s: 238.74537346756054  loss: 4.8204 (4.7150)  time: 1.1347  data: 0.2808  max mem: 4760
+2020-10-14 21:58:41,048	INFO	kdkit.misc.log	Epoch: [73]  [2000/5025]  eta: 1:04:27  lr: 0.0010000000000000002  img/s: 8.571699913527052  loss: 4.7165 (4.7278)  time: 1.6447  data: 0.1744  max mem: 4760
+2020-10-14 22:19:58,908	INFO	kdkit.misc.log	Epoch: [73]  [3000/5025]  eta: 0:43:08  lr: 0.0010000000000000002  img/s: 193.95319434606677  loss: 4.8298 (4.7303)  time: 1.1022  data: 0.0016  max mem: 4760
+2020-10-14 22:41:30,280	INFO	kdkit.misc.log	Epoch: [73]  [4000/5025]  eta: 0:21:53  lr: 0.0010000000000000002  img/s: 6.378442801632551  loss: 4.7694 (4.7260)  time: 1.7473  data: 0.0009  max mem: 4760
+2020-10-14 23:02:49,896	INFO	kdkit.misc.log	Epoch: [73]  [5000/5025]  eta: 0:00:32  lr: 0.0010000000000000002  img/s: 350.12053824835556  loss: 4.6699 (4.7265)  time: 1.0376  data: 0.0018  max mem: 4760
+2020-10-14 23:02:57,051	INFO	kdkit.misc.log	Epoch: [73] Total time: 1:46:54
+2020-10-14 23:03:03,837	INFO	kdkit.misc.log	Validation:  [  0/131]  eta: 0:14:46  acc1: 57.8125 (57.8125)  acc5: 83.5938 (83.5938)  time: 6.7650  data: 6.6994  max mem: 4760
+2020-10-14 23:03:28,652	INFO	kdkit.misc.log	Validation: Total time: 0:00:31
+2020-10-14 23:03:28,653	INFO	__main__	 * Acc@1 70.1786	Acc@5 89.5402
+
+2020-10-14 23:03:28,654	INFO	__main__	Updating ckpt (Best top1 accuracy: 70.0986 -> 70.1786)
+2020-10-14 23:03:52,384	INFO	kdkit.misc.log	Epoch: [74]  [   0/5025]  eta: 1 day, 8:49:17  lr: 0.0010000000000000002  img/s: 69.87040546552396  loss: 4.1788 (4.1788)  time: 23.5138  data: 22.2973  max mem: 4760
+2020-10-14 23:25:38,689	INFO	kdkit.misc.log	Epoch: [74]  [1000/5025]  eta: 1:29:07  lr: 0.0010000000000000002  img/s: 434.6519098841427  loss: 4.5781 (4.6972)  time: 1.0753  data: 0.0007  max mem: 4760
+2020-10-14 23:47:03,458	INFO	kdkit.misc.log	Epoch: [74]  [2000/5025]  eta: 1:05:52  lr: 0.0010000000000000002  img/s: 264.2657038383907  loss: 4.6905 (4.7054)  time: 1.0887  data: 0.0004  max mem: 4760
+2020-10-15 00:08:44,700	INFO	kdkit.misc.log	Epoch: [74]  [3000/5025]  eta: 0:44:02  lr: 0.0010000000000000002  img/s: 424.7487541058215  loss: 4.7043 (4.7082)  time: 1.0907  data: 0.0009  max mem: 4760
+2020-10-15 00:30:09,340	INFO	kdkit.misc.log	Epoch: [74]  [4000/5025]  eta: 0:22:12  lr: 0.0010000000000000002  img/s: 254.53381329685536  loss: 4.7676 (4.7095)  time: 1.0861  data: 0.0002  max mem: 4760
+2020-10-15 00:51:44,858	INFO	kdkit.misc.log	Epoch: [74]  [5000/5025]  eta: 0:00:32  lr: 0.0010000000000000002  img/s: 447.6935576431645  loss: 4.5311 (4.7119)  time: 0.8079  data: 0.0011  max mem: 4760
+2020-10-15 00:51:51,043	INFO	kdkit.misc.log	Epoch: [74] Total time: 1:48:22
+2020-10-15 00:51:58,640	INFO	kdkit.misc.log	Validation:  [  0/131]  eta: 0:16:31  acc1: 60.1562 (60.1562)  acc5: 83.5938 (83.5938)  time: 7.5694  data: 7.4771  max mem: 4760
+2020-10-15 00:52:22,434	INFO	kdkit.misc.log	Validation: Total time: 0:00:31
+2020-10-15 00:52:22,652	INFO	__main__	 * Acc@1 70.2026	Acc@5 89.6122
+
+2020-10-15 00:52:22,653	INFO	__main__	Updating ckpt (Best top1 accuracy: 70.1786 -> 70.2026)
+2020-10-15 00:52:46,900	INFO	kdkit.misc.log	Epoch: [75]  [   0/5025]  eta: 1 day, 9:35:22  lr: 0.0010000000000000002  img/s: 132.02192688643174  loss: 4.8944 (4.8944)  time: 24.0642  data: 23.4203  max mem: 4760
+2020-10-15 01:13:40,760	INFO	kdkit.misc.log	Epoch: [75]  [1000/5025]  eta: 1:25:38  lr: 0.0010000000000000002  img/s: 191.56848121154025  loss: 4.6810 (4.7188)  time: 1.1314  data: 0.4367  max mem: 4760
+2020-10-15 01:35:02,921	INFO	kdkit.misc.log	Epoch: [75]  [2000/5025]  eta: 1:04:30  lr: 0.0010000000000000002  img/s: 17.80198096036646  loss: 4.5958 (4.7238)  time: 1.5760  data: 0.7070  max mem: 4760
+2020-10-15 01:56:19,420	INFO	kdkit.misc.log	Epoch: [75]  [3000/5025]  eta: 0:43:08  lr: 0.0010000000000000002  img/s: 214.73934271599168  loss: 4.5493 (4.7167)  time: 1.0826  data: 0.3279  max mem: 4760
+2020-10-15 02:17:38,680	INFO	kdkit.misc.log	Epoch: [75]  [4000/5025]  eta: 0:21:50  lr: 0.0010000000000000002  img/s: 193.24755293880423  loss: 4.5884 (4.7159)  time: 1.4145  data: 0.9315  max mem: 4760
+2020-10-15 02:39:00,769	INFO	kdkit.misc.log	Epoch: [75]  [5000/5025]  eta: 0:00:31  lr: 0.0010000000000000002  img/s: 298.19588215220114  loss: 4.7089 (4.7167)  time: 1.0843  data: 0.6322  max mem: 4760
+2020-10-15 02:39:10,754	INFO	kdkit.misc.log	Epoch: [75] Total time: 1:46:47
+2020-10-15 02:39:17,607	INFO	kdkit.misc.log	Validation:  [  0/131]  eta: 0:14:55  acc1: 57.8125 (57.8125)  acc5: 83.5938 (83.5938)  time: 6.8344  data: 6.7200  max mem: 4760
+2020-10-15 02:39:42,246	INFO	kdkit.misc.log	Validation: Total time: 0:00:31
+2020-10-15 02:39:42,472	INFO	__main__	 * Acc@1 70.1366	Acc@5 89.6242
+
+2020-10-15 02:40:06,376	INFO	kdkit.misc.log	Epoch: [76]  [   0/5025]  eta: 1 day, 9:21:46  lr: 0.0010000000000000002  img/s: 62.040443003027754  loss: 4.8927 (4.8927)  time: 23.9018  data: 22.5317  max mem: 4760
+2020-10-15 03:00:57,832	INFO	kdkit.misc.log	Epoch: [76]  [1000/5025]  eta: 1:25:28  lr: 0.0010000000000000002  img/s: 253.76580983286368  loss: 4.6957 (4.6879)  time: 1.1142  data: 0.4013  max mem: 4760
+2020-10-15 03:22:13,902	INFO	kdkit.misc.log	Epoch: [76]  [2000/5025]  eta: 1:04:17  lr: 0.0010000000000000002  img/s: 15.370148686324551  loss: 4.6699 (4.7005)  time: 1.3747  data: 0.4422  max mem: 4760
+2020-10-15 03:43:32,233	INFO	kdkit.misc.log	Epoch: [76]  [3000/5025]  eta: 0:43:04  lr: 0.0010000000000000002  img/s: 189.26972737345108  loss: 4.6998 (4.7011)  time: 1.0781  data: 0.6379  max mem: 4760
+2020-10-15 04:04:42,608	INFO	kdkit.misc.log	Epoch: [76]  [4000/5025]  eta: 0:21:46  lr: 0.0010000000000000002  img/s: 184.451239260655  loss: 4.6223 (4.7067)  time: 1.0942  data: 0.6356  max mem: 4760
+2020-10-15 04:26:03,068	INFO	kdkit.misc.log	Epoch: [76]  [5000/5025]  eta: 0:00:31  lr: 0.0010000000000000002  img/s: 276.0686168453999  loss: 4.6419 (4.7043)  time: 1.0736  data: 0.5692  max mem: 4760
+2020-10-15 04:26:12,092	INFO	kdkit.misc.log	Epoch: [76] Total time: 1:46:29
+2020-10-15 04:26:19,420	INFO	kdkit.misc.log	Validation:  [  0/131]  eta: 0:15:57  acc1: 59.3750 (59.3750)  acc5: 84.3750 (84.3750)  time: 7.3089  data: 7.2438  max mem: 4760
+2020-10-15 04:26:43,737	INFO	kdkit.misc.log	Validation: Total time: 0:00:31
+2020-10-15 04:26:43,741	INFO	__main__	 * Acc@1 70.2566	Acc@5 89.6882
+
+2020-10-15 04:26:43,742	INFO	__main__	Updating ckpt (Best top1 accuracy: 70.2026 -> 70.2566)
+2020-10-15 04:27:07,896	INFO	kdkit.misc.log	Epoch: [77]  [   0/5025]  eta: 1 day, 9:26:53  lr: 0.0010000000000000002  img/s: 47.54674243933692  loss: 4.7259 (4.7259)  time: 23.9629  data: 22.1752  max mem: 4760
+2020-10-15 04:48:11,040	INFO	kdkit.misc.log	Epoch: [77]  [1000/5025]  eta: 1:26:15  lr: 0.0010000000000000002  img/s: 156.30462307927033  loss: 4.6979 (4.6806)  time: 1.0807  data: 0.1951  max mem: 4760
+2020-10-15 05:09:48,270	INFO	kdkit.misc.log	Epoch: [77]  [2000/5025]  eta: 1:05:06  lr: 0.0010000000000000002  img/s: 6.332015764224894  loss: 4.6318 (4.6825)  time: 1.8635  data: 0.0390  max mem: 4760
+2020-10-15 05:31:10,180	INFO	kdkit.misc.log	Epoch: [77]  [3000/5025]  eta: 0:43:28  lr: 0.0010000000000000002  img/s: 185.05114762947815  loss: 4.6235 (4.6883)  time: 1.1490  data: 0.0763  max mem: 4760
+2020-10-15 05:52:45,604	INFO	kdkit.misc.log	Epoch: [77]  [4000/5025]  eta: 0:22:02  lr: 0.0010000000000000002  img/s: 6.254730467041991  loss: 4.6185 (4.6929)  time: 1.8189  data: 0.0013  max mem: 4760
+2020-10-15 06:14:07,028	INFO	kdkit.misc.log	Epoch: [77]  [5000/5025]  eta: 0:00:32  lr: 0.0010000000000000002  img/s: 217.81882921929625  loss: 4.7400 (4.6971)  time: 1.0845  data: 0.0128  max mem: 4760
+2020-10-15 06:14:16,261	INFO	kdkit.misc.log	Epoch: [77] Total time: 1:47:32
+2020-10-15 06:14:23,627	INFO	kdkit.misc.log	Validation:  [  0/131]  eta: 0:16:02  acc1: 60.9375 (60.9375)  acc5: 84.3750 (84.3750)  time: 7.3482  data: 7.2461  max mem: 4760
+2020-10-15 06:14:47,966	INFO	kdkit.misc.log	Validation: Total time: 0:00:31
+2020-10-15 06:14:48,008	INFO	__main__	 * Acc@1 70.3006	Acc@5 89.7262
+
+2020-10-15 06:14:48,008	INFO	__main__	Updating ckpt (Best top1 accuracy: 70.2566 -> 70.3006)
+2020-10-15 06:15:11,465	INFO	kdkit.misc.log	Epoch: [78]  [   0/5025]  eta: 1 day, 8:29:00  lr: 0.0010000000000000002  img/s: 144.19945154062077  loss: 4.9789 (4.9789)  time: 23.2718  data: 22.6823  max mem: 4760
+2020-10-15 06:36:04,652	INFO	kdkit.misc.log	Epoch: [78]  [1000/5025]  eta: 1:25:32  lr: 0.0010000000000000002  img/s: 162.46546452121527  loss: 4.5956 (4.6915)  time: 1.1298  data: 0.6315  max mem: 4760
+2020-10-15 06:57:19,558	INFO	kdkit.misc.log	Epoch: [78]  [2000/5025]  eta: 1:04:16  lr: 0.0010000000000000002  img/s: 154.41019226571404  loss: 4.6333 (4.6988)  time: 1.3061  data: 0.5412  max mem: 4760
+2020-10-15 07:19:00,632	INFO	kdkit.misc.log	Epoch: [78]  [3000/5025]  eta: 0:43:19  lr: 0.0010000000000000002  img/s: 175.1619328371042  loss: 4.6427 (4.6948)  time: 1.0814  data: 0.2110  max mem: 4760
+2020-10-15 07:40:35,063	INFO	kdkit.misc.log	Epoch: [78]  [4000/5025]  eta: 0:21:58  lr: 0.0010000000000000002  img/s: 6.284294750400401  loss: 4.5944 (4.6943)  time: 1.8752  data: 0.0021  max mem: 4760
+2020-10-15 08:01:54,387	INFO	kdkit.misc.log	Epoch: [78]  [5000/5025]  eta: 0:00:32  lr: 0.0010000000000000002  img/s: 257.23200357872105  loss: 4.8035 (4.6994)  time: 1.0501  data: 0.0185  max mem: 4760
+2020-10-15 08:02:04,157	INFO	kdkit.misc.log	Epoch: [78] Total time: 1:47:15
+2020-10-15 08:02:11,952	INFO	kdkit.misc.log	Validation:  [  0/131]  eta: 0:16:50  acc1: 60.1562 (60.1562)  acc5: 83.5938 (83.5938)  time: 7.7102  data: 7.6335  max mem: 4760
+2020-10-15 08:02:35,652	INFO	kdkit.misc.log	Validation: Total time: 0:00:31
+2020-10-15 08:02:35,883	INFO	__main__	 * Acc@1 70.1806	Acc@5 89.6602
+
+2020-10-15 08:03:00,978	INFO	kdkit.misc.log	Epoch: [79]  [   0/5025]  eta: 1 day, 11:01:31  lr: 0.0010000000000000002  img/s: 190.92247606613282  loss: 4.2661 (4.2661)  time: 25.0928  data: 24.6476  max mem: 4760
+2020-10-15 08:23:59,232	INFO	kdkit.misc.log	Epoch: [79]  [1000/5025]  eta: 1:26:00  lr: 0.0010000000000000002  img/s: 167.50887546162738  loss: 4.6799 (4.7000)  time: 1.1031  data: 0.5909  max mem: 4760
+2020-10-15 08:45:26,362	INFO	kdkit.misc.log	Epoch: [79]  [2000/5025]  eta: 1:04:45  lr: 0.0010000000000000002  img/s: 136.0468117615543  loss: 4.6852 (4.6944)  time: 1.8258  data: 1.3375  max mem: 4760
+2020-10-15 09:06:38,988	INFO	kdkit.misc.log	Epoch: [79]  [3000/5025]  eta: 0:43:13  lr: 0.0010000000000000002  img/s: 214.7097271530996  loss: 4.6371 (4.6984)  time: 1.0926  data: 0.6335  max mem: 4760
+2020-10-15 09:28:08,962	INFO	kdkit.misc.log	Epoch: [79]  [4000/5025]  eta: 0:21:55  lr: 0.0010000000000000002  img/s: 135.76849168478736  loss: 4.6691 (4.6944)  time: 1.7869  data: 1.3421  max mem: 4760
+2020-10-15 09:49:17,536	INFO	kdkit.misc.log	Epoch: [79]  [5000/5025]  eta: 0:00:32  lr: 0.0010000000000000002  img/s: 247.26209449777855  loss: 4.6387 (4.6937)  time: 1.1444  data: 0.4828  max mem: 4760
+2020-10-15 09:49:30,194	INFO	kdkit.misc.log	Epoch: [79] Total time: 1:46:54
+2020-10-15 09:49:38,205	INFO	kdkit.misc.log	Validation:  [  0/131]  eta: 0:17:26  acc1: 60.9375 (60.9375)  acc5: 82.8125 (82.8125)  time: 7.9859  data: 7.9345  max mem: 4760
+2020-10-15 09:50:01,826	INFO	kdkit.misc.log	Validation: Total time: 0:00:31
+2020-10-15 09:50:01,827	INFO	__main__	 * Acc@1 70.3026	Acc@5 89.6662
+
+2020-10-15 09:50:01,827	INFO	__main__	Updating ckpt (Best top1 accuracy: 70.3006 -> 70.3026)
+2020-10-15 09:50:25,869	INFO	kdkit.misc.log	Epoch: [80]  [   0/5025]  eta: 1 day, 9:16:42  lr: 0.0010000000000000002  img/s: 153.99626969790427  loss: 5.0358 (5.0358)  time: 23.8414  data: 23.2894  max mem: 4760
+2020-10-15 10:11:25,668	INFO	kdkit.misc.log	Epoch: [80]  [1000/5025]  eta: 1:26:01  lr: 0.0010000000000000002  img/s: 158.83926403437368  loss: 4.6354 (4.6879)  time: 1.0554  data: 0.0706  max mem: 4760
+2020-10-15 10:32:50,769	INFO	kdkit.misc.log	Epoch: [80]  [2000/5025]  eta: 1:04:43  lr: 0.0010000000000000002  img/s: 9.485241393989178  loss: 4.5596 (4.6785)  time: 1.5142  data: 0.0413  max mem: 4760
+2020-10-15 10:54:13,049	INFO	kdkit.misc.log	Epoch: [80]  [3000/5025]  eta: 0:43:18  lr: 0.0010000000000000002  img/s: 173.962948758111  loss: 4.6930 (4.6760)  time: 1.1268  data: 0.0789  max mem: 4760
+2020-10-15 11:15:46,188	INFO	kdkit.misc.log	Epoch: [80]  [4000/5025]  eta: 0:21:57  lr: 0.0010000000000000002  img/s: 6.459034042470547  loss: 4.7220 (4.6757)  time: 1.7311  data: 0.0017  max mem: 4760
+2020-10-15 11:37:07,188	INFO	kdkit.misc.log	Epoch: [80]  [5000/5025]  eta: 0:00:32  lr: 0.0010000000000000002  img/s: 290.485802678869  loss: 4.6181 (4.6766)  time: 1.4134  data: 0.0033  max mem: 4760
+2020-10-15 11:37:14,240	INFO	kdkit.misc.log	Epoch: [80] Total time: 1:47:12
+2020-10-15 11:37:21,402	INFO	kdkit.misc.log	Validation:  [  0/131]  eta: 0:15:36  acc1: 59.3750 (59.3750)  acc5: 82.8125 (82.8125)  time: 7.1463  data: 7.0830  max mem: 4760
+2020-10-15 11:37:45,876	INFO	kdkit.misc.log	Validation: Total time: 0:00:31
+2020-10-15 11:37:45,900	INFO	__main__	 * Acc@1 70.2906	Acc@5 89.6662
+
+2020-10-15 11:38:09,367	INFO	kdkit.misc.log	Epoch: [81]  [   0/5025]  eta: 1 day, 8:42:28  lr: 0.0010000000000000002  img/s: 128.3844693743723  loss: 4.5620 (4.5620)  time: 23.4325  data: 22.7704  max mem: 4760
+2020-10-15 11:59:13,036	INFO	kdkit.misc.log	Epoch: [81]  [1000/5025]  eta: 1:26:15  lr: 0.0010000000000000002  img/s: 162.46242909957888  loss: 4.5961 (4.6744)  time: 1.0979  data: 0.2096  max mem: 4760
+2020-10-15 12:20:33,924	INFO	kdkit.misc.log	Epoch: [81]  [2000/5025]  eta: 1:04:42  lr: 0.0010000000000000002  img/s: 167.279217665402  loss: 4.7934 (4.6780)  time: 1.1290  data: 0.6508  max mem: 4760
+2020-10-15 12:41:59,896	INFO	kdkit.misc.log	Epoch: [81]  [3000/5025]  eta: 0:43:20  lr: 0.0010000000000000002  img/s: 256.2034704146647  loss: 4.8440 (4.6790)  time: 1.1068  data: 0.6677  max mem: 4760
+2020-10-15 13:03:13,587	INFO	kdkit.misc.log	Epoch: [81]  [4000/5025]  eta: 0:21:53  lr: 0.0010000000000000002  img/s: 150.8078074788043  loss: 4.4999 (4.6811)  time: 1.0963  data: 0.6004  max mem: 4760
+2020-10-15 13:24:44,061	INFO	kdkit.misc.log	Epoch: [81]  [5000/5025]  eta: 0:00:32  lr: 0.0010000000000000002  img/s: 326.77146719827687  loss: 4.6527 (4.6817)  time: 1.0448  data: 0.6264  max mem: 4760
+2020-10-15 13:24:52,123	INFO	kdkit.misc.log	Epoch: [81] Total time: 1:47:06
+2020-10-15 13:24:59,782	INFO	kdkit.misc.log	Validation:  [  0/131]  eta: 0:16:40  acc1: 60.1562 (60.1562)  acc5: 83.5938 (83.5938)  time: 7.6372  data: 7.5859  max mem: 4760
+2020-10-15 13:25:23,715	INFO	kdkit.misc.log	Validation: Total time: 0:00:31
+2020-10-15 13:25:23,716	INFO	__main__	 * Acc@1 70.2966	Acc@5 89.7042
+
+2020-10-15 13:25:47,908	INFO	kdkit.misc.log	Epoch: [82]  [   0/5025]  eta: 1 day, 9:45:47  lr: 0.0010000000000000002  img/s: 43.068948450390096  loss: 4.6975 (4.6975)  time: 24.1885  data: 22.2149  max mem: 4760
+2020-10-15 13:47:33,559	INFO	kdkit.misc.log	Epoch: [82]  [1000/5025]  eta: 1:29:07  lr: 0.0010000000000000002  img/s: 437.1434527035478  loss: 4.5043 (4.6642)  time: 1.1013  data: 0.0002  max mem: 4760
+2020-10-15 14:08:58,134	INFO	kdkit.misc.log	Epoch: [82]  [2000/5025]  eta: 1:05:52  lr: 0.0010000000000000002  img/s: 306.1070494222862  loss: 4.8348 (4.6705)  time: 1.0889  data: 0.0004  max mem: 4760
+2020-10-15 14:30:38,737	INFO	kdkit.misc.log	Epoch: [82]  [3000/5025]  eta: 0:44:01  lr: 0.0010000000000000002  img/s: 324.29841405564224  loss: 4.6604 (4.6697)  time: 1.0622  data: 0.0007  max mem: 4760
+2020-10-15 14:52:03,268	INFO	kdkit.misc.log	Epoch: [82]  [4000/5025]  eta: 0:22:12  lr: 0.0010000000000000002  img/s: 291.699843151822  loss: 4.8228 (4.6716)  time: 1.0832  data: 0.0007  max mem: 4760
+2020-10-15 15:13:39,383	INFO	kdkit.misc.log	Epoch: [82]  [5000/5025]  eta: 0:00:32  lr: 0.0010000000000000002  img/s: 447.01826361495694  loss: 4.6540 (4.6785)  time: 0.7914  data: 0.0008  max mem: 4760
+2020-10-15 15:13:45,734	INFO	kdkit.misc.log	Epoch: [82] Total time: 1:48:22
+2020-10-15 15:13:52,900	INFO	kdkit.misc.log	Validation:  [  0/131]  eta: 0:15:36  acc1: 60.1562 (60.1562)  acc5: 83.5938 (83.5938)  time: 7.1478  data: 7.0358  max mem: 4760
+2020-10-15 15:14:17,333	INFO	kdkit.misc.log	Validation: Total time: 0:00:31
+2020-10-15 15:14:17,335	INFO	__main__	 * Acc@1 70.3506	Acc@5 89.6722
+
+2020-10-15 15:14:17,335	INFO	__main__	Updating ckpt (Best top1 accuracy: 70.3026 -> 70.3506)
+2020-10-15 15:14:40,720	INFO	kdkit.misc.log	Epoch: [83]  [   0/5025]  eta: 1 day, 8:21:12  lr: 0.0010000000000000002  img/s: 138.01736889803544  loss: 4.6394 (4.6394)  time: 23.1785  data: 22.5626  max mem: 4760
+2020-10-15 15:35:45,852	INFO	kdkit.misc.log	Epoch: [83]  [1000/5025]  eta: 1:26:20  lr: 0.0010000000000000002  img/s: 269.1662709255209  loss: 4.5502 (4.6757)  time: 1.0704  data: 0.5262  max mem: 4760
+2020-10-15 15:57:06,837	INFO	kdkit.misc.log	Epoch: [83]  [2000/5025]  eta: 1:04:44  lr: 0.0010000000000000002  img/s: 9.905744568121364  loss: 4.6943 (4.6712)  time: 1.5533  data: 0.2353  max mem: 4760
+2020-10-15 16:18:24,572	INFO	kdkit.misc.log	Epoch: [83]  [3000/5025]  eta: 0:43:15  lr: 0.0010000000000000002  img/s: 186.2750101623786  loss: 4.6803 (4.6699)  time: 1.1346  data: 0.0578  max mem: 4760
+2020-10-15 16:39:54,776	INFO	kdkit.misc.log	Epoch: [83]  [4000/5025]  eta: 0:21:56  lr: 0.0010000000000000002  img/s: 9.242404111854926  loss: 4.7410 (4.6692)  time: 1.6026  data: 0.0030  max mem: 4760
+2020-10-15 17:01:15,160	INFO	kdkit.misc.log	Epoch: [83]  [5000/5025]  eta: 0:00:32  lr: 0.0010000000000000002  img/s: 332.1914530424217  loss: 4.6755 (4.6726)  time: 1.0276  data: 0.3116  max mem: 4760
+2020-10-15 17:01:24,199	INFO	kdkit.misc.log	Epoch: [83] Total time: 1:47:06
+2020-10-15 17:01:31,828	INFO	kdkit.misc.log	Validation:  [  0/131]  eta: 0:16:36  acc1: 61.7188 (61.7188)  acc5: 84.3750 (84.3750)  time: 7.6090  data: 7.5325  max mem: 4760
+2020-10-15 17:01:55,097	INFO	kdkit.misc.log	Validation: Total time: 0:00:30
+2020-10-15 17:01:55,781	INFO	__main__	 * Acc@1 70.3226	Acc@5 89.7022
+
+2020-10-15 17:02:19,205	INFO	kdkit.misc.log	Epoch: [84]  [   0/5025]  eta: 1 day, 8:41:29  lr: 0.0010000000000000002  img/s: 51.58033384954779  loss: 5.2306 (5.2306)  time: 23.4208  data: 21.7728  max mem: 4760
+2020-10-15 17:23:23,200	INFO	kdkit.misc.log	Epoch: [84]  [1000/5025]  eta: 1:26:16  lr: 0.0010000000000000002  img/s: 253.1287093423419  loss: 4.5562 (4.6551)  time: 1.1048  data: 0.5139  max mem: 4760
+2020-10-15 17:44:38,020	INFO	kdkit.misc.log	Epoch: [84]  [2000/5025]  eta: 1:04:33  lr: 0.0010000000000000002  img/s: 193.09819189045294  loss: 4.5486 (4.6575)  time: 1.5345  data: 0.9992  max mem: 4760
+2020-10-15 18:05:37,731	INFO	kdkit.misc.log	Epoch: [84]  [3000/5025]  eta: 0:42:58  lr: 0.0010000000000000002  img/s: 176.9629054578594  loss: 4.5578 (4.6543)  time: 1.2495  data: 0.7681  max mem: 4760
+2020-10-15 18:26:49,840	INFO	kdkit.misc.log	Epoch: [84]  [4000/5025]  eta: 0:21:45  lr: 0.0010000000000000002  img/s: 10.248736270537599  loss: 4.5834 (4.6562)  time: 1.6310  data: 0.2179  max mem: 4760
+2020-10-15 18:48:02,560	INFO	kdkit.misc.log	Epoch: [84]  [5000/5025]  eta: 0:00:31  lr: 0.0010000000000000002  img/s: 295.19351911344864  loss: 4.6927 (4.6584)  time: 1.1005  data: 0.3223  max mem: 4760
+2020-10-15 18:48:11,598	INFO	kdkit.misc.log	Epoch: [84] Total time: 1:46:15
+2020-10-15 18:48:18,597	INFO	kdkit.misc.log	Validation:  [  0/131]  eta: 0:15:12  acc1: 60.9375 (60.9375)  acc5: 82.8125 (82.8125)  time: 6.9665  data: 6.9040  max mem: 4760
+2020-10-15 18:48:43,299	INFO	kdkit.misc.log	Validation: Total time: 0:00:31
+2020-10-15 18:48:43,312	INFO	__main__	 * Acc@1 70.3686	Acc@5 89.6842
+
+2020-10-15 18:48:43,313	INFO	__main__	Updating ckpt (Best top1 accuracy: 70.3506 -> 70.3686)
+2020-10-15 18:49:09,251	INFO	kdkit.misc.log	Epoch: [85]  [   0/5025]  eta: 1 day, 11:55:56  lr: 0.0010000000000000002  img/s: 128.60036713503015  loss: 4.0326 (4.0326)  time: 25.7426  data: 25.0816  max mem: 4760
+2020-10-15 19:10:51,235	INFO	kdkit.misc.log	Epoch: [85]  [1000/5025]  eta: 1:28:58  lr: 0.0010000000000000002  img/s: 326.5535702672674  loss: 4.5151 (4.6593)  time: 1.0780  data: 0.0020  max mem: 4760
+2020-10-15 19:32:37,389	INFO	kdkit.misc.log	Epoch: [85]  [2000/5025]  eta: 1:06:21  lr: 0.0010000000000000002  img/s: 382.61188351515085  loss: 4.6692 (4.6664)  time: 1.9394  data: 0.0004  max mem: 4760
+2020-10-15 19:54:06,679	INFO	kdkit.misc.log	Epoch: [85]  [3000/5025]  eta: 0:44:07  lr: 0.0010000000000000002  img/s: 354.5756023041915  loss: 4.4799 (4.6617)  time: 1.0996  data: 0.0029  max mem: 4760
+2020-10-15 20:15:53,220	INFO	kdkit.misc.log	Epoch: [85]  [4000/5025]  eta: 0:22:19  lr: 0.0010000000000000002  img/s: 352.51584273251416  loss: 4.7651 (4.6607)  time: 1.9004  data: 0.0009  max mem: 4760
+2020-10-15 20:37:21,305	INFO	kdkit.misc.log	Epoch: [85]  [5000/5025]  eta: 0:00:32  lr: 0.0010000000000000002  img/s: 447.19152368253697  loss: 4.6004 (4.6620)  time: 1.0712  data: 0.0018  max mem: 4760
+2020-10-15 20:37:28,236	INFO	kdkit.misc.log	Epoch: [85] Total time: 1:48:44
+2020-10-15 20:37:35,308	INFO	kdkit.misc.log	Validation:  [  0/131]  eta: 0:15:23  acc1: 57.0312 (57.0312)  acc5: 82.0312 (82.0312)  time: 7.0516  data: 6.9805  max mem: 4760
+2020-10-15 20:37:59,843	INFO	kdkit.misc.log	Validation: Total time: 0:00:31
+2020-10-15 20:37:59,884	INFO	__main__	 * Acc@1 70.3486	Acc@5 89.6942
+
+2020-10-15 20:38:24,317	INFO	kdkit.misc.log	Epoch: [86]  [   0/5025]  eta: 1 day, 10:06:01  lr: 0.0010000000000000002  img/s: 43.29105205818253  loss: 4.6683 (4.6683)  time: 24.4301  data: 22.4666  max mem: 4760
+2020-10-15 20:59:30,850	INFO	kdkit.misc.log	Epoch: [86]  [1000/5025]  eta: 1:26:30  lr: 0.0010000000000000002  img/s: 194.66379534400178  loss: 4.6481 (4.6724)  time: 1.0693  data: 0.2231  max mem: 4760
+2020-10-15 21:20:47,196	INFO	kdkit.misc.log	Epoch: [86]  [2000/5025]  eta: 1:04:41  lr: 0.0010000000000000002  img/s: 200.52456921474356  loss: 4.6311 (4.6652)  time: 1.6528  data: 1.1357  max mem: 4760
+2020-10-15 21:41:47,525	INFO	kdkit.misc.log	Epoch: [86]  [3000/5025]  eta: 0:43:02  lr: 0.0010000000000000002  img/s: 211.80559664738223  loss: 4.5302 (4.6681)  time: 1.0500  data: 0.5721  max mem: 4760
+2020-10-15 22:02:59,972	INFO	kdkit.misc.log	Epoch: [86]  [4000/5025]  eta: 0:21:46  lr: 0.0010000000000000002  img/s: 182.78120651769336  loss: 4.5983 (4.6630)  time: 1.6403  data: 1.2216  max mem: 4760
+2020-10-15 22:24:18,124	INFO	kdkit.misc.log	Epoch: [86]  [5000/5025]  eta: 0:00:31  lr: 0.0010000000000000002  img/s: 205.1974758090695  loss: 4.5353 (4.6639)  time: 1.0338  data: 0.0027  max mem: 4760
+2020-10-15 22:24:27,378	INFO	kdkit.misc.log	Epoch: [86] Total time: 1:46:27
+2020-10-15 22:24:34,234	INFO	kdkit.misc.log	Validation:  [  0/131]  eta: 0:14:54  acc1: 60.9375 (60.9375)  acc5: 83.5938 (83.5938)  time: 6.8266  data: 6.7671  max mem: 4760
+2020-10-15 22:24:58,709	INFO	kdkit.misc.log	Validation: Total time: 0:00:31
+2020-10-15 22:24:59,048	INFO	__main__	 * Acc@1 70.2426	Acc@5 89.7022
+
+2020-10-15 22:25:23,509	INFO	kdkit.misc.log	Epoch: [87]  [   0/5025]  eta: 1 day, 10:08:24  lr: 0.0010000000000000002  img/s: 85.38700268771493  loss: 4.3906 (4.3906)  time: 24.4587  data: 23.4632  max mem: 4760
+2020-10-15 22:46:15,000	INFO	kdkit.misc.log	Epoch: [87]  [1000/5025]  eta: 1:25:30  lr: 0.0010000000000000002  img/s: 208.66952021019375  loss: 4.6933 (4.6616)  time: 1.0800  data: 0.6224  max mem: 4760
+2020-10-15 23:07:24,264	INFO	kdkit.misc.log	Epoch: [87]  [2000/5025]  eta: 1:04:07  lr: 0.0010000000000000002  img/s: 15.214319482416911  loss: 4.6722 (4.6621)  time: 1.3746  data: 0.4492  max mem: 4760
+2020-10-15 23:28:40,794	INFO	kdkit.misc.log	Epoch: [87]  [3000/5025]  eta: 0:42:58  lr: 0.0010000000000000002  img/s: 161.7702918542181  loss: 4.5255 (4.6666)  time: 1.0728  data: 0.3916  max mem: 4760
+2020-10-15 23:49:59,701	INFO	kdkit.misc.log	Epoch: [87]  [4000/5025]  eta: 0:21:46  lr: 0.0010000000000000002  img/s: 8.242854739307198  loss: 4.6767 (4.6639)  time: 1.6151  data: 0.1576  max mem: 4760
+2020-10-16 00:11:24,559	INFO	kdkit.misc.log	Epoch: [87]  [5000/5025]  eta: 0:00:31  lr: 0.0010000000000000002  img/s: 288.9936335058842  loss: 4.6846 (4.6620)  time: 1.0966  data: 0.0342  max mem: 4760
+2020-10-16 00:11:35,341	INFO	kdkit.misc.log	Epoch: [87] Total time: 1:46:36
+2020-10-16 00:11:41,913	INFO	kdkit.misc.log	Validation:  [  0/131]  eta: 0:14:18  acc1: 59.3750 (59.3750)  acc5: 82.0312 (82.0312)  time: 6.5534  data: 6.4853  max mem: 4760
+2020-10-16 00:12:06,405	INFO	kdkit.misc.log	Validation: Total time: 0:00:31
+2020-10-16 00:12:06,797	INFO	__main__	 * Acc@1 70.3626	Acc@5 89.7502
+
+2020-10-16 00:12:31,020	INFO	kdkit.misc.log	Epoch: [88]  [   0/5025]  eta: 1 day, 9:48:27  lr: 0.0010000000000000002  img/s: 208.1348443699253  loss: 4.6593 (4.6593)  time: 24.2204  data: 23.8120  max mem: 4760
+2020-10-16 00:33:29,889	INFO	kdkit.misc.log	Epoch: [88]  [1000/5025]  eta: 1:25:59  lr: 0.0010000000000000002  img/s: 78.90461796147855  loss: 4.5924 (4.6455)  time: 1.1322  data: 0.3274  max mem: 4760
+2020-10-16 00:54:43,299	INFO	kdkit.misc.log	Epoch: [88]  [2000/5025]  eta: 1:04:24  lr: 0.0010000000000000002  img/s: 136.49334504865112  loss: 4.5882 (4.6449)  time: 1.5845  data: 0.9814  max mem: 4760
+2020-10-16 01:15:51,731	INFO	kdkit.misc.log	Epoch: [88]  [3000/5025]  eta: 0:43:00  lr: 0.0010000000000000002  img/s: 203.7744554205312  loss: 4.5347 (4.6453)  time: 1.1425  data: 0.5518  max mem: 4760
+2020-10-16 01:37:08,166	INFO	kdkit.misc.log	Epoch: [88]  [4000/5025]  eta: 0:21:46  lr: 0.0010000000000000002  img/s: 212.20663067151338  loss: 4.6778 (4.6455)  time: 1.6115  data: 1.1634  max mem: 4760
+2020-10-16 01:58:27,243	INFO	kdkit.misc.log	Epoch: [88]  [5000/5025]  eta: 0:00:31  lr: 0.0010000000000000002  img/s: 241.41415687227828  loss: 4.6559 (4.6488)  time: 1.3597  data: 0.0032  max mem: 4760
+2020-10-16 01:58:34,923	INFO	kdkit.misc.log	Epoch: [88] Total time: 1:46:28
+2020-10-16 01:58:42,437	INFO	kdkit.misc.log	Validation:  [  0/131]  eta: 0:16:22  acc1: 56.2500 (56.2500)  acc5: 83.5938 (83.5938)  time: 7.4971  data: 7.4150  max mem: 4760
+2020-10-16 01:59:06,147	INFO	kdkit.misc.log	Validation: Total time: 0:00:31
+2020-10-16 01:59:06,477	INFO	__main__	 * Acc@1 70.3586	Acc@5 89.5842
+
+2020-10-16 01:59:30,980	INFO	kdkit.misc.log	Epoch: [89]  [   0/5025]  eta: 1 day, 10:11:58  lr: 0.0010000000000000002  img/s: 40.81022497396961  loss: 5.0845 (5.0845)  time: 24.5012  data: 22.4184  max mem: 4760
+2020-10-16 02:20:34,743	INFO	kdkit.misc.log	Epoch: [89]  [1000/5025]  eta: 1:26:20  lr: 0.0010000000000000002  img/s: 176.7440191043616  loss: 4.5339 (4.6639)  time: 1.1209  data: 0.1722  max mem: 4760
+2020-10-16 02:41:59,816	INFO	kdkit.misc.log	Epoch: [89]  [2000/5025]  eta: 1:04:50  lr: 0.0010000000000000002  img/s: 151.84365355800938  loss: 4.5479 (4.6576)  time: 1.1434  data: 0.0012  max mem: 4760
+2020-10-16 03:03:32,348	INFO	kdkit.misc.log	Epoch: [89]  [3000/5025]  eta: 0:43:28  lr: 0.0010000000000000002  img/s: 168.35422989507722  loss: 4.5723 (4.6507)  time: 1.1736  data: 0.0014  max mem: 4760
+2020-10-16 03:24:55,096	INFO	kdkit.misc.log	Epoch: [89]  [4000/5025]  eta: 0:21:58  lr: 0.0010000000000000002  img/s: 161.97623121454512  loss: 4.8198 (4.6524)  time: 1.1156  data: 0.0020  max mem: 4760
+2020-10-16 03:46:24,143	INFO	kdkit.misc.log	Epoch: [89]  [5000/5025]  eta: 0:00:32  lr: 0.0010000000000000002  img/s: 247.8847918833679  loss: 4.5579 (4.6553)  time: 1.0785  data: 0.0010  max mem: 4760
+2020-10-16 03:46:35,197	INFO	kdkit.misc.log	Epoch: [89] Total time: 1:47:28
+2020-10-16 03:46:42,203	INFO	kdkit.misc.log	Validation:  [  0/131]  eta: 0:15:15  acc1: 60.1562 (60.1562)  acc5: 82.0312 (82.0312)  time: 6.9893  data: 6.9379  max mem: 4760
+2020-10-16 03:47:06,807	INFO	kdkit.misc.log	Validation: Total time: 0:00:31
+2020-10-16 03:47:06,810	INFO	__main__	 * Acc@1 70.4086	Acc@5 89.6802
+
+2020-10-16 03:47:06,810	INFO	__main__	Updating ckpt (Best top1 accuracy: 70.3686 -> 70.4086)
+2020-10-16 03:47:31,648	INFO	kdkit.misc.log	Epoch: [90]  [   0/5025]  eta: 1 day, 10:20:05  lr: 0.00010000000000000003  img/s: 206.79033319895942  loss: 4.8205 (4.8205)  time: 24.5980  data: 24.1869  max mem: 4760
+2020-10-16 04:08:38,308	INFO	kdkit.misc.log	Epoch: [90]  [1000/5025]  eta: 1:26:32  lr: 0.00010000000000000003  img/s: 188.13004406216194  loss: 4.5411 (4.6211)  time: 1.1248  data: 0.2930  max mem: 4760
+2020-10-16 04:30:16,756	INFO	kdkit.misc.log	Epoch: [90]  [2000/5025]  eta: 1:05:14  lr: 0.00010000000000000003  img/s: 162.7846675984324  loss: 4.5721 (4.6171)  time: 1.1618  data: 0.0007  max mem: 4760
+2020-10-16 04:51:39,600	INFO	kdkit.misc.log	Epoch: [90]  [3000/5025]  eta: 0:43:33  lr: 0.00010000000000000003  img/s: 210.5050893913101  loss: 4.4602 (4.6203)  time: 1.1042  data: 0.0021  max mem: 4760
+2020-10-16 05:13:14,801	INFO	kdkit.misc.log	Epoch: [90]  [4000/5025]  eta: 0:22:03  lr: 0.00010000000000000003  img/s: 184.51414899282523  loss: 4.3194 (4.6174)  time: 1.1443  data: 0.0025  max mem: 4760
+2020-10-16 05:34:37,632	INFO	kdkit.misc.log	Epoch: [90]  [5000/5025]  eta: 0:00:32  lr: 0.00010000000000000003  img/s: 347.4874218066204  loss: 4.5323 (4.6167)  time: 1.1189  data: 0.0027  max mem: 4760
+2020-10-16 05:34:49,308	INFO	kdkit.misc.log	Epoch: [90] Total time: 1:47:42
+2020-10-16 05:34:56,368	INFO	kdkit.misc.log	Validation:  [  0/131]  eta: 0:15:20  acc1: 58.5938 (58.5938)  acc5: 82.0312 (82.0312)  time: 7.0237  data: 6.9392  max mem: 4760
+2020-10-16 05:35:20,343	INFO	kdkit.misc.log	Validation: Total time: 0:00:30
+2020-10-16 05:35:20,788	INFO	__main__	 * Acc@1 70.7826	Acc@5 89.9002
+
+2020-10-16 05:35:20,789	INFO	__main__	Updating ckpt (Best top1 accuracy: 70.4086 -> 70.7826)
+2020-10-16 05:35:44,524	INFO	kdkit.misc.log	Epoch: [91]  [   0/5025]  eta: 1 day, 8:53:03  lr: 0.00010000000000000003  img/s: 50.34578035669777  loss: 5.2687 (5.2687)  time: 23.5589  data: 21.8706  max mem: 4760
+2020-10-16 05:56:47,418	INFO	kdkit.misc.log	Epoch: [91]  [1000/5025]  eta: 1:26:12  lr: 0.00010000000000000003  img/s: 187.51033627814041  loss: 4.4460 (4.5929)  time: 1.0975  data: 0.3266  max mem: 4760
+2020-10-16 06:18:12,252	INFO	kdkit.misc.log	Epoch: [91]  [2000/5025]  eta: 1:04:47  lr: 0.00010000000000000003  img/s: 11.884873528395502  loss: 4.6731 (4.5929)  time: 1.4782  data: 0.3409  max mem: 4760
+2020-10-16 06:39:38,633	INFO	kdkit.misc.log	Epoch: [91]  [3000/5025]  eta: 0:43:22  lr: 0.00010000000000000003  img/s: 210.10054912480655  loss: 4.4734 (4.5948)  time: 1.2091  data: 0.3355  max mem: 4760
+2020-10-16 07:00:58,144	INFO	kdkit.misc.log	Epoch: [91]  [4000/5025]  eta: 0:21:56  lr: 0.00010000000000000003  img/s: 106.6603161971378  loss: 4.4153 (4.5932)  time: 1.1686  data: 0.5796  max mem: 4760
+2020-10-16 07:22:17,068	INFO	kdkit.misc.log	Epoch: [91]  [5000/5025]  eta: 0:00:32  lr: 0.00010000000000000003  img/s: 202.43090258594697  loss: 4.6280 (4.5932)  time: 1.0648  data: 0.6072  max mem: 4760
+2020-10-16 07:22:29,915	INFO	kdkit.misc.log	Epoch: [91] Total time: 1:47:08
+2020-10-16 07:22:37,310	INFO	kdkit.misc.log	Validation:  [  0/131]  eta: 0:16:06  acc1: 59.3750 (59.3750)  acc5: 82.0312 (82.0312)  time: 7.3763  data: 7.3123  max mem: 4760
+2020-10-16 07:23:01,491	INFO	kdkit.misc.log	Validation: Total time: 0:00:31
+2020-10-16 07:23:01,530	INFO	__main__	 * Acc@1 70.8406	Acc@5 89.9662
+
+2020-10-16 07:23:01,530	INFO	__main__	Updating ckpt (Best top1 accuracy: 70.7826 -> 70.8406)
+2020-10-16 07:23:26,708	INFO	kdkit.misc.log	Epoch: [92]  [   0/5025]  eta: 1 day, 10:50:12  lr: 0.00010000000000000003  img/s: 187.3293434569004  loss: 4.4103 (4.4103)  time: 24.9577  data: 24.5039  max mem: 4760
+2020-10-16 07:44:16,796	INFO	kdkit.misc.log	Epoch: [92]  [1000/5025]  eta: 1:25:26  lr: 0.00010000000000000003  img/s: 172.84451617563712  loss: 4.5995 (4.6025)  time: 1.0896  data: 0.3767  max mem: 4760
+2020-10-16 08:05:29,774	INFO	kdkit.misc.log	Epoch: [92]  [2000/5025]  eta: 1:04:11  lr: 0.00010000000000000003  img/s: 16.616588715101646  loss: 4.4882 (4.5986)  time: 1.6466  data: 0.6579  max mem: 4760
+2020-10-16 08:26:40,524	INFO	kdkit.misc.log	Epoch: [92]  [3000/5025]  eta: 0:42:56  lr: 0.00010000000000000003  img/s: 150.84698617727562  loss: 4.6173 (4.5980)  time: 1.1014  data: 0.0196  max mem: 4760
+2020-10-16 08:48:14,879	INFO	kdkit.misc.log	Epoch: [92]  [4000/5025]  eta: 0:21:49  lr: 0.00010000000000000003  img/s: 6.972364710403231  loss: 4.5424 (4.5981)  time: 1.7682  data: 0.0012  max mem: 4760
+2020-10-16 09:09:38,724	INFO	kdkit.misc.log	Epoch: [92]  [5000/5025]  eta: 0:00:31  lr: 0.00010000000000000003  img/s: 262.39771543808905  loss: 4.6519 (4.6000)  time: 1.0412  data: 0.0021  max mem: 4760
+2020-10-16 09:09:47,809	INFO	kdkit.misc.log	Epoch: [92] Total time: 1:46:46
+2020-10-16 09:09:55,348	INFO	kdkit.misc.log	Validation:  [  0/131]  eta: 0:16:24  acc1: 60.9375 (60.9375)  acc5: 82.0312 (82.0312)  time: 7.5185  data: 7.4525  max mem: 4760
+2020-10-16 09:10:19,275	INFO	kdkit.misc.log	Validation: Total time: 0:00:31
+2020-10-16 09:10:19,420	INFO	__main__	 * Acc@1 70.8206	Acc@5 89.9222
+
+2020-10-16 09:10:43,263	INFO	kdkit.misc.log	Epoch: [93]  [   0/5025]  eta: 1 day, 9:15:19  lr: 0.00010000000000000003  img/s: 174.37238025086987  loss: 4.3569 (4.3569)  time: 23.8248  data: 23.3373  max mem: 4760
+2020-10-16 09:31:40,584	INFO	kdkit.misc.log	Epoch: [93]  [1000/5025]  eta: 1:25:51  lr: 0.00010000000000000003  img/s: 269.14391878782664  loss: 4.5721 (4.5895)  time: 1.0412  data: 0.6042  max mem: 4760
+2020-10-16 09:52:55,524	INFO	kdkit.misc.log	Epoch: [93]  [2000/5025]  eta: 1:04:24  lr: 0.00010000000000000003  img/s: 125.06361298162261  loss: 4.5503 (4.5942)  time: 1.1220  data: 0.6159  max mem: 4760
+2020-10-16 10:14:06,956	INFO	kdkit.misc.log	Epoch: [93]  [3000/5025]  eta: 0:43:02  lr: 0.00010000000000000003  img/s: 170.78758561155766  loss: 4.4475 (4.5926)  time: 1.0762  data: 0.4501  max mem: 4760
+2020-10-16 10:35:07,796	INFO	kdkit.misc.log	Epoch: [93]  [4000/5025]  eta: 0:21:43  lr: 0.00010000000000000003  img/s: 276.1212153130874  loss: 4.5348 (4.5914)  time: 1.0688  data: 0.3105  max mem: 4760
+2020-10-16 10:56:33,161	INFO	kdkit.misc.log	Epoch: [93]  [5000/5025]  eta: 0:00:31  lr: 0.00010000000000000003  img/s: 189.6238805906641  loss: 4.4994 (4.5936)  time: 1.1001  data: 0.2111  max mem: 4760
+2020-10-16 10:56:43,165	INFO	kdkit.misc.log	Epoch: [93] Total time: 1:46:23
+2020-10-16 10:56:50,328	INFO	kdkit.misc.log	Validation:  [  0/131]  eta: 0:15:33  acc1: 60.1562 (60.1562)  acc5: 82.8125 (82.8125)  time: 7.1235  data: 7.0612  max mem: 4760
+2020-10-16 10:57:14,603	INFO	kdkit.misc.log	Validation: Total time: 0:00:31
+2020-10-16 10:57:14,751	INFO	__main__	 * Acc@1 70.8126	Acc@5 89.9542
+
+2020-10-16 10:57:39,409	INFO	kdkit.misc.log	Epoch: [94]  [   0/5025]  eta: 1 day, 10:24:52  lr: 0.00010000000000000003  img/s: 155.7083870900116  loss: 3.9980 (3.9980)  time: 24.6553  data: 24.1094  max mem: 4760
+2020-10-16 11:18:42,904	INFO	kdkit.misc.log	Epoch: [94]  [1000/5025]  eta: 1:26:19  lr: 0.00010000000000000003  img/s: 259.58555530637744  loss: 4.4769 (4.6023)  time: 1.1308  data: 0.0011  max mem: 4760
+2020-10-16 11:40:11,443	INFO	kdkit.misc.log	Epoch: [94]  [2000/5025]  eta: 1:04:55  lr: 0.00010000000000000003  img/s: 5.946170286080642  loss: 4.5371 (4.6009)  time: 1.7538  data: 0.0035  max mem: 4760
+2020-10-16 12:01:31,748	INFO	kdkit.misc.log	Epoch: [94]  [3000/5025]  eta: 0:43:22  lr: 0.00010000000000000003  img/s: 213.11450166299636  loss: 4.5028 (4.6010)  time: 1.2022  data: 0.0005  max mem: 4760
+2020-10-16 12:22:57,500	INFO	kdkit.misc.log	Epoch: [94]  [4000/5025]  eta: 0:21:57  lr: 0.00010000000000000003  img/s: 52.0750039547492  loss: 4.5098 (4.6009)  time: 1.1956  data: 0.0010  max mem: 4760
+2020-10-16 12:44:20,968	INFO	kdkit.misc.log	Epoch: [94]  [5000/5025]  eta: 0:00:32  lr: 0.00010000000000000003  img/s: 244.1372613604381  loss: 4.6992 (4.6003)  time: 1.1208  data: 0.0017  max mem: 4760
+2020-10-16 12:44:35,555	INFO	kdkit.misc.log	Epoch: [94] Total time: 1:47:20
+2020-10-16 12:44:42,724	INFO	kdkit.misc.log	Validation:  [  0/131]  eta: 0:15:35  acc1: 60.1562 (60.1562)  acc5: 82.8125 (82.8125)  time: 7.1421  data: 7.0578  max mem: 4760
+2020-10-16 12:45:06,989	INFO	kdkit.misc.log	Validation: Total time: 0:00:31
+2020-10-16 12:45:07,021	INFO	__main__	 * Acc@1 70.8606	Acc@5 89.9722
+
+2020-10-16 12:45:07,021	INFO	__main__	Updating ckpt (Best top1 accuracy: 70.8406 -> 70.8606)
+2020-10-16 12:45:32,392	INFO	kdkit.misc.log	Epoch: [95]  [   0/5025]  eta: 1 day, 11:07:42  lr: 0.00010000000000000003  img/s: 222.45881886791275  loss: 4.5762 (4.5762)  time: 25.1666  data: 24.7845  max mem: 4760
+2020-10-16 13:06:25,612	INFO	kdkit.misc.log	Epoch: [95]  [1000/5025]  eta: 1:25:40  lr: 0.00010000000000000003  img/s: 214.24393878844876  loss: 4.4440 (4.5909)  time: 1.2054  data: 0.3434  max mem: 4760
+2020-10-16 13:27:34,606	INFO	kdkit.misc.log	Epoch: [95]  [2000/5025]  eta: 1:04:10  lr: 0.00010000000000000003  img/s: 18.734010260526745  loss: 4.6620 (4.5949)  time: 1.3702  data: 0.0743  max mem: 4760
+2020-10-16 13:48:55,776	INFO	kdkit.misc.log	Epoch: [95]  [3000/5025]  eta: 0:43:03  lr: 0.00010000000000000003  img/s: 170.56248193983836  loss: 4.7071 (4.5959)  time: 1.1232  data: 0.2062  max mem: 4760
+2020-10-16 14:10:08,484	INFO	kdkit.misc.log	Epoch: [95]  [4000/5025]  eta: 0:21:46  lr: 0.00010000000000000003  img/s: 25.072798607631864  loss: 4.4648 (4.5934)  time: 1.3540  data: 0.5085  max mem: 4760
+2020-10-16 14:31:22,322	INFO	kdkit.misc.log	Epoch: [95]  [5000/5025]  eta: 0:00:31  lr: 0.00010000000000000003  img/s: 447.1640398253065  loss: 4.5697 (4.5919)  time: 1.0243  data: 0.6073  max mem: 4760
+2020-10-16 14:31:29,538	INFO	kdkit.misc.log	Epoch: [95] Total time: 1:46:22
+2020-10-16 14:31:36,944	INFO	kdkit.misc.log	Validation:  [  0/131]  eta: 0:16:07  acc1: 60.1562 (60.1562)  acc5: 82.8125 (82.8125)  time: 7.3849  data: 7.3100  max mem: 4760
+2020-10-16 14:32:01,073	INFO	kdkit.misc.log	Validation: Total time: 0:00:31
+2020-10-16 14:32:01,075	INFO	__main__	 * Acc@1 70.8146	Acc@5 89.9622
+
+2020-10-16 14:32:24,808	INFO	kdkit.misc.log	Epoch: [96]  [   0/5025]  eta: 1 day, 9:07:24  lr: 0.00010000000000000003  img/s: 187.89792931451663  loss: 4.6480 (4.6480)  time: 23.7302  data: 23.2778  max mem: 4760
+2020-10-16 14:53:25,500	INFO	kdkit.misc.log	Epoch: [96]  [1000/5025]  eta: 1:26:04  lr: 0.00010000000000000003  img/s: 170.91039659517511  loss: 4.5881 (4.5821)  time: 1.0775  data: 0.3621  max mem: 4760
+2020-10-16 15:14:39,740	INFO	kdkit.misc.log	Epoch: [96]  [2000/5025]  eta: 1:04:28  lr: 0.00010000000000000003  img/s: 7.049058496222456  loss: 4.5283 (4.5817)  time: 1.7538  data: 0.1437  max mem: 4760
+2020-10-16 15:35:52,656	INFO	kdkit.misc.log	Epoch: [96]  [3000/5025]  eta: 0:43:05  lr: 0.00010000000000000003  img/s: 186.7176289747746  loss: 4.6737 (4.5881)  time: 1.0986  data: 0.0176  max mem: 4760
+2020-10-16 15:57:23,708	INFO	kdkit.misc.log	Epoch: [96]  [4000/5025]  eta: 0:21:52  lr: 0.00010000000000000003  img/s: 6.98322316490567  loss: 4.5178 (4.5835)  time: 1.7024  data: 0.0009  max mem: 4760
+2020-10-16 16:18:40,088	INFO	kdkit.misc.log	Epoch: [96]  [5000/5025]  eta: 0:00:31  lr: 0.00010000000000000003  img/s: 327.1585909956008  loss: 4.6145 (4.5842)  time: 1.1256  data: 0.0131  max mem: 4760
+2020-10-16 16:18:50,974	INFO	kdkit.misc.log	Epoch: [96] Total time: 1:46:49
+2020-10-16 16:18:57,820	INFO	kdkit.misc.log	Validation:  [  0/131]  eta: 0:14:54  acc1: 59.3750 (59.3750)  acc5: 82.8125 (82.8125)  time: 6.8287  data: 6.7425  max mem: 4760
+2020-10-16 16:19:22,263	INFO	kdkit.misc.log	Validation: Total time: 0:00:31
+2020-10-16 16:19:22,428	INFO	__main__	 * Acc@1 70.8166	Acc@5 89.9542
+
+2020-10-16 16:19:46,816	INFO	kdkit.misc.log	Epoch: [97]  [   0/5025]  eta: 1 day, 10:02:12  lr: 0.00010000000000000003  img/s: 174.9053345473955  loss: 4.2584 (4.2584)  time: 24.3846  data: 23.8986  max mem: 4760
+2020-10-16 16:40:41,757	INFO	kdkit.misc.log	Epoch: [97]  [1000/5025]  eta: 1:25:44  lr: 0.00010000000000000003  img/s: 189.49728842225667  loss: 4.5401 (4.5802)  time: 1.1004  data: 0.2530  max mem: 4760
+2020-10-16 17:01:55,898	INFO	kdkit.misc.log	Epoch: [97]  [2000/5025]  eta: 1:04:20  lr: 0.00010000000000000003  img/s: 21.36170409092911  loss: 4.5606 (4.5719)  time: 1.4893  data: 0.6055  max mem: 4760
+2020-10-16 17:23:09,496	INFO	kdkit.misc.log	Epoch: [97]  [3000/5025]  eta: 0:43:02  lr: 0.00010000000000000003  img/s: 190.99407328596462  loss: 4.5373 (4.5799)  time: 1.1684  data: 0.2517  max mem: 4760
+2020-10-16 17:44:34,776	INFO	kdkit.misc.log	Epoch: [97]  [4000/5025]  eta: 0:21:49  lr: 0.00010000000000000003  img/s: 8.291936892721106  loss: 4.5513 (4.5801)  time: 1.7316  data: 0.2515  max mem: 4760
+2020-10-16 18:06:02,113	INFO	kdkit.misc.log	Epoch: [97]  [5000/5025]  eta: 0:00:31  lr: 0.00010000000000000003  img/s: 259.97379230584687  loss: 4.5310 (4.5825)  time: 1.1358  data: 0.0018  max mem: 4760
+2020-10-16 18:06:09,985	INFO	kdkit.misc.log	Epoch: [97] Total time: 1:46:47
+2020-10-16 18:06:16,962	INFO	kdkit.misc.log	Validation:  [  0/131]  eta: 0:15:09  acc1: 60.1562 (60.1562)  acc5: 82.8125 (82.8125)  time: 6.9453  data: 6.8926  max mem: 4760
+2020-10-16 18:06:41,403	INFO	kdkit.misc.log	Validation: Total time: 0:00:31
+2020-10-16 18:06:41,497	INFO	__main__	 * Acc@1 70.7626	Acc@5 89.9122
+
+2020-10-16 18:07:06,853	INFO	kdkit.misc.log	Epoch: [98]  [   0/5025]  eta: 1 day, 11:23:20  lr: 0.00010000000000000003  img/s: 148.88281876733845  loss: 4.3137 (4.3137)  time: 25.3534  data: 24.7825  max mem: 4760
+2020-10-16 18:28:07,884	INFO	kdkit.misc.log	Epoch: [98]  [1000/5025]  eta: 1:26:12  lr: 0.00010000000000000003  img/s: 263.81417651455166  loss: 4.5433 (4.5741)  time: 1.1036  data: 0.3967  max mem: 4760
+2020-10-16 18:49:41,424	INFO	kdkit.misc.log	Epoch: [98]  [2000/5025]  eta: 1:05:00  lr: 0.00010000000000000003  img/s: 6.418084274181484  loss: 4.5128 (4.5714)  time: 1.7531  data: 0.0017  max mem: 4760
+2020-10-16 19:11:04,592	INFO	kdkit.misc.log	Epoch: [98]  [3000/5025]  eta: 0:43:26  lr: 0.00010000000000000003  img/s: 168.7073145686135  loss: 4.3866 (4.5797)  time: 1.1027  data: 0.5808  max mem: 4760
+2020-10-16 19:32:21,260	INFO	kdkit.misc.log	Epoch: [98]  [4000/5025]  eta: 0:21:56  lr: 0.00010000000000000003  img/s: 156.8910115786143  loss: 4.5090 (4.5827)  time: 1.1400  data: 0.6467  max mem: 4760
+2020-10-16 19:53:46,887	INFO	kdkit.misc.log	Epoch: [98]  [5000/5025]  eta: 0:00:32  lr: 0.00010000000000000003  img/s: 272.4058904296945  loss: 4.5878 (4.5827)  time: 0.9785  data: 0.5567  max mem: 4760
+2020-10-16 19:53:54,182	INFO	kdkit.misc.log	Epoch: [98] Total time: 1:47:12
+2020-10-16 19:54:01,104	INFO	kdkit.misc.log	Validation:  [  0/131]  eta: 0:15:04  acc1: 59.3750 (59.3750)  acc5: 82.8125 (82.8125)  time: 6.9024  data: 6.8243  max mem: 4760
+2020-10-16 19:54:25,297	INFO	kdkit.misc.log	Validation: Total time: 0:00:31
+2020-10-16 19:54:25,752	INFO	__main__	 * Acc@1 70.8566	Acc@5 89.9302
+
+2020-10-16 19:54:49,304	INFO	kdkit.misc.log	Epoch: [99]  [   0/5025]  eta: 1 day, 8:52:21  lr: 0.00010000000000000003  img/s: 89.34383191575739  loss: 4.8515 (4.8515)  time: 23.5506  data: 22.5992  max mem: 4760
+2020-10-16 20:15:48,210	INFO	kdkit.misc.log	Epoch: [99]  [1000/5025]  eta: 1:25:56  lr: 0.00010000000000000003  img/s: 235.22911881742743  loss: 4.5379 (4.5931)  time: 1.1357  data: 0.7064  max mem: 4760
+2020-10-16 20:37:04,367	INFO	kdkit.misc.log	Epoch: [99]  [2000/5025]  eta: 1:04:27  lr: 0.00010000000000000003  img/s: 169.41206882623797  loss: 4.7983 (4.5973)  time: 1.5455  data: 1.0877  max mem: 4760
+2020-10-16 20:58:13,833	INFO	kdkit.misc.log	Epoch: [99]  [3000/5025]  eta: 0:43:03  lr: 0.00010000000000000003  img/s: 214.23080736488586  loss: 4.3645 (4.5887)  time: 1.1120  data: 0.4286  max mem: 4760
+2020-10-16 21:19:40,888	INFO	kdkit.misc.log	Epoch: [99]  [4000/5025]  eta: 0:21:50  lr: 0.00010000000000000003  img/s: 9.217762192767085  loss: 4.5739 (4.5925)  time: 1.5746  data: 0.1878  max mem: 4760
+2020-10-16 21:41:05,044	INFO	kdkit.misc.log	Epoch: [99]  [5000/5025]  eta: 0:00:31  lr: 0.00010000000000000003  img/s: 219.41691238422658  loss: 4.5980 (4.5907)  time: 1.0610  data: 0.0088  max mem: 4760
+2020-10-16 21:41:13,258	INFO	kdkit.misc.log	Epoch: [99] Total time: 1:46:47
+2020-10-16 21:41:20,381	INFO	kdkit.misc.log	Validation:  [  0/131]  eta: 0:15:30  acc1: 59.3750 (59.3750)  acc5: 84.3750 (84.3750)  time: 7.1065  data: 7.0047  max mem: 4760
+2020-10-16 21:41:44,682	INFO	kdkit.misc.log	Validation: Total time: 0:00:31
+2020-10-16 21:41:44,738	INFO	__main__	 * Acc@1 70.9386	Acc@5 89.9902
+
+2020-10-16 21:41:44,739	INFO	__main__	Updating ckpt (Best top1 accuracy: 70.8606 -> 70.9386)
+2020-10-16 21:41:44,929	INFO	__main__	Training time 7 days, 11:18:29
+2020-10-16 21:41:44,977	INFO	kdkit.common.main_util	Loading model parameters
+2020-10-16 21:41:45,024	INFO	__main__	[Teacher: resnet34]
+2020-10-16 21:41:48,266	INFO	kdkit.misc.log	Test:  [    0/16667]  eta: 15:00:01  acc1: 0.0000 (0.0000)  acc5: 100.0000 (100.0000)  time: 3.2400  data: 3.1402  max mem: 4760
+2020-10-16 21:41:53,255	INFO	kdkit.misc.log	Test:  [ 1000/16667]  eta: 0:02:08  acc1: 100.0000 (72.7273)  acc5: 100.0000 (92.1079)  time: 0.0045  data: 0.0001  max mem: 4760
+2020-10-16 21:41:58,152	INFO	kdkit.misc.log	Test:  [ 2000/16667]  eta: 0:01:36  acc1: 100.0000 (72.2139)  acc5: 100.0000 (91.4543)  time: 0.0050  data: 0.0001  max mem: 4760
+2020-10-16 21:42:03,123	INFO	kdkit.misc.log	Test:  [ 3000/16667]  eta: 0:01:22  acc1: 100.0000 (72.4758)  acc5: 100.0000 (91.0030)  time: 0.0046  data: 0.0001  max mem: 4760
+2020-10-16 21:42:08,227	INFO	kdkit.misc.log	Test:  [ 4000/16667]  eta: 0:01:13  acc1: 100.0000 (72.2819)  acc5: 100.0000 (90.9023)  time: 0.0050  data: 0.0001  max mem: 4760
+2020-10-16 21:42:13,386	INFO	kdkit.misc.log	Test:  [ 5000/16667]  eta: 0:01:06  acc1: 100.0000 (72.7255)  acc5: 100.0000 (91.0218)  time: 0.0050  data: 0.0001  max mem: 4760
+2020-10-16 21:42:18,414	INFO	kdkit.misc.log	Test:  [ 6000/16667]  eta: 0:00:59  acc1: 100.0000 (72.5212)  acc5: 100.0000 (90.9515)  time: 0.0052  data: 0.0001  max mem: 4760
+2020-10-16 21:42:23,335	INFO	kdkit.misc.log	Test:  [ 7000/16667]  eta: 0:00:52  acc1: 100.0000 (72.6896)  acc5: 100.0000 (90.9299)  time: 0.0047  data: 0.0001  max mem: 4760
+2020-10-16 21:42:28,243	INFO	kdkit.misc.log	Test:  [ 8000/16667]  eta: 0:00:46  acc1: 100.0000 (72.7659)  acc5: 100.0000 (91.0136)  time: 0.0057  data: 0.0001  max mem: 4760
+2020-10-16 21:42:33,187	INFO	kdkit.misc.log	Test:  [ 9000/16667]  eta: 0:00:41  acc1: 100.0000 (72.8364)  acc5: 100.0000 (91.0343)  time: 0.0044  data: 0.0001  max mem: 4760
+2020-10-16 21:42:38,208	INFO	kdkit.misc.log	Test:  [10000/16667]  eta: 0:00:35  acc1: 100.0000 (72.7327)  acc5: 100.0000 (91.0209)  time: 0.0045  data: 0.0001  max mem: 4760
+2020-10-16 21:42:43,001	INFO	kdkit.misc.log	Test:  [11000/16667]  eta: 0:00:29  acc1: 100.0000 (72.7570)  acc5: 100.0000 (90.9099)  time: 0.0047  data: 0.0001  max mem: 4760
+2020-10-16 21:42:47,967	INFO	kdkit.misc.log	Test:  [12000/16667]  eta: 0:00:24  acc1: 100.0000 (72.8523)  acc5: 100.0000 (91.1007)  time: 0.0046  data: 0.0001  max mem: 4760
+2020-10-16 21:42:53,022	INFO	kdkit.misc.log	Test:  [13000/16667]  eta: 0:00:19  acc1: 100.0000 (72.8406)  acc5: 100.0000 (91.0315)  time: 0.0047  data: 0.0001  max mem: 4760
+2020-10-16 21:42:57,854	INFO	kdkit.misc.log	Test:  [14000/16667]  eta: 0:00:13  acc1: 100.0000 (72.8948)  acc5: 100.0000 (91.0935)  time: 0.0045  data: 0.0001  max mem: 4760
+2020-10-16 21:43:02,736	INFO	kdkit.misc.log	Test:  [15000/16667]  eta: 0:00:08  acc1: 100.0000 (72.9351)  acc5: 100.0000 (91.1406)  time: 0.0057  data: 0.0001  max mem: 4760
+2020-10-16 21:43:07,567	INFO	kdkit.misc.log	Test:  [16000/16667]  eta: 0:00:03  acc1: 100.0000 (73.0079)  acc5: 100.0000 (91.1381)  time: 0.0051  data: 0.0001  max mem: 4760
+2020-10-16 21:43:11,173	INFO	kdkit.misc.log	Test: Total time: 0:01:26
+2020-10-16 21:43:13,382	INFO	__main__	 * Acc@1 73.3125	Acc@5 91.4202
+
+2020-10-16 21:43:13,398	INFO	__main__	[Student: resnet18]
+2020-10-16 21:43:16,560	INFO	kdkit.misc.log	Test:  [    0/16667]  eta: 14:38:04  acc1: 0.0000 (0.0000)  acc5: 0.0000 (0.0000)  time: 3.1610  data: 3.1531  max mem: 4760
+2020-10-16 21:43:20,076	INFO	kdkit.misc.log	Test:  [ 1000/16667]  eta: 0:01:44  acc1: 100.0000 (69.2308)  acc5: 100.0000 (89.4106)  time: 0.0030  data: 0.0001  max mem: 4760
+2020-10-16 21:43:23,612	INFO	kdkit.misc.log	Test:  [ 2000/16667]  eta: 0:01:14  acc1: 100.0000 (69.5652)  acc5: 100.0000 (89.2054)  time: 0.0035  data: 0.0001  max mem: 4760
+2020-10-16 21:43:27,093	INFO	kdkit.misc.log	Test:  [ 3000/16667]  eta: 0:01:02  acc1: 100.0000 (70.0100)  acc5: 100.0000 (89.0370)  time: 0.0031  data: 0.0001  max mem: 4760
+2020-10-16 21:43:30,527	INFO	kdkit.misc.log	Test:  [ 4000/16667]  eta: 0:00:54  acc1: 100.0000 (70.3574)  acc5: 100.0000 (89.1777)  time: 0.0031  data: 0.0001  max mem: 4760
+2020-10-16 21:43:34,014	INFO	kdkit.misc.log	Test:  [ 5000/16667]  eta: 0:00:48  acc1: 100.0000 (70.7059)  acc5: 100.0000 (89.5821)  time: 0.0034  data: 0.0001  max mem: 4760
+2020-10-16 21:43:37,426	INFO	kdkit.misc.log	Test:  [ 6000/16667]  eta: 0:00:42  acc1: 100.0000 (70.3716)  acc5: 100.0000 (89.5684)  time: 0.0031  data: 0.0001  max mem: 4760
+2020-10-16 21:43:40,972	INFO	kdkit.misc.log	Test:  [ 7000/16667]  eta: 0:00:38  acc1: 100.0000 (70.6042)  acc5: 100.0000 (89.7015)  time: 0.0032  data: 0.0001  max mem: 4760
+2020-10-16 21:43:44,376	INFO	kdkit.misc.log	Test:  [ 8000/16667]  eta: 0:00:33  acc1: 100.0000 (70.4912)  acc5: 100.0000 (89.7638)  time: 0.0034  data: 0.0001  max mem: 4760
+2020-10-16 21:43:47,815	INFO	kdkit.misc.log	Test:  [ 9000/16667]  eta: 0:00:29  acc1: 100.0000 (70.5588)  acc5: 100.0000 (89.6789)  time: 0.0035  data: 0.0001  max mem: 4760
+2020-10-16 21:43:51,124	INFO	kdkit.misc.log	Test:  [10000/16667]  eta: 0:00:25  acc1: 100.0000 (70.5429)  acc5: 100.0000 (89.6610)  time: 0.0032  data: 0.0001  max mem: 4760
+2020-10-16 21:43:54,541	INFO	kdkit.misc.log	Test:  [11000/16667]  eta: 0:00:21  acc1: 100.0000 (70.4754)  acc5: 100.0000 (89.5737)  time: 0.0032  data: 0.0001  max mem: 4760
+2020-10-16 21:43:57,988	INFO	kdkit.misc.log	Test:  [12000/16667]  eta: 0:00:17  acc1: 100.0000 (70.4691)  acc5: 100.0000 (89.7675)  time: 0.0032  data: 0.0001  max mem: 4760
+2020-10-16 21:44:01,451	INFO	kdkit.misc.log	Test:  [13000/16667]  eta: 0:00:13  acc1: 100.0000 (70.4869)  acc5: 100.0000 (89.6854)  time: 0.0032  data: 0.0001  max mem: 4760
+2020-10-16 21:44:04,895	INFO	kdkit.misc.log	Test:  [14000/16667]  eta: 0:00:09  acc1: 100.0000 (70.6664)  acc5: 100.0000 (89.8079)  time: 0.0032  data: 0.0001  max mem: 4760
+2020-10-16 21:44:08,391	INFO	kdkit.misc.log	Test:  [15000/16667]  eta: 0:00:06  acc1: 100.0000 (70.7153)  acc5: 100.0000 (89.8740)  time: 0.0034  data: 0.0001  max mem: 4760
+2020-10-16 21:44:11,742	INFO	kdkit.misc.log	Test:  [16000/16667]  eta: 0:00:02  acc1: 100.0000 (70.8331)  acc5: 100.0000 (89.8506)  time: 0.0034  data: 0.0001  max mem: 4760
+2020-10-16 21:44:14,456	INFO	kdkit.misc.log	Test: Total time: 0:01:01
+2020-10-16 21:44:15,991	INFO	__main__	 * Acc@1 70.9386	Acc@5 89.9902
+
