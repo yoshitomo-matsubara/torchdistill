@@ -143,7 +143,7 @@ train:
         momentum: 0.9
         weight_decay: 0.0001
     criterion:
-      type: 'GeneralizedCustomLoss'
+      type: 'WeightedSumLoss'
       org_term:
         factor: 0.0
       sub_terms:
@@ -211,7 +211,7 @@ train:
         milestones: [5, 10]
         gamma: 0.1
     criterion:
-      type: 'GeneralizedCustomLoss'
+      type: 'WeightedSumLoss'
       org_term:
         criterion:
           type: 'KDLoss'

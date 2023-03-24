@@ -101,7 +101,7 @@ train:
       milestones: [60, 120, 160]
       gamma: 0.2
   criterion:
-    type: 'GeneralizedCustomLoss'
+    type: 'WeightedSumLoss'
     org_term:
       criterion:
         type: 'KDLoss'

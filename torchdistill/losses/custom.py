@@ -1,12 +1,12 @@
 from torch import nn
 
-from .registry import register_custom_loss, get_single_loss
+from .registry import register_high_level_loss, get_single_loss
 from ..common.constant import def_logger
 
 logger = def_logger.getChild(__name__)
 
 
-class CustomLoss(nn.Module):
+class AbstractLoss(nn.Module):
     def __init__(self, criterion_config):
         super().__init__()
         term_dict = dict()
@@ -27,8 +27,8 @@ class CustomLoss(nn.Module):
         return desc
 
 
-@register_custom_loss
-class GeneralizedCustomLoss(CustomLoss):
+@register_high_level_loss
+class WeightedSumLoss(AbstractLoss):
     def __init__(self, criterion_config):
         super().__init__(criterion_config)
         self.org_loss_factor = criterion_config['org_term'].get('factor', None)

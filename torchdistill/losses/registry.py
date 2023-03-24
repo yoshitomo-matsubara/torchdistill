@@ -7,8 +7,8 @@ SINGLE_LOSS_DICT = dict()
 FUNC2EXTRACT_ORG_OUTPUT_DICT = dict()
 
 
-def register_custom_loss(arg=None, **kwargs):
-    def _register_custom_loss(cls_or_func):
+def register_high_level_loss(arg=None, **kwargs):
+    def _register_high_level_loss(cls_or_func):
         key = kwargs.get('key')
         if key is None:
             key = cls_or_func.__name__
@@ -17,8 +17,8 @@ def register_custom_loss(arg=None, **kwargs):
         return cls_or_func
 
     if callable(arg):
-        return _register_custom_loss(arg)
-    return _register_custom_loss
+        return _register_high_level_loss(arg)
+    return _register_high_level_loss
 
 
 def register_loss_wrapper(arg=None, **kwargs):

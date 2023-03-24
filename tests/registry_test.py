@@ -10,7 +10,7 @@ from torchdistill.datasets.registry import register_dataset, register_collate_fu
 from torchdistill.losses.registry import register_high_level_loss, CUSTOM_LOSS_DICT, register_loss_wrapper, \
     register_single_loss, LOSS_WRAPPER_DICT, SINGLE_LOSS_DICT, register_func2extract_org_output, \
     FUNC2EXTRACT_ORG_OUTPUT_DICT
-from torchdistill.models.registry import get_model, register_adaptation_module, ADAPTATION_MODULE_DICT, \
+from torchdistill.models.registry import register_adaptation_module, ADAPTATION_MODULE_DICT, \
     register_model_class, register_model_func, MODEL_CLASS_DICT, MODEL_FUNC_DICT, register_auxiliary_model_wrapper, \
     AUXILIARY_MODEL_WRAPPER_DICT
 from torchdistill.optim.registry import register_optimizer, register_scheduler, OPTIM_DICT, SCHEDULER_DICT

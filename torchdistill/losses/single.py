@@ -363,7 +363,7 @@ class VIDLoss(nn.Module):
 class CCKDLoss(nn.Module):
     """
     "Correlation Congruence for Knowledge Distillation"
-    Configure KDLoss in a yaml file to meet eq. (7), using GeneralizedCustomLoss
+    Configure KDLoss in a yaml file to meet eq. (7), using WeightedSumLoss
     """
     def __init__(self, student_linear_path, teacher_linear_path, kernel_params, reduction, **kwargs):
         super().__init__()
