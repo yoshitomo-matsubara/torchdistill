@@ -72,11 +72,11 @@ def get_loss(key, param_dict=None, **kwargs):
     raise ValueError('No loss `{}` registered'.format(key))
 
 
-def get_custom_loss(criterion_config):
+def get_high_level_loss(criterion_config):
     criterion_type = criterion_config['type']
     if criterion_type in HIGH_LEVEL_LOSS_DICT:
         return HIGH_LEVEL_LOSS_DICT[criterion_type](criterion_config)
-    raise ValueError('No custom loss `{}` registered'.format(criterion_type))
+    raise ValueError('No high-level loss `{}` registered'.format(criterion_type))
 
 
 def get_loss_wrapper(single_loss, params_config, wrapper_config):
