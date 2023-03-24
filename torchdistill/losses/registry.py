@@ -1,7 +1,7 @@
 from ..common import misc_util
 
 LOSS_DICT = misc_util.get_classes_as_dict('torch.nn.modules.loss')
-CUSTOM_LOSS_DICT = dict()
+HIGH_LEVEL_LOSS_DICT = dict()
 LOSS_WRAPPER_DICT = dict()
 SINGLE_LOSS_DICT = dict()
 FUNC2EXTRACT_ORG_OUTPUT_DICT = dict()
@@ -13,7 +13,7 @@ def register_high_level_loss(arg=None, **kwargs):
         if key is None:
             key = cls_or_func.__name__
 
-        CUSTOM_LOSS_DICT[key] = cls_or_func
+        HIGH_LEVEL_LOSS_DICT[key] = cls_or_func
         return cls_or_func
 
     if callable(arg):
@@ -74,8 +74,8 @@ def get_loss(key, param_dict=None, **kwargs):
 
 def get_custom_loss(criterion_config):
     criterion_type = criterion_config['type']
-    if criterion_type in CUSTOM_LOSS_DICT:
-        return CUSTOM_LOSS_DICT[criterion_type](criterion_config)
+    if criterion_type in HIGH_LEVEL_LOSS_DICT:
+        return HIGH_LEVEL_LOSS_DICT[criterion_type](criterion_config)
     raise ValueError('No custom loss `{}` registered'.format(criterion_type))
 
 
