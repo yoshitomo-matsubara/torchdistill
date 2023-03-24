@@ -18,11 +18,11 @@ from torchdistill.optim.registry import register_optimizer, register_scheduler, 
 
 class RegistryTest(TestCase):
     def test_torch_hub(self):
-        model_name = 'tf_mobilenetv3_large_100'
-        repo_or_dir = 'rwightman/pytorch-image-models'
+        model_name = 'alexnet'
+        repo_or_dir = 'pytorch/vision'
         kwargs = {'pretrained': True}
-        mobilenet_v3 = get_model(model_name, repo_or_dir, **kwargs)
-        assert type(mobilenet_v3).__name__ == 'MobileNetV3'
+        alexnet = get_model(model_name, repo_or_dir, **kwargs)
+        assert type(alexnet).__name__ == 'AlexNet'
 
     def test_register_dataset(self):
         @register_dataset
