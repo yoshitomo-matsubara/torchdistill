@@ -120,7 +120,7 @@ train:
         momentum: 0.9
         weight_decay: 0.0001
     criterion:
-      type: 'GeneralizedCustomLoss'
+      type: 'WeightedSumLoss'
       org_term:
         factor: 0.0
       sub_terms:
@@ -214,7 +214,7 @@ train:
         power: 0.9
       scheduling_step: 1
     criterion:
-      type: 'GeneralizedCustomLoss'
+      type: 'WeightedSumLoss'
       func2extract_org_loss: 'extract_simple_org_loss_dict'
       org_term:
         criterion:

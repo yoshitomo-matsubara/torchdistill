@@ -95,7 +95,7 @@ train:
       num_training_steps:
     scheduling_step: 1
   criterion:
-    type: 'GeneralizedCustomLoss'
+    type: 'WeightedSumLoss'
     org_term:
       criterion:
         type: 'KDLoss4Transformer'

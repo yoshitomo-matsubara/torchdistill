@@ -1,7 +1,7 @@
 from torch.hub import load_state_dict_from_url
-from torchvision.models.detection.faster_rcnn import FasterRCNN, model_urls as fasterrcnn_model_urls
-from torchvision.models.detection.keypoint_rcnn import KeypointRCNN, model_urls as keypointrcnn_model_urls
-from torchvision.models.detection.mask_rcnn import MaskRCNN, model_urls as maskrcnn_model_urls
+from torchvision.models.detection.faster_rcnn import FasterRCNN
+from torchvision.models.detection.keypoint_rcnn import KeypointRCNN
+from torchvision.models.detection.mask_rcnn import MaskRCNN
 from torchvision.ops import MultiScaleRoIAlign
 
 from .resnet_backbone import custom_resnet_fpn_backbone
@@ -28,7 +28,9 @@ def custom_fasterrcnn_resnet_fpn(backbone, pretrained=True, progress=True,
                                 output_size=7, sampling_ratio=2)
     model = FasterRCNN(backbone_model, num_classes, box_roi_pool=box_roi_pool, **kwargs)
     if pretrained and backbone_name.endswith('resnet50'):
-        state_dict = load_state_dict_from_url(fasterrcnn_model_urls['fasterrcnn_resnet50_fpn_coco'], progress=progress)
+        state_dict = \
+            load_state_dict_from_url('https://download.pytorch.org/models/fasterrcnn_resnet50_fpn_coco-258fb6c6.pth',
+                                     progress=progress)
         model.load_state_dict(state_dict, strict=False)
     return model
 
@@ -56,7 +58,9 @@ def custom_maskrcnn_resnet_fpn(backbone, pretrained=True, progress=True,
                                 output_size=14, sampling_ratio=2)
     model = MaskRCNN(backbone_model, num_classes, box_roi_pool=box_roi_pool, mask_roi_pool=mask_roi_pool **kwargs)
     if pretrained and backbone_name.endswith('resnet50'):
-        state_dict = load_state_dict_from_url(maskrcnn_model_urls['maskrcnn_resnet50_fpn_coco'], progress=progress)
+        state_dict = \
+            load_state_dict_from_url('https://download.pytorch.org/models/maskrcnn_resnet50_fpn_coco-bf2d0c1e.pth',
+                                     progress=progress)
         model.load_state_dict(state_dict, strict=False)
     return model
 
@@ -86,6 +90,7 @@ def custom_keypointrcnn_resnet_fpn(backbone, pretrained=True, progress=True, num
                          keypoint_roi_pool=keypoint_roi_pool, **kwargs)
     if pretrained and backbone_name.endswith('resnet50'):
         state_dict = \
-            load_state_dict_from_url(keypointrcnn_model_urls['keypointrcnn_resnet50_fpn_coco'], progress=progress)
+            load_state_dict_from_url('https://download.pytorch.org/models/keypointrcnn_resnet50_fpn_coco-fc266e95.pth',
+                                     progress=progress)
         model.load_state_dict(state_dict, strict=False)
     return model

@@ -1,7 +1,6 @@
 from collections import abc
 
 import torch
-from torch._six import string_classes
 from torch.nn.parallel.scatter_gather import gather
 
 from ..common.module_util import check_if_wrapped, get_module
@@ -21,7 +20,7 @@ def get_device_index(data):
             result = get_device_index(d)
             if result is not None:
                 return result
-    elif isinstance(data, abc.Sequence) and not isinstance(data, string_classes):
+    elif isinstance(data, abc.Sequence) and not isinstance(data, (list, tuple)):
         for d in data:
             result = get_device_index(d)
             if result is not None:

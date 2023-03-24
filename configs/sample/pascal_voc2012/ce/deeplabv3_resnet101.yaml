@@ -115,7 +115,7 @@ train:
       power: 0.9
     scheduling_step: 1
   criterion:
-    type: 'GeneralizedCustomLoss'
+    type: 'WeightedSumLoss'
     func2extract_org_loss: 'extract_simple_org_loss_dict'
     org_term:
       criterion:

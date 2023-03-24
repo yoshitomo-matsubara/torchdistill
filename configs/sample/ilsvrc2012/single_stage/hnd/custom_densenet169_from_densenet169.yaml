@@ -98,7 +98,7 @@ train:
       milestones: [5, 10, 15]
       gamma: 0.1
   criterion:
-    type: 'GeneralizedCustomLoss'
+    type: 'WeightedSumLoss'
     org_term:
       factor: 0.0
     sub_terms:

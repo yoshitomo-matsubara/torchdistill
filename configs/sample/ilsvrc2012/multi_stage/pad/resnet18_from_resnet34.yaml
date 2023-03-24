@@ -96,7 +96,7 @@ train:
         milestones: [5]
         gamma: 0.1
     criterion:
-      type: 'GeneralizedCustomLoss'
+      type: 'WeightedSumLoss'
       org_term:
         criterion:
           type: 'CrossEntropyLoss'
@@ -142,7 +142,7 @@ train:
     optimizer: *optimizer
     scheduler: *scheduler
     criterion:
-      type: 'GeneralizedCustomLoss'
+      type: 'WeightedSumLoss'
       org_term:
         criterion:
           type: 'CrossEntropyLoss'

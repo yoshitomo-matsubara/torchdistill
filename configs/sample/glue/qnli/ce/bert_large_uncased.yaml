@@ -66,7 +66,7 @@ train:
       num_training_steps:
     scheduling_step: 1
   criterion:
-    type: 'GeneralizedCustomLoss'
+    type: 'WeightedSumLoss'
     func2extract_org_loss: 'extract_transformers_loss'
     org_term:
       factor: 1.0

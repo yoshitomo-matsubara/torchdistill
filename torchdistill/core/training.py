@@ -14,7 +14,7 @@ from ..common.constant import SELF_MODULE_PATH, def_logger
 from ..common.module_util import check_if_wrapped, freeze_module_params, get_module, \
     unfreeze_module_params, get_updatable_param_names
 from ..datasets.util import build_data_loaders
-from ..losses.registry import get_custom_loss, get_single_loss, get_func2extract_org_output
+from ..losses.registry import get_high_level_loss, get_single_loss, get_func2extract_org_output
 from ..models.util import redesign_model
 from ..models.wrapper import AuxiliaryModelWrapper, build_auxiliary_model_wrapper
 from ..optim.registry import get_optimizer, get_scheduler
@@ -64,7 +64,7 @@ class TrainingBox(nn.Module):
         org_criterion_config = org_term_config.get('criterion', dict()) if isinstance(org_term_config, dict) else None
         self.org_criterion = None if org_criterion_config is None or len(org_criterion_config) == 0 \
             else get_single_loss(org_criterion_config)
-        self.criterion = get_custom_loss(criterion_config)
+        self.criterion = get_high_level_loss(criterion_config)
         logger.info(self.criterion)
         self.extract_org_loss = get_func2extract_org_output(criterion_config.get('func2extract_org_loss', None))
 

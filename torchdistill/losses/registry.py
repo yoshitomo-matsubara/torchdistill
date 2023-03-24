@@ -1,24 +1,24 @@
 from ..common import misc_util
 
 LOSS_DICT = misc_util.get_classes_as_dict('torch.nn.modules.loss')
-CUSTOM_LOSS_DICT = dict()
+HIGH_LEVEL_LOSS_DICT = dict()
 LOSS_WRAPPER_DICT = dict()
 SINGLE_LOSS_DICT = dict()
 FUNC2EXTRACT_ORG_OUTPUT_DICT = dict()
 
 
-def register_custom_loss(arg=None, **kwargs):
-    def _register_custom_loss(cls_or_func):
+def register_high_level_loss(arg=None, **kwargs):
+    def _register_high_level_loss(cls_or_func):
         key = kwargs.get('key')
         if key is None:
             key = cls_or_func.__name__
 
-        CUSTOM_LOSS_DICT[key] = cls_or_func
+        HIGH_LEVEL_LOSS_DICT[key] = cls_or_func
         return cls_or_func
 
     if callable(arg):
-        return _register_custom_loss(arg)
-    return _register_custom_loss
+        return _register_high_level_loss(arg)
+    return _register_high_level_loss
 
 
 def register_loss_wrapper(arg=None, **kwargs):
@@ -72,11 +72,11 @@ def get_loss(key, param_dict=None, **kwargs):
     raise ValueError('No loss `{}` registered'.format(key))
 
 
-def get_custom_loss(criterion_config):
+def get_high_level_loss(criterion_config):
     criterion_type = criterion_config['type']
-    if criterion_type in CUSTOM_LOSS_DICT:
-        return CUSTOM_LOSS_DICT[criterion_type](criterion_config)
-    raise ValueError('No custom loss `{}` registered'.format(criterion_type))
+    if criterion_type in HIGH_LEVEL_LOSS_DICT:
+        return HIGH_LEVEL_LOSS_DICT[criterion_type](criterion_config)
+    raise ValueError('No high-level loss `{}` registered'.format(criterion_type))
 
 
 def get_loss_wrapper(single_loss, params_config, wrapper_config):
