@@ -96,7 +96,7 @@ train:
     scheduling_step: 1
   criterion:
     type: 'WeightedSumLoss'
-    org_term:
+    model_term:
       criterion:
         type: 'KDLoss4Transformer'
         params:

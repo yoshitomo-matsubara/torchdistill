@@ -2,18 +2,18 @@ import torch
 from torch import nn
 from torch.nn import functional
 
-from torchdistill.losses.single import register_org_loss
-from torchdistill.losses.util import register_func2extract_org_output
+from torchdistill.losses.registry import register_single_loss
+from torchdistill.losses.util import register_func2extract_model_output
 
 
-@register_func2extract_org_output
-def extract_transformers_loss(org_criterion, student_outputs, teacher_outputs, targets, uses_teacher_output, **kwargs):
-    org_loss_dict = dict()
-    org_loss_dict['loss'] = student_outputs.loss
-    return org_loss_dict
+@register_func2extract_model_output
+def extract_transformers_loss(student_outputs, teacher_outputs, targets, uses_teacher_output, **kwargs):
+    model_loss_dict = dict()
+    model_loss_dict['loss'] = student_outputs.loss
+    return model_loss_dict
 
 
-@register_org_loss
+@register_single_loss
 class KDLoss4Transformer(nn.KLDivLoss):
     """
     "Distilling the Knowledge in a Neural Network"

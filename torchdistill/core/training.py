@@ -14,7 +14,7 @@ from ..common.constant import SELF_MODULE_PATH, def_logger
 from ..common.module_util import check_if_wrapped, freeze_module_params, get_module, \
     unfreeze_module_params, get_updatable_param_names
 from ..datasets.util import build_data_loaders
-from ..losses.registry import get_high_level_loss, get_single_loss, get_func2extract_org_output
+from ..losses.registry import get_high_level_loss, get_func2extract_model_output
 from ..models.util import redesign_model
 from ..models.wrapper import AuxiliaryModelWrapper, build_auxiliary_model_wrapper
 from ..optim.registry import get_optimizer, get_scheduler
@@ -60,13 +60,9 @@ class TrainingBox(nn.Module):
 
     def setup_loss(self, train_config):
         criterion_config = train_config['criterion']
-        org_term_config = criterion_config.get('org_term', dict())
-        org_criterion_config = org_term_config.get('criterion', dict()) if isinstance(org_term_config, dict) else None
-        self.org_criterion = None if org_criterion_config is None or len(org_criterion_config) == 0 \
-            else get_single_loss(org_criterion_config)
         self.criterion = get_high_level_loss(criterion_config)
         logger.info(self.criterion)
-        self.extract_org_loss = get_func2extract_org_output(criterion_config.get('func2extract_org_loss', None))
+        self.extract_model_loss = get_func2extract_model_output(criterion_config.get('func2extract_model_loss', None))
 
     def setup_pre_post_processes(self, train_config):
         pre_epoch_process = default_pre_epoch_process_without_teacher
@@ -175,7 +171,7 @@ class TrainingBox(nn.Module):
         self.target_model_pairs = list()
         self.model_io_dict = dict()
         self.train_data_loader, self.val_data_loader, self.optimizer, self.lr_scheduler = None, None, None, None
-        self.org_criterion, self.criterion, self.extract_org_loss = None, None, None
+        self.criterion, self.extract_model_loss = None, None
         self.model_any_frozen = None
         self.grad_accum_step = None
         self.max_grad_norm = None
@@ -197,11 +193,10 @@ class TrainingBox(nn.Module):
         if isinstance(self.model, AuxiliaryModelWrapper):
             self.model.secondary_forward(extracted_model_io_dict)
 
-        org_loss_dict = self.extract_org_loss(self.org_criterion, model_outputs, targets,
-                                              supp_dict=supp_dict)
+        model_loss_dict = self.extract_model_loss(model_outputs, targets, supp_dict=supp_dict)
         update_io_dict(extracted_model_io_dict, extract_io_dict(self.model_io_dict, self.device))
         io_dict = {'student': extracted_model_io_dict, 'teacher': dict()}
-        total_loss = self.criterion(io_dict, org_loss_dict, targets)
+        total_loss = self.criterion(io_dict, model_loss_dict, targets)
         return total_loss
 
     def update_params(self, loss, **kwargs):

@@ -8,8 +8,8 @@ from torchdistill.datasets.registry import register_dataset, register_collate_fu
     DATASET_DICT, COLLATE_FUNC_DICT, SAMPLE_LOADER_CLASS_DICT, SAMPLE_LOADER_FUNC_DICT, BATCH_SAMPLER_DICT, \
     TRANSFORM_DICT, DATASET_WRAPPER_DICT
 from torchdistill.losses.registry import register_high_level_loss, HIGH_LEVEL_LOSS_DICT, register_loss_wrapper, \
-    register_single_loss, LOSS_WRAPPER_DICT, SINGLE_LOSS_DICT, register_func2extract_org_output, \
-    FUNC2EXTRACT_ORG_OUTPUT_DICT
+    register_single_loss, LOSS_WRAPPER_DICT, SINGLE_LOSS_DICT, register_func2extract_model_output, \
+    FUNC2EXTRACT_MODEL_OUTPUT_DICT
 from torchdistill.models.registry import register_adaptation_module, ADAPTATION_MODULE_DICT, \
     register_model_class, register_model_func, MODEL_CLASS_DICT, MODEL_FUNC_DICT, register_auxiliary_model_wrapper, \
     AUXILIARY_MODEL_WRAPPER_DICT
@@ -260,25 +260,25 @@ class RegistryTest(TestCase):
 
         assert SINGLE_LOSS_DICT[random_name] == TestSingleLoss2
 
-    def test_func2extract_org_output(self):
-        @register_func2extract_org_output
-        def test_func2extract_org_output0():
+    def test_func2extract_model_output(self):
+        @register_func2extract_model_output
+        def test_func2extract_model_output0():
             pass
 
-        assert FUNC2EXTRACT_ORG_OUTPUT_DICT['test_func2extract_org_output0'] == test_func2extract_org_output0
+        assert FUNC2EXTRACT_MODEL_OUTPUT_DICT['test_func2extract_model_output0'] == test_func2extract_model_output0
 
-        @register_func2extract_org_output()
-        def test_func2extract_org_output1():
+        @register_func2extract_model_output()
+        def test_func2extract_model_output1():
             pass
 
-        assert FUNC2EXTRACT_ORG_OUTPUT_DICT['test_func2extract_org_output1'] == test_func2extract_org_output1
+        assert FUNC2EXTRACT_MODEL_OUTPUT_DICT['test_func2extract_model_output1'] == test_func2extract_model_output1
         random_name = 'custom_func2extract_org_output_name2'
 
-        @register_func2extract_org_output(key=random_name)
-        def test_func2extract_org_output2():
+        @register_func2extract_model_output(key=random_name)
+        def test_func2extract_model_output2():
             pass
 
-        assert FUNC2EXTRACT_ORG_OUTPUT_DICT[random_name] == test_func2extract_org_output2
+        assert FUNC2EXTRACT_MODEL_OUTPUT_DICT[random_name] == test_func2extract_model_output2
 
     def test_register_optimizer(self):
         @register_optimizer

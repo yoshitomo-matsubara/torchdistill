@@ -112,7 +112,7 @@ train:
         gamma: 0.1
     criterion:
       type: 'WeightedSumLoss'
-      org_term:
+      model_term:
         factor: 0.0
       sub_terms:
         aux_task:
@@ -172,7 +172,7 @@ train:
         gamma: 0.1
     criterion:
       type: 'WeightedSumLoss'
-      org_term:
+      model_term:
         factor: 0.0
       sub_terms:
         sskd:

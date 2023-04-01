@@ -86,7 +86,7 @@ train:
       gamma: 0.2
   criterion:
     type: 'WeightedSumLoss'
-    org_term:
+    model_term:
       criterion:
         type: 'CrossEntropyLoss'
         params:
