@@ -144,7 +144,7 @@ train:
         weight_decay: 0.0001
     criterion:
       type: 'WeightedSumLoss'
-      org_term:
+      model_term:
         factor: 0.0
       sub_terms:
         dab:
@@ -212,7 +212,7 @@ train:
         gamma: 0.1
     criterion:
       type: 'WeightedSumLoss'
-      org_term:
+      model_term:
         criterion:
           type: 'KDLoss'
           params:

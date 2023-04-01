@@ -121,7 +121,7 @@ train:
         weight_decay: 0.0001
     criterion:
       type: 'WeightedSumLoss'
-      org_term:
+      model_term:
         factor: 0.0
       sub_terms:
         reconst:
@@ -215,8 +215,8 @@ train:
       scheduling_step: 1
     criterion:
       type: 'WeightedSumLoss'
-      func2extract_org_loss: 'extract_simple_org_loss_dict'
-      org_term:
+      func2extract_model_loss: 'extract_simple_model_loss_dict'
+      model_term:
         criterion:
           type: 'CrossEntropyLoss'
           params:

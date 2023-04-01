@@ -132,7 +132,7 @@ train:
       gamma: 0.1
   criterion:
     type: 'WeightedSumLoss'
-    org_term:
+    model_term:
       criterion:
         type: 'KDLoss'
         params:

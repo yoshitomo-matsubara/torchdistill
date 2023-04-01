@@ -4,7 +4,7 @@ LOSS_DICT = misc_util.get_classes_as_dict('torch.nn.modules.loss')
 HIGH_LEVEL_LOSS_DICT = dict()
 LOSS_WRAPPER_DICT = dict()
 SINGLE_LOSS_DICT = dict()
-FUNC2EXTRACT_ORG_OUTPUT_DICT = dict()
+FUNC2EXTRACT_MODEL_OUTPUT_DICT = dict()
 
 
 def register_high_level_loss(arg=None, **kwargs):
@@ -49,18 +49,18 @@ def register_single_loss(arg=None, **kwargs):
     return _register_single_loss
 
 
-def register_func2extract_org_output(arg=None, **kwargs):
-    def _register_func2extract_org_output(func):
+def register_func2extract_model_output(arg=None, **kwargs):
+    def _register_func2extract_model_output(func):
         key = kwargs.get('key')
         if key is None:
             key = func.__name__
 
-        FUNC2EXTRACT_ORG_OUTPUT_DICT[key] = func
+        FUNC2EXTRACT_MODEL_OUTPUT_DICT[key] = func
         return func
 
     if callable(arg):
-        return _register_func2extract_org_output(arg)
-    return _register_func2extract_org_output
+        return _register_func2extract_model_output(arg)
+    return _register_func2extract_model_output
 
 
 def get_loss(key, param_dict=None, **kwargs):
@@ -97,9 +97,9 @@ def get_single_loss(single_criterion_config, params_config=None):
     return get_loss_wrapper(single_loss, params_config, params_config.get('wrapper', dict()))
 
 
-def get_func2extract_org_output(key):
+def get_func2extract_model_output(key):
     if key is None:
-        key = 'extract_simple_org_loss'
-    if key in FUNC2EXTRACT_ORG_OUTPUT_DICT:
-        return FUNC2EXTRACT_ORG_OUTPUT_DICT[key]
+        key = 'extract_simple_model_loss'
+    if key in FUNC2EXTRACT_MODEL_OUTPUT_DICT:
+        return FUNC2EXTRACT_MODEL_OUTPUT_DICT[key]
     raise ValueError('No function to extract original output `{}` registered'.format(key))

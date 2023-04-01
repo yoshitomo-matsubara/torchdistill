@@ -77,8 +77,8 @@ train:
     scheduling_step: 1
   criterion:
     type: 'WeightedSumLoss'
-    func2extract_org_loss: 'extract_transformers_loss'
-    org_term:
+    func2extract_model_loss: 'extract_transformers_loss'
+    model_term:
       factor: 1.0
     sub_terms:
 
