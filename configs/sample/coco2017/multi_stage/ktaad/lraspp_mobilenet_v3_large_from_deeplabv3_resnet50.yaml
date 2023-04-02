@@ -10,23 +10,23 @@ datasets:
         annotations: !join [*root_dir, '/annotations/instances_train2017.json']
         annotated_only: True
         is_segment: True
-        transforms_params:
+        transforms_configs:
           - type: 'CustomRandomResize'
-            params:
+            kwargs:
               min_size: 260
               max_size: 1040
           - type: 'CustomRandomHorizontalFlip'
-            params:
+            kwargs:
               p: 0.5
           - type: 'CustomRandomCrop'
-            params:
+            kwargs:
               size: 480
           - &totensor
             type: 'CustomToTensor'
-            params:
+            kwargs:
           - &normalize
             type: 'CustomNormalize'
-            params:
+            kwargs:
               mean: [0.485, 0.456, 0.406]
               std: [0.229, 0.224, 0.225]
       val:
@@ -35,9 +35,9 @@ datasets:
         annotations: !join [*root_dir, '/annotations/instances_val2017.json']
         annotated_only: False
         is_segment: True
-        transforms_params:
+        transforms_configs:
           - type: 'CustomRandomResize'
-            params:
+            kwargs:
               min_size: 520
               max_size: 520
           - *totensor
@@ -46,7 +46,7 @@ datasets:
 models:
   teacher_model:
     name: &teacher_model_name 'deeplabv3_resnet50'
-    params:
+    kwargs:
       pretrained: True
       pretrained_backbone: True
       num_classes: 21
@@ -55,7 +55,7 @@ models:
     ckpt: !join ['./resource/ckpt/coco2017/teacher/', *teacher_experiment, '.pt']
   student_model:
     name: &student_model_name 'lraspp_mobilenet_v3_large'
-    params:
+    kwargs:
       pretrained: False
       pretrained_backbone: True
       num_classes: 21
@@ -84,10 +84,10 @@ train:
       sequential: []
       auxiliary_model_wrapper:
         type: &teacher4ft 'Teacher4FactorTransfer'
-        params:
+        kwargs:
           minimal:
           input_module_path: &teacher4ft_in_module 'teacher_model.classifier.-1'
-          paraphraser_params: &teacher4ft_paraphraser_params
+          paraphraser_kwargs: &teacher4ft_paraphraser_kwargs
             k: 0.5
             num_input_channels: 21
             kernel_size: 3
@@ -106,7 +106,7 @@ train:
       adaptations:
       auxiliary_model_wrapper:
         type: 'EmptyModule'
-        params:
+        kwargs:
       sequential: []
       forward_hook:
         input: []
@@ -115,7 +115,7 @@ train:
       requires_grad: False
     optimizer:
       type: 'SGD'
-      params:
+      kwargs:
         lr: 0.1
         momentum: 0.9
         weight_decay: 0.0001
@@ -127,9 +127,9 @@ train:
         reconst:
           criterion:
             type: 'MSELoss'
-            params:
+            kwargs:
               reduction: 'mean'
-          params:
+          kwargs:
             input:
               is_from_teacher: True
               module_path: 'paraphraser'
@@ -142,7 +142,7 @@ train:
         regularization:
           criterion:
             type: 'RegularizationLoss'
-            params:
+            kwargs:
               is_from_teacher: True
               module_path: 'paraphraser.encoder'
               io: 'output'
@@ -162,10 +162,10 @@ train:
       sequential: []
       auxiliary_model_wrapper:
         type: *teacher4ft
-        params:
+        kwargs:
           minimal:
           input_module_path: *teacher4ft_in_module
-          paraphraser_params: *teacher4ft_paraphraser_params
+          paraphraser_kwargs: *teacher4ft_paraphraser_kwargs
           paraphraser_ckpt: *teacher4ft_paraphraser_ckpt
           uses_decoder: False
       forward_hook:
@@ -178,21 +178,21 @@ train:
       sequential: []
       auxiliary_model_wrapper:
         type: 'Student4KTAAD'
-        params:
+        kwargs:
           input_module_path: 'student_model.classifier.high_classifier'
-          feature_adapter_params:
-            conv: &adapter_conv
+          feature_adapter_config:
+            conv_kwargs: &adapter_conv
               in_channels: 21
               out_channels: &adapt_ch 10
               kernel_size: 3
               stride: 1
               padding: 1
-            bn:
+            bn_kwargs:
               num_features: *adapt_ch
-            relu:
+            relu_kwargs:
               inplace: True
-          affinity_adapter_params:
-            conv: *adapter_conv
+          affinity_adapter_config:
+            conv_kwargs: *adapter_conv
       forward_hook:
         input: []
         output: ['student_model.classifier.high_classifier', 'feature_adapter', 'affinity_adapter']
@@ -201,14 +201,14 @@ train:
       frozen_modules: []
     optimizer:
       type: 'SGD'
-      params:
+      kwargs:
         lr: 0.007
         momentum: 0.9
         weight_decay: 1.0e-6
       grad_accum_step: 2
     scheduler:
       type: 'poly_lr_scheduler'
-      params:
+      kwargs:
         num_iterations: None
         num_epochs: *num_epochs
         power: 0.9
@@ -219,7 +219,7 @@ train:
       model_term:
         criterion:
           type: 'CrossEntropyLoss'
-          params:
+          kwargs:
             reduction: 'mean'
             ignore_index: 255
         factor:
@@ -228,7 +228,7 @@ train:
         adapt:
           criterion:
             type: 'KTALoss'
-            params:
+            kwargs:
               p: 1
               q: 2
               reduction: 'mean'
@@ -238,7 +238,7 @@ train:
         aff:
           criterion:
             type: 'AffinityLoss'
-            params:
+            kwargs:
               student_module_path: 'affinity_adapter'
               student_module_io: 'output'
               teacher_module_path: 'paraphraser.encoder'

@@ -81,10 +81,10 @@ def custom_resnet_fpn_backbone(backbone_name, backbone_params_config,
     if layer1_config is not None:
         compressor_config = layer1_config.get('compressor', None)
         compressor = None if compressor_config is None \
-            else get_bottleneck_processor(compressor_config['name'], **compressor_config['params'])
+            else get_bottleneck_processor(compressor_config['name'], **compressor_config['kwargs'])
         decompressor_config = layer1_config.get('decompressor', None)
         decompressor = None if decompressor_config is None \
-            else get_bottleneck_processor(decompressor_config['name'], **decompressor_config['params'])
+            else get_bottleneck_processor(decompressor_config['name'], **decompressor_config['kwargs'])
 
         layer1_type = layer1_config['type']
         if layer1_type == 'Bottleneck4SmallResNet' and backbone_name in {'custom_resnet18', 'custom_resnet34'}:

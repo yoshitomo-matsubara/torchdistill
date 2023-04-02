@@ -109,7 +109,7 @@ class Teacher4FactorTransfer(AuxiliaryModelWrapper):
     Teacher for factor transfer proposed in "Paraphrasing Complex Network: Network Compression via Factor Transfer"
     """
     def __init__(self, teacher_model, minimal, input_module_path,
-                 paraphraser_params, paraphraser_ckpt, uses_decoder, device, device_ids, distributed, **kwargs):
+                 paraphraser_kwargs, paraphraser_ckpt, uses_decoder, device, device_ids, distributed, **kwargs):
         super().__init__()
         if minimal is None:
             minimal = dict()
@@ -124,7 +124,7 @@ class Teacher4FactorTransfer(AuxiliaryModelWrapper):
         self.teacher_model = redesign_model(teacher_ref_model, minimal, 'teacher', model_type)
         self.input_module_path = input_module_path
         self.paraphraser = \
-            wrap_if_distributed(Paraphraser4FactorTransfer(**paraphraser_params), device, device_ids, distributed)
+            wrap_if_distributed(Paraphraser4FactorTransfer(**paraphraser_kwargs), device, device_ids, distributed)
         self.ckpt_file_path = paraphraser_ckpt
         if os.path.isfile(self.ckpt_file_path):
             map_location = {'cuda:0': 'cuda:{}'.format(device_ids[0])} if distributed else device
@@ -149,12 +149,12 @@ class Student4FactorTransfer(AuxiliaryModelWrapper):
     """
     Student for factor transfer proposed in "Paraphrasing Complex Network: Network Compression via Factor Transfer"
     """
-    def __init__(self, student_model, input_module_path, translator_params, device, device_ids, distributed, **kwargs):
+    def __init__(self, student_model, input_module_path, translator_kwargs, device, device_ids, distributed, **kwargs):
         super().__init__()
         self.student_model = wrap_if_distributed(student_model, device, device_ids, distributed)
         self.input_module_path = input_module_path
         self.translator = \
-            wrap_if_distributed(Translator4FactorTransfer(**translator_params), device, device_ids, distributed)
+            wrap_if_distributed(Translator4FactorTransfer(**translator_kwargs), device, device_ids, distributed)
 
     def forward(self, *args):
         return self.student_model(*args)
@@ -169,10 +169,10 @@ class Connector4DAB(AuxiliaryModelWrapper):
     Connector proposed in "Knowledge Transfer via Distillation of Activation Boundaries Formed by Hidden Neurons"
     """
     @staticmethod
-    def build_connector(conv_params_config, bn_params_config=None):
-        module_list = [nn.Conv2d(**conv_params_config)]
-        if bn_params_config is not None and len(bn_params_config) > 0:
-            module_list.append(nn.BatchNorm2d(**bn_params_config))
+    def build_connector(conv2d_kwargs, bn2d_kwargs=None):
+        module_list = [nn.Conv2d(**conv2d_kwargs)]
+        if bn2d_kwargs is not None and len(bn2d_kwargs) > 0:
+            module_list.append(nn.BatchNorm2d(**bn2d_kwargs))
         return nn.Sequential(*module_list)
 
     def __init__(self, student_model, connectors, device, device_ids, distributed, **kwargs):
@@ -180,10 +180,11 @@ class Connector4DAB(AuxiliaryModelWrapper):
         self.student_model = wrap_if_distributed(student_model, device, device_ids, distributed)
         io_path_pairs = list()
         self.connector_dict = nn.ModuleDict()
-        for connector_key, connector_params in connectors.items():
-            connector = self.build_connector(connector_params['conv_params'], connector_params.get('bn_params', None))
+        for connector_key, connector_config in connectors.items():
+            connector = \
+                self.build_connector(connector_config['conv2d_kwargs'], connector_config.get('bn2d_kwargs', None))
             self.connector_dict[connector_key] = wrap_if_distributed(connector, device, device_ids, distributed)
-            io_path_pairs.append((connector_key, connector_params['io'], connector_params['path']))
+            io_path_pairs.append((connector_key, connector_config['io'], connector_config['path']))
         self.io_path_pairs = io_path_pairs
 
     def forward(self, x):
@@ -226,10 +227,10 @@ class VariationalDistributor4VID(AuxiliaryModelWrapper):
         self.student_model = wrap_if_distributed(student_model, device, device_ids, distributed)
         io_path_pairs = list()
         self.regressor_dict = nn.ModuleDict()
-        for regressor_key, regressor_params in regressors.items():
-            regressor = Regressor4VID(**regressor_params)
+        for regressor_key, regressor_config in regressors.items():
+            regressor = Regressor4VID(**regressor_config['kwargs'])
             self.regressor_dict[regressor_key] = wrap_if_distributed(regressor, device, device_ids, distributed)
-            io_path_pairs.append((regressor_key, regressor_params['io'], regressor_params['path']))
+            io_path_pairs.append((regressor_key, regressor_config['io'], regressor_config['path']))
         self.io_path_pairs = io_path_pairs
 
     def forward(self, x):
@@ -246,7 +247,7 @@ class Linear4CCKD(AuxiliaryModelWrapper):
     Fully-connected layer to cope with a mismatch of feature representations of teacher and student network for
     "Correlation Congruence for Knowledge Distillation"
     """
-    def __init__(self, input_module, linear_params, device, device_ids, distributed,
+    def __init__(self, input_module, linear_kwargs, device, device_ids, distributed,
                  teacher_model=None, student_model=None, **kwargs):
         super().__init__()
         is_teacher = teacher_model is not None
@@ -257,7 +258,7 @@ class Linear4CCKD(AuxiliaryModelWrapper):
         self.is_teacher = is_teacher
         self.input_module_path = input_module['path']
         self.input_module_io = input_module['io']
-        self.linear = wrap_if_distributed(nn.Linear(**linear_params), device, device_ids, distributed)
+        self.linear = wrap_if_distributed(nn.Linear(**linear_kwargs), device, device_ids, distributed)
 
     def forward(self, x):
         if self.is_teacher:
@@ -289,7 +290,7 @@ class Linear4CRD(AuxiliaryModelWrapper):
     "Contrastive Representation Distillation"
     Refactored https://github.com/HobbitLong/RepDistiller/blob/master/crd/memory.py
     """
-    def __init__(self, input_module_path, linear_params, device, device_ids, distributed, power=2,
+    def __init__(self, input_module_path, linear_kwargs, device, device_ids, distributed, power=2,
                  teacher_model=None, student_model=None, **kwargs):
         super().__init__()
         is_teacher = teacher_model is not None
@@ -300,7 +301,7 @@ class Linear4CRD(AuxiliaryModelWrapper):
         self.is_teacher = is_teacher
         self.empty = nn.Sequential()
         self.input_module_path = input_module_path
-        linear = nn.Linear(**linear_params)
+        linear = nn.Linear(**linear_kwargs)
         self.normalizer = wrap_if_distributed(Normalizer4CRD(linear, power=power), device, device_ids, distributed)
 
     def forward(self, x, supp_dict):
@@ -465,7 +466,7 @@ class Student4KnowledgeReview(AuxiliaryModelWrapper):
         num_abfs = len(abfs)
         io_path_pairs = list()
         for idx, abf_config in enumerate(abfs):
-            abf = wrap_if_distributed(AttentionBasedFusion(uses_attention=idx < num_abfs - 1, **abf_config['params']),
+            abf = wrap_if_distributed(AttentionBasedFusion(uses_attention=idx < num_abfs - 1, **abf_config['kwargs']),
                                       device, device_ids, distributed)
             abf_list.append(abf)
             io_path_pairs.append((abf_config['io'], abf_config['path']))
@@ -490,17 +491,17 @@ class Student4KTAAD(AuxiliaryModelWrapper):
     Student for knowledge translation and adaptation + affinity distillation proposed in
     "Knowledge Adaptation for Efficient Semantic Segmentation"
     """
-    def __init__(self, student_model, input_module_path, feature_adapter_params, affinity_adapter_params,
+    def __init__(self, student_model, input_module_path, feature_adapter_config, affinity_adapter_config,
                  device, device_ids, distributed, **kwargs):
         super().__init__()
         self.student_model = wrap_if_distributed(student_model, device, device_ids, distributed)
         self.input_module_path = input_module_path
         feature_adapter = nn.Sequential(
-            nn.Conv2d(**feature_adapter_params['conv']),
-            nn.BatchNorm2d(**feature_adapter_params['bn']), nn.ReLU(**feature_adapter_params['relu'])
+            nn.Conv2d(**feature_adapter_config['conv_kwargs']),
+            nn.BatchNorm2d(**feature_adapter_config['bn_kwargs']), nn.ReLU(**feature_adapter_config['relu_kwargs'])
         )
         affinity_adapter = nn.Sequential(
-            nn.Conv2d(**affinity_adapter_params['conv'])
+            nn.Conv2d(**affinity_adapter_config['conv_kwargs'])
         )
         self.feature_adapter = wrap_if_distributed(feature_adapter, device, device_ids, distributed)
         self.affinity_adapter = wrap_if_distributed(affinity_adapter, device, device_ids, distributed)
@@ -520,7 +521,7 @@ def build_auxiliary_model_wrapper(model_config, **kwargs):
     if auxiliary_model_wrapper_type is None:
         return None
 
-    auxiliary_model_wrapper_params_config = auxiliary_model_wrapper_config.get('params', None)
-    if auxiliary_model_wrapper_params_config is None:
-        auxiliary_model_wrapper_params_config = dict()
-    return get_auxiliary_model_wrapper(auxiliary_model_wrapper_type, **kwargs, **auxiliary_model_wrapper_params_config)
+    auxiliary_model_wrapper_kwargs = auxiliary_model_wrapper_config.get('kwargs', None)
+    if auxiliary_model_wrapper_kwargs is None:
+        auxiliary_model_wrapper_kwargs = dict()
+    return get_auxiliary_model_wrapper(auxiliary_model_wrapper_type, **kwargs, **auxiliary_model_wrapper_kwargs)

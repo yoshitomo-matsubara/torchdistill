@@ -19,7 +19,7 @@ datasets:
 models:
   teacher_model:
     name: &teacher_model_name 'fasterrcnn_resnet50_fpn'
-    params:
+    kwargs:
       pretrained: True
       progress: True
       num_classes: 91
@@ -28,14 +28,14 @@ models:
     ckpt: !join ['./resource/ckpt/coco2017/teacher/', *teacher_experiment, '.pt']
   student_model:
     name: &student_model_name 'custom_fasterrcnn_resnet_fpn'
-    params:
+    kwargs:
       pretrained: True
       progress: True
       num_classes: 91
       pretrained_backbone: True
       backbone:
         name: 'custom_resnet50'
-        params:
+        kwargs:
           num_classes: 1000
           pretrained: True
           trainable_backbone_layers: 6
@@ -56,7 +56,7 @@ train:
     num_workers: 16
     batch_sampler:
       type: 'GroupedBatchSampler'
-      params:
+      kwargs:
         aspect_ratio_group_factor: 3
         batch_size: 4
     collate_fn: 'coco_collate_fn'
@@ -72,7 +72,7 @@ train:
     sequential: []
     auxiliary_model_wrapper:
       type: 'HeadRCNN'
-      params:
+      kwargs:
         head_rcnn:
           sequential: ['backbone.body']
     frozen_modules: []
@@ -87,7 +87,7 @@ train:
     sequential: []
     auxiliary_model_wrapper:
       type: 'HeadRCNN'
-      params:
+      kwargs:
         head_rcnn:
           sequential: ['backbone.body']
     frozen_modules: ['seq.backbone.body.layer2', 'seq.backbone.body.layer3', 'seq.backbone.body.layer4']
@@ -98,11 +98,11 @@ train:
     requires_grad: True
   optimizer:
     type: 'Adam'
-    params:
+    kwargs:
       lr: 0.001
   scheduler:
     type: 'MultiStepLR'
-    params:
+    kwargs:
       milestones: [5, 15]
       gamma: 0.1
   criterion:
@@ -113,9 +113,9 @@ train:
       layer1:
         criterion:
           type: 'MSELoss'
-          params:
+          kwargs:
             reduction: 'sum'
-        params:
+        kwargs:
           input:
             is_from_teacher: False
             module_path: 'seq.backbone.body.layer1'
@@ -128,9 +128,9 @@ train:
       layer2:
         criterion:
           type: 'MSELoss'
-          params:
+          kwargs:
             reduction: 'sum'
-        params:
+        kwargs:
           input:
             is_from_teacher: False
             module_path: 'seq.backbone.body.layer2'
@@ -143,9 +143,9 @@ train:
       layer3:
         criterion:
           type: 'MSELoss'
-          params:
+          kwargs:
             reduction: 'sum'
-        params:
+        kwargs:
           input:
             is_from_teacher: False
             module_path: 'seq.backbone.body.layer3'
@@ -158,9 +158,9 @@ train:
       layer4:
         criterion:
           type: 'MSELoss'
-          params:
+          kwargs:
             reduction: 'sum'
-        params:
+        kwargs:
           input:
             is_from_teacher: False
             module_path: 'seq.backbone.body.layer4'

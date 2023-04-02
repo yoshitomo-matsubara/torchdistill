@@ -67,16 +67,14 @@ def get_argparser():
 def load_tokenizer_and_model(model_config, task_name, prioritizes_ckpt=False):
     # In distributed training, the .from_pretrained methods guarantee that only one local process can concurrently
     # download model & vocab.
-    num_labels = model_config['num_labels']
-    config_config = model_config['config_params']
-    config = AutoConfig.from_pretrained(**config_config, num_labels=num_labels, finetuning_task=task_name)
-    tokenizer_config = model_config['tokenizer_params']
+    config_config = model_config['config_kwargs']
+    config = AutoConfig.from_pretrained(**config_config, finetuning_task=task_name)
+    tokenizer_config = model_config['tokenizer_kwargs']
     tokenizer = AutoTokenizer.from_pretrained(**tokenizer_config)
-    from_tf = model_config.get('from_tf', False)
-    model_name_or_path = model_config['ckpt'] \
-        if prioritizes_ckpt and file_util.check_if_exists(model_config.get('ckpt', None)) \
-        else model_config['model_name_or_path']
-    model = AutoModelForSequenceClassification.from_pretrained(model_name_or_path, from_tf=from_tf, config=config)
+    model_kwargs = model_config['model_kwargs']
+    if prioritizes_ckpt and file_util.check_if_exists(model_config.get('ckpt', None)):
+        model_kwargs['model_name_or_path'] = model_config['ckpt']
+    model = AutoModelForSequenceClassification.from_pretrained(config=config, **model_kwargs)
     return tokenizer, model
 
 
@@ -86,11 +84,11 @@ def get_all_datasets(datasets_config, task_name, student_tokenizer, student_mode
     is_regression = None
     for dataset_name in datasets_config.keys():
         dataset_config = datasets_config[dataset_name]
-        raw_data_params = dataset_config['raw_data_params']
+        raw_data_kwargs = dataset_config['raw_data_kwargs']
         base_split_name = dataset_config.get('base_split_name', 'train')
         sub_task_name = dataset_config.get('name', task_name)
         raw_datasets, num_labels, label_names, is_regression = \
-            load_raw_glue_datasets_and_misc(sub_task_name, base_split_name=base_split_name, **raw_data_params)
+            load_raw_glue_datasets_and_misc(sub_task_name, base_split_name=base_split_name, **raw_data_kwargs)
         pad_to_max_length = dataset_config.get('pad_to_max_length', False)
         max_length = dataset_config.get('pad_to_max_length', 128)
         sub_dataset_dict = \

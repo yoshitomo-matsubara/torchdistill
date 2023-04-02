@@ -102,7 +102,7 @@ def redesign_model(org_model, model_config, model_label, model_type='original'):
         if module_path.startswith('+'):
             module_path = module_path[1:]
             adaptation_config = adaptation_dict[module_path]
-            module = get_adaptation_module(adaptation_config['type'], **adaptation_config['params'])
+            module = get_adaptation_module(adaptation_config['type'], **adaptation_config['kwargs'])
         else:
             module = get_module(org_model, module_path)
 

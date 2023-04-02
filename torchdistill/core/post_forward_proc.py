@@ -20,7 +20,7 @@ def default_post_forward_process(self, loss, **kwargs):
 
     if self.stage_grad_count % self.grad_accum_step == 0:
         if self.max_grad_norm is not None:
-            target_params = [p for group in self.optimizer.param_groups for p in group['params']]
+            target_params = [p for group in self.optimizer.param_groups for p in group['kwargs']]
             torch.nn.utils.clip_grad_norm_(target_params, self.max_grad_norm)
 
         self.optimizer.step()

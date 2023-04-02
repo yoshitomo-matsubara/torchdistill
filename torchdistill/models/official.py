@@ -11,9 +11,9 @@ def get_image_classification_model(model_config, distributed=False):
     model_name = model_config['name']
     quantized = model_config.get('quantized', False)
     if not quantized and model_name in models.__dict__:
-        model = models.__dict__[model_name](**model_config['params'])
+        model = models.__dict__[model_name](**model_config['kwargs'])
     elif quantized and model_name in models.quantization.__dict__:
-        model = models.quantization.__dict__[model_name](**model_config['params'])
+        model = models.quantization.__dict__[model_name](**model_config['kwargs'])
     else:
         return None
 
@@ -27,16 +27,16 @@ def get_object_detection_model(model_config):
     model_name = model_config['name']
     if model_name not in models.detection.__dict__:
         return None
-    return models.detection.__dict__[model_name](**model_config['params'])
+    return models.detection.__dict__[model_name](**model_config['kwargs'])
 
 
 def get_semantic_segmentation_model(model_config):
     model_name = model_config['name']
     if model_name not in models.segmentation.__dict__:
         return None
-    return models.segmentation.__dict__[model_name](**model_config['params'])
+    return models.segmentation.__dict__[model_name](**model_config['kwargs'])
 
 
 def get_vision_model(model_config):
     model_name = model_config['name']
-    return OFFICIAL_MODEL_DICT[model_name](**model_config['params'])
+    return OFFICIAL_MODEL_DICT[model_name](**model_config['kwargs'])

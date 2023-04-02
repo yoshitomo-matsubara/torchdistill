@@ -10,23 +10,23 @@ datasets:
         annotations: !join [*root_dir, '/annotations/instances_train2017.json']
         annotated_only: True
         is_segment: True
-        transforms_params:
+        transforms_configs:
           - type: 'CustomRandomResize'
-            params:
+            kwargs:
               min_size: 260
               max_size: 1040
           - type: 'CustomRandomHorizontalFlip'
-            params:
+            kwargs:
               p: 0.5
           - type: 'CustomRandomCrop'
-            params:
+            kwargs:
               size: 480
           - &totensor
             type: 'CustomToTensor'
-            params:
+            kwargs:
           - &normalize
             type: 'CustomNormalize'
-            params:
+            kwargs:
               mean: [0.485, 0.456, 0.406]
               std: [0.229, 0.224, 0.225]
       val:
@@ -35,9 +35,9 @@ datasets:
         annotations: !join [*root_dir, '/annotations/instances_val2017.json']
         annotated_only: False
         is_segment: True
-        transforms_params:
+        transforms_configs:
           - type: 'CustomRandomResize'
-            params:
+            kwargs:
               min_size: 520
               max_size: 520
           - *totensor
@@ -46,7 +46,7 @@ datasets:
 models:
   model:
     name: &student_model_name 'deeplabv3_resnet50'
-    params:
+    kwargs:
       pretrained: False
       pretrained_backbone: True
       num_classes: 21
@@ -82,21 +82,21 @@ train:
     frozen_modules: []
   optimizer:
     type: 'SGD'
-    params:
+    kwargs:
       lr: 0.0025
       momentum: 0.9
       weight_decay: 0.0001
-    module_wise_params:
+    module_wise_kwargs:
       - module: 'backbone'
-        params: {}
+        kwargs: {}
       - module: 'classifier'
-        params: {}
+        kwargs: {}
       - module: 'aux_classifier'
-        params:
+        kwargs:
           lr: 0.025
   scheduler:
     type: 'poly_lr_scheduler'
-    params:
+    kwargs:
       num_iterations: None
       num_epochs: *num_epochs
       power: 0.9
@@ -107,7 +107,7 @@ train:
     model_term:
       criterion:
         type: 'CrossEntropyLoss'
-        params:
+        kwargs:
           reduction: 'mean'
           ignore_index: 255
       factor:

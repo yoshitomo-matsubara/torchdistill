@@ -63,10 +63,10 @@ def custom_resnet50(bottleneck_channel=12, bottleneck_idx=7, compressor=None, de
         short_module_names = ['layer3', 'layer4', 'avgpool', 'fc']
 
     if compressor is not None:
-        compressor = get_bottleneck_processor(compressor['name'], **compressor['params'])
+        compressor = get_bottleneck_processor(compressor['name'], **compressor['kwargs'])
 
     if decompressor is not None:
-        decompressor = get_bottleneck_processor(decompressor['name'], **decompressor['params'])
+        decompressor = get_bottleneck_processor(decompressor['name'], **decompressor['kwargs'])
 
     bottleneck = Bottleneck4ResNet(bottleneck_channel, bottleneck_idx, compressor, decompressor)
     org_model = resnet50(**kwargs)
@@ -80,10 +80,10 @@ def custom_resnet101(bottleneck_channel=12, bottleneck_idx=7, compressor=None, d
         short_module_names = ['layer3', 'layer4', 'avgpool', 'fc']
 
     if compressor is not None:
-        compressor = get_bottleneck_processor(compressor['name'], **compressor['params'])
+        compressor = get_bottleneck_processor(compressor['name'], **compressor['kwargs'])
 
     if decompressor is not None:
-        decompressor = get_bottleneck_processor(decompressor['name'], **decompressor['params'])
+        decompressor = get_bottleneck_processor(decompressor['name'], **decompressor['kwargs'])
 
     bottleneck = Bottleneck4ResNet(bottleneck_channel, bottleneck_idx, compressor, decompressor)
     org_model = resnet101(**kwargs)
@@ -97,10 +97,10 @@ def custom_resnet152(bottleneck_channel=12, bottleneck_idx=7, compressor=None, d
         short_module_names = ['layer3', 'layer4', 'avgpool', 'fc']
 
     if compressor is not None:
-        compressor = get_bottleneck_processor(compressor['name'], **compressor['params'])
+        compressor = get_bottleneck_processor(compressor['name'], **compressor['kwargs'])
 
     if decompressor is not None:
-        decompressor = get_bottleneck_processor(decompressor['name'], **decompressor['params'])
+        decompressor = get_bottleneck_processor(decompressor['name'], **decompressor['kwargs'])
 
     bottleneck = Bottleneck4ResNet(bottleneck_channel, bottleneck_idx, compressor, decompressor)
     org_model = resnet152(**kwargs)
