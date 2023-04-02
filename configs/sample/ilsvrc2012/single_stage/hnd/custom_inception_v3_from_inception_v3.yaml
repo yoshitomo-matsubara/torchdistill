@@ -6,33 +6,33 @@ datasets:
     splits:
       train:
         dataset_id: &imagenet_train !join [*dataset_name, '/train']
-        params:
+        kwargs:
           root: !join [*root_dir, '/train']
-          transform_params:
+          transform_configs:
             - type: 'RandomResizedCrop'
-              params:
+              kwargs:
                 size: &input_size [224, 224]
             - type: 'RandomHorizontalFlip'
-              params:
+              kwargs:
                 p: 0.5
             - &totensor
               type: 'ToTensor'
-              params:
+              kwargs:
             - &normalize
               type: 'Normalize'
-              params:
+              kwargs:
                 mean: [0.485, 0.456, 0.406]
                 std: [0.229, 0.224, 0.225]
       val:
         dataset_id: &imagenet_val !join [*dataset_name, '/val']
-        params:
+        kwargs:
           root: !join [*root_dir, '/val']
-          transform_params:
+          transform_configs:
             - type: 'Resize'
-              params:
+              kwargs:
                 size: 256
             - type: 'CenterCrop'
-              params:
+              kwargs:
                 size: *input_size
             - *totensor
             - *normalize
@@ -40,14 +40,14 @@ datasets:
 models:
   teacher_model:
     name: &teacher_model_name 'inception_v3'
-    params:
+    kwargs:
       num_classes: 1000
       pretrained: True
     experiment: &teacher_experiment !join [*dataset_name, '-', *teacher_model_name]
     ckpt: !join ['./resource/ckpt/ilsvrc2012/teacher/', *teacher_experiment, '.pt']
   student_model:
     name: &student_model_name 'custom_inception_v3'
-    params:
+    kwargs:
       bottleneck_channel: 12
       bottleneck_idx: 7
       compressor:
@@ -75,12 +75,12 @@ train:
     adaptations:
       maxpool1:
         type: 'MaxPool2d'
-        params:
+        kwargs:
           kernel_size: 3
           stride: 2
       maxpool2:
         type: 'MaxPool2d'
-        params:
+        kwargs:
           kernel_size: 3
           stride: 2
     sequential: ['Conv2d_1a_3x3', 'Conv2d_2a_3x3', 'Conv2d_2b_3x3', '+maxpool1', 'Conv2d_3b_1x1', 'Conv2d_4a_3x3', '+maxpool2']
@@ -101,11 +101,11 @@ train:
     requires_grad: True
   optimizer:
     type: 'Adam'
-    params:
+    kwargs:
       lr: 0.001
   scheduler:
     type: 'MultiStepLR'
-    params:
+    kwargs:
       milestones: [5, 10, 15]
       gamma: 0.1
   criterion:
@@ -116,9 +116,9 @@ train:
       maxpool2:
         criterion:
           type: 'MSELoss'
-          params:
+          kwargs:
             reduction: 'sum'
-        params:
+        kwargs:
           input:
             is_from_teacher: False
             module_path: 'bottleneck'

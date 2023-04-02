@@ -19,7 +19,7 @@ def update_num_iterations(train_config, dataset_dict, world_size):
     num_iterations = math.ceil(len(dataset_dict[train_data_loader_config['dataset_id']]) /
                                train_data_loader_config['batch_size'] / grad_accum_step / world_size)
     scheduler_config = train_config['scheduler']
-    scheduler_config['params']['num_training_steps'] = num_iterations * train_config['num_epochs']
+    scheduler_config['kwargs']['num_training_steps'] = num_iterations * train_config['num_epochs']
 
 
 def customize_lr_config(config, dataset_dict, world_size):
@@ -49,11 +49,11 @@ def optimizer_no_decay(model, optimizer_type, weight_decay, no_decay=None, **kwa
 
     optimizer_grouped_parameters = [
         {
-            'params': [p for n, p in model if not any(nd in n for nd in no_decay)],
+            'kwargs': [p for n, p in model if not any(nd in n for nd in no_decay)],
             'weight_decay': weight_decay,
         },
         {
-            'params': [p for n, p in model if any(nd in n for nd in no_decay)],
+            'kwargs': [p for n, p in model if any(nd in n for nd in no_decay)],
             'weight_decay': 0.0
         }
     ]

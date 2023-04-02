@@ -1,7 +1,7 @@
 datasets:
   glue:
     name: &dataset_name 'stsb'
-    raw_data_params:
+    raw_data_kwargs:
       train_file_path:
       valid_file_path:
     dataset_id_map:
@@ -14,25 +14,25 @@ models:
     name: &teacher_model_name 'bert-large-uncased'
     model_name_or_path: &teacher_model_path 'yoshitomo-matsubara/bert-large-uncased-stsb'
     num_labels: 1
-    config_params:
+    config_kwargs:
       pretrained_model_name_or_path: *teacher_model_path
-    tokenizer_params:
+    tokenizer_kwargs:
       pretrained_model_name_or_path: *teacher_model_path
       do_lower: True
       use_fast: True
-    model_params:
+    model_kwargs:
       pretrained_model_name_or_path: *teacher_model_path
   student_model:
     name: &student_model_name 'bert-base-uncased'
     model_name_or_path: *student_model_name
     num_labels: 1
-    config_params:
+    config_kwargs:
       pretrained_model_name_or_path: *student_model_name
-    tokenizer_params:
+    tokenizer_kwargs:
       pretrained_model_name_or_path: *student_model_name
       do_lower: True
       use_fast: True
-    model_params:
+    model_kwargs:
       pretrained_model_name_or_path: *student_model_name
     experiment: &student_experiment !join [*dataset_name, '-', *student_model_name, '_from_', *teacher_model_name]
     ckpt: !join ['./resource/ckpt/glue/', *dataset_name, '/kd/', *student_experiment]
@@ -77,7 +77,7 @@ train:
     frozen_modules: []
   optimizer:
     type: 'optimizer_no_decay'
-    params:
+    kwargs:
       optimizer_type: 'AdamW'
       lr: 3.0e-5
       weight_decay: 0.0
@@ -86,7 +86,7 @@ train:
     grad_accum_step: 1
   scheduler:
     type: 'get_linear_schedule_with_warmup'
-    params:
+    kwargs:
       num_warmup_steps: 0
       num_training_steps:
     scheduling_step: 1
@@ -99,9 +99,9 @@ train:
       mse:
         criterion:
           type: 'MSELoss'
-          params:
+          kwargs:
             reduction: 'sum'
-        params:
+        kwargs:
           input:
             is_from_teacher: False
             module_path: 'classifier'

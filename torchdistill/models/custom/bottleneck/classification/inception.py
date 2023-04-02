@@ -75,10 +75,10 @@ def custom_inception_v3(bottleneck_channel=12, bottleneck_idx=7, compressor=None
         ]
 
     if compressor is not None:
-        compressor = get_bottleneck_processor(compressor['name'], **compressor['params'])
+        compressor = get_bottleneck_processor(compressor['name'], **compressor['kwargs'])
 
     if decompressor is not None:
-        decompressor = get_bottleneck_processor(decompressor['name'], **decompressor['params'])
+        decompressor = get_bottleneck_processor(decompressor['name'], **decompressor['kwargs'])
 
     bottleneck = Bottleneck4Inception3(bottleneck_channel, bottleneck_idx, compressor, decompressor)
     org_model = inception_v3(**kwargs)

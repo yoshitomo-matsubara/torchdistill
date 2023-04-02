@@ -48,7 +48,7 @@ def load_model(model_config, device):
     model = get_semantic_segmentation_model(model_config)
     if model is None:
         repo_or_dir = model_config.get('repo_or_dir', None)
-        model = get_model(model_config['name'], repo_or_dir, **model_config['params'])
+        model = get_model(model_config['name'], repo_or_dir, **model_config['kwargs'])
 
     ckpt_file_path = model_config['ckpt']
     load_ckpt(ckpt_file_path, model=model, strict=True)

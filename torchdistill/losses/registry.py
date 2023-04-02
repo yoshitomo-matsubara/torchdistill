@@ -63,12 +63,10 @@ def register_func2extract_model_output(arg=None, **kwargs):
     return _register_func2extract_model_output
 
 
-def get_loss(key, param_dict=None, **kwargs):
-    if param_dict is None:
-        param_dict = dict()
+def get_loss(key, **kwargs):
     lower_loss_type = key.lower()
     if lower_loss_type in LOSS_DICT:
-        return LOSS_DICT[lower_loss_type](**param_dict, **kwargs)
+        return LOSS_DICT[lower_loss_type](**kwargs)
     raise ValueError('No loss `{}` registered'.format(key))
 
 
@@ -79,22 +77,22 @@ def get_high_level_loss(criterion_config):
     raise ValueError('No high-level loss `{}` registered'.format(criterion_type))
 
 
-def get_loss_wrapper(single_loss, params_config, wrapper_config):
+def get_loss_wrapper(single_loss, wrapper_config):
     wrapper_type = wrapper_config.get('type', None)
     if wrapper_type is None:
-        return LOSS_WRAPPER_DICT['SimpleLossWrapper'](single_loss, params_config)
+        return LOSS_WRAPPER_DICT['SimpleLossWrapper'](single_loss)
     elif wrapper_type in LOSS_WRAPPER_DICT:
-        return LOSS_WRAPPER_DICT[wrapper_type](single_loss, params_config, **wrapper_config.get('params', dict()))
+        return LOSS_WRAPPER_DICT[wrapper_type](single_loss, **wrapper_config.get('kwargs', dict()))
     raise ValueError('No loss wrapper `{}` registered'.format(wrapper_type))
 
 
-def get_single_loss(single_criterion_config, params_config=None):
+def get_single_loss(single_criterion_config, wrapper_config=None):
     loss_type = single_criterion_config['type']
-    single_loss = SINGLE_LOSS_DICT[loss_type](**single_criterion_config['params']) \
-        if loss_type in SINGLE_LOSS_DICT else get_loss(loss_type, single_criterion_config['params'])
-    if params_config is None:
+    single_loss = SINGLE_LOSS_DICT[loss_type](**single_criterion_config['kwargs']) \
+        if loss_type in SINGLE_LOSS_DICT else get_loss(loss_type, **single_criterion_config['kwargs'])
+    if wrapper_config is None:
         return single_loss
-    return get_loss_wrapper(single_loss, params_config, params_config.get('wrapper', dict()))
+    return get_loss_wrapper(single_loss, wrapper_config.get('wrapper', dict()))
 
 
 def get_func2extract_model_output(key):

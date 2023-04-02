@@ -6,33 +6,33 @@ datasets:
     splits:
       train:
         dataset_id: &imagenet_train !join [*dataset_name, '/train']
-        params:
+        kwargs:
           root: !join [*root_dir, '/train']
-          transform_params:
+          transform_configs:
             - type: 'RandomResizedCrop'
-              params:
+              kwargs:
                 size: &input_size [224, 224]
             - type: 'RandomHorizontalFlip'
-              params:
+              kwargs:
                 p: 0.5
             - &totensor
               type: 'ToTensor'
-              params:
+              kwargs:
             - &normalize
               type: 'Normalize'
-              params:
+              kwargs:
                 mean: [0.485, 0.456, 0.406]
                 std: [0.229, 0.224, 0.225]
       val:
         dataset_id: &imagenet_val !join [*dataset_name, '/val']
-        params:
+        kwargs:
           root: !join [*root_dir, '/val']
-          transform_params:
+          transform_configs:
             - type: 'Resize'
-              params:
+              kwargs:
                 size: 256
             - type: 'CenterCrop'
-              params:
+              kwargs:
                 size: *input_size
             - *totensor
             - *normalize
@@ -40,14 +40,14 @@ datasets:
 models:
   teacher_model:
     name: &teacher_model_name 'resnet34'
-    params:
+    kwargs:
       num_classes: 1000
       pretrained: True
     experiment: &teacher_experiment !join [*dataset_name, '-', *teacher_model_name]
     ckpt: !join ['./resource/ckpt/ilsvrc2012/teacher/', *teacher_experiment, '.pt']
   student_model:
     name: &student_model_name 'resnet18'
-    params:
+    kwargs:
       num_classes: 1000
       pretrained: False
     experiment: &student_experiment !join [*dataset_name, '-', *student_model_name, '_from_', *teacher_model_name]
@@ -79,35 +79,35 @@ train:
     sequential: []
     auxiliary_model_wrapper:
       type: 'Student4KnowledgeReview'
-      params:
+      kwargs:
         abfs:
           - path: 'student_model.layer1.-1.relu'
             io: 'input'
-            params:
+            kwargs:
               in_channel: 64
               mid_channel: 512
               out_channel: 64
           - path: 'student_model.layer2.-1.relu'
             io: 'input'
-            params:
+            kwargs:
               in_channel: 128
               mid_channel: 512
               out_channel: 128
           - path: 'student_model.layer3.-1.relu'
             io: 'input'
-            params:
+            kwargs:
               in_channel: 256
               mid_channel: 512
               out_channel: 256
           - path: 'student_model.layer4.-1.relu'
             io: 'input'
-            params:
+            kwargs:
               in_channel: 512
               mid_channel: 512
               out_channel: 512
           - path: 'student_model.avgpool'
             io: 'output'
-            params:
+            kwargs:
               in_channel: 512
               mid_channel: 512
               out_channel: 512
@@ -120,13 +120,13 @@ train:
     frozen_modules: []
   optimizer:
     type: 'SGD'
-    params:
+    kwargs:
       lr: 0.025
       momentum: 0.9
       weight_decay: 0.0001
   scheduler:
     type: 'MultiStepLR'
-    params:
+    kwargs:
       milestones: [30, 60, 90]
       gamma: 0.1
   criterion:
@@ -134,14 +134,14 @@ train:
     model_term:
       criterion:
         type: 'CrossEntropyLoss'
-        params:
+        kwargs:
           reduction: 'mean'
       factor: 1.0
     sub_terms:
       layer1:
         criterion:
           type: &hcl 'HierarchicalContextLoss'
-          params:
+          kwargs:
             student_module_path: 'abf_modules.4'
             student_module_io: 'output'
             teacher_module_path: 'layer1.-1.relu'
@@ -152,7 +152,7 @@ train:
       layer2:
         criterion:
           type: *hcl
-          params:
+          kwargs:
             student_module_path: 'abf_modules.3'
             student_module_io: 'output'
             teacher_module_path: 'layer2.-1.relu'
@@ -163,7 +163,7 @@ train:
       layer3:
         criterion:
           type: *hcl
-          params:
+          kwargs:
             student_module_path: 'abf_modules.2'
             student_module_io: 'output'
             teacher_module_path: 'layer3.-1.relu'
@@ -174,7 +174,7 @@ train:
       layer4:
         criterion:
           type: *hcl
-          params:
+          kwargs:
             student_module_path: 'abf_modules.1'
             student_module_io: 'output'
             teacher_module_path: 'layer4.-1.relu'
@@ -185,7 +185,7 @@ train:
       avgpool:
         criterion:
           type: *hcl
-          params:
+          kwargs:
             student_module_path: 'abf_modules.0'
             student_module_io: 'output'
             teacher_module_path: 'avgpool'

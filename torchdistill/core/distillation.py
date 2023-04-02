@@ -147,26 +147,26 @@ class DistillationBox(nn.Module):
         optim_config = train_config.get('optimizer', dict())
         optimizer_reset = False
         if len(optim_config) > 0:
-            optim_params_config = optim_config['params']
-            if 'lr' in optim_params_config:
-                optim_params_config['lr'] *= self.lr_factor
+            optim_kwargs = optim_config['kwargs']
+            if 'lr' in optim_kwargs:
+                optim_kwargs['lr'] *= self.lr_factor
 
-            module_wise_params_configs = optim_config.get('module_wise_params', list())
-            if len(module_wise_params_configs) > 0:
+            module_wise_kwargs_configs = optim_config.get('module_wise_kwargs', list())
+            if len(module_wise_kwargs_configs) > 0:
                 trainable_module_list = list()
-                for module_wise_params_config in module_wise_params_configs:
-                    module_wise_params_dict = dict()
-                    if isinstance(module_wise_params_config.get('params', None), dict):
-                        module_wise_params_dict.update(module_wise_params_config['params'])
+                for module_wise_kwargs_config in module_wise_kwargs_configs:
+                    module_wise_kwargs = dict()
+                    if isinstance(module_wise_kwargs_config.get('kwargs', None), dict):
+                        module_wise_kwargs.update(module_wise_kwargs_config['kwargs'])
 
-                    if 'lr' in module_wise_params_dict:
-                        module_wise_params_dict['lr'] *= self.lr_factor
+                    if 'lr' in module_wise_kwargs:
+                        module_wise_kwargs['lr'] *= self.lr_factor
 
                     target_model = \
-                        self.teacher_model if module_wise_params_config.get('is_teacher', False) else self.student_model
-                    module = get_module(target_model, module_wise_params_config['module'])
-                    module_wise_params_dict['params'] = module.parameters()
-                    trainable_module_list.append(module_wise_params_dict)
+                        self.teacher_model if module_wise_kwargs_config.get('is_teacher', False) else self.student_model
+                    module = get_module(target_model, module_wise_kwargs_config['module'])
+                    module_wise_kwargs['params'] = module.parameters()
+                    trainable_module_list.append(module_wise_kwargs)
             else:
                 trainable_module_list = nn.ModuleList([self.student_model])
                 if self.teacher_updatable:
@@ -175,7 +175,9 @@ class DistillationBox(nn.Module):
 
             filters_params = optim_config.get('filters_params', True)
             self.optimizer = \
-                get_optimizer(trainable_module_list, optim_config['type'], optim_params_config, filters_params)
+                get_optimizer(trainable_module_list, optim_config['type'],
+                              **optim_kwargs, filters_params=filters_params)
+
             self.optimizer.zero_grad()
             self.max_grad_norm = optim_config.get('max_grad_norm', None)
             self.grad_accum_step = optim_config.get('grad_accum_step', 1)
@@ -183,7 +185,7 @@ class DistillationBox(nn.Module):
 
         scheduler_config = train_config.get('scheduler', None)
         if scheduler_config is not None and len(scheduler_config) > 0:
-            self.lr_scheduler = get_scheduler(self.optimizer, scheduler_config['type'], scheduler_config['params'])
+            self.lr_scheduler = get_scheduler(self.optimizer, scheduler_config['type'], **scheduler_config['kwargs'])
             self.scheduling_step = scheduler_config.get('scheduling_step', 0)
         elif optimizer_reset:
             self.lr_scheduler = None
@@ -331,7 +333,7 @@ class DistillationBox(nn.Module):
 
         if self.stage_grad_count % self.grad_accum_step == 0:
             if self.max_grad_norm is not None:
-                target_params = [p for group in self.optimizer.param_groups for p in group['params']]
+                target_params = [p for group in self.optimizer.param_groups for p in group['kwargs']]
                 torch.nn.utils.clip_grad_norm_(target_params, self.max_grad_norm)
 
             self.optimizer.step()

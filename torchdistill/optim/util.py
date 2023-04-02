@@ -11,7 +11,7 @@ def update_num_iterations(train_config, dataset_dict, world_size):
     scheduler_config = train_config['scheduler']
     scheduler_type = scheduler_config['type']
     if scheduler_type == 'poly_lr_scheduler':
-        scheduler_config['params']['num_iterations'] = num_iterations
+        scheduler_config['kwargs']['num_iterations'] = num_iterations
 
 
 def customize_lr_config(config, dataset_dict, world_size):

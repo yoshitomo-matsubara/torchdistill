@@ -18,14 +18,14 @@ def extract_feature_map(io_dict, feature_map_config):
 
 @register_loss_wrapper
 class SimpleLossWrapper(nn.Module):
-    def __init__(self, single_loss, params_config):
+    def __init__(self, single_loss, **kwargs):
         super().__init__()
         self.single_loss = single_loss
-        input_config = params_config['input']
+        input_config = kwargs['input']
         self.is_input_from_teacher = input_config['is_from_teacher']
         self.input_module_path = input_config['module_path']
         self.input_key = input_config['io']
-        target_config = params_config['target']
+        target_config = kwargs['target']
         self.is_target_from_teacher = target_config['is_from_teacher']
         self.target_module_path = target_config['module_path']
         self.target_key = target_config['io']
@@ -365,14 +365,14 @@ class CCKDLoss(nn.Module):
     "Correlation Congruence for Knowledge Distillation"
     Configure KDLoss in a yaml file to meet eq. (7), using WeightedSumLoss
     """
-    def __init__(self, student_linear_path, teacher_linear_path, kernel_params, reduction, **kwargs):
+    def __init__(self, student_linear_path, teacher_linear_path, kernel_config, reduction, **kwargs):
         super().__init__()
         self.student_linear_path = student_linear_path
         self.teacher_linear_path = teacher_linear_path
-        self.kernel_type = kernel_params['type']
+        self.kernel_type = kernel_config['type']
         if self.kernel_type == 'gaussian':
-            self.gamma = kernel_params['gamma']
-            self.max_p = kernel_params['max_p']
+            self.gamma = kernel_config['gamma']
+            self.max_p = kernel_config['max_p']
         elif self.kernel_type not in ('bilinear', 'gaussian'):
             raise ValueError('self.kernel_type `{}` is not expected'.format(self.kernel_type))
         self.reduction = reduction
@@ -494,7 +494,7 @@ class CRDLoss(nn.Module):
         self.unigrams = torch.ones(output_size)
         self.num_negative_samples = num_negative_samples
         self.num_samples = num_samples
-        self.register_buffer('params', torch.tensor([num_negative_samples, temperature, -1, -1, momentum]))
+        self.register_buffer('kwargs', torch.tensor([num_negative_samples, temperature, -1, -1, momentum]))
         stdv = 1.0 / math.sqrt(input_size / 3)
         self.register_buffer('memory_v1', torch.rand(output_size, input_size).mul_(2 * stdv).add_(-stdv))
         self.register_buffer('memory_v2', torch.rand(output_size, input_size).mul_(2 * stdv).add_(-stdv))

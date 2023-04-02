@@ -79,10 +79,10 @@ def custom_densenet169(bottleneck_channel=12, bottleneck_idx=7, compressor=None,
         short_feature_names = ['denseblock3', 'transition3', 'denseblock4', 'norm5']
 
     if compressor is not None:
-        compressor = get_bottleneck_processor(compressor['name'], **compressor['params'])
+        compressor = get_bottleneck_processor(compressor['name'], **compressor['kwargs'])
 
     if decompressor is not None:
-        decompressor = get_bottleneck_processor(decompressor['name'], **decompressor['params'])
+        decompressor = get_bottleneck_processor(decompressor['name'], **decompressor['kwargs'])
 
     bottleneck = Bottleneck4DenseNet(bottleneck_channel, bottleneck_idx, compressor, decompressor)
     org_model = densenet169(**kwargs)
@@ -96,10 +96,10 @@ def custom_densenet201(bottleneck_channel=12, bottleneck_idx=7, compressor=None,
         short_feature_names = ['denseblock3', 'transition3', 'denseblock4', 'norm5']
 
     if compressor is not None:
-        compressor = get_bottleneck_processor(compressor['name'], **compressor['params'])
+        compressor = get_bottleneck_processor(compressor['name'], **compressor['kwargs'])
 
     if decompressor is not None:
-        decompressor = get_bottleneck_processor(decompressor['name'], **decompressor['params'])
+        decompressor = get_bottleneck_processor(decompressor['name'], **decompressor['kwargs'])
 
     bottleneck = Bottleneck4DenseNet(bottleneck_channel, bottleneck_idx, compressor, decompressor)
     org_model = densenet201(**kwargs)

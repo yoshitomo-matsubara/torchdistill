@@ -12,16 +12,16 @@ from ....registry import register_model_func
 def custom_fasterrcnn_resnet_fpn(backbone, pretrained=True, progress=True,
                                  num_classes=91, pretrained_backbone=True, trainable_backbone_layers=3, **kwargs):
     backbone_name = backbone['name']
-    backbone_params_config = backbone['params']
+    backbone_kwargs = backbone['kwargs']
     assert 0 <= trainable_backbone_layers <= 5
     # dont freeze any layers if pretrained model or backbone is not used
     if not (pretrained or pretrained_backbone):
-        backbone_params_config['trainable_backbone_layers'] = 5
+        backbone_kwargs['trainable_backbone_layers'] = 5
     if pretrained:
         # no need to download the backbone if pretrained is set
-        backbone_params_config['pretrained'] = False
+        backbone_kwargs['pretrained'] = False
 
-    backbone_model = custom_resnet_fpn_backbone(backbone_name, backbone_params_config)
+    backbone_model = custom_resnet_fpn_backbone(backbone_name, backbone_kwargs)
     num_feature_maps = len(backbone_model.body.return_layers)
     box_roi_pool = None if num_feature_maps == 4 \
         else MultiScaleRoIAlign(featmap_names=[str(i) for i in range(num_feature_maps)],
@@ -39,16 +39,16 @@ def custom_fasterrcnn_resnet_fpn(backbone, pretrained=True, progress=True,
 def custom_maskrcnn_resnet_fpn(backbone, pretrained=True, progress=True,
                                num_classes=91, pretrained_backbone=True, trainable_backbone_layers=3, **kwargs):
     backbone_name = backbone['name']
-    backbone_params_config = backbone['params']
+    backbone_kwargs = backbone['kwargs']
     assert 0 <= trainable_backbone_layers <= 5
     # dont freeze any layers if pretrained model or backbone is not used
     if not (pretrained or pretrained_backbone):
-        backbone_params_config['trainable_backbone_layers'] = 5
+        backbone_kwargs['trainable_backbone_layers'] = 5
     if pretrained:
         # no need to download the backbone if pretrained is set
-        backbone_params_config['pretrained'] = False
+        backbone_kwargs['pretrained'] = False
 
-    backbone_model = custom_resnet_fpn_backbone(backbone_name, backbone_params_config)
+    backbone_model = custom_resnet_fpn_backbone(backbone_name, backbone_kwargs)
     num_feature_maps = len(backbone_model.body.return_layers)
     box_roi_pool = None if num_feature_maps == 4 \
         else MultiScaleRoIAlign(featmap_names=[str(i) for i in range(num_feature_maps)],
@@ -69,16 +69,16 @@ def custom_maskrcnn_resnet_fpn(backbone, pretrained=True, progress=True,
 def custom_keypointrcnn_resnet_fpn(backbone, pretrained=True, progress=True, num_classes=2, num_keypoints=17,
                                    pretrained_backbone=True, trainable_backbone_layers=3, **kwargs):
     backbone_name = backbone['name']
-    backbone_params_config = backbone['params']
+    backbone_kwargs = backbone['kwargs']
     assert 0 <= trainable_backbone_layers <= 5
     # dont freeze any layers if pretrained model or backbone is not used
     if not (pretrained or pretrained_backbone):
-        backbone_params_config['trainable_backbone_layers'] = 5
+        backbone_kwargs['trainable_backbone_layers'] = 5
     if pretrained:
         # no need to download the backbone if pretrained is set
-        backbone_params_config['pretrained'] = False
+        backbone_kwargs['pretrained'] = False
 
-    backbone_model = custom_resnet_fpn_backbone(backbone_name, backbone_params_config)
+    backbone_model = custom_resnet_fpn_backbone(backbone_name, backbone_kwargs)
     num_feature_maps = len(backbone_model.body.return_layers)
     box_roi_pool = None if num_feature_maps == 4 \
         else MultiScaleRoIAlign(featmap_names=[str(i) for i in range(num_feature_maps)],

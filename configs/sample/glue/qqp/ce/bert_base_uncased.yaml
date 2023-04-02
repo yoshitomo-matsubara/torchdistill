@@ -1,7 +1,7 @@
 datasets:
   glue:
     name: &dataset_name 'qqp'
-    raw_data_params:
+    raw_data_kwargs:
       train_file_path:
       valid_file_path:
     dataset_id_map:
@@ -13,14 +13,14 @@ models:
   student_model:
     name: &student_model_name 'bert-base-uncased'
     model_name_or_path: *student_model_name
-    num_labels: 2
-    config_params:
+    config_kwargs:
       pretrained_model_name_or_path: *student_model_name
-    tokenizer_params:
+      num_labels: 2
+    tokenizer_kwargs:
       pretrained_model_name_or_path: *student_model_name
       do_lower: True
       use_fast: True
-    model_params:
+    model_kwargs:
       pretrained_model_name_or_path: *student_model_name
     experiment: &student_experiment !join [*dataset_name, '-', *student_model_name]
     ckpt: !join ['./resource/ckpt/glue/', *dataset_name, '/ce/', *student_experiment]
@@ -52,7 +52,7 @@ train:
     frozen_modules: []
   optimizer:
     type: 'optimizer_no_decay'
-    params:
+    kwargs:
       optimizer_type: 'AdamW'
       lr: 5.0e-5
       weight_decay: 0.0
@@ -61,7 +61,7 @@ train:
     grad_accum_step: 1
   scheduler:
     type: 'get_linear_schedule_with_warmup'
-    params:
+    kwargs:
       num_warmup_steps: 0
       num_training_steps:
     scheduling_step: 1

@@ -19,7 +19,7 @@ datasets:
 models:
   teacher_model:
     name: &teacher_model_name 'fasterrcnn_resnet50_fpn'
-    params:
+    kwargs:
       pretrained: True
       progress: True
       num_classes: 91
@@ -28,14 +28,14 @@ models:
     ckpt: !join ['./resource/ckpt/coco2017/teacher/', *teacher_experiment, '.pt']
   student_model:
     name: &student_model_name 'custom_fasterrcnn_resnet_fpn'
-    params:
+    kwargs:
       pretrained: True
       progress: True
       num_classes: 91
       pretrained_backbone: True
       backbone:
         name: 'resnet18'
-        params:
+        kwargs:
           num_classes: 1000
           pretrained: True
           trainable_backbone_layers: 3
@@ -52,7 +52,7 @@ train:
       num_workers: 4
       batch_sampler:
         type: 'GroupedBatchSampler'
-        params:
+        kwargs:
           aspect_ratio_group_factor: 3
           batch_size: 4
       collate_fn: 'coco_collate_fn'
@@ -67,15 +67,15 @@ train:
       sequential: []
       auxiliary_model_wrapper:
         type: &teacher4ft 'Teacher4FactorTransfer'
-        params:
+        kwargs:
           minimal:
             auxiliary_model_wrapper:
               type: 'HeadRCNN'
-              params:
+              kwargs:
                 head_rcnn:
                   sequential: ['backbone.body']
           input_module_path: 'teacher_model.seq.backbone.body.layer4'
-          paraphraser_params: &teacher4ft_paraphraser_params
+          paraphraser_kwargs: &teacher4ft_paraphraser_kwargs
             k: 0.25
             num_input_channels: 2048
             kernel_size: 3
@@ -94,7 +94,7 @@ train:
       adaptations:
       auxiliary_model_wrapper:
         type: 'EmptyModule'
-        params:
+        kwargs:
       sequential: []
       forward_hook:
         input: []
@@ -103,7 +103,7 @@ train:
       requires_grad: False
     optimizer:
       type: 'SGD'
-      params:
+      kwargs:
         lr: 0.0001
         momentum: 0.9
         weight_decay: 0.0005
@@ -115,9 +115,9 @@ train:
         reconst:
           criterion:
             type: 'MSELoss'
-            params:
+            kwargs:
               reduction: 'sum'
-          params:
+          kwargs:
             input:
               is_from_teacher: True
               module_path: 'paraphraser'
@@ -134,10 +134,10 @@ train:
       sequential: []
       auxiliary_model_wrapper:
         type: *teacher4ft
-        params:
+        kwargs:
           minimal:
           input_module_path: 'teacher_model.backbone.body.layer4'
-          paraphraser_params: *teacher4ft_paraphraser_params
+          paraphraser_kwargs: *teacher4ft_paraphraser_kwargs
           paraphraser_ckpt: *teacher4ft_paraphraser_ckpt
           uses_decoder: False
       forward_hook:
@@ -151,9 +151,9 @@ train:
       sequential: []
       auxiliary_model_wrapper:
         type: 'Student4FactorTransfer'
-        params:
+        kwargs:
           input_module_path: 'student_model.backbone.body.layer4'
-          translator_params:
+          translator_kwargs:
             num_input_channels: 512
             num_output_channels: 512
             kernel_size: 3
@@ -168,13 +168,13 @@ train:
       frozen_modules: ['student_model.backbone.body.conv1', 'student_model.backbone.body.bn1', 'student_model.backbone.body.relu', 'student_model.backbone.body.maxpool']
     optimizer:
       type: 'SGD'
-      params:
+      kwargs:
         lr: 0.0001
         momentum: 0.9
         weight_decay: 0.0005
     scheduler:
       type: 'MultiStepLR'
-      params:
+      kwargs:
         milestones: [5, 10]
         gamma: 0.1
     criterion:
@@ -186,7 +186,7 @@ train:
         factor_transfer:
           criterion:
             type: 'FTLoss'
-            params:
+            kwargs:
               p: 1
               reduction: 'mean'
               paraphraser_path: 'paraphraser'

@@ -6,60 +6,60 @@ datasets:
     splits:
       train:
         dataset_id: &pascal_train !join [*dataset_name, '/train']
-        params:
+        kwargs:
           root: *root_dir
           image_set: 'train'
           year: '2012'
           download: True
           transforms_compose_cls: 'CustomCompose'
-          transforms_params:
+          transforms_configs:
             - type: 'CustomRandomResize'
-              params:
+              kwargs:
                 min_size: 256
                 max_size: 1026
             - type: 'CustomRandomHorizontalFlip'
-              params:
+              kwargs:
                 p: 0.5
             - type: 'CustomRandomCrop'
-              params:
+              kwargs:
                 size: 513
             - type: 'CustomToTensor'
-              params:
+              kwargs:
             - &normalize
               type: 'CustomNormalize'
-              params:
+              kwargs:
                 mean: [0.485, 0.456, 0.406]
                 std: [0.229, 0.224, 0.225]
       val:
         dataset_id: &pascal_val !join [*dataset_name, '/val']
-        params:
+        kwargs:
           root: *root_dir
           image_set: 'val'
           year: '2012'
           download: True
           transforms_compose_cls: 'CustomCompose'
-          transforms_params: &val_transform
+          transforms_configs: &val_transform
             - type: 'CustomRandomResize'
-              params:
+              kwargs:
                 min_size: 513
                 max_size: 513
             - type: 'CustomToTensor'
-              params:
+              kwargs:
             - *normalize
       test:
         dataset_id: &pascal_test !join [*dataset_name, '/test']
-        params:
+        kwargs:
           root: *root_dir
           image_set: 'val'
           year: '2012'
           download: True
           transforms_compose_cls: 'CustomCompose'
-          transforms_params: *val_transform
+          transforms_configs: *val_transform
 
 models:
   model:
     name: &student_model_name 'deeplabv3_resnet50'
-    params:
+    kwargs:
       pretrained: True
       pretrained_backbone: True
       num_classes: 21
@@ -95,21 +95,21 @@ train:
     frozen_modules: []
   optimizer:
     type: 'SGD'
-    params:
+    kwargs:
       lr: 0.001
       momentum: 0.9
       weight_decay: 0.0001
-    module_wise_params:
+    module_wise_kwargs:
       - module: 'backbone'
-        params: {}
+        kwargs: {}
       - module: 'classifier'
-        params: {}
+        kwargs: {}
       - module: 'aux_classifier'
-        params:
+        kwargs:
           lr: 0.01
   scheduler:
     type: 'poly_lr_scheduler'
-    params:
+    kwargs:
       num_iterations: None
       num_epochs: *num_epochs
       power: 0.9
@@ -120,7 +120,7 @@ train:
     model_term:
       criterion:
         type: 'CrossEntropyLoss'
-        params:
+        kwargs:
           reduction: 'mean'
           ignore_index: 255
       factor:
