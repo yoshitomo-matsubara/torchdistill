@@ -97,7 +97,7 @@ models:
   teacher_model:
     name: 'resnest50d'
     repo_or_dir: 'rwightman/pytorch-image-models'
-    params:
+    kwargs:
       num_classes: 1000
       pretrained: True
 ```
