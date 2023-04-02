@@ -129,15 +129,17 @@ train:
             type: 'MSELoss'
             kwargs:
               reduction: 'mean'
-          kwargs:
-            input:
-              is_from_teacher: True
-              module_path: 'paraphraser'
-              io: 'output'
-            target:
-              is_from_teacher: True
-              module_path: 'teacher_model.classifier.-1'
-              io: 'output'
+          criterion_wrapper:
+            type: 'SimpleLossWrapper'
+            kwargs:
+              input:
+                is_from_teacher: True
+                module_path: 'paraphraser'
+                io: 'output'
+              target:
+                is_from_teacher: True
+                module_path: 'teacher_model.classifier.-1'
+                io: 'output'
           factor: 1.0
         regularization:
           criterion:

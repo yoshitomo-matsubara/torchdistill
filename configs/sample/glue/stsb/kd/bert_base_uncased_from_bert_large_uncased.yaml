@@ -101,15 +101,17 @@ train:
           type: 'MSELoss'
           kwargs:
             reduction: 'sum'
-        kwargs:
-          input:
-            is_from_teacher: False
-            module_path: 'classifier'
-            io: 'output'
-          target:
-            is_from_teacher: True
-            module_path: 'classifier'
-            io: 'output'
+        criterion_wrapper:
+          type: 'SimpleLossWrapper'
+          kwargs:
+            input:
+              is_from_teacher: False
+              module_path: 'classifier'
+              io: 'output'
+            target:
+              is_from_teacher: True
+              module_path: 'classifier'
+              io: 'output'
         factor: 1.0
 
 test:
