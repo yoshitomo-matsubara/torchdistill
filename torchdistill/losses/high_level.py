@@ -1,6 +1,6 @@
 from torch import nn
 
-from .registry import register_high_level_loss, get_single_loss
+from .registry import register_high_level_loss, get_mid_level_loss
 from ..common.constant import def_logger
 
 logger = def_logger.getChild(__name__)
@@ -14,7 +14,7 @@ class AbstractLoss(nn.Module):
         if sub_terms_config is not None:
             for loss_name, loss_config in sub_terms_config.items():
                 sub_criterion_config = loss_config['criterion']
-                sub_criterion = get_single_loss(sub_criterion_config, loss_config.get('criterion_wrapper', dict()))
+                sub_criterion = get_mid_level_loss(sub_criterion_config, loss_config.get('criterion_wrapper', dict()))
                 term_dict[loss_name] = (sub_criterion, loss_config['factor'])
         self.term_dict = term_dict
 

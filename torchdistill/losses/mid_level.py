@@ -4,7 +4,7 @@ import torch
 from torch import nn
 from torch.nn.functional import adaptive_avg_pool2d, adaptive_max_pool2d, normalize, cosine_similarity
 
-from .registry import register_loss_wrapper, register_single_loss
+from .registry import register_loss_wrapper, register_mid_level_loss
 from ..common.constant import def_logger
 
 logger = def_logger.getChild(__name__)
@@ -18,9 +18,9 @@ def extract_feature_map(io_dict, feature_map_config):
 
 @register_loss_wrapper
 class SimpleLossWrapper(nn.Module):
-    def __init__(self, single_loss, **kwargs):
+    def __init__(self, mid_level_loss, **kwargs):
         super().__init__()
-        self.single_loss = single_loss
+        self.mid_level_loss = mid_level_loss
         input_config = kwargs['input']
         self.is_input_from_teacher = input_config['is_from_teacher']
         self.input_module_path = input_config['module_path']
@@ -42,13 +42,13 @@ class SimpleLossWrapper(nn.Module):
         else:
             target_batch = self.extract_value(teacher_io_dict if self.is_target_from_teacher else student_io_dict,
                                               self.target_module_path, self.target_key)
-        return self.single_loss(input_batch, target_batch, *args, **kwargs)
+        return self.mid_level_loss(input_batch, target_batch, *args, **kwargs)
 
     def __str__(self):
-        return self.single_loss.__str__()
+        return self.mid_level_loss.__str__()
 
 
-@register_single_loss
+@register_mid_level_loss
 class KDLoss(nn.KLDivLoss):
     """
     "Distilling the Knowledge in a Neural Network"
@@ -78,7 +78,7 @@ class KDLoss(nn.KLDivLoss):
         return self.alpha * hard_loss + self.beta * (self.temperature ** 2) * soft_loss
 
 
-@register_single_loss
+@register_mid_level_loss
 class FSPLoss(nn.Module):
     """
     "A Gift From Knowledge Distillation: Fast Optimization, Network Minimization and Transfer Learning"
@@ -120,7 +120,7 @@ class FSPLoss(nn.Module):
         return fsp_loss / batch_size
 
 
-@register_single_loss
+@register_mid_level_loss
 class ATLoss(nn.Module):
     """
     "Paying More Attention to Attention: Improving the Performance of
@@ -172,7 +172,7 @@ class ATLoss(nn.Module):
         return at_loss / batch_size if self.mode == 'paper' else at_loss
 
 
-@register_single_loss
+@register_mid_level_loss
 class PKTLoss(nn.Module):
     """
     "Paraphrasing Complex Network: Network Compression via Factor Transfer"
@@ -219,7 +219,7 @@ class PKTLoss(nn.Module):
         return self.cosine_similarity_loss(student_penultimate_outputs, teacher_penultimate_outputs)
 
 
-@register_single_loss
+@register_mid_level_loss
 class FTLoss(nn.Module):
     """
     "Paraphrasing Complex Network: Network Compression via Factor Transfer"
@@ -244,7 +244,7 @@ class FTLoss(nn.Module):
         return ft_loss.mean() if self.reduction == 'mean' else ft_loss.sum()
 
 
-@register_single_loss
+@register_mid_level_loss
 class AltActTransferLoss(nn.Module):
     """
     "Knowledge Transfer via Distillation of Activation Boundaries Formed by Hidden Neurons"
@@ -276,7 +276,7 @@ class AltActTransferLoss(nn.Module):
         return dab_loss / batch_size if self.reduction == 'mean' else dab_loss
 
 
-@register_single_loss
+@register_mid_level_loss
 class RKDLoss(nn.Module):
     """
     "Relational Knowledge Distillation"
@@ -338,7 +338,7 @@ class RKDLoss(nn.Module):
         return self.dist_factor * rkd_distance_loss + self.angle_factor * rkd_angle_loss
 
 
-@register_single_loss
+@register_mid_level_loss
 class VIDLoss(nn.Module):
     """
     "Variational Information Distillation for Knowledge Transfer"
@@ -359,7 +359,7 @@ class VIDLoss(nn.Module):
         return vid_loss
 
 
-@register_single_loss
+@register_mid_level_loss
 class CCKDLoss(nn.Module):
     """
     "Correlation Congruence for Knowledge Distillation"
@@ -411,7 +411,7 @@ class CCKDLoss(nn.Module):
         return cc_loss / (batch_size ** 2) if self.reduction == 'batchmean' else cc_loss
 
 
-@register_single_loss
+@register_mid_level_loss
 class SPKDLoss(nn.Module):
     """
     "Similarity-Preserving Knowledge Distillation"
@@ -440,7 +440,7 @@ class SPKDLoss(nn.Module):
         return spkd_loss / (batch_size ** 2) if self.reduction == 'batchmean' else spkd_loss
 
 
-@register_single_loss
+@register_mid_level_loss
 class CRDLoss(nn.Module):
     """
     "Contrastive Representation Distillation"
@@ -615,7 +615,7 @@ class CRDLoss(nn.Module):
         return loss
 
 
-@register_single_loss
+@register_mid_level_loss
 class AuxSSKDLoss(nn.CrossEntropyLoss):
     """
     Loss of contrastive prediction as self-supervision task (auxiliary task)
@@ -645,7 +645,7 @@ class AuxSSKDLoss(nn.CrossEntropyLoss):
         return super().forward(cos_similarities, targets)
 
 
-@register_single_loss
+@register_mid_level_loss
 class SSKDLoss(nn.Module):
     """
     Loss of contrastive prediction as self-supervision task (auxiliary task)
@@ -747,7 +747,7 @@ class SSKDLoss(nn.Module):
         return total_loss
 
 
-@register_single_loss
+@register_mid_level_loss
 class PADL2Loss(nn.Module):
     """
     "Prime-Aware Adaptive Distillation"
@@ -777,7 +777,7 @@ class PADL2Loss(nn.Module):
         return squared_losses.mean()
 
 
-@register_single_loss
+@register_mid_level_loss
 class HierarchicalContextLoss(nn.Module):
     """
     "Distilling Knowledge via Knowledge Review"
@@ -815,7 +815,7 @@ class HierarchicalContextLoss(nn.Module):
         return loss / total_weight
 
 
-@register_single_loss
+@register_mid_level_loss
 class RegularizationLoss(nn.Module):
     def __init__(self, module_path, io_type='output', is_from_teacher=False, p=1, **kwargs):
         super().__init__()
@@ -830,7 +830,7 @@ class RegularizationLoss(nn.Module):
         return z.norm(p=self.norm_p)
 
 
-@register_single_loss
+@register_mid_level_loss
 class KTALoss(nn.Module):
     """
     "Knowledge Adaptation for Efficient Semantic Segmentation"
@@ -860,7 +860,7 @@ class KTALoss(nn.Module):
         return kta_loss.mean() if self.reduction == 'mean' else kta_loss.sum()
 
 
-@register_single_loss
+@register_mid_level_loss
 class AffinityLoss(nn.Module):
     """
     "Knowledge Adaptation for Efficient Semantic Segmentation"

@@ -2,7 +2,7 @@ import torch
 from torch import nn
 from torch.nn import functional
 
-from torchdistill.losses.registry import register_single_loss
+from torchdistill.losses.registry import register_mid_level_loss
 from torchdistill.losses.util import register_func2extract_model_output
 
 
@@ -13,7 +13,7 @@ def extract_transformers_loss(student_outputs, teacher_outputs, targets, uses_te
     return model_loss_dict
 
 
-@register_single_loss
+@register_mid_level_loss
 class KDLoss4Transformer(nn.KLDivLoss):
     """
     "Distilling the Knowledge in a Neural Network"
