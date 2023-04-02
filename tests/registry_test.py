@@ -8,7 +8,7 @@ from torchdistill.datasets.registry import register_dataset, register_collate_fu
     DATASET_DICT, COLLATE_FUNC_DICT, SAMPLE_LOADER_CLASS_DICT, SAMPLE_LOADER_FUNC_DICT, BATCH_SAMPLER_DICT, \
     TRANSFORM_DICT, DATASET_WRAPPER_DICT
 from torchdistill.losses.registry import register_high_level_loss, HIGH_LEVEL_LOSS_DICT, register_loss_wrapper, \
-    register_mid_level_loss, LOSS_WRAPPER_DICT, MIDDLE_LEVELLOSS_DICT, register_func2extract_model_output, \
+    register_mid_level_loss, LOSS_WRAPPER_DICT, MIDDLE_LEVEL_LOSS_DICT, register_func2extract_model_output, \
     FUNC2EXTRACT_MODEL_OUTPUT_DICT
 from torchdistill.models.registry import register_adaptation_module, ADAPTATION_MODULE_DICT, \
     register_model_class, register_model_func, MODEL_CLASS_DICT, MODEL_FUNC_DICT, register_auxiliary_model_wrapper, \
@@ -243,14 +243,14 @@ class RegistryTest(TestCase):
             def __init__(self):
                 self.name = 'test0'
 
-        assert MIDDLE_LEVELLOSS_DICT['TestMiddleLevelLoss0'] == TestMiddleLevelLoss0
+        assert MIDDLE_LEVEL_LOSS_DICT['TestMiddleLevelLoss0'] == TestMiddleLevelLoss0
 
         @register_mid_level_loss()
         class TestMiddleLevelLoss1(object):
             def __init__(self):
                 self.name = 'test1'
 
-        assert MIDDLE_LEVELLOSS_DICT['TestMiddleLevelLoss1'] == TestMiddleLevelLoss1
+        assert MIDDLE_LEVEL_LOSS_DICT['TestMiddleLevelLoss1'] == TestMiddleLevelLoss1
         random_name = 'custom_mid_level_loss_class_name2'
 
         @register_mid_level_loss(key=random_name)
@@ -258,7 +258,7 @@ class RegistryTest(TestCase):
             def __init__(self):
                 self.name = 'test2'
 
-        assert MIDDLE_LEVELLOSS_DICT[random_name] == TestMiddleLevelLoss2
+        assert MIDDLE_LEVEL_LOSS_DICT[random_name] == TestMiddleLevelLoss2
 
     def test_func2extract_model_output(self):
         @register_func2extract_model_output

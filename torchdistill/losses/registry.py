@@ -3,7 +3,7 @@ from ..common import misc_util
 LOSS_DICT = misc_util.get_classes_as_dict('torch.nn.modules.loss')
 HIGH_LEVEL_LOSS_DICT = dict()
 LOSS_WRAPPER_DICT = dict()
-MIDDLE_LEVELLOSS_DICT = dict()
+MIDDLE_LEVEL_LOSS_DICT = dict()
 FUNC2EXTRACT_MODEL_OUTPUT_DICT = dict()
 
 
@@ -41,7 +41,7 @@ def register_mid_level_loss(arg=None, **kwargs):
         if key is None:
             key = cls_or_func.__name__
 
-        MIDDLE_LEVELLOSS_DICT[key] = cls_or_func
+        MIDDLE_LEVEL_LOSS_DICT[key] = cls_or_func
         return cls_or_func
 
     if callable(arg):
@@ -86,8 +86,8 @@ def get_loss_wrapper(mid_level_loss, criterion_wrapper_config):
 
 def get_mid_level_loss(mid_level_criterion_config, criterion_wrapper_config=None):
     loss_type = mid_level_criterion_config['type']
-    mid_level_loss = MIDDLE_LEVELLOSS_DICT[loss_type](**mid_level_criterion_config['kwargs']) \
-        if loss_type in MIDDLE_LEVELLOSS_DICT else get_loss(loss_type, **mid_level_criterion_config['kwargs'])
+    mid_level_loss = MIDDLE_LEVEL_LOSS_DICT[loss_type](**mid_level_criterion_config['kwargs']) \
+        if loss_type in MIDDLE_LEVEL_LOSS_DICT else get_loss(loss_type, **mid_level_criterion_config['kwargs'])
     if criterion_wrapper_config is None:
         return mid_level_loss
     return get_loss_wrapper(mid_level_loss, criterion_wrapper_config)
