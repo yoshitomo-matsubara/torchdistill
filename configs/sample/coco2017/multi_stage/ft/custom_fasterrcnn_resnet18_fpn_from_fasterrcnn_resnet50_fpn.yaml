@@ -117,16 +117,18 @@ train:
             type: 'MSELoss'
             kwargs:
               reduction: 'sum'
-          kwargs:
-            input:
-              is_from_teacher: True
-              module_path: 'paraphraser'
-              io: 'output'
-            target:
-              is_from_teacher: True
-              module_path: 'teacher_model.seq.backbone.body.layer4'
-              io: 'output'
-          factor: 1.0
+          criterion_wrapper:
+            type: 'SimpleLossWrapper'
+            kwargs:
+              input:
+                is_from_teacher: True
+                module_path: 'paraphraser'
+                io: 'output'
+              target:
+                is_from_teacher: True
+                module_path: 'teacher_model.seq.backbone.body.layer4'
+                io: 'output'
+            factor: 1.0
   stage2:
     num_epochs: 19
     teacher:

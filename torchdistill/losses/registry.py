@@ -77,22 +77,20 @@ def get_high_level_loss(criterion_config):
     raise ValueError('No high-level loss `{}` registered'.format(criterion_type))
 
 
-def get_loss_wrapper(single_loss, wrapper_config):
-    wrapper_type = wrapper_config.get('type', None)
-    if wrapper_type is None:
-        return LOSS_WRAPPER_DICT['SimpleLossWrapper'](single_loss)
-    elif wrapper_type in LOSS_WRAPPER_DICT:
-        return LOSS_WRAPPER_DICT[wrapper_type](single_loss, **wrapper_config.get('kwargs', dict()))
+def get_loss_wrapper(single_loss, criterion_wrapper_config):
+    wrapper_type = criterion_wrapper_config['type']
+    if wrapper_type in LOSS_WRAPPER_DICT:
+        return LOSS_WRAPPER_DICT[wrapper_type](single_loss, **criterion_wrapper_config.get('kwargs', dict()))
     raise ValueError('No loss wrapper `{}` registered'.format(wrapper_type))
 
 
-def get_single_loss(single_criterion_config, wrapper_config=None):
+def get_single_loss(single_criterion_config, criterion_wrapper_config=None):
     loss_type = single_criterion_config['type']
     single_loss = SINGLE_LOSS_DICT[loss_type](**single_criterion_config['kwargs']) \
         if loss_type in SINGLE_LOSS_DICT else get_loss(loss_type, **single_criterion_config['kwargs'])
-    if wrapper_config is None:
+    if criterion_wrapper_config is None:
         return single_loss
-    return get_loss_wrapper(single_loss, wrapper_config.get('wrapper', dict()))
+    return get_loss_wrapper(single_loss, criterion_wrapper_config)
 
 
 def get_func2extract_model_output(key):

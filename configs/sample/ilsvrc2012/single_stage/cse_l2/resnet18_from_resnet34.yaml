@@ -108,15 +108,17 @@ train:
           type: 'MSELoss'
           kwargs:
             reduction: 'mean'
-        kwargs:
-          input:
-            is_from_teacher: False
-            module_path: 'avgpool'
-            io: 'output'
-          target:
-            is_from_teacher: True
-            module_path: 'avgpool'
-            io: 'output'
+        criterion_wrapper:
+          type: 'SimpleLossWrapper'
+          kwargs:
+            input:
+              is_from_teacher: False
+              module_path: 'avgpool'
+              io: 'output'
+            target:
+              is_from_teacher: True
+              module_path: 'avgpool'
+              io: 'output'
         factor: 1.0
 
 test:

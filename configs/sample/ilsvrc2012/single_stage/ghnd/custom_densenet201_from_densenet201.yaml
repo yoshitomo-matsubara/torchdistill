@@ -107,45 +107,51 @@ train:
           type: 'MSELoss'
           kwargs:
             reduction: 'sum'
-        kwargs:
-          input:
-            is_from_teacher: False
-            module_path: 'features.bottleneck'
-            io: 'output'
-          target:
-            is_from_teacher: True
-            module_path: 'features.transition2'
-            io: 'output'
+        criterion_wrapper:
+          type: 'SimpleLossWrapper'
+          kwargs:
+            input:
+              is_from_teacher: False
+              module_path: 'features.bottleneck'
+              io: 'output'
+            target:
+              is_from_teacher: True
+              module_path: 'features.transition2'
+              io: 'output'
         factor: 1.0
       transition3:
         criterion:
           type: 'MSELoss'
           kwargs:
             reduction: 'sum'
-        kwargs:
-          input:
-            is_from_teacher: False
-            module_path: 'features.transition3'
-            io: 'output'
-          target:
-            is_from_teacher: True
-            module_path: 'features.transition3'
-            io: 'output'
+        criterion_wrapper:
+          type: 'SimpleLossWrapper'
+          kwargs:
+            input:
+              is_from_teacher: False
+              module_path: 'features.transition3'
+              io: 'output'
+            target:
+              is_from_teacher: True
+              module_path: 'features.transition3'
+              io: 'output'
         factor: 1.0
       denseblock4:
         criterion:
           type: 'MSELoss'
           kwargs:
             reduction: 'sum'
-        kwargs:
-          input:
-            is_from_teacher: False
-            module_path: 'features.denseblock4'
-            io: 'output'
-          target:
-            is_from_teacher: True
-            module_path: 'features.denseblock4'
-            io: 'output'
+        criterion_wrapper:
+          type: 'SimpleLossWrapper'
+          kwargs:
+            input:
+              is_from_teacher: False
+              module_path: 'features.denseblock4'
+              io: 'output'
+            target:
+              is_from_teacher: True
+              module_path: 'features.denseblock4'
+              io: 'output'
         factor: 1.0
 
 test:
