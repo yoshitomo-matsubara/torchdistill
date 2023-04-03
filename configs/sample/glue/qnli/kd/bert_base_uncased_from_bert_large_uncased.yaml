@@ -86,15 +86,20 @@ train:
     scheduling_step: 1
   criterion:
     type: 'WeightedSumLoss'
-    model_term:
-      criterion:
-        type: 'KDLoss4Transformer'
-        kwargs:
-          temperature: 1.0
-          alpha: 0.5
-          reduction: 'batchmean'
-      factor: 1.0
-    sub_terms:
+    kwargs:
+      sub_terms:
+        kd:
+          criterion:
+            type: 'KDLoss'
+            kwargs:
+              student_module_path: '.classifier'
+              student_module_io: 'output'
+              teacher_module_path: '.classifier'
+              teacher_module_io: 'output'
+              temperature: 1.0
+              alpha: 0.5
+              reduction: 'batchmean'
+          factor: 1.0
 
 test:
   test_data_loader:

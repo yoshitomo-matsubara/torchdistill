@@ -107,75 +107,76 @@ train:
       gamma: 0.1
   criterion:
     type: 'WeightedSumLoss'
-    sub_terms:
-      layer1:
-        criterion:
-          type: 'MSELoss'
-          kwargs:
-            reduction: 'sum'
-        criterion_wrapper:
-          type: 'SimpleLossWrapper'
-          kwargs:
-            input:
-              is_from_teacher: False
-              module_path: 'seq.backbone.body.layer1'
-              io: 'output'
-            target:
-              is_from_teacher: True
-              module_path: 'seq.backbone.body.layer1'
-              io: 'output'
-        factor: 1.0
-      layer2:
-        criterion:
-          type: 'MSELoss'
-          kwargs:
-            reduction: 'sum'
-        criterion_wrapper:
-          type: 'SimpleLossWrapper'
-          kwargs:
-            input:
-              is_from_teacher: False
-              module_path: 'seq.backbone.body.layer2'
-              io: 'output'
-            target:
-              is_from_teacher: True
-              module_path: 'seq.backbone.body.layer2'
-              io: 'output'
-        factor: 1.0
-      layer3:
-        criterion:
-          type: 'MSELoss'
-          kwargs:
-            reduction: 'sum'
-        criterion_wrapper:
-          type: 'SimpleLossWrapper'
-          kwargs:
-            input:
-              is_from_teacher: False
-              module_path: 'seq.backbone.body.layer3'
-              io: 'output'
-            target:
-              is_from_teacher: True
-              module_path: 'seq.backbone.body.layer3'
-              io: 'output'
-        factor: 1.0
-      layer4:
-        criterion:
-          type: 'MSELoss'
-          kwargs:
-            reduction: 'sum'
-        criterion_wrapper:
-          type: 'SimpleLossWrapper'
-          kwargs:
-            input:
-              is_from_teacher: False
-              module_path: 'seq.backbone.body.layer4'
-              io: 'output'
-            target:
-              is_from_teacher: True
-              module_path: 'seq.backbone.body.layer4'
-              io: 'output'
-        factor: 1.0
+    kwargs:
+      sub_terms:
+        layer1:
+          criterion:
+            type: 'MSELoss'
+            kwargs:
+              reduction: 'sum'
+          criterion_wrapper:
+            type: 'SimpleLossWrapper'
+            kwargs:
+              input:
+                is_from_teacher: False
+                module_path: 'seq.backbone.body.layer1'
+                io: 'output'
+              target:
+                is_from_teacher: True
+                module_path: 'seq.backbone.body.layer1'
+                io: 'output'
+          factor: 1.0
+        layer2:
+          criterion:
+            type: 'MSELoss'
+            kwargs:
+              reduction: 'sum'
+          criterion_wrapper:
+            type: 'SimpleLossWrapper'
+            kwargs:
+              input:
+                is_from_teacher: False
+                module_path: 'seq.backbone.body.layer2'
+                io: 'output'
+              target:
+                is_from_teacher: True
+                module_path: 'seq.backbone.body.layer2'
+                io: 'output'
+          factor: 1.0
+        layer3:
+          criterion:
+            type: 'MSELoss'
+            kwargs:
+              reduction: 'sum'
+          criterion_wrapper:
+            type: 'SimpleLossWrapper'
+            kwargs:
+              input:
+                is_from_teacher: False
+                module_path: 'seq.backbone.body.layer3'
+                io: 'output'
+              target:
+                is_from_teacher: True
+                module_path: 'seq.backbone.body.layer3'
+                io: 'output'
+          factor: 1.0
+        layer4:
+          criterion:
+            type: 'MSELoss'
+            kwargs:
+              reduction: 'sum'
+          criterion_wrapper:
+            type: 'SimpleLossWrapper'
+            kwargs:
+              input:
+                is_from_teacher: False
+                module_path: 'seq.backbone.body.layer4'
+                io: 'output'
+              target:
+                is_from_teacher: True
+                module_path: 'seq.backbone.body.layer4'
+                io: 'output'
+          factor: 1.0
 
 test:
   test_data_loader:

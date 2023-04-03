@@ -110,26 +110,25 @@ train:
       gamma: 0.1
   criterion:
     type: 'WeightedSumLoss'
-    model_term:
-      factor: 0.0
-    sub_terms:
-      maxpool2:
-        criterion:
-          type: 'MSELoss'
-          kwargs:
-            reduction: 'sum'
-        criterion_wrapper:
-          type: 'SimpleLossWrapper'
-          kwargs:
-            input:
-              is_from_teacher: False
-              module_path: 'bottleneck'
-              io: 'output'
-            target:
-              is_from_teacher: True
-              module_path: '+maxpool2'
-              io: 'output'
-        factor: 1.0
+    kwargs:
+      sub_terms:
+        maxpool2:
+          criterion:
+            type: 'MSELoss'
+            kwargs:
+              reduction: 'sum'
+          criterion_wrapper:
+            type: 'SimpleLossWrapper'
+            kwargs:
+              input:
+                is_from_teacher: False
+                module_path: 'bottleneck'
+                io: 'output'
+              target:
+                is_from_teacher: True
+                module_path: '+maxpool2'
+                io: 'output'
+          factor: 1.0
 
 test:
   test_data_loader:

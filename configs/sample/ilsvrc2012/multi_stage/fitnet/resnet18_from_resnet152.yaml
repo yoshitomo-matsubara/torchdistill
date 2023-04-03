@@ -104,26 +104,25 @@ train:
         gamma: 0.1
     criterion:
       type: 'WeightedSumLoss'
-      model_term:
-        factor: 0.0
-      sub_terms:
-        layer1:
-          criterion:
-            type: 'MSELoss'
-            kwargs:
-              reduction: 'sum'
-          criterion_wrapper:
-            type: 'SimpleLossWrapper'
-            kwargs:
-              input:
-                is_from_teacher: False
-                module_path: '+convreg'
-                io: 'output'
-              target:
-                is_from_teacher: True
-                module_path: 'layer1'
-                io: 'output'
-          factor: 1.0
+      kwargs:
+        sub_terms:
+          layer1:
+            criterion:
+              type: 'MSELoss'
+              kwargs:
+                reduction: 'sum'
+            criterion_wrapper:
+              type: 'SimpleLossWrapper'
+              kwargs:
+                input:
+                  is_from_teacher: False
+                  module_path: '+convreg'
+                  io: 'output'
+                target:
+                  is_from_teacher: True
+                  module_path: 'layer1'
+                  io: 'output'
+            factor: 1.0
   stage2:
     num_epochs: 15
     teacher:
@@ -149,15 +148,16 @@ train:
         gamma: 0.1
     criterion:
       type: 'WeightedSumLoss'
-      model_term:
-        criterion:
-          type: 'KDLoss'
-          kwargs:
-            temperature: 1.0
-            alpha: 0.5
-            reduction: 'batchmean'
-        factor: 1.0
-      sub_terms:
+      kwargs:
+        sub_terms:
+          kd:
+            criterion:
+              type: 'KDLoss'
+              kwargs:
+                temperature: 1.0
+                alpha: 0.5
+                reduction: 'batchmean'
+            factor: 1.0
 
 test:
   test_data_loader:

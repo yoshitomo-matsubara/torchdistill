@@ -117,16 +117,25 @@ train:
   criterion:
     type: 'WeightedSumLoss'
     func2extract_model_loss: 'extract_simple_model_loss_dict'
-    model_term:
-      criterion:
-        type: 'CrossEntropyLoss'
-        kwargs:
-          reduction: 'mean'
-          ignore_index: 255
-      factor:
-        out: 1.0
-        aux: 0.5
-    sub_terms:
+    kwargs:
+      sub_terms:
+        criterion:
+          type: 'CrossEntropyLoss'
+          kwargs:
+            reduction: 'mean'
+            ignore_index: 255
+        criterion_wrapper:
+          type: 'SimpleLossWrapper'
+          kwargs:
+            input:
+              is_from_teacher: False
+              module_path: '.'
+              io: 'output'
+            target:
+              uses_label: True
+        factor:
+          out: 1.0
+          aux: 0.5
 
 test:
   test_data_loader:

@@ -95,25 +95,30 @@ train:
       gamma: 0.1
   criterion:
     type: 'WeightedSumLoss'
-    model_term:
-      criterion:
-        type: 'KDLoss'
-        kwargs:
-          temperature: 1.0
-          alpha: 1.0
-          reduction: 'batchmean'
-      factor: 1.0
-    sub_terms:
-      rkd_da:
-        criterion:
-          type: 'RKDLoss'
-          kwargs:
-            teacher_output_path: 'layer4'
-            student_output_path: 'layer4'
-            dist_factor: 1.0
-            angle_factor: 2.0
-            reduction: 'mean'
-        factor: 1.0
+    kwargs:
+      sub_terms:
+        kd:
+          criterion:
+            type: 'KDLoss'
+            kwargs:
+              student_module_path: '.'
+              student_module_io: 'output'
+              teacher_module_path: '.'
+              teacher_module_io: 'output'
+              temperature: 1.0
+              alpha: 1.0
+              reduction: 'batchmean'
+          factor: 1.0
+        rkd_da:
+          criterion:
+            type: 'RKDLoss'
+            kwargs:
+              teacher_output_path: 'layer4'
+              student_output_path: 'layer4'
+              dist_factor: 1.0
+              angle_factor: 2.0
+              reduction: 'mean'
+          factor: 1.0
 
 test:
   test_data_loader:

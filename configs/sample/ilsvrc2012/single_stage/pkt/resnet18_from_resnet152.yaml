@@ -94,19 +94,18 @@ train:
       gamma: 0.1
   criterion:
     type: 'WeightedSumLoss'
-    model_term:
-      factor: 0.0
-    sub_terms:
-      pkt:
-        criterion:
-          type: 'PKTLoss'
-          kwargs:
-            student_module_path: 'fc'
-            student_module_io: 'input'
-            teacher_module_path: 'fc'
-            teacher_module_io: 'input'
-            eps: 0.0000001
-        factor: 30000.0
+    kwargs:
+      sub_terms:
+        pkt:
+          criterion:
+            type: 'PKTLoss'
+            kwargs:
+              student_module_path: 'fc'
+              student_module_io: 'input'
+              teacher_module_path: 'fc'
+              teacher_module_io: 'input'
+              eps: 0.0000001
+          factor: 30000.0
 
 test:
   test_data_loader:

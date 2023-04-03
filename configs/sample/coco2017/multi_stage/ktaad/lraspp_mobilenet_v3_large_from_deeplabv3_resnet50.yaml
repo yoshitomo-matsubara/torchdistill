@@ -121,35 +121,34 @@ train:
         weight_decay: 0.0001
     criterion:
       type: 'WeightedSumLoss'
-      model_term:
-        factor: 0.0
-      sub_terms:
-        reconst:
-          criterion:
-            type: 'MSELoss'
-            kwargs:
-              reduction: 'mean'
-          criterion_wrapper:
-            type: 'SimpleLossWrapper'
-            kwargs:
-              input:
+      kwargs:
+        sub_terms:
+          reconst:
+            criterion:
+              type: 'MSELoss'
+              kwargs:
+                reduction: 'mean'
+            criterion_wrapper:
+              type: 'SimpleLossWrapper'
+              kwargs:
+                input:
+                  is_from_teacher: True
+                  module_path: 'paraphraser'
+                  io: 'output'
+                target:
+                  is_from_teacher: True
+                  module_path: 'teacher_model.classifier.-1'
+                  io: 'output'
+            factor: 1.0
+          regularization:
+            criterion:
+              type: 'RegularizationLoss'
+              kwargs:
                 is_from_teacher: True
-                module_path: 'paraphraser'
+                module_path: 'paraphraser.encoder'
                 io: 'output'
-              target:
-                is_from_teacher: True
-                module_path: 'teacher_model.classifier.-1'
-                io: 'output'
-          factor: 1.0
-        regularization:
-          criterion:
-            type: 'RegularizationLoss'
-            kwargs:
-              is_from_teacher: True
-              module_path: 'paraphraser.encoder'
-              io: 'output'
-              p: 1
-          factor: 1.0e-7
+                p: 1
+            factor: 1.0e-7
   stage2:
     num_epochs: &num_epochs 30
     train_data_loader:
@@ -218,35 +217,45 @@ train:
     criterion:
       type: 'WeightedSumLoss'
       func2extract_model_loss: 'extract_simple_model_loss_dict'
-      model_term:
-        criterion:
-          type: 'CrossEntropyLoss'
-          kwargs:
-            reduction: 'mean'
-            ignore_index: 255
-        factor:
-          out: 1.0
-      sub_terms:
-        adapt:
-          criterion:
-            type: 'KTALoss'
-            kwargs:
-              p: 1
-              q: 2
-              reduction: 'mean'
-              knowledge_translator_path: 'paraphraser.encoder'
-              feature_adapter_path: 'feature_adapter'
-          factor: 50.0
-        aff:
-          criterion:
-            type: 'AffinityLoss'
-            kwargs:
-              student_module_path: 'affinity_adapter'
-              student_module_io: 'output'
-              teacher_module_path: 'paraphraser.encoder'
-              teacher_module_io: 'output'
-              reduction: 'mean'
-          factor: 1.0
+      kwargs:
+        sub_terms:
+          ce:
+            criterion:
+              type: 'CrossEntropyLoss'
+              kwargs:
+                reduction: 'mean'
+                ignore_index: 255
+            criterion_wrapper:
+              type: 'SimpleLossWrapper'
+              kwargs:
+                input:
+                  is_from_teacher: False
+                  module_path: '.'
+                  io: 'output'
+                target:
+                  uses_label: True
+            factor:
+              out: 1.0
+          adapt:
+            criterion:
+              type: 'KTALoss'
+              kwargs:
+                p: 1
+                q: 2
+                reduction: 'mean'
+                knowledge_translator_path: 'paraphraser.encoder'
+                feature_adapter_path: 'feature_adapter'
+            factor: 50.0
+          aff:
+            criterion:
+              type: 'AffinityLoss'
+              kwargs:
+                student_module_path: 'affinity_adapter'
+                student_module_io: 'output'
+                teacher_module_path: 'paraphraser.encoder'
+                teacher_module_io: 'output'
+                reduction: 'mean'
+            factor: 1.0
 
 test:
   test_data_loader:

@@ -25,10 +25,11 @@ class SimpleLossWrapper(nn.Module):
         self.is_input_from_teacher = input_config['is_from_teacher']
         self.input_module_path = input_config['module_path']
         self.input_key = input_config['io']
-        target_config = kwargs['target']
-        self.is_target_from_teacher = target_config['is_from_teacher']
-        self.target_module_path = target_config['module_path']
-        self.target_key = target_config['io']
+        target_config = kwargs.get('target', dict())
+        self.uses_label = target_config.get('uses_label', False)
+        self.is_target_from_teacher = target_config.get('is_from_teacher', None)
+        self.target_module_path = target_config.get('module_path', None)
+        self.target_key = target_config.get('io', None)
 
     @staticmethod
     def extract_value(io_dict, path, key):
@@ -494,7 +495,7 @@ class CRDLoss(nn.Module):
         self.unigrams = torch.ones(output_size)
         self.num_negative_samples = num_negative_samples
         self.num_samples = num_samples
-        self.register_buffer('kwargs', torch.tensor([num_negative_samples, temperature, -1, -1, momentum]))
+        self.register_buffer('params', torch.tensor([num_negative_samples, temperature, -1, -1, momentum]))
         stdv = 1.0 / math.sqrt(input_size / 3)
         self.register_buffer('memory_v1', torch.rand(output_size, input_size).mul_(2 * stdv).add_(-stdv))
         self.register_buffer('memory_v2', torch.rand(output_size, input_size).mul_(2 * stdv).add_(-stdv))
