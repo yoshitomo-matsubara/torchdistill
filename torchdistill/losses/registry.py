@@ -73,7 +73,7 @@ def get_loss(key, **kwargs):
 def get_high_level_loss(criterion_config):
     criterion_type = criterion_config['type']
     if criterion_type in HIGH_LEVEL_LOSS_DICT:
-        return HIGH_LEVEL_LOSS_DICT[criterion_type](criterion_config)
+        return HIGH_LEVEL_LOSS_DICT[criterion_type](**criterion_config['kwargs'])
     raise ValueError('No high-level loss `{}` registered'.format(criterion_type))
 
 

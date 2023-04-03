@@ -7,12 +7,11 @@ logger = def_logger.getChild(__name__)
 
 
 class AbstractLoss(nn.Module):
-    def __init__(self, criterion_config):
+    def __init__(self, sub_terms=None, **kwargs):
         super().__init__()
         term_dict = dict()
-        sub_terms_config = criterion_config.get('sub_terms', None)
-        if sub_terms_config is not None:
-            for loss_name, loss_config in sub_terms_config.items():
+        if sub_terms is not None:
+            for loss_name, loss_config in sub_terms.items():
                 sub_criterion_config = loss_config['criterion']
                 sub_criterion = get_mid_level_loss(sub_criterion_config, loss_config.get('criterion_wrapper', dict()))
                 term_dict[loss_name] = (sub_criterion, loss_config['factor'])
@@ -27,9 +26,11 @@ class AbstractLoss(nn.Module):
 
 @register_high_level_loss
 class WeightedSumLoss(AbstractLoss):
-    def __init__(self, criterion_config):
-        super().__init__(criterion_config)
-        self.model_loss_factor = criterion_config.get('model_term', dict()).get('factor', None)
+    def __init__(self, model_term=None, **kwargs):
+        super().__init__(**kwargs)
+        if model_term is None:
+            model_term = dict()
+        self.model_loss_factor = model_term.get('factor', None)
 
     def forward(self, io_dict, model_loss_dict, targets):
         loss_dict = dict()

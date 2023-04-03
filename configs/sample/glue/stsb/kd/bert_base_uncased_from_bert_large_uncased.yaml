@@ -93,26 +93,27 @@ train:
   criterion:
     type: 'WeightedSumLoss'
     func2extract_model_loss: 'extract_transformers_loss'
-    model_term:
-      factor: 1.0
-    sub_terms:
-      mse:
-        criterion:
-          type: 'MSELoss'
-          kwargs:
-            reduction: 'sum'
-        criterion_wrapper:
-          type: 'SimpleLossWrapper'
-          kwargs:
-            input:
-              is_from_teacher: False
-              module_path: 'classifier'
-              io: 'output'
-            target:
-              is_from_teacher: True
-              module_path: 'classifier'
-              io: 'output'
+    kwargs:
+      model_term:
         factor: 1.0
+      sub_terms:
+        mse:
+          criterion:
+            type: 'MSELoss'
+            kwargs:
+              reduction: 'sum'
+          criterion_wrapper:
+            type: 'SimpleLossWrapper'
+            kwargs:
+              input:
+                is_from_teacher: False
+                module_path: 'classifier'
+                io: 'output'
+              target:
+                is_from_teacher: True
+                module_path: 'classifier'
+                io: 'output'
+          factor: 1.0
 
 test:
   test_data_loader:

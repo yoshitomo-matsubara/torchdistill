@@ -112,17 +112,16 @@ train:
         gamma: 0.1
     criterion:
       type: 'WeightedSumLoss'
-      model_term:
-        factor: 0.0
-      sub_terms:
-        aux_task:
-          criterion:
-            type: 'AuxSSKDLoss'
-            kwargs:
-              module_path: 'ss_module'
-              module_io: 'output'
-              reduction: 'mean'
-          factor: 1.0
+      kwargs:
+        sub_terms:
+          aux_task:
+            criterion:
+              type: 'AuxSSKDLoss'
+              kwargs:
+                module_path: 'ss_module'
+                module_io: 'output'
+                reduction: 'mean'
+            factor: 1.0
   stage2:
     num_epochs: 100
     teacher:
@@ -172,25 +171,24 @@ train:
         gamma: 0.1
     criterion:
       type: 'WeightedSumLoss'
-      model_term:
-        factor: 0.0
-      sub_terms:
-        sskd:
-          criterion:
-            type: 'SSKDLoss'
-            kwargs:
-              student_linear_module_path: 'model.fc'
-              teacher_linear_module_path: 'model.fc'
-              student_ss_module_path: 'ss_module'
-              teacher_ss_module_path: 'ss_module'
-              kl_temp: 4.0
-              ss_temp: 0.5
-              tf_temp: 4.0
-              ss_ratio: 0.75
-              tf_ratio: 1.0
-              loss_weights: [1.0, 0.9, 10.0, 2.7]
-              reduction: 'batchmean'
-          factor: 1.0
+      kwargs:
+        sub_terms:
+          sskd:
+            criterion:
+              type: 'SSKDLoss'
+              kwargs:
+                student_linear_module_path: 'model.fc'
+                teacher_linear_module_path: 'model.fc'
+                student_ss_module_path: 'ss_module'
+                teacher_ss_module_path: 'ss_module'
+                kl_temp: 4.0
+                ss_temp: 0.5
+                tf_temp: 4.0
+                ss_ratio: 0.75
+                tf_ratio: 1.0
+                loss_weights: [1.0, 0.9, 10.0, 2.7]
+                reduction: 'batchmean'
+            factor: 1.0
 
 test:
   test_data_loader:

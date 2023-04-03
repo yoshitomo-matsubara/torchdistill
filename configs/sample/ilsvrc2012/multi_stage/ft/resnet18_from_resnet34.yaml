@@ -110,26 +110,25 @@ train:
         weight_decay: 0.0005
     criterion:
       type: 'WeightedSumLoss'
-      model_term:
-        factor: 0.0
-      sub_terms:
-        reconst:
-          criterion:
-            type: 'MSELoss'
-            kwargs:
-              reduction: 'sum'
-          criterion_wrapper:
-            type: 'SimpleLossWrapper'
-            kwargs:
-              input:
-                is_from_teacher: True
-                module_path: 'paraphraser'
-                io: 'output'
-              target:
-                is_from_teacher: True
-                module_path: 'teacher_model.layer4'
-                io: 'output'
-          factor: 1.0
+      kwargs:
+        sub_terms:
+          reconst:
+            criterion:
+              type: 'MSELoss'
+              kwargs:
+                reduction: 'sum'
+            criterion_wrapper:
+              type: 'SimpleLossWrapper'
+              kwargs:
+                input:
+                  is_from_teacher: True
+                  module_path: 'paraphraser'
+                  io: 'output'
+                target:
+                  is_from_teacher: True
+                  module_path: 'teacher_model.layer4'
+                  io: 'output'
+            factor: 1.0
   stage2:
     num_epochs: 19
     teacher:
@@ -180,22 +179,32 @@ train:
         gamma: 0.1
     criterion:
       type: 'WeightedSumLoss'
-      model_term:
-        criterion:
-          type: 'CrossEntropyLoss'
-          kwargs:
-            reduction: 'mean'
-        factor: 1.0
-      sub_terms:
-        factor_transfer:
+      kwargs:
+        model_term:
           criterion:
-            type: 'FTLoss'
+            type: 'CrossEntropyLoss'
             kwargs:
-              p: 1
               reduction: 'mean'
-              paraphraser_path: 'paraphraser'
-              translator_path: 'translator'
-          factor: 1000.0
+          criterion_wrapper:
+            type: 'SimpleLossWrapper'
+            kwargs:
+              input:
+                is_from_teacher: False
+                module_path: '.'
+                io: 'output'
+              target:
+                uses_label: True
+          factor: 1.0
+        sub_terms:
+          factor_transfer:
+            criterion:
+              type: 'FTLoss'
+              kwargs:
+                p: 1
+                reduction: 'mean'
+                paraphraser_path: 'paraphraser'
+                translator_path: 'translator'
+            factor: 1000.0
 
 test:
   test_data_loader:

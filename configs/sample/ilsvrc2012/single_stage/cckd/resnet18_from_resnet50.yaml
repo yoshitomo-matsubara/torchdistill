@@ -117,27 +117,28 @@ train:
       gamma: 0.1
   criterion:
     type: 'WeightedSumLoss'
-    model_term:
-      criterion:
-        type: 'KDLoss'
-        kwargs:
-          temperature: 1.0
-          alpha: 0
-          reduction: 'batchmean'
-      factor: 1.0
-    sub_terms:
-      cckd:
-        criterion:
-          type: 'CCKDLoss'
-          kwargs:
-            teacher_linear_path: 'linear'
-            student_linear_path: 'linear'
-            kernel_params:
-              type: 'gaussian'
-              gamma: 0.4
-              max_p: 2
-            reduction: 'batchmean'
-        factor: 0.003
+    kwargs:
+      sub_terms:
+        kd:
+          criterion:
+            type: 'KDLoss'
+            kwargs:
+              temperature: 1.0
+              alpha: 0
+              reduction: 'batchmean'
+          factor: 1.0
+        cckd:
+          criterion:
+            type: 'CCKDLoss'
+            kwargs:
+              teacher_linear_path: 'linear'
+              student_linear_path: 'linear'
+              kernel_params:
+                type: 'gaussian'
+                gamma: 0.4
+                max_p: 2
+              reduction: 'batchmean'
+          factor: 0.003
 
 test:
   test_data_loader:

@@ -25,10 +25,11 @@ class SimpleLossWrapper(nn.Module):
         self.is_input_from_teacher = input_config['is_from_teacher']
         self.input_module_path = input_config['module_path']
         self.input_key = input_config['io']
-        target_config = kwargs['target']
-        self.is_target_from_teacher = target_config['is_from_teacher']
-        self.target_module_path = target_config['module_path']
-        self.target_key = target_config['io']
+        target_config = kwargs.get('target', dict())
+        self.uses_label = target_config.get('uses_label', False)
+        self.is_target_from_teacher = target_config.get('is_from_teacher', None)
+        self.target_module_path = target_config.get('module_path', None)
+        self.target_key = target_config.get('io', None)
 
     @staticmethod
     def extract_value(io_dict, path, key):

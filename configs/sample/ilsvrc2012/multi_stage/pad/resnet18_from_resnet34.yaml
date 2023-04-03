@@ -97,16 +97,10 @@ train:
         gamma: 0.1
     criterion:
       type: 'WeightedSumLoss'
-      model_term:
-        criterion:
-          type: 'CrossEntropyLoss'
-          kwargs:
-            reduction: 'mean'
-        factor: 1.0
-      sub_terms:
-        l2based:
+      kwargs:
+        model_term:
           criterion:
-            type: 'MSELoss'
+            type: 'CrossEntropyLoss'
             kwargs:
               reduction: 'mean'
           criterion_wrapper:
@@ -114,13 +108,29 @@ train:
             kwargs:
               input:
                 is_from_teacher: False
-                module_path: 'avgpool'
+                module_path: '.'
                 io: 'output'
               target:
-                is_from_teacher: True
-                module_path: 'avgpool'
-                io: 'output'
+                uses_label: True
           factor: 1.0
+        sub_terms:
+          l2based:
+            criterion:
+              type: 'MSELoss'
+              kwargs:
+                reduction: 'mean'
+            criterion_wrapper:
+              type: 'SimpleLossWrapper'
+              kwargs:
+                input:
+                  is_from_teacher: False
+                  module_path: 'avgpool'
+                  io: 'output'
+                target:
+                  is_from_teacher: True
+                  module_path: 'avgpool'
+                  io: 'output'
+            factor: 1.0
   stage2:
     num_epochs: 10
     teacher: *teacher
