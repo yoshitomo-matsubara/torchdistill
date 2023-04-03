@@ -90,8 +90,12 @@ train:
       sub_terms:
         kd:
           criterion:
-            type: 'KDLoss4Transformer'
+            type: 'KDLoss'
             kwargs:
+              student_module_path: '.classifier'
+              student_module_io: 'output'
+              teacher_module_path: '.classifier'
+              teacher_module_io: 'output'
               temperature: 3.0
               alpha: 0.9
               reduction: 'batchmean'

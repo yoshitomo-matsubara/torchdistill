@@ -191,15 +191,15 @@ train:
               type: 'CrossEntropyLoss'
               kwargs:
                 reduction: 'mean'
-          criterion_wrapper:
-            type: 'SimpleLossWrapper'
-            kwargs:
-              input:
-                is_from_teacher: False
-                module_path: '.'
-                io: 'output'
-              target:
-                uses_label: True
+            criterion_wrapper:
+              type: 'SimpleLossWrapper'
+              kwargs:
+                input:
+                  is_from_teacher: False
+                  module_path: '.'
+                  io: 'output'
+                target:
+                  uses_label: True
             factor: 1.0
           factor_transfer:
             criterion:
