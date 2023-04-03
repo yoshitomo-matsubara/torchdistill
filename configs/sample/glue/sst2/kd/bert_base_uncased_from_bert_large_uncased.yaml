@@ -99,7 +99,7 @@ train:
               temperature: 3.0
               alpha: 0.9
               reduction: 'batchmean'
-          factor: 1.0
+          weight: 1.0
 
 test:
   test_data_loader:

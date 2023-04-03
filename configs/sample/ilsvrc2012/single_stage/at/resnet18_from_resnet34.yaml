@@ -112,7 +112,7 @@ train:
                 io: 'output'
               target:
                 uses_label: True
-          factor: 1.0
+          weight: 1.0
         at_loss:
           criterion:
             type: 'ATLoss'
@@ -125,7 +125,7 @@ train:
                   student:
                     io: 'output'
                     path: 'layer3'
-                  factor: 1
+                  weight: 1
                 pair2:
                   teacher:
                     io: 'output'
@@ -133,9 +133,9 @@ train:
                   student:
                     io: 'output'
                     path: 'layer4'
-                  factor: 1
+                  weight: 1
               mode: 'code'
-          factor: 1000.0
+          weight: 1000.0
 
 test:
   test_data_loader:

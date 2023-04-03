@@ -125,7 +125,7 @@ train:
                 is_from_teacher: True
                 module_path: 'seq.backbone.body.layer1'
                 io: 'output'
-          factor: 1.0
+          weight: 1.0
         layer2:
           criterion:
             type: 'MSELoss'
@@ -142,7 +142,7 @@ train:
                 is_from_teacher: True
                 module_path: 'seq.backbone.body.layer2'
                 io: 'output'
-          factor: 1.0
+          weight: 1.0
         layer3:
           criterion:
             type: 'MSELoss'
@@ -159,7 +159,7 @@ train:
                 is_from_teacher: True
                 module_path: 'seq.backbone.body.layer3'
                 io: 'output'
-          factor: 1.0
+          weight: 1.0
         layer4:
           criterion:
             type: 'MSELoss'
@@ -176,7 +176,7 @@ train:
                 is_from_teacher: True
                 module_path: 'seq.backbone.body.layer4'
                 io: 'output'
-          factor: 1.0
+          weight: 1.0
 
 test:
   test_data_loader:

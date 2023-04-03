@@ -139,7 +139,7 @@ train:
                   is_from_teacher: True
                   module_path: 'teacher_model.classifier.-1'
                   io: 'output'
-            factor: 1.0
+            weight: 1.0
           regularization:
             criterion:
               type: 'RegularizationLoss'
@@ -148,7 +148,7 @@ train:
                 module_path: 'paraphraser.encoder'
                 io: 'output'
                 p: 1
-            factor: 1.0e-7
+            weight: 1.0e-7
   stage2:
     num_epochs: &num_epochs 30
     train_data_loader:
@@ -234,7 +234,7 @@ train:
                   io: 'output'
                 target:
                   uses_label: True
-            factor:
+            weight:
               out: 1.0
           adapt:
             criterion:
@@ -245,7 +245,7 @@ train:
                 reduction: 'mean'
                 knowledge_translator_path: 'paraphraser.encoder'
                 feature_adapter_path: 'feature_adapter'
-            factor: 50.0
+            weight: 50.0
           aff:
             criterion:
               type: 'AffinityLoss'
@@ -255,7 +255,7 @@ train:
                 teacher_module_path: 'paraphraser.encoder'
                 teacher_module_io: 'output'
                 reduction: 'mean'
-            factor: 1.0
+            weight: 1.0
 
 test:
   test_data_loader:

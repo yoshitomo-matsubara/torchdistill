@@ -105,7 +105,7 @@ train:
               teacher_module_path: 'fc'
               teacher_module_io: 'input'
               eps: 0.0000001
-          factor: 30000.0
+          weight: 30000.0
 
 test:
   test_data_loader:

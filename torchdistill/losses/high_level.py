@@ -14,7 +14,7 @@ class AbstractLoss(nn.Module):
             for loss_name, loss_config in sub_terms.items():
                 sub_criterion_config = loss_config['criterion']
                 sub_criterion = get_mid_level_loss(sub_criterion_config, loss_config.get('criterion_wrapper', dict()))
-                term_dict[loss_name] = (sub_criterion, loss_config['factor'])
+                term_dict[loss_name] = (sub_criterion, loss_config['weight'])
         self.term_dict = term_dict
 
     def forward(self, *args, **kwargs):
@@ -30,7 +30,7 @@ class WeightedSumLoss(AbstractLoss):
         super().__init__(**kwargs)
         if model_term is None:
             model_term = dict()
-        self.model_loss_factor = model_term.get('factor', None)
+        self.model_loss_factor = model_term.get('weight', None)
 
     def forward(self, io_dict, model_loss_dict, targets):
         loss_dict = dict()

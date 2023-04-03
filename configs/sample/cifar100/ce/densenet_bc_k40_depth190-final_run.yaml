@@ -102,7 +102,7 @@ train:
                 io: 'output'
               target:
                 uses_label: True
-          factor: 1.0
+          weight: 1.0
 
 test:
   test_data_loader:

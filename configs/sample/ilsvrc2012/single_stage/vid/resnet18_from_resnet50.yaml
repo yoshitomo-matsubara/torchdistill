@@ -149,7 +149,7 @@ train:
               temperature: 1.0
               alpha: 1.0
               reduction: 'batchmean'
-          factor: 1.0
+          weight: 1.0
         vid:
           criterion:
             type: 'VIDLoss'
@@ -162,7 +162,7 @@ train:
                   student:
                     io: 'output'
                     path: 'regressor_dict.regressor1'
-                  factor: 1
+                  weight: 1
                 pair2:
                   teacher:
                     io: 'output'
@@ -170,7 +170,7 @@ train:
                   student:
                     io: 'output'
                     path: 'regressor_dict.regressor2'
-                  factor: 1
+                  weight: 1
                 pair3:
                   teacher:
                     io: 'output'
@@ -178,7 +178,7 @@ train:
                   student:
                     io: 'output'
                     path: 'regressor_dict.regressor3'
-                  factor: 1
+                  weight: 1
                 pair4:
                   teacher:
                     io: 'output'
@@ -186,9 +186,9 @@ train:
                   student:
                     io: 'output'
                     path: 'regressor_dict.regressor4'
-                  factor: 1
+                  weight: 1
               margin: 1.0
-          factor: 1.0
+          weight: 1.0
 
 test:
   test_data_loader:

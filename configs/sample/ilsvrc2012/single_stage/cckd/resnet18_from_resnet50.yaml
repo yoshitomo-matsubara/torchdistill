@@ -130,7 +130,7 @@ train:
               temperature: 1.0
               alpha: 0
               reduction: 'batchmean'
-          factor: 1.0
+          weight: 1.0
         cckd:
           criterion:
             type: 'CCKDLoss'
@@ -142,7 +142,7 @@ train:
                 gamma: 0.4
                 max_p: 2
               reduction: 'batchmean'
-          factor: 0.003
+          weight: 0.003
 
 test:
   test_data_loader:

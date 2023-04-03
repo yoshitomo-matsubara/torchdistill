@@ -117,7 +117,7 @@ train:
                 is_from_teacher: True
                 module_path: 'layer2'
                 io: 'output'
-          factor: 1.0
+          weight: 1.0
         layer3:
           criterion:
             type: 'MSELoss'
@@ -134,7 +134,7 @@ train:
                 is_from_teacher: True
                 module_path: 'layer3'
                 io: 'output'
-          factor: 1.0
+          weight: 1.0
         layer4:
           criterion:
             type: 'MSELoss'
@@ -151,7 +151,7 @@ train:
                 is_from_teacher: True
                 module_path: 'layer4'
                 io: 'output'
-          factor: 1.0
+          weight: 1.0
 
 test:
   test_data_loader:

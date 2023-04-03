@@ -114,7 +114,7 @@ class FSPLoss(nn.Module):
             teacher_first_feature_map = extract_feature_map(teacher_io_dict, pair_config['teacher_first'])
             teacher_second_feature_map = extract_feature_map(teacher_io_dict, pair_config['teacher_second'])
             teacher_fsp_matrices = self.compute_fsp_matrix(teacher_first_feature_map, teacher_second_feature_map)
-            factor = pair_config.get('factor', 1)
+            factor = pair_config.get('weight', 1)
             fsp_loss += factor * (student_fsp_matrices - teacher_fsp_matrices).norm(dim=1).sum()
             if batch_size is None:
                 batch_size = student_first_feature_map.shape[0]
@@ -163,7 +163,7 @@ class ATLoss(nn.Module):
         for pair_name, pair_config in self.at_pairs.items():
             student_feature_map = extract_feature_map(student_io_dict, pair_config['student'])
             teacher_feature_map = extract_feature_map(teacher_io_dict, pair_config['teacher'])
-            factor = pair_config.get('factor', 1)
+            factor = pair_config.get('weight', 1)
             if self.mode == 'paper':
                 at_loss += factor * self.compute_at_loss_paper(student_feature_map, teacher_feature_map)
             else:
@@ -269,7 +269,7 @@ class AltActTransferLoss(nn.Module):
         for pair_name, pair_config in self.feature_pairs.items():
             student_feature_map = extract_feature_map(student_io_dict, pair_config['student'])
             teacher_feature_map = extract_feature_map(teacher_io_dict, pair_config['teacher'])
-            factor = pair_config.get('factor', 1)
+            factor = pair_config.get('weight', 1)
             dab_loss += \
                 factor * self.compute_alt_act_transfer_loss(student_feature_map, teacher_feature_map, self.margin)
             if batch_size is None:
@@ -354,7 +354,7 @@ class VIDLoss(nn.Module):
         for pair_name, pair_config in self.feature_pairs.items():
             pred_mean, pred_var = extract_feature_map(student_io_dict, pair_config['student'])
             teacher_feature_map = extract_feature_map(teacher_io_dict, pair_config['teacher'])
-            factor = pair_config.get('factor', 1)
+            factor = pair_config.get('weight', 1)
             neg_log_prob = 0.5 * ((pred_mean - teacher_feature_map) ** 2 / pred_var + torch.log(pred_var))
             vid_loss += factor * neg_log_prob.mean()
         return vid_loss

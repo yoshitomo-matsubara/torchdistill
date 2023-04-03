@@ -113,7 +113,7 @@ train:
                   io: 'output'
                 target:
                   uses_label: True
-            factor: 1.0
+            weight: 1.0
           l2based:
             criterion:
               type: 'MSELoss'
@@ -130,7 +130,7 @@ train:
                   is_from_teacher: True
                   module_path: 'avgpool'
                   io: 'output'
-            factor: 1.0
+            weight: 1.0
   stage2:
     num_epochs: 10
     teacher: *teacher
@@ -171,7 +171,7 @@ train:
                   io: 'output'
                 target:
                   uses_label: True
-            factor: 1.0
+            weight: 1.0
           pad_l2:
             criterion:
               type: 'PADL2Loss'
@@ -184,7 +184,7 @@ train:
                 module_io: 'output'
                 eps: 0.000001
                 reduction: 'mean'
-            factor: 1.0
+            weight: 1.0
 
 test:
   test_data_loader:
