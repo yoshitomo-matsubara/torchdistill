@@ -495,7 +495,7 @@ class CRDLoss(nn.Module):
         self.unigrams = torch.ones(output_size)
         self.num_negative_samples = num_negative_samples
         self.num_samples = num_samples
-        self.register_buffer('kwargs', torch.tensor([num_negative_samples, temperature, -1, -1, momentum]))
+        self.register_buffer('params', torch.tensor([num_negative_samples, temperature, -1, -1, momentum]))
         stdv = 1.0 / math.sqrt(input_size / 3)
         self.register_buffer('memory_v1', torch.rand(output_size, input_size).mul_(2 * stdv).add_(-stdv))
         self.register_buffer('memory_v2', torch.rand(output_size, input_size).mul_(2 * stdv).add_(-stdv))
