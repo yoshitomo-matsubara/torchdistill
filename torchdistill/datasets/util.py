@@ -39,23 +39,13 @@ def build_transform(transform_configs, compose_cls=None):
         compose_cls = TRANSFORM_DICT[compose_cls]
 
     component_list = list()
-    if isinstance(transform_configs, dict):
-        for component_key in sorted(transform_configs.keys()):
-            component_config = transform_configs[component_key]
-            kwargs = component_config.get('kwargs', dict())
-            if kwargs is None:
-                kwargs = dict()
+    for component_config in transform_configs:
+        kwargs = component_config.get('kwargs', dict())
+        if kwargs is None:
+            kwargs = dict()
 
-            component = TRANSFORM_DICT[component_config['type']](**kwargs)
-            component_list.append(component)
-    else:
-        for component_config in transform_configs:
-            kwargs = component_config.get('kwargs', dict())
-            if kwargs is None:
-                kwargs = dict()
-
-            component = TRANSFORM_DICT[component_config['type']](**kwargs)
-            component_list.append(component)
+        component = TRANSFORM_DICT[component_config['type']](**kwargs)
+        component_list.append(component)
     return torchvision.transforms.Compose(component_list) if compose_cls is None else compose_cls(component_list)
 
 
