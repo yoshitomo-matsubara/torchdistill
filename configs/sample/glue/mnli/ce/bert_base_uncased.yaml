@@ -80,7 +80,7 @@ train:
     func2extract_model_loss: 'extract_transformers_loss'
     kwargs:
       model_term:
-        factor: 1.0
+        weight: 1.0
 
 test:
   test_data_loader:

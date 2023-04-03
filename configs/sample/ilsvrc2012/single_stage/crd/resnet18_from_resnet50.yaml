@@ -135,7 +135,7 @@ train:
               temperature: 4.0
               alpha: 0.5
               reduction: 'batchmean'
-          factor: 2.0
+          weight: 2.0
         crd:
           criterion:
             type: 'CRDLoss'
@@ -150,7 +150,7 @@ train:
               temperature: 0.07
               momentum: 0.5
               eps: 0.0000001
-          factor: 0.8
+          weight: 0.8
 
 test:
   test_data_loader:

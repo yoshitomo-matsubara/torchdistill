@@ -122,7 +122,7 @@ train:
                   is_from_teacher: True
                   module_path: 'layer1'
                   io: 'output'
-            factor: 1.0
+            weight: 1.0
   stage2:
     num_epochs: 15
     teacher:
@@ -157,7 +157,7 @@ train:
                 temperature: 1.0
                 alpha: 0.5
                 reduction: 'batchmean'
-            factor: 1.0
+            weight: 1.0
 
 test:
   test_data_loader:

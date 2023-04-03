@@ -128,7 +128,7 @@ train:
                 is_from_teacher: True
                 module_path: '+maxpool2'
                 io: 'output'
-          factor: 1.0
+          weight: 1.0
         Mixed_5d:
           criterion:
             type: 'MSELoss'
@@ -145,7 +145,7 @@ train:
                 is_from_teacher: True
                 module_path: 'Mixed_5d'
                 io: 'output'
-          factor: 1.0
+          weight: 1.0
         Mixed_6e:
           criterion:
             type: 'MSELoss'
@@ -162,7 +162,7 @@ train:
                 is_from_teacher: True
                 module_path: 'Mixed_6e'
                 io: 'output'
-          factor: 1.0
+          weight: 1.0
         Mixed_7c:
           criterion:
             type: 'MSELoss'
@@ -179,7 +179,7 @@ train:
                 is_from_teacher: True
                 module_path: 'Mixed_7c'
                 io: 'output'
-          factor: 1.0
+          weight: 1.0
 
 test:
   test_data_loader:

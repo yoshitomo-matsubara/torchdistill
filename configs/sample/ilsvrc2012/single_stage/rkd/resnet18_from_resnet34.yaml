@@ -108,7 +108,7 @@ train:
               temperature: 1.0
               alpha: 1.0
               reduction: 'batchmean'
-          factor: 1.0
+          weight: 1.0
         rkd_da:
           criterion:
             type: 'RKDLoss'
@@ -118,7 +118,7 @@ train:
               dist_factor: 1.0
               angle_factor: 2.0
               reduction: 'mean'
-          factor: 1.0
+          weight: 1.0
 
 test:
   test_data_loader:

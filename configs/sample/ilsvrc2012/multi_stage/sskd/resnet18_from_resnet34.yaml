@@ -121,7 +121,7 @@ train:
                 module_path: 'ss_module'
                 module_io: 'output'
                 reduction: 'mean'
-            factor: 1.0
+            weight: 1.0
   stage2:
     num_epochs: 100
     teacher:
@@ -188,7 +188,7 @@ train:
                 tf_ratio: 1.0
                 loss_weights: [1.0, 0.9, 10.0, 2.7]
                 reduction: 'batchmean'
-            factor: 1.0
+            weight: 1.0
 
 test:
   test_data_loader:

@@ -158,7 +158,7 @@ train:
                     student:
                       io: 'output'
                       path: 'connector_dict.connector1'
-                    factor: 1
+                    weight: 1
                   pair2:
                     teacher:
                       io: 'output'
@@ -166,7 +166,7 @@ train:
                     student:
                       io: 'output'
                       path: 'connector_dict.connector2'
-                    factor: 1
+                    weight: 1
                   pair3:
                     teacher:
                       io: 'output'
@@ -174,7 +174,7 @@ train:
                     student:
                       io: 'output'
                       path: 'connector_dict.connector3'
-                    factor: 1
+                    weight: 1
                   pair4:
                     teacher:
                       io: 'output'
@@ -182,10 +182,10 @@ train:
                     student:
                       io: 'output'
                       path: 'connector_dict.connector4'
-                    factor: 1
+                    weight: 1
                 margin: 1.0
                 reduction: 'mean'
-            factor: 1.0
+            weight: 1.0
   stage2:
     num_epochs: 19
     teacher:
@@ -220,7 +220,7 @@ train:
                 temperature: 1.0
                 alpha: 1.0
                 reduction: 'batchmean'
-            factor: 1.0
+            weight: 1.0
 
 test:
   test_data_loader:

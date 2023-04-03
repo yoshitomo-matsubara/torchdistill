@@ -112,7 +112,7 @@ train:
                 io: 'output'
               target:
                 uses_label: True
-          factor: 1.0
+          weight: 1.0
         spkd:
           criterion:
             type: 'SPKDLoss'
@@ -120,7 +120,7 @@ train:
               teacher_output_path: 'layer4'
               student_output_path: 'layer4'
               reduction: 'batchmean'
-          factor: 1.0
+          weight: 1.0
 
 test:
   test_data_loader:

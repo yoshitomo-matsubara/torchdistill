@@ -112,7 +112,7 @@ train:
                 io: 'output'
               target:
                 uses_label: True
-          factor: 1.0
+          weight: 1.0
         l2based:
           criterion:
             type: 'MSELoss'
@@ -129,7 +129,7 @@ train:
                 is_from_teacher: True
                 module_path: 'avgpool'
                 io: 'output'
-          factor: 15.0
+          weight: 15.0
 
 test:
   test_data_loader:

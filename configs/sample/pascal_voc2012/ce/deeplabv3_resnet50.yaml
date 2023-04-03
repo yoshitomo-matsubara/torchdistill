@@ -134,7 +134,7 @@ train:
                 io: 'output'
               target:
                 uses_label: True
-          factor:
+          weight:
             out: 1.0
             aux: 0.5
 

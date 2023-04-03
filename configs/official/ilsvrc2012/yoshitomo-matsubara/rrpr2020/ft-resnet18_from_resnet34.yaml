@@ -127,7 +127,7 @@ train:
                 is_from_teacher: True
                 module_path: 'teacher_model.layer4'
                 io: 'output'
-          factor: 1.0
+          weight: 1.0
   stage2:
     num_epochs: 90
     train_data_loader:
@@ -200,7 +200,7 @@ train:
                   io: 'output'
                 target:
                   uses_label: True
-            factor: 1.0
+            weight: 1.0
           factor_transfer:
             criterion:
               type: 'FTLoss'
@@ -209,7 +209,7 @@ train:
                 reduction: 'mean'
                 paraphraser_path: 'paraphraser'
                 translator_path: 'translator'
-            factor: 1000.0
+            weight: 1000.0
 
 test:
   test_data_loader:
