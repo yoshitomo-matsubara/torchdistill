@@ -20,7 +20,7 @@ class AuxiliaryModelWrapper(nn.Module):
     def secondary_forward(self, *args, **kwargs):
         pass
 
-    def post_process(self, *args, **kwargs):
+    def post_epoch_process(self, *args, **kwargs):
         pass
 
 
@@ -140,7 +140,7 @@ class Teacher4FactorTransfer(AuxiliaryModelWrapper):
             self.paraphraser.train()
         self.paraphraser(io_dict[self.input_module_path]['output'])
 
-    def post_process(self, *args, **kwargs):
+    def post_epoch_process(self, *args, **kwargs):
         save_module_ckpt(self.paraphraser, self.ckpt_file_path)
 
 
@@ -378,7 +378,7 @@ class SSWrapper4SSKD(AuxiliaryModelWrapper):
         flat_outputs = torch.flatten(io_dict[self.input_module_path][self.input_module_io], 1)
         self.ss_module(flat_outputs)
 
-    def post_process(self, *args, **kwargs):
+    def post_epoch_process(self, *args, **kwargs):
         save_module_ckpt(self.ss_module, self.ckpt_file_path)
 
 
@@ -410,7 +410,7 @@ class VarianceBranch4PAD(AuxiliaryModelWrapper):
         embed_outputs = io_dict[self.input_module_path][self.input_module_io].flatten(1)
         self.var_estimator(embed_outputs)
 
-    def post_process(self, *args, **kwargs):
+    def post_epoch_process(self, *args, **kwargs):
         save_module_ckpt(self.var_estimator, self.ckpt_file_path)
 
 

@@ -20,9 +20,9 @@ def default_post_epoch_process_with_teacher(self, metrics=None, **kwargs):
         else:
             self.lr_scheduler.step()
     if isinstance(self.teacher_model, AuxiliaryModelWrapper):
-        self.teacher_model.post_process()
+        self.teacher_model.post_epoch_process()
     if isinstance(self.student_model, AuxiliaryModelWrapper):
-        self.student_model.post_process()
+        self.student_model.post_epoch_process()
     if self.distributed:
         dist.barrier()
 
@@ -39,6 +39,6 @@ def default_post_epoch_process_without_teacher(self, metrics=None, **kwargs):
         else:
             self.lr_scheduler.step()
     if isinstance(self.model, AuxiliaryModelWrapper):
-        self.model.post_process()
+        self.model.post_epoch_process()
     if self.distributed:
         dist.barrier()
