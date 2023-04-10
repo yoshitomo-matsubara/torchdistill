@@ -62,7 +62,7 @@ def train_one_epoch(training_box, device, epoch, log_freq):
         start_time = time.time()
         sample_batch, targets = sample_batch.to(device), targets.to(device)
         loss = training_box(sample_batch, targets, supp_dict)
-        training_box.update_params(loss=loss)
+        training_box.post_forward_process(loss=loss)
         batch_size = sample_batch.shape[0]
         metric_logger.update(loss=loss.item(), lr=training_box.optimizer.param_groups[0]['lr'])
         metric_logger.meters['img/s'].update(batch_size / (time.time() - start_time))
@@ -119,7 +119,7 @@ def train(teacher_model, student_model, dataset_dict, ckpt_file_path, device, de
     student_model_without_ddp = student_model.module if module_util.check_if_wrapped(student_model) else student_model
     start_time = time.time()
     for epoch in range(args.start_epoch, training_box.num_epochs):
-        training_box.pre_process(epoch=epoch)
+        training_box.pre_epoch_process(epoch=epoch)
         train_one_epoch(training_box, device, epoch, log_freq)
         val_top1_accuracy = evaluate(student_model, training_box.val_data_loader, device, device_ids, distributed,
                                      log_freq=log_freq, header='Validation:')
@@ -129,7 +129,7 @@ def train(teacher_model, student_model, dataset_dict, ckpt_file_path, device, de
             best_val_top1_accuracy = val_top1_accuracy
             save_ckpt(student_model_without_ddp, optimizer, lr_scheduler,
                       best_val_top1_accuracy, config, args, ckpt_file_path)
-        training_box.post_process()
+        training_box.post_epoch_process()
 
     if distributed:
         dist.barrier()

@@ -8,7 +8,7 @@ logger = def_logger.getChild(__name__)
 
 
 @register_post_forward_proc_func
-def default_post_forward_process(self, loss, **kwargs):
+def default_post_forward_process(self, loss, metrics=None, **kwargs):
     self.stage_grad_count += 1
     if self.grad_accum_step > 1:
         loss /= self.grad_accum_step
@@ -30,7 +30,6 @@ def default_post_forward_process(self, loss, **kwargs):
     if self.lr_scheduler is not None and self.scheduling_step > 0 \
             and self.stage_grad_count % self.scheduling_step == 0:
         if isinstance(self.lr_scheduler, ReduceLROnPlateau):
-            metrics = kwargs['metrics']
             self.lr_scheduler.step(metrics)
         elif isinstance(self.lr_scheduler, LambdaLR):
             local_epoch = int(self.stage_grad_count / self.scheduling_step)

@@ -116,7 +116,7 @@ def train_one_epoch(training_box, epoch, log_freq):
             metric_logger.log_every(training_box.train_data_loader, log_freq, header):
         start_time = time.time()
         loss = training_box(sample_batch, targets=None, supp_dict=None)
-        training_box.update_params(loss=loss)
+        training_box.post_forward_process(loss=loss)
         batch_size = len(sample_batch)
         metric_logger.update(loss=loss.item(), lr=training_box.optimizer.param_groups[0]['lr'])
         metric_logger.meters['sample/s'].update(batch_size / (time.time() - start_time))
@@ -155,6 +155,7 @@ def train(teacher_model, student_model, dataset_dict, is_regression, ckpt_dir_pa
     log_freq = train_config['log_freq']
     best_val_number = 0.0
     for epoch in range(training_box.num_epochs):
+        training_box.pre_epoch_process(epoch=epoch)
         train_one_epoch(training_box, epoch, log_freq)
         val_dict = evaluate(student_model, training_box.val_data_loader, metric, is_regression,
                             accelerator, header='Validation: ')
@@ -165,7 +166,7 @@ def train(teacher_model, student_model, dataset_dict, is_regression, ckpt_dir_pa
             accelerator.wait_for_everyone()
             unwrapped_model = accelerator.unwrap_model(student_model)
             unwrapped_model.save_pretrained(ckpt_dir_path, save_function=accelerator.save)
-        training_box.post_process()
+        training_box.post_epoch_process()
 
 
 @torch.inference_mode()
