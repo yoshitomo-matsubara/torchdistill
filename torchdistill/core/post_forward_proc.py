@@ -1,5 +1,5 @@
 import torch
-from torch.optim.lr_scheduler import ReduceLROnPlateau, LambdaLR
+from torch.optim.lr_scheduler import ReduceLROnPlateau, LambdaLR, CosineAnnealingWarmRestarts
 
 from .registry import register_post_forward_proc_func
 from ..common.constant import def_logger
@@ -31,7 +31,7 @@ def default_post_forward_process(self, loss, metrics=None, **kwargs):
             and self.stage_grad_count % self.scheduling_step == 0:
         if isinstance(self.lr_scheduler, ReduceLROnPlateau):
             self.lr_scheduler.step(metrics)
-        elif isinstance(self.lr_scheduler, LambdaLR):
+        elif isinstance(self.lr_scheduler, (LambdaLR, CosineAnnealingWarmRestarts)):
             local_epoch = int(self.stage_grad_count / self.scheduling_step)
             self.lr_scheduler.step(local_epoch)
         else:

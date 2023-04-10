@@ -1,5 +1,5 @@
 from torch import distributed as dist
-from torch.optim.lr_scheduler import ReduceLROnPlateau, LambdaLR
+from torch.optim.lr_scheduler import ReduceLROnPlateau, LambdaLR, CosineAnnealingWarmRestarts
 
 from .registry import register_post_epoch_proc_func
 from ..common.constant import def_logger
@@ -14,7 +14,7 @@ def default_post_epoch_process_with_teacher(self, metrics=None, **kwargs):
     if self.lr_scheduler is not None and self.scheduling_step <= 0:
         if isinstance(self.lr_scheduler, ReduceLROnPlateau):
             self.lr_scheduler.step(metrics)
-        elif isinstance(self.lr_scheduler, LambdaLR):
+        elif isinstance(self.lr_scheduler, (LambdaLR, CosineAnnealingWarmRestarts)):
             epoch = self.lr_scheduler.last_epoch + 1
             self.lr_scheduler.step(epoch)
         else:
@@ -33,7 +33,7 @@ def default_post_epoch_process_without_teacher(self, metrics=None, **kwargs):
     if self.lr_scheduler is not None and self.scheduling_step <= 0:
         if isinstance(self.lr_scheduler, ReduceLROnPlateau):
             self.lr_scheduler.step(metrics)
-        elif isinstance(self.lr_scheduler, LambdaLR):
+        elif isinstance(self.lr_scheduler, (LambdaLR, CosineAnnealingWarmRestarts)):
             epoch = self.lr_scheduler.last_epoch + 1
             self.lr_scheduler.step(epoch)
         else:
