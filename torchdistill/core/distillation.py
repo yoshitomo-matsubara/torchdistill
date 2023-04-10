@@ -354,8 +354,8 @@ class MultiStagesDistillationBox(DistillationBox):
         self.stage_end_epoch += next_stage_config['num_epochs']
         logger.info('Advanced to stage {}'.format(self.stage_number))
 
-    def post_process(self, **kwargs):
-        super().post_process(**kwargs)
+    def post_epoch_process(self, **kwargs):
+        super().post_epoch_process(**kwargs)
         self.current_epoch += 1
         if self.current_epoch == self.stage_end_epoch and self.current_epoch < self.num_epochs:
             self.advance_to_next_stage()
