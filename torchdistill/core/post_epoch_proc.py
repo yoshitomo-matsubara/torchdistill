@@ -9,11 +9,10 @@ logger = def_logger.getChild(__name__)
 
 
 @register_post_epoch_proc_func
-def default_post_epoch_process_with_teacher(self, **kwargs):
+def default_post_epoch_process_with_teacher(self, metrics=None, **kwargs):
     # Epoch-wise scheduler step
     if self.lr_scheduler is not None and self.scheduling_step <= 0:
         if isinstance(self.lr_scheduler, ReduceLROnPlateau):
-            metrics = kwargs['metrics']
             self.lr_scheduler.step(metrics)
         elif isinstance(self.lr_scheduler, LambdaLR):
             epoch = self.lr_scheduler.last_epoch + 1
@@ -29,11 +28,10 @@ def default_post_epoch_process_with_teacher(self, **kwargs):
 
 
 @register_post_epoch_proc_func
-def default_post_epoch_process_without_teacher(self, **kwargs):
+def default_post_epoch_process_without_teacher(self, metrics=None, **kwargs):
     # Epoch-wise scheduler step
     if self.lr_scheduler is not None and self.scheduling_step <= 0:
         if isinstance(self.lr_scheduler, ReduceLROnPlateau):
-            metrics = kwargs['metrics']
             self.lr_scheduler.step(metrics)
         elif isinstance(self.lr_scheduler, LambdaLR):
             epoch = self.lr_scheduler.last_epoch + 1

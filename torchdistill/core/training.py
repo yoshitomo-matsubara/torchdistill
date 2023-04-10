@@ -1,15 +1,12 @@
-import torch
-from torch import distributed as dist
 from torch import nn
-from torch.optim.lr_scheduler import ReduceLROnPlateau, LambdaLR
 
-from .post_epoch_proc import default_post_epoch_process_with_teacher
+from .post_epoch_proc import default_post_epoch_process_without_teacher
 from .post_forward_proc import default_post_forward_process
 from .pre_epoch_proc import default_pre_epoch_process_without_teacher
 from .pre_forward_proc import default_pre_forward_process
 from .registry import get_pre_epoch_proc_func, get_pre_forward_proc_func, get_forward_proc_func, \
     get_post_forward_proc_func, get_post_epoch_proc_func
-from .util import set_hooks, wrap_model, clear_io_dict, extract_io_dict, update_io_dict
+from .util import set_hooks, wrap_model, extract_io_dict, update_io_dict
 from ..common.constant import SELF_MODULE_PATH, def_logger
 from ..common.module_util import check_if_wrapped, freeze_module_params, get_module, \
     unfreeze_module_params, get_updatable_param_names
@@ -78,7 +75,7 @@ class TrainingBox(nn.Module):
             post_forward_process = get_post_forward_proc_func(train_config['post_forward_process'])
 
         setattr(TrainingBox, 'post_forward_process', post_forward_process)
-        post_epoch_process = default_post_epoch_process_with_teacher
+        post_epoch_process = default_post_epoch_process_without_teacher
         if 'post_epoch_process' in train_config:
             post_epoch_process = get_post_epoch_proc_func(train_config['post_epoch_process'])
         setattr(TrainingBox, 'post_epoch_process', post_epoch_process)
@@ -181,11 +178,8 @@ class TrainingBox(nn.Module):
         self.setup(train_config)
         self.num_epochs = train_config['num_epochs']
 
-    def pre_process(self, epoch=None, **kwargs):
-        clear_io_dict(self.model_io_dict)
-        self.model.train()
-        if self.distributed:
-            self.train_data_loader.batch_sampler.sampler.set_epoch(epoch)
+    def pre_epoch_process(self, *args, **kwargs):
+        raise NotImplementedError()
 
     def forward(self, sample_batch, targets, supp_dict):
         model_outputs = self.model_forward_proc(self.model, sample_batch, targets, supp_dict)
@@ -200,51 +194,11 @@ class TrainingBox(nn.Module):
         total_loss = self.criterion(io_dict, model_loss_dict, targets)
         return total_loss
 
-    def update_params(self, loss, **kwargs):
-        self.stage_grad_count += 1
-        if self.grad_accum_step > 1:
-            loss /= self.grad_accum_step
+    def post_forward_process(self, *args, **kwargs):
+        raise NotImplementedError()
 
-        if self.accelerator is not None:
-            self.accelerator.backward(loss)
-        else:
-            loss.backward()
-
-        if self.stage_grad_count % self.grad_accum_step == 0:
-            if self.max_grad_norm is not None:
-                target_params = [p for group in self.optimizer.param_groups for p in group['kwargs']]
-                torch.nn.utils.clip_grad_norm_(target_params, self.max_grad_norm)
-
-            self.optimizer.step()
-            self.optimizer.zero_grad()
-
-        # Step-wise scheduler step
-        if self.lr_scheduler is not None and self.scheduling_step > 0 \
-                and self.stage_grad_count % self.scheduling_step == 0:
-            if isinstance(self.lr_scheduler, ReduceLROnPlateau):
-                metrics = kwargs['metrics']
-                self.lr_scheduler.step(metrics)
-            elif isinstance(self.lr_scheduler, LambdaLR):
-                local_epoch = int(self.stage_grad_count / self.scheduling_step)
-                self.lr_scheduler.step(local_epoch)
-            else:
-                self.lr_scheduler.step()
-
-    def post_process(self, **kwargs):
-        # Epoch-wise scheduler step
-        if self.lr_scheduler is not None and self.scheduling_step <= 0:
-            if isinstance(self.lr_scheduler, ReduceLROnPlateau):
-                metrics = kwargs['metrics']
-                self.lr_scheduler.step(metrics)
-            elif isinstance(self.lr_scheduler, LambdaLR):
-                epoch = self.lr_scheduler.last_epoch + 1
-                self.lr_scheduler.step(epoch)
-            else:
-                self.lr_scheduler.step()
-        if isinstance(self.model, AuxiliaryModelWrapper):
-            self.model.post_process()
-        if self.distributed:
-            dist.barrier()
+    def post_epoch_process(self, *args, **kwargs):
+        raise NotImplementedError()
 
     def clean_modules(self):
         unfreeze_module_params(self.org_model)
@@ -276,8 +230,8 @@ class MultiStagesTrainingBox(TrainingBox):
         self.stage_end_epoch += next_stage_config['num_epochs']
         logger.info('Advanced to stage {}'.format(self.stage_number))
 
-    def post_process(self, **kwargs):
-        super().post_process(**kwargs)
+    def post_epoch_process(self, *args, **kwargs):
+        super().post_epoch_process(*args, **kwargs)
         self.current_epoch += 1
         if self.current_epoch == self.stage_end_epoch and self.current_epoch < self.num_epochs:
             self.advance_to_next_stage()

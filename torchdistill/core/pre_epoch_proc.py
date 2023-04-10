@@ -6,7 +6,7 @@ logger = def_logger.getChild(__name__)
 
 
 @register_pre_epoch_proc_func
-def default_pre_epoch_process_with_teacher(self, epoch, **kwargs):
+def default_pre_epoch_process_with_teacher(self, epoch=None, **kwargs):
     clear_io_dict(self.teacher_io_dict)
     clear_io_dict(self.student_io_dict)
     self.teacher_model.eval()
@@ -16,7 +16,7 @@ def default_pre_epoch_process_with_teacher(self, epoch, **kwargs):
 
 
 @register_pre_epoch_proc_func
-def default_pre_epoch_process_without_teacher(self, epoch, **kwargs):
+def default_pre_epoch_process_without_teacher(self, epoch=None, **kwargs):
     clear_io_dict(self.model_io_dict)
     self.model.train()
     if self.distributed:
