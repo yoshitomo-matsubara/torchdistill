@@ -1,8 +1,9 @@
 from unittest import TestCase
 
-from torchdistill.core.registry import register_forward_proc_func, get_forward_proc_func, register_pre_epoch_proc_func, \
-    register_pre_forward_proc_func, register_post_forward_proc_func, register_post_epoch_proc_func, \
-    get_pre_epoch_proc_func, get_pre_forward_proc_func, get_post_forward_proc_func, get_post_epoch_proc_func
+from torchdistill.core.interfaces.registry import register_forward_proc_func, get_forward_proc_func, \
+    register_pre_epoch_proc_func, register_pre_forward_proc_func, register_post_forward_proc_func, \
+    register_post_epoch_proc_func, get_pre_epoch_proc_func, get_pre_forward_proc_func, get_post_forward_proc_func, \
+    get_post_epoch_proc_func
 from torchdistill.datasets.registry import register_dataset, register_collate_func, register_sample_loader_class, \
     register_sample_loader_func, register_batch_sampler, register_transform, register_dataset_wrapper, \
     DATASET_DICT, COLLATE_FUNC_DICT, SAMPLE_LOADER_CLASS_DICT, SAMPLE_LOADER_FUNC_DICT, BATCH_SAMPLER_DICT, \
