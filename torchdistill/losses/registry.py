@@ -95,7 +95,7 @@ def get_mid_level_loss(mid_level_criterion_config, criterion_wrapper_config=None
 
 def get_func2extract_model_output(key):
     if key is None:
-        key = 'extract_simple_model_loss'
+        key = 'extract_model_loss_dict'
     if key in FUNC2EXTRACT_MODEL_OUTPUT_DICT:
         return FUNC2EXTRACT_MODEL_OUTPUT_DICT[key]
     raise ValueError('No function to extract original output `{}` registered'.format(key))

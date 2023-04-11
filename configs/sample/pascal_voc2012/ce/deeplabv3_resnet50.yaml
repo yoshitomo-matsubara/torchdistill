@@ -116,7 +116,7 @@ train:
     scheduling_step: 1
   criterion:
     type: 'WeightedSumLoss'
-    func2extract_model_loss: 'extract_simple_model_loss_dict'
+    func2extract_model_loss: 'extract_model_loss_dict'
     kwargs:
       sub_terms:
         ce:
