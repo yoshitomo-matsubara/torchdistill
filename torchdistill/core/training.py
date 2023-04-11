@@ -181,8 +181,9 @@ class TrainingBox(nn.Module):
     def pre_epoch_process(self, *args, **kwargs):
         raise NotImplementedError()
 
-    def forward(self, sample_batch, targets, supp_dict):
-        model_outputs = self.model_forward_proc(self.model, sample_batch, targets, supp_dict)
+    def forward(self, sample_batch, targets=None, supp_dict=None, **kwargs):
+        model_outputs = self.model_forward_proc(self.model, sample_batch=sample_batch,
+                                                targets=targets, supp_dict=supp_dict, **kwargs)
         extracted_model_io_dict = extract_io_dict(self.model_io_dict, self.device)
         extracted_model_io_dict[SELF_MODULE_PATH]['output'] = model_outputs
         if isinstance(self.model, AuxiliaryModelWrapper):
