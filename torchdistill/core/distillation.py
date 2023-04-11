@@ -3,11 +3,11 @@ import copy
 import torch
 from torch import nn
 
-from .post_epoch_proc import default_post_epoch_process_with_teacher
-from .post_forward_proc import default_post_forward_process
-from .pre_epoch_proc import default_pre_epoch_process_with_teacher
-from .pre_forward_proc import default_pre_forward_process
-from .registry import get_pre_epoch_proc_func, get_pre_forward_proc_func, get_forward_proc_func, \
+from .interfaces.post_epoch_proc import default_post_epoch_process_with_teacher
+from .interfaces.post_forward_proc import default_post_forward_process
+from .interfaces.pre_epoch_proc import default_pre_epoch_process_with_teacher
+from .interfaces.pre_forward_proc import default_pre_forward_process
+from .interfaces.registry import get_pre_epoch_proc_func, get_pre_forward_proc_func, get_forward_proc_func, \
     get_post_forward_proc_func, get_post_epoch_proc_func
 from .util import set_hooks, wrap_model, change_device, tensor2numpy2tensor, extract_io_dict, update_io_dict, \
     extract_sub_model_output_dict
