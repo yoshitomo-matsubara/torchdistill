@@ -1,6 +1,6 @@
 from .registry import register_pre_epoch_proc_func
-from .util import clear_io_dict
-from ..common.constant import def_logger
+from ..util import clear_io_dict
+from ...common.constant import def_logger
 
 logger = def_logger.getChild(__name__)
 
