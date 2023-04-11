@@ -260,12 +260,12 @@ class DistillationBox(nn.Module):
         # If no cached data
         if teacher_outputs is None:
             if self.teacher_updatable:
-                teacher_outputs = self.teacher_forward_proc(self.teacher_model, sample_batch=sample_batch,
-                                                            targets=targets, supp_dict=supp_dict, **kwargs)
+                teacher_outputs = self.teacher_forward_proc(self.teacher_model, sample_batch,
+                                                            targets, supp_dict, **kwargs)
             else:
                 with torch.no_grad():
-                    teacher_outputs = self.teacher_forward_proc(self.teacher_model, sample_batch=sample_batch,
-                                                                targets=targets, supp_dict=supp_dict, **kwargs)
+                    teacher_outputs = self.teacher_forward_proc(self.teacher_model, sample_batch,
+                                                                targets, supp_dict, **kwargs)
 
         if cached_extracted_teacher_output_dict is not None:
             if isinstance(self.teacher_model, AuxiliaryModelWrapper) or \
@@ -304,8 +304,7 @@ class DistillationBox(nn.Module):
     def forward(self, sample_batch, targets=None, supp_dict=None, **kwargs):
         teacher_outputs, extracted_teacher_io_dict =\
             self.get_teacher_output(sample_batch=sample_batch, targets=targets, supp_dict=supp_dict, **kwargs)
-        student_outputs = self.student_forward_proc(self.student_model, sample_batch=sample_batch,
-                                                    targets=targets, supp_dict=supp_dict, **kwargs)
+        student_outputs = self.student_forward_proc(self.student_model, sample_batch, targets, supp_dict, **kwargs)
         extracted_student_io_dict = extract_io_dict(self.student_io_dict, self.device)
         extracted_student_io_dict[SELF_MODULE_PATH]['output'] = student_outputs
         if isinstance(self.student_model, AuxiliaryModelWrapper):
