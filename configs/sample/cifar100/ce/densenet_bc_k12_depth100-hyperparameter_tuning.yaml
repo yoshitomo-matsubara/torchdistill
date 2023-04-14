@@ -1,7 +1,7 @@
 datasets:
   cifar100:
     name: &dataset_name 'cifar100'
-    type: 'CIFAR100'
+    key: 'CIFAR100'
     root: &root_dir !join ['./resource/dataset/', *dataset_name]
     splits:
       dummy:
@@ -16,23 +16,23 @@ datasets:
           sub_splits:
             - dataset_id: &cifar100_train !join [*dataset_name, '/train']
               transform_configs:
-                - type: 'RandomCrop'
+                - key: 'RandomCrop'
                   kwargs:
                     size: 32
                     padding: 4
-                - type: 'RandomHorizontalFlip'
+                - key: 'RandomHorizontalFlip'
                   kwargs:
                     p: 0.5
-                - type: 'ToTensor'
+                - key: 'ToTensor'
                   kwargs:
                 - &normalize
-                  type: 'Normalize'
+                  key: 'Normalize'
                   kwargs:
                     mean: [0.5070754, 0.48655024, 0.44091907]
                     std: [0.26733398, 0.25643876, 0.2761503]
             - dataset_id: &cifar100_val !join [*dataset_name, '/val']
               transform_configs: &val_transform
-                - type: 'ToTensor'
+                - key: 'ToTensor'
                   kwargs:
                 - *normalize
       test:
@@ -45,12 +45,12 @@ datasets:
 
 models:
   model:
-    name: &student_model_name 'densenet_bc_k12_depth100'
+    key: &student_model_key 'densenet_bc_k12_depth100'
     kwargs:
       num_classes: 100
       memory_efficient: False
       pretrained: False
-    experiment: &student_experiment !join [*dataset_name, '-', *student_model_name]
+    experiment: &student_experiment !join [*dataset_name, '-', *student_model_key]
     ckpt: !join ['./resource/ckpt/', *dataset_name, '/ce/', *student_experiment, '-hyperparameter_tuning.pt']
 
 train:
@@ -74,27 +74,27 @@ train:
     requires_grad: True
     frozen_modules: []
   optimizer:
-    type: 'SGD'
+    key: 'SGD'
     kwargs:
       lr: 0.1
       momentum: 0.9
       weight_decay: 0.0001
   scheduler:
-    type: 'MultiStepLR'
+    key: 'MultiStepLR'
     kwargs:
       milestones: [150, 225]
       gamma: 0.1
   criterion:
-    type: 'WeightedSumLoss'
+    key: 'WeightedSumLoss'
     kwargs:
       sub_terms:
         ce:
           criterion:
-            type: 'CrossEntropyLoss'
+            key: 'CrossEntropyLoss'
             kwargs:
               reduction: 'mean'
           criterion_wrapper:
-            type: 'SimpleLossWrapper'
+            key: 'SimpleLossWrapper'
             kwargs:
               input:
                 is_from_teacher: False

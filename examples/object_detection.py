@@ -51,7 +51,7 @@ def load_model(model_config, device):
     model = get_object_detection_model(model_config)
     if model is None:
         repo_or_dir = model_config.get('repo_or_dir', None)
-        model = get_model(model_config['name'], repo_or_dir, **model_config['kwargs'])
+        model = get_model(model_config['key'], repo_or_dir, **model_config['kwargs'])
 
     ckpt_file_path = model_config['ckpt']
     load_ckpt(ckpt_file_path, model=model, strict=True)
@@ -234,9 +234,9 @@ def main(args):
     iou_types = args.iou_types
     if not args.student_only and teacher_model is not None:
         evaluate(teacher_model, test_data_loader, iou_types, device, device_ids, distributed, log_freq=log_freq,
-                 title='[Teacher: {}]'.format(teacher_model_config['name']))
+                 title='[Teacher: {}]'.format(teacher_model_config['key']))
     evaluate(student_model, test_data_loader, iou_types, device, device_ids, distributed, log_freq=log_freq,
-             title='[Student: {}]'.format(student_model_config['name']))
+             title='[Student: {}]'.format(student_model_config['key']))
 
 
 if __name__ == '__main__':

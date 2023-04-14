@@ -273,13 +273,13 @@ def main(args):
     if not args.student_only and teacher_model is not None:
         teacher_model = teacher_model.to(accelerator.device)
         evaluate(teacher_model, test_data_loader, metric, is_regression, accelerator,
-                 title='[Teacher: {}]'.format(teacher_model_config['name']))
+                 title='[Teacher: {}]'.format(teacher_model_config['key']))
 
     # Reload best checkpoint based on validation result
     student_tokenizer, student_model = load_tokenizer_and_model(student_model_config, task_name, True)
     student_model = accelerator.prepare(student_model)
     evaluate(student_model, test_data_loader, metric, is_regression, accelerator,
-             title='[Student: {}]'.format(student_model_config['name']))
+             title='[Student: {}]'.format(student_model_config['key']))
 
     # Output prediction for private dataset(s) if both the config and output dir path are given
     private_configs = config.get('private', None)

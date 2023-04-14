@@ -11,28 +11,28 @@ datasets:
       validation_mismatched: &glue_val_mm !join [*dataset_name, '/val_mm']
       test_mismatched: &glue_test_mm !join [*dataset_name, '/test_mm']
   glue_ax:
-    name: &ax_dataset_name 'ax'
+    key: &ax_dataset_key 'ax'
     base_split_name: 'test'
     raw_data_kwargs:
       train_file_path:
       valid_file_path:
     dataset_id_map:
-      test: &glue_test_ax !join [*ax_dataset_name, '/test_ax']
+      test: &glue_test_ax !join [*ax_dataset_key, '/test_ax']
 
 models:
   student_model:
-    name: &student_model_name 'bert-base-uncased'
-    model_name_or_path: *student_model_name
+    key: &student_model_key 'bert-base-uncased'
+    model_name_or_path: *student_model_key
     num_labels: 3
     config_kwargs:
-      pretrained_model_name_or_path: *student_model_name
+      pretrained_model_name_or_path: *student_model_key
     tokenizer_kwargs:
-      pretrained_model_name_or_path: *student_model_name
+      pretrained_model_name_or_path: *student_model_key
       do_lower: True
       use_fast: True
     model_kwargs:
-      pretrained_model_name_or_path: *student_model_name
-    experiment: &student_experiment !join [*dataset_name, '-', *student_model_name]
+      pretrained_model_name_or_path: *student_model_key
+    experiment: &student_experiment !join [*dataset_name, '-', *student_model_key]
     ckpt: !join ['./resource/ckpt/glue/', *dataset_name, '/ce/', *student_experiment]
 
 train:
@@ -61,22 +61,22 @@ train:
     requires_grad: True
     frozen_modules: []
   optimizer:
-    type: 'optimizer_no_decay'
+    key: 'optimizer_no_decay'
     kwargs:
-      optimizer_type: 'AdamW'
+      optimizer_key: 'AdamW'
       lr: 2.0e-5
       weight_decay: 0.0
     filters_params: False
     max_grad_norm: 1.0
     grad_accum_step: 1
   scheduler:
-    type: 'get_linear_schedule_with_warmup'
+    key: 'get_linear_schedule_with_warmup'
     kwargs:
       num_warmup_steps: 0
       num_training_steps:
     scheduling_step: 1
   criterion:
-    type: 'WeightedSumLoss'
+    key: 'WeightedSumLoss'
     func2extract_model_loss: 'extract_transformers_loss'
     kwargs:
       model_term:

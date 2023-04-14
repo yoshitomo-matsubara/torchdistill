@@ -71,23 +71,23 @@ def get_loss(key, **kwargs):
 
 
 def get_high_level_loss(criterion_config):
-    criterion_type = criterion_config['type']
-    if criterion_type in HIGH_LEVEL_LOSS_DICT:
-        return HIGH_LEVEL_LOSS_DICT[criterion_type](**criterion_config['kwargs'])
-    raise ValueError('No high-level loss `{}` registered'.format(criterion_type))
+    criterion_key = criterion_config['key']
+    if criterion_key in HIGH_LEVEL_LOSS_DICT:
+        return HIGH_LEVEL_LOSS_DICT[criterion_key](**criterion_config['kwargs'])
+    raise ValueError('No high-level loss `{}` registered'.format(criterion_key))
 
 
 def get_loss_wrapper(mid_level_loss, criterion_wrapper_config):
-    wrapper_type = criterion_wrapper_config['type']
-    if wrapper_type in LOSS_WRAPPER_DICT:
-        return LOSS_WRAPPER_DICT[wrapper_type](mid_level_loss, **criterion_wrapper_config.get('kwargs', dict()))
-    raise ValueError('No loss wrapper `{}` registered'.format(wrapper_type))
+    wrapper_key = criterion_wrapper_config['key']
+    if wrapper_key in LOSS_WRAPPER_DICT:
+        return LOSS_WRAPPER_DICT[wrapper_key](mid_level_loss, **criterion_wrapper_config.get('kwargs', dict()))
+    raise ValueError('No loss wrapper `{}` registered'.format(wrapper_key))
 
 
 def get_mid_level_loss(mid_level_criterion_config, criterion_wrapper_config=None):
-    loss_type = mid_level_criterion_config['type']
-    mid_level_loss = MIDDLE_LEVEL_LOSS_DICT[loss_type](**mid_level_criterion_config['kwargs']) \
-        if loss_type in MIDDLE_LEVEL_LOSS_DICT else get_loss(loss_type, **mid_level_criterion_config['kwargs'])
+    loss_key = mid_level_criterion_config['key']
+    mid_level_loss = MIDDLE_LEVEL_LOSS_DICT[loss_key](**mid_level_criterion_config['kwargs']) \
+        if loss_key in MIDDLE_LEVEL_LOSS_DICT else get_loss(loss_key, **mid_level_criterion_config['kwargs'])
     if criterion_wrapper_config is None:
         return mid_level_loss
     return get_loss_wrapper(mid_level_loss, criterion_wrapper_config)

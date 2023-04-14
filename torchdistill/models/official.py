@@ -8,12 +8,12 @@ OFFICIAL_MODEL_DICT.update(models.segmentation.__dict__)
 
 
 def get_image_classification_model(model_config, distributed=False):
-    model_name = model_config['name']
+    model_key = model_config['key']
     quantized = model_config.get('quantized', False)
-    if not quantized and model_name in models.__dict__:
-        model = models.__dict__[model_name](**model_config['kwargs'])
-    elif quantized and model_name in models.quantization.__dict__:
-        model = models.quantization.__dict__[model_name](**model_config['kwargs'])
+    if not quantized and model_key in models.__dict__:
+        model = models.__dict__[model_key](**model_config['kwargs'])
+    elif quantized and model_key in models.quantization.__dict__:
+        model = models.quantization.__dict__[model_key](**model_config['kwargs'])
     else:
         return None
 
@@ -24,19 +24,19 @@ def get_image_classification_model(model_config, distributed=False):
 
 
 def get_object_detection_model(model_config):
-    model_name = model_config['name']
-    if model_name not in models.detection.__dict__:
+    model_key = model_config['key']
+    if model_key not in models.detection.__dict__:
         return None
-    return models.detection.__dict__[model_name](**model_config['kwargs'])
+    return models.detection.__dict__[model_key](**model_config['kwargs'])
 
 
 def get_semantic_segmentation_model(model_config):
-    model_name = model_config['name']
-    if model_name not in models.segmentation.__dict__:
+    model_key = model_config['key']
+    if model_key not in models.segmentation.__dict__:
         return None
-    return models.segmentation.__dict__[model_name](**model_config['kwargs'])
+    return models.segmentation.__dict__[model_key](**model_config['kwargs'])
 
 
 def get_vision_model(model_config):
-    model_name = model_config['name']
-    return OFFICIAL_MODEL_DICT[model_name](**model_config['kwargs'])
+    model_key = model_config['key']
+    return OFFICIAL_MODEL_DICT[model_key](**model_config['kwargs'])
