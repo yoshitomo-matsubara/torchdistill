@@ -1,7 +1,7 @@
 datasets:
   coco2017:
     name: &dataset_name 'coco2017'
-    type: 'cocodetect'
+    key: 'cocodetect'
     root: &root_dir !join ['./resource/dataset/', *dataset_name]
     splits:
       train:
@@ -18,28 +18,28 @@ datasets:
 
 models:
   teacher_model:
-    name: &teacher_model_name 'fasterrcnn_resnet50_fpn'
+    key: &teacher_model_key 'fasterrcnn_resnet50_fpn'
     kwargs:
       pretrained: True
       progress: True
       num_classes: 91
       pretrained_backbone: True
-    experiment: &teacher_experiment !join [*dataset_name, '-', *teacher_model_name]
+    experiment: &teacher_experiment !join [*dataset_name, '-', *teacher_model_key]
     ckpt: !join ['./resource/ckpt/coco2017/teacher/', *teacher_experiment, '.pt']
   student_model:
-    name: &student_model_name 'custom_fasterrcnn_resnet_fpn'
+    key: &student_model_key 'custom_fasterrcnn_resnet_fpn'
     kwargs:
       pretrained: True
       progress: True
       num_classes: 91
       pretrained_backbone: True
       backbone:
-        name: 'resnet18'
+        key: 'resnet18'
         kwargs:
           num_classes: 1000
           pretrained: True
           trainable_backbone_layers: 3
-    experiment: &student_experiment !join [*dataset_name, '-', *student_model_name, '_from_', *teacher_model_name]
+    experiment: &student_experiment !join [*dataset_name, '-', *student_model_key, '_from_', *teacher_model_key]
     ckpt: !join ['./resource/ckpt/coco2017/multi_stage/ft/', *student_experiment, '.pt']
 
 train:
@@ -51,7 +51,7 @@ train:
       random_sample: True
       num_workers: 4
       batch_sampler:
-        type: 'GroupedBatchSampler'
+        key: 'GroupedBatchSampler'
         kwargs:
           aspect_ratio_group_factor: 3
           batch_size: 4
@@ -66,11 +66,11 @@ train:
     teacher:
       sequential: []
       auxiliary_model_wrapper:
-        type: &teacher4ft 'Teacher4FactorTransfer'
+        key: &teacher4ft 'Teacher4FactorTransfer'
         kwargs:
           minimal:
             auxiliary_model_wrapper:
-              type: 'HeadRCNN'
+              key: 'HeadRCNN'
               kwargs:
                 head_rcnn:
                   sequential: ['backbone.body']
@@ -93,7 +93,7 @@ train:
     student:
       adaptations:
       auxiliary_model_wrapper:
-        type: 'EmptyModule'
+        key: 'EmptyModule'
         kwargs:
       sequential: []
       forward_hook:
@@ -102,22 +102,22 @@ train:
       wrapper:
       requires_grad: False
     optimizer:
-      type: 'SGD'
+      key: 'SGD'
       kwargs:
         lr: 0.0001
         momentum: 0.9
         weight_decay: 0.0005
     criterion:
-      type: 'WeightedSumLoss'
+      key: 'WeightedSumLoss'
       kwargs:
         sub_terms:
           reconst:
             criterion:
-              type: 'MSELoss'
+              key: 'MSELoss'
               kwargs:
                 reduction: 'sum'
             criterion_wrapper:
-              type: 'SimpleLossWrapper'
+              key: 'SimpleLossWrapper'
               kwargs:
                 input:
                   is_from_teacher: True
@@ -134,7 +134,7 @@ train:
       forward_proc: 'forward_batch_target'
       sequential: []
       auxiliary_model_wrapper:
-        type: *teacher4ft
+        key: *teacher4ft
         kwargs:
           minimal:
           input_module_path: 'teacher_model.backbone.body.layer4'
@@ -151,7 +151,7 @@ train:
       adaptations:
       sequential: []
       auxiliary_model_wrapper:
-        type: 'Student4FactorTransfer'
+        key: 'Student4FactorTransfer'
         kwargs:
           input_module_path: 'student_model.backbone.body.layer4'
           translator_kwargs:
@@ -168,18 +168,18 @@ train:
       requires_grad: True
       frozen_modules: ['student_model.backbone.body.conv1', 'student_model.backbone.body.bn1', 'student_model.backbone.body.relu', 'student_model.backbone.body.maxpool']
     optimizer:
-      type: 'SGD'
+      key: 'SGD'
       kwargs:
         lr: 0.0001
         momentum: 0.9
         weight_decay: 0.0005
     scheduler:
-      type: 'MultiStepLR'
+      key: 'MultiStepLR'
       kwargs:
         milestones: [5, 10]
         gamma: 0.1
     criterion:
-      type: 'WeightedSumLoss'
+      key: 'WeightedSumLoss'
       func2extract_model_loss: 'extract_model_loss_dict'
       kwargs:
         model_term:
@@ -187,7 +187,7 @@ train:
         sub_terms:
           factor_transfer:
             criterion:
-              type: 'FTLoss'
+              key: 'FTLoss'
               kwargs:
                 p: 1
                 reduction: 'mean'

@@ -11,18 +11,18 @@ datasets:
 
 models:
   student_model:
-    name: &student_model_name 'bert-large-uncased'
-    model_name_or_path: *student_model_name
+    key: &student_model_key 'bert-large-uncased'
+    model_name_or_path: *student_model_key
     num_labels: 1
     config_kwargs:
-      pretrained_model_name_or_path: *student_model_name
+      pretrained_model_name_or_path: *student_model_key
     tokenizer_kwargs:
-      pretrained_model_name_or_path: *student_model_name
+      pretrained_model_name_or_path: *student_model_key
       do_lower: True
       use_fast: True
     model_kwargs:
-      pretrained_model_name_or_path: *student_model_name
-    experiment: &student_experiment !join [*dataset_name, '-', *student_model_name]
+      pretrained_model_name_or_path: *student_model_key
+    experiment: &student_experiment !join [*dataset_name, '-', *student_model_key]
     ckpt: !join ['./resource/ckpt/glue/', *dataset_name, '/mse/', *student_experiment]
 
 train:
@@ -51,22 +51,22 @@ train:
     requires_grad: True
     frozen_modules: []
   optimizer:
-    type: 'optimizer_no_decay'
+    key: 'optimizer_no_decay'
     kwargs:
-      optimizer_type: 'AdamW'
+      optimizer_key: 'AdamW'
       lr: 3.0e-5
       weight_decay: 0.0
     filters_params: False
     max_grad_norm: 1.0
     grad_accum_step: 1
   scheduler:
-    type: 'get_linear_schedule_with_warmup'
+    key: 'get_linear_schedule_with_warmup'
     kwargs:
       num_warmup_steps: 0
       num_training_steps:
     scheduling_step: 1
   criterion:
-    type: 'WeightedSumLoss'
+    key: 'WeightedSumLoss'
     func2extract_model_loss: 'extract_transformers_loss'
     kwargs:
       model_term:

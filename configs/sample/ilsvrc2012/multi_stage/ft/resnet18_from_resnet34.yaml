@@ -1,7 +1,7 @@
 datasets:
   ilsvrc2012:
     name: &dataset_name 'ilsvrc2012'
-    type: 'ImageFolder'
+    key: 'ImageFolder'
     root: &root_dir !join ['./resource/dataset/', *dataset_name]
     splits:
       train:
@@ -9,17 +9,17 @@ datasets:
         kwargs:
           root: !join [*root_dir, '/train']
           transform_configs:
-            - type: 'RandomResizedCrop'
+            - key: 'RandomResizedCrop'
               kwargs:
                 size: &input_size [224, 224]
-            - type: 'RandomHorizontalFlip'
+            - key: 'RandomHorizontalFlip'
               kwargs:
                 p: 0.5
             - &totensor
-              type: 'ToTensor'
+              key: 'ToTensor'
               kwargs:
             - &normalize
-              type: 'Normalize'
+              key: 'Normalize'
               kwargs:
                 mean: [0.485, 0.456, 0.406]
                 std: [0.229, 0.224, 0.225]
@@ -28,10 +28,10 @@ datasets:
         kwargs:
           root: !join [*root_dir, '/val']
           transform_configs:
-            - type: 'Resize'
+            - key: 'Resize'
               kwargs:
                 size: 256
-            - type: 'CenterCrop'
+            - key: 'CenterCrop'
               kwargs:
                 size: *input_size
             - *totensor
@@ -39,18 +39,18 @@ datasets:
 
 models:
   teacher_model:
-    name: &teacher_model_name 'resnet34'
+    key: &teacher_model_key 'resnet34'
     kwargs:
       num_classes: 1000
       pretrained: True
-    experiment: &teacher_experiment !join [*dataset_name, '-', *teacher_model_name]
+    experiment: &teacher_experiment !join [*dataset_name, '-', *teacher_model_key]
     ckpt: !join ['./resource/ckpt/ilsvrc2012/teacher/', *teacher_experiment, '.pt']
   student_model:
-    name: &student_model_name 'resnet18'
+    key: &student_model_key 'resnet18'
     kwargs:
       num_classes: 1000
       pretrained: False
-    experiment: &student_experiment !join [*dataset_name, '-', *student_model_name, '_from_', *teacher_model_name]
+    experiment: &student_experiment !join [*dataset_name, '-', *student_model_key, '_from_', *teacher_model_key]
     ckpt: !join ['./resource/ckpt/ilsvrc2012/multi_stage/ft/', *student_experiment, '.pt']
 
 train:
@@ -71,7 +71,7 @@ train:
     teacher:
       sequential: []
       auxiliary_model_wrapper:
-        type: &teacher4ft 'Teacher4FactorTransfer'
+        key: &teacher4ft 'Teacher4FactorTransfer'
         kwargs:
           minimal:
             sequential: ['conv1', 'bn1', 'relu', 'maxpool', 'layer1', 'layer2', 'layer3', 'layer4']
@@ -94,7 +94,7 @@ train:
     student:
       adaptations:
       auxiliary_model_wrapper:
-        type: 'EmptyModule'
+        key: 'EmptyModule'
         kwargs:
       sequential: []
       forward_hook:
@@ -103,22 +103,22 @@ train:
       wrapper:
       requires_grad: False
     optimizer:
-      type: 'SGD'
+      key: 'SGD'
       kwargs:
         lr: 0.0001
         momentum: 0.9
         weight_decay: 0.0005
     criterion:
-      type: 'WeightedSumLoss'
+      key: 'WeightedSumLoss'
       kwargs:
         sub_terms:
           reconst:
             criterion:
-              type: 'MSELoss'
+              key: 'MSELoss'
               kwargs:
                 reduction: 'sum'
             criterion_wrapper:
-              type: 'SimpleLossWrapper'
+              key: 'SimpleLossWrapper'
               kwargs:
                 input:
                   is_from_teacher: True
@@ -134,7 +134,7 @@ train:
     teacher:
       sequential: []
       auxiliary_model_wrapper:
-        type: *teacher4ft
+        key: *teacher4ft
         kwargs:
           minimal:
           input_module_path: *teacher4ft_in_module
@@ -150,7 +150,7 @@ train:
       adaptations:
       sequential: []
       auxiliary_model_wrapper:
-        type: 'Student4FactorTransfer'
+        key: 'Student4FactorTransfer'
         kwargs:
           input_module_path: 'student_model.layer4'
           translator_kwargs:
@@ -167,27 +167,27 @@ train:
       requires_grad: True
       frozen_modules: []
     optimizer:
-      type: 'SGD'
+      key: 'SGD'
       kwargs:
         lr: 0.0001
         momentum: 0.9
         weight_decay: 0.0005
     scheduler:
-      type: 'MultiStepLR'
+      key: 'MultiStepLR'
       kwargs:
         milestones: [5, 10]
         gamma: 0.1
     criterion:
-      type: 'WeightedSumLoss'
+      key: 'WeightedSumLoss'
       kwargs:
         sub_terms:
           ce:
             criterion:
-              type: 'CrossEntropyLoss'
+              key: 'CrossEntropyLoss'
               kwargs:
                 reduction: 'mean'
             criterion_wrapper:
-              type: 'SimpleLossWrapper'
+              key: 'SimpleLossWrapper'
               kwargs:
                 input:
                   is_from_teacher: False
@@ -198,7 +198,7 @@ train:
             weight: 1.0
           factor_transfer:
             criterion:
-              type: 'FTLoss'
+              key: 'FTLoss'
               kwargs:
                 p: 1
                 reduction: 'mean'

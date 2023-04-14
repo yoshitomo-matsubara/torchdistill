@@ -130,7 +130,7 @@ class TrainingBox(nn.Module):
 
             filters_params = optim_config.get('filters_params', True)
             self.optimizer = \
-                get_optimizer(trainable_module_list, optim_config['type'],
+                get_optimizer(trainable_module_list, optim_config['key'],
                               **optim_kwargs, filters_params=filters_params)
             self.optimizer.zero_grad()
             self.max_grad_norm = optim_config.get('max_grad_norm', None)
@@ -139,7 +139,7 @@ class TrainingBox(nn.Module):
 
         scheduler_config = train_config.get('scheduler', None)
         if scheduler_config is not None and len(scheduler_config) > 0:
-            self.lr_scheduler = get_scheduler(self.optimizer, scheduler_config['type'], **scheduler_config['kwargs'])
+            self.lr_scheduler = get_scheduler(self.optimizer, scheduler_config['key'], **scheduler_config['kwargs'])
             self.scheduling_step = scheduler_config.get('scheduling_step', 0)
         elif optimizer_reset:
             self.lr_scheduler = None

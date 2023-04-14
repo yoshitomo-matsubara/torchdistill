@@ -1,7 +1,7 @@
 datasets:
   cifar10:
     name: &dataset_name 'cifar10'
-    type: 'CIFAR10'
+    key: 'CIFAR10'
     root: &root_dir !join ['./resource/dataset/', *dataset_name]
     splits:
       dummy:
@@ -16,23 +16,23 @@ datasets:
           sub_splits:
             - dataset_id: &cifar10_train !join [*dataset_name, '/train']
               transform_configs:
-                - type: 'RandomCrop'
+                - key: 'RandomCrop'
                   kwargs:
                     size: 32
                     padding: 4
-                - type: 'RandomHorizontalFlip'
+                - key: 'RandomHorizontalFlip'
                   kwargs:
                     p: 0.5
-                - type: 'ToTensor'
+                - key: 'ToTensor'
                   kwargs:
                 - &normalize
-                  type: 'Normalize'
+                  key: 'Normalize'
                   kwargs:
                     mean: [0.49139968, 0.48215841, 0.44653091]
                     std: [0.24703223, 0.24348513, 0.26158784]
             - dataset_id: &cifar10_val !join [*dataset_name, '/val']
               transform_configs: &val_transform
-                - type: 'ToTensor'
+                - key: 'ToTensor'
                   kwargs:
                 - *normalize
       test:
@@ -45,15 +45,15 @@ datasets:
 
 models:
   teacher_model:
-    name: &teacher_model_name 'wide_resnet40_4'
+    key: &teacher_model_key 'wide_resnet40_4'
     kwargs:
       dropout_p: 0.0
       num_classes: 10
       pretrained: True
-    experiment: &teacher_experiment !join [*dataset_name, '-', *teacher_model_name]
+    experiment: &teacher_experiment !join [*dataset_name, '-', *teacher_model_key]
     ckpt: !join ['./resource/ckpt/', *dataset_name, '/teacher/', *teacher_experiment, '.pt']
   student_model:
-    name: &student_model_name 'wide_resnet'
+    key: &student_model_key 'wide_resnet'
     kwargs:
       depth: &s_depth 40
       k: &s_k 1
@@ -61,7 +61,7 @@ models:
       num_classes: 10
       pretrained: False
       progress: True
-    experiment: &student_experiment !join [*dataset_name, '-', *student_model_name, *s_depth, '-', *s_k, '_from_', *teacher_model_name]
+    experiment: &student_experiment !join [*dataset_name, '-', *student_model_key, *s_depth, '-', *s_k, '_from_', *teacher_model_key]
     ckpt: !join ['./resource/ckpt/', *dataset_name, '/kd/', *student_experiment, '-hyperparameter_tuning.pt']
 
 train:
@@ -90,23 +90,23 @@ train:
     requires_grad: True
     frozen_modules: []
   optimizer:
-    type: 'SGD'
+    key: 'SGD'
     kwargs:
       lr: 0.1
       momentum: 0.9
       weight_decay: 0.0005
   scheduler:
-    type: 'MultiStepLR'
+    key: 'MultiStepLR'
     kwargs:
       milestones: [60, 120, 160]
       gamma: 0.2
   criterion:
-    type: 'WeightedSumLoss'
+    key: 'WeightedSumLoss'
     kwargs:
       sub_terms:
         kd:
           criterion:
-            type: 'KDLoss'
+            key: 'KDLoss'
             kwargs:
               student_module_path: '.'
               student_module_io: 'output'

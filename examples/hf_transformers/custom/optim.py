@@ -40,7 +40,7 @@ def customize_lr_config(config, dataset_dict, world_size):
 
 
 @register_optimizer
-def optimizer_no_decay(model, optimizer_type, weight_decay, no_decay=None, **kwargs):
+def optimizer_no_decay(model, optimizer_key, weight_decay, no_decay=None, **kwargs):
     if no_decay is None:
         no_decay = ['bias', 'LayerNorm.weight']
 
@@ -57,5 +57,5 @@ def optimizer_no_decay(model, optimizer_type, weight_decay, no_decay=None, **kwa
             'weight_decay': 0.0
         }
     ]
-    optimizer = get_optimizer(optimizer_grouped_parameters, optimizer_type, **kwargs)
+    optimizer = get_optimizer(optimizer_grouped_parameters, optimizer_key, **kwargs)
     return optimizer

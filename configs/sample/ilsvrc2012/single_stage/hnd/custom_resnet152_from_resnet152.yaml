@@ -1,7 +1,7 @@
 datasets:
   ilsvrc2012:
     name: &dataset_name 'ilsvrc2012'
-    type: 'ImageFolder'
+    key: 'ImageFolder'
     root: &root_dir !join ['./resource/dataset/', *dataset_name]
     splits:
       train:
@@ -9,17 +9,17 @@ datasets:
         kwargs:
           root: !join [*root_dir, '/train']
           transform_configs:
-            - type: 'RandomResizedCrop'
+            - key: 'RandomResizedCrop'
               kwargs:
                 size: &input_size [224, 224]
-            - type: 'RandomHorizontalFlip'
+            - key: 'RandomHorizontalFlip'
               kwargs:
                 p: 0.5
             - &totensor
-              type: 'ToTensor'
+              key: 'ToTensor'
               kwargs:
             - &normalize
-              type: 'Normalize'
+              key: 'Normalize'
               kwargs:
                 mean: [0.485, 0.456, 0.406]
                 std: [0.229, 0.224, 0.225]
@@ -28,10 +28,10 @@ datasets:
         kwargs:
           root: !join [*root_dir, '/val']
           transform_configs:
-            - type: 'Resize'
+            - key: 'Resize'
               kwargs:
                 size: 256
-            - type: 'CenterCrop'
+            - key: 'CenterCrop'
               kwargs:
                 size: *input_size
             - *totensor
@@ -39,14 +39,14 @@ datasets:
 
 models:
   teacher_model:
-    name: &teacher_model_name 'resnet152'
+    key: &teacher_model_key 'resnet152'
     kwargs:
       num_classes: 1000
       pretrained: True
-    experiment: &teacher_experiment !join [*dataset_name, '-', *teacher_model_name]
+    experiment: &teacher_experiment !join [*dataset_name, '-', *teacher_model_key]
     ckpt: !join ['./resource/ckpt/ilsvrc2012/teacher/', *teacher_experiment, '.pt']
   student_model:
-    name: &student_model_name 'custom_resnet152'
+    key: &student_model_key 'custom_resnet152'
     kwargs:
       bottleneck_channel: 12
       bottleneck_idx: 7
@@ -54,7 +54,7 @@ models:
       decompressor:
       num_classes: 1000
       pretrained: True
-    experiment: &student_experiment !join [*dataset_name, '-', *student_model_name, '_from_', *teacher_model_name]
+    experiment: &student_experiment !join [*dataset_name, '-', *student_model_key, '_from_', *teacher_model_key]
     ckpt: !join ['./resource/ckpt/ilsvrc2012/single_stage/hnd/', *student_experiment, '.pt']
 
 train:
@@ -89,25 +89,25 @@ train:
     wrapper: 'DistributedDataParallel'
     requires_grad: True
   optimizer:
-    type: 'Adam'
+    key: 'Adam'
     kwargs:
       lr: 0.001
   scheduler:
-    type: 'MultiStepLR'
+    key: 'MultiStepLR'
     kwargs:
       milestones: [5, 10, 15]
       gamma: 0.1
   criterion:
-    type: 'WeightedSumLoss'
+    key: 'WeightedSumLoss'
     kwargs:
       sub_terms:
         layer1:
           criterion:
-            type: 'MSELoss'
+            key: 'MSELoss'
             kwargs:
               reduction: 'sum'
           criterion_wrapper:
-            type: 'SimpleLossWrapper'
+            key: 'SimpleLossWrapper'
             kwargs:
               input:
                 is_from_teacher: False

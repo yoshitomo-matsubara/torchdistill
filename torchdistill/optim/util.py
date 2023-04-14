@@ -9,8 +9,8 @@ def update_num_iterations(train_config, dataset_dict, world_size):
     num_iterations = math.ceil(len(dataset_dict[train_data_loader_config['dataset_id']]) /
                                train_data_loader_config['batch_size'] / world_size)
     scheduler_config = train_config['scheduler']
-    scheduler_type = scheduler_config['type']
-    if scheduler_type == 'poly_lr_scheduler':
+    scheduler_key = scheduler_config['key']
+    if scheduler_key == 'poly_lr_scheduler':
         scheduler_config['kwargs']['num_iterations'] = num_iterations
 
 

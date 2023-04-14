@@ -1,7 +1,7 @@
 datasets:
   coco2017:
     name: &dataset_name 'coco2017'
-    type: 'cocodetect'
+    key: 'cocodetect'
     root: &root_dir !join ['./resource/dataset/', *dataset_name]
     splits:
       train:
@@ -11,21 +11,21 @@ datasets:
         annotated_only: True
         is_segment: True
         transforms_configs:
-          - type: 'CustomRandomResize'
+          - key: 'CustomRandomResize'
             kwargs:
               min_size: 260
               max_size: 1040
-          - type: 'CustomRandomHorizontalFlip'
+          - key: 'CustomRandomHorizontalFlip'
             kwargs:
               p: 0.5
-          - type: 'CustomRandomCrop'
+          - key: 'CustomRandomCrop'
             kwargs:
               size: 480
           - &totensor
-            type: 'CustomToTensor'
+            key: 'CustomToTensor'
             kwargs:
           - &normalize
-            type: 'CustomNormalize'
+            key: 'CustomNormalize'
             kwargs:
               mean: [0.485, 0.456, 0.406]
               std: [0.229, 0.224, 0.225]
@@ -36,7 +36,7 @@ datasets:
         annotated_only: False
         is_segment: True
         transforms_configs:
-          - type: 'CustomRandomResize'
+          - key: 'CustomRandomResize'
             kwargs:
               min_size: 520
               max_size: 520
@@ -45,13 +45,13 @@ datasets:
 
 models:
   model:
-    name: &student_model_name 'deeplabv3_resnet50'
+    key: &student_model_key 'deeplabv3_resnet50'
     kwargs:
       pretrained: False
       pretrained_backbone: True
       num_classes: 21
       aux_loss: True
-    experiment: &student_experiment !join [*dataset_name, '-', *student_model_name]
+    experiment: &student_experiment !join [*dataset_name, '-', *student_model_key]
     ckpt: !join ['./resource/ckpt/coco2017/ce/', *student_experiment, '.pt']
 
 train:
@@ -81,7 +81,7 @@ train:
     requires_grad: True
     frozen_modules: []
   optimizer:
-    type: 'SGD'
+    key: 'SGD'
     kwargs:
       lr: 0.0025
       momentum: 0.9
@@ -95,25 +95,25 @@ train:
         kwargs:
           lr: 0.025
   scheduler:
-    type: 'poly_lr_scheduler'
+    key: 'poly_lr_scheduler'
     kwargs:
       num_iterations: None
       num_epochs: *num_epochs
       power: 0.9
     scheduling_step: 1
   criterion:
-    type: 'WeightedSumLoss'
+    key: 'WeightedSumLoss'
     func2extract_model_loss: 'extract_simple_model_loss_dict'
     kwargs:
       sub_terms:
         ce:
           criterion:
-            type: 'CrossEntropyLoss'
+            key: 'CrossEntropyLoss'
             kwargs:
               reduction: 'mean'
               ignore_index: 255
           criterion_wrapper:
-            type: 'SimpleLossWrapper'
+            key: 'SimpleLossWrapper'
             kwargs:
               input:
                 is_from_teacher: False

@@ -1,7 +1,7 @@
 datasets:
   cifar10:
     name: &dataset_name 'cifar10'
-    type: 'CIFAR10'
+    key: 'CIFAR10'
     root: &root_dir !join ['./resource/dataset/', *dataset_name]
     splits:
       train:
@@ -11,17 +11,17 @@ datasets:
           train: True
           download: True
           transform_configs:
-            - type: 'RandomCrop'
+            - key: 'RandomCrop'
               kwargs:
                 size: 32
                 padding: 4
-            - type: 'RandomHorizontalFlip'
+            - key: 'RandomHorizontalFlip'
               kwargs:
                 p: 0.5
-            - type: 'ToTensor'
+            - key: 'ToTensor'
               kwargs:
             - &normalize
-              type: 'Normalize'
+              key: 'Normalize'
               kwargs:
                 mean: [0.49139968, 0.48215841, 0.44653091]
                 std: [0.24703223, 0.24348513, 0.26158784]
@@ -32,7 +32,7 @@ datasets:
           train: False
           download: True
           transform_configs: &val_transform
-            - type: 'ToTensor'
+            - key: 'ToTensor'
               kwargs:
             - *normalize
       test:
@@ -45,12 +45,12 @@ datasets:
 
 models:
   model:
-    name: &student_model_name 'wide_resnet16_8'
+    key: &student_model_key 'wide_resnet16_8'
     kwargs:
       dropout_p: 0.0
       num_classes: 10
       pretrained: False
-    experiment: &student_experiment !join [*dataset_name, '-', *student_model_name]
+    experiment: &student_experiment !join [*dataset_name, '-', *student_model_key]
     ckpt: !join ['./resource/ckpt/', *dataset_name, '/ce/', *student_experiment, '-final_run.pt']
 
 train:
@@ -74,27 +74,27 @@ train:
     requires_grad: True
     frozen_modules: []
   optimizer:
-    type: 'SGD'
+    key: 'SGD'
     kwargs:
       lr: 0.1
       momentum: 0.9
       weight_decay: 0.0005
   scheduler:
-    type: 'MultiStepLR'
+    key: 'MultiStepLR'
     kwargs:
       milestones: [60, 120, 160]
       gamma: 0.2
   criterion:
-    type: 'WeightedSumLoss'
+    key: 'WeightedSumLoss'
     kwargs:
       sub_terms:
         ce:
           criterion:
-            type: 'CrossEntropyLoss'
+            key: 'CrossEntropyLoss'
             kwargs:
               reduction: 'mean'
           criterion_wrapper:
-            type: 'SimpleLossWrapper'
+            key: 'SimpleLossWrapper'
             kwargs:
               input:
                 is_from_teacher: False

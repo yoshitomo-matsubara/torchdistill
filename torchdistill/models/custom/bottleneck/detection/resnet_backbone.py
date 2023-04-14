@@ -74,29 +74,29 @@ class Bottleneck4LargeResNet(BottleneckBase):
         return self.encoder.get_ext_classifier()
 
 
-def custom_resnet_fpn_backbone(backbone_name, backbone_params_config,
+def custom_resnet_fpn_backbone(backbone_key, backbone_params_config,
                                norm_layer=misc_nn_ops.FrozenBatchNorm2d):
     layer1_config = backbone_params_config.get('layer1', None)
     layer1 = None
     if layer1_config is not None:
         compressor_config = layer1_config.get('compressor', None)
         compressor = None if compressor_config is None \
-            else get_bottleneck_processor(compressor_config['name'], **compressor_config['kwargs'])
+            else get_bottleneck_processor(compressor_config['key'], **compressor_config['kwargs'])
         decompressor_config = layer1_config.get('decompressor', None)
         decompressor = None if decompressor_config is None \
-            else get_bottleneck_processor(decompressor_config['name'], **decompressor_config['kwargs'])
+            else get_bottleneck_processor(decompressor_config['key'], **decompressor_config['kwargs'])
 
-        layer1_type = layer1_config['type']
-        if layer1_type == 'Bottleneck4SmallResNet' and backbone_name in {'custom_resnet18', 'custom_resnet34'}:
+        layer1_key = layer1_config['key']
+        if layer1_key == 'Bottleneck4SmallResNet' and backbone_key in {'custom_resnet18', 'custom_resnet34'}:
             layer1 = Bottleneck4SmallResNet(layer1_config['bottleneck_channel'], compressor, decompressor)
-        elif layer1_type == 'Bottleneck4LargeResNet'\
-                and backbone_name in {'custom_resnet50', 'custom_resnet101', 'custom_resnet152'}:
+        elif layer1_key == 'Bottleneck4LargeResNet'\
+                and backbone_key in {'custom_resnet50', 'custom_resnet101', 'custom_resnet152'}:
             layer1 = Bottleneck4LargeResNet(layer1_config['bottleneck_channel'], compressor, decompressor)
 
     prefix = 'custom_'
-    start_idx = backbone_name.find(prefix) + len(prefix)
-    org_backbone_name = backbone_name[start_idx:] if backbone_name.startswith(prefix) else backbone_name
-    backbone = resnet.__dict__[org_backbone_name](
+    start_idx = backbone_key.find(prefix) + len(prefix)
+    org_backbone_key = backbone_key[start_idx:] if backbone_key.startswith(prefix) else backbone_key
+    backbone = resnet.__dict__[org_backbone_key](
         pretrained=backbone_params_config.get('pretrained', False),
         norm_layer=norm_layer
     )

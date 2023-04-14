@@ -517,11 +517,11 @@ class Student4KTAAD(AuxiliaryModelWrapper):
 
 def build_auxiliary_model_wrapper(model_config, **kwargs):
     auxiliary_model_wrapper_config = model_config.get('auxiliary_model_wrapper', dict())
-    auxiliary_model_wrapper_type = auxiliary_model_wrapper_config.get('type', None)
-    if auxiliary_model_wrapper_type is None:
+    auxiliary_model_wrapper_key = auxiliary_model_wrapper_config.get('key', None)
+    if auxiliary_model_wrapper_key is None:
         return None
 
     auxiliary_model_wrapper_kwargs = auxiliary_model_wrapper_config.get('kwargs', None)
     if auxiliary_model_wrapper_kwargs is None:
         auxiliary_model_wrapper_kwargs = dict()
-    return get_auxiliary_model_wrapper(auxiliary_model_wrapper_type, **kwargs, **auxiliary_model_wrapper_kwargs)
+    return get_auxiliary_model_wrapper(auxiliary_model_wrapper_key, **kwargs, **auxiliary_model_wrapper_kwargs)

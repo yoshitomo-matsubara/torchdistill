@@ -1,7 +1,7 @@
 datasets:
   coco2017:
     name: &dataset_name 'coco2017'
-    type: 'cocodetect'
+    key: 'cocodetect'
     root: &root_dir !join ['~/dataset/', *dataset_name]
     splits:
       train:
@@ -18,33 +18,33 @@ datasets:
 
 models:
   teacher_model:
-    name: &teacher_model_name 'maskrcnn_resnet50_fpn'
+    key: &teacher_model_key 'maskrcnn_resnet50_fpn'
     kwargs:
       pretrained: True
       progress: True
       num_classes: 91
       pretrained_backbone: True
-    experiment: &teacher_experiment !join [*dataset_name, '-', *teacher_model_name]
+    experiment: &teacher_experiment !join [*dataset_name, '-', *teacher_model_key]
     ckpt: !join ['./resource/ckpt/coco2017/teacher/', *teacher_experiment, '.pt']
   student_model:
-    name: &student_model_name 'custom_maskrcnn_resnet_fpn'
+    key: &student_model_key 'custom_maskrcnn_resnet_fpn'
     kwargs:
       pretrained: True
       progress: True
       num_classes: 91
       pretrained_backbone: True
       backbone:
-        name: 'custom_resnet50'
+        key: 'custom_resnet50'
         kwargs:
           num_classes: 1000
           pretrained: True
           trainable_backbone_layers: 6
           layer1:
-            type: 'Bottleneck4LargeResNet'
+            key: 'Bottleneck4LargeResNet'
             bottleneck_channel: 3
             compressor:
             decompressor:
-    experiment: &student_experiment !join [*dataset_name, '-', *student_model_name, '_from_', *teacher_model_name]
+    experiment: &student_experiment !join [*dataset_name, '-', *student_model_key, '_from_', *teacher_model_key]
     ckpt: !join ['./coco/ghnd/', *student_experiment, '.pt']
 
 train:
@@ -55,7 +55,7 @@ train:
     random_sample: True
     num_workers: 16
     batch_sampler:
-      type: 'GroupedBatchSampler'
+      key: 'GroupedBatchSampler'
       kwargs:
         aspect_ratio_group_factor: 3
         batch_size: 4
@@ -71,7 +71,7 @@ train:
     forward_proc: 'forward_batch'
     sequential: []
     auxiliary_model_wrapper:
-      type: 'HeadRCNN'
+      key: 'HeadRCNN'
       kwargs:
         head_rcnn:
           sequential: ['backbone.body']
@@ -86,7 +86,7 @@ train:
     adaptations:
     sequential: []
     auxiliary_model_wrapper:
-      type: 'HeadRCNN'
+      key: 'HeadRCNN'
       kwargs:
         head_rcnn:
           sequential: ['backbone.body']
@@ -97,25 +97,25 @@ train:
     wrapper: 'DistributedDataParallel'
     requires_grad: True
   optimizer:
-    type: 'Adam'
+    key: 'Adam'
     kwargs:
       lr: 0.001
   scheduler:
-    type: 'MultiStepLR'
+    key: 'MultiStepLR'
     kwargs:
       milestones: [5, 15]
       gamma: 0.1
   criterion:
-    type: 'WeightedSumLoss'
+    key: 'WeightedSumLoss'
     kwargs:
       sub_terms:
         layer1:
           criterion:
-            type: 'MSELoss'
+            key: 'MSELoss'
             kwargs:
               reduction: 'sum'
           criterion_wrapper:
-            type: 'SimpleLossWrapper'
+            key: 'SimpleLossWrapper'
             kwargs:
               input:
                 is_from_teacher: False
@@ -128,11 +128,11 @@ train:
           weight: 1.0
         layer2:
           criterion:
-            type: 'MSELoss'
+            key: 'MSELoss'
             kwargs:
               reduction: 'sum'
           criterion_wrapper:
-            type: 'SimpleLossWrapper'
+            key: 'SimpleLossWrapper'
             kwargs:
               input:
                 is_from_teacher: False
@@ -145,11 +145,11 @@ train:
           weight: 1.0
         layer3:
           criterion:
-            type: 'MSELoss'
+            key: 'MSELoss'
             kwargs:
               reduction: 'sum'
           criterion_wrapper:
-            type: 'SimpleLossWrapper'
+            key: 'SimpleLossWrapper'
             kwargs:
               input:
                 is_from_teacher: False
@@ -162,11 +162,11 @@ train:
           weight: 1.0
         layer4:
           criterion:
-            type: 'MSELoss'
+            key: 'MSELoss'
             kwargs:
               reduction: 'sum'
           criterion_wrapper:
-            type: 'SimpleLossWrapper'
+            key: 'SimpleLossWrapper'
             kwargs:
               input:
                 is_from_teacher: False

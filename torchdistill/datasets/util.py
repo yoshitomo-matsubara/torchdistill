@@ -44,7 +44,7 @@ def build_transform(transform_configs, compose_cls=None):
         if kwargs is None:
             kwargs = dict()
 
-        component = TRANSFORM_DICT[component_config['type']](**kwargs)
+        component = TRANSFORM_DICT[component_config['key']](**kwargs)
         component_list.append(component)
     return torchvision.transforms.Compose(component_list) if compose_cls is None else compose_cls(component_list)
 
@@ -61,10 +61,10 @@ def get_torchvision_dataset(dataset_cls, dataset_kwargs):
         build_transform(dataset_kwargs.pop('transforms_configs', None), compose_cls=transforms_compose_cls_name)
     if 'loader' in dataset_kwargs:
         loader_config = dataset_kwargs.pop('loader')
-        loader_type = loader_config['type']
+        loader_key = loader_config['key']
         loader_kwargs = loader_config.get('kwargs', None)
-        loader = get_sample_loader(loader_type) if loader_kwargs is None \
-            else get_sample_loader(loader_type, **loader_kwargs)
+        loader = get_sample_loader(loader_key) if loader_kwargs is None \
+            else get_sample_loader(loader_key, **loader_kwargs)
         dataset_kwargs['loader'] = loader
 
     # For datasets without target_transform
@@ -114,9 +114,9 @@ def split_dataset(org_dataset, random_split_config, dataset_id, dataset_dict):
 
 
 def get_dataset_dict(dataset_config):
-    dataset_type = dataset_config['type']
+    dataset_key = dataset_config['key']
     dataset_dict = dict()
-    if dataset_type == 'cocodetect':
+    if dataset_key == 'cocodetect':
         dataset_splits_config = dataset_config['splits']
         for split_name in dataset_splits_config.keys():
             split_config = dataset_splits_config[split_name]
@@ -127,9 +127,9 @@ def get_dataset_dict(dataset_config):
                 load_coco_dataset(split_config['images'], split_config['annotations'],
                                   split_config['annotated_only'], split_config.get('random_horizontal_flip', None),
                                   is_segment, transforms, split_config.get('jpeg_quality', None))
-    elif dataset_type in DATASET_DICT:
-        dataset_cls_or_func = DATASET_DICT[dataset_type]
-        is_torchvision = dataset_type in torchvision.datasets.__dict__
+    elif dataset_key in DATASET_DICT:
+        dataset_cls_or_func = DATASET_DICT[dataset_key]
+        is_torchvision = dataset_key in torchvision.datasets.__dict__
         dataset_splits_config = dataset_config['splits']
         for split_name in dataset_splits_config.keys():
             st = time.time()
@@ -145,7 +145,7 @@ def get_dataset_dict(dataset_config):
                 split_dataset(org_dataset, random_split_config, dataset_id, dataset_dict)
             logger.info('dataset_id `{}`: {} sec'.format(dataset_id, time.time() - st))
     else:
-        raise ValueError('dataset_type `{}` is not expected'.format(dataset_type))
+        raise ValueError('dataset_key `{}` is not expected'.format(dataset_key))
     return dataset_dict
 
 
@@ -162,7 +162,7 @@ def build_data_loader(dataset, data_loader_config, distributed, accelerator=None
     cache_dir_path = data_loader_config.get('cache_output', None)
     dataset_wrapper_config = data_loader_config.get('dataset_wrapper', None)
     if isinstance(dataset_wrapper_config, dict) and len(dataset_wrapper_config) > 0:
-        dataset = get_dataset_wrapper(dataset_wrapper_config['name'], dataset, **dataset_wrapper_config['kwargs'])
+        dataset = get_dataset_wrapper(dataset_wrapper_config['key'], dataset, **dataset_wrapper_config['kwargs'])
     elif cache_dir_path is not None:
         dataset = CacheableDataset(dataset, cache_dir_path, idx2subpath_func=default_idx2subpath)
     elif data_loader_config.get('requires_supp', False):
@@ -172,7 +172,7 @@ def build_data_loader(dataset, data_loader_config, distributed, accelerator=None
         else RandomSampler(dataset) if data_loader_config.get('random_sample', False) else SequentialSampler(dataset)
     batch_sampler_config = data_loader_config.get('batch_sampler', None)
     batch_sampler = None if batch_sampler_config is None \
-        else get_batch_sampler(batch_sampler_config['type'], sampler, **batch_sampler_config['kwargs'])
+        else get_batch_sampler(batch_sampler_config['key'], sampler, **batch_sampler_config['kwargs'])
     collate_fn = get_collate_func(data_loader_config.get('collate_fn', None))
     drop_last = data_loader_config.get('drop_last', False)
     if batch_sampler is not None:
