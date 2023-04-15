@@ -43,8 +43,7 @@ models:
     kwargs:
       num_classes: 1000
       pretrained: True
-    experiment: &teacher_experiment !join [*dataset_name, '-', *teacher_model_key]
-    ckpt: !join ['./resource/ckpt/ilsvrc2012/teacher/', *teacher_experiment, '.pt']
+    src_ckpt:
   student_model:
     key: &student_model_key 'custom_densenet169'
     kwargs:
@@ -55,7 +54,8 @@ models:
       num_classes: 1000
       pretrained: True
     experiment: &student_experiment !join [*dataset_name, '-', *student_model_key, '_from_', *teacher_model_key]
-    ckpt: !join ['./resource/ckpt/ilsvrc2012/single_stage/ghnd/', *student_experiment, '.pt']
+    src_ckpt:
+    dst_ckpt: !join ['./resource/ckpt/ilsvrc2012/single_stage/ghnd/', *student_experiment, '.pt']
 
 train:
   log_freq: 1000

@@ -50,7 +50,8 @@ models:
       num_classes: 10
       pretrained: False
     experiment: &student_experiment !join [*dataset_name, '-', *student_model_key]
-    ckpt: !join ['./resource/ckpt/', *dataset_name, '/ce/', *student_experiment, '-hyperparameter_tuning.pt']
+    src_ckpt:
+    dst_ckpt: !join ['./resource/ckpt/', *dataset_name, '/ce/', *student_experiment, '-hyperparameter_tuning.pt']
 
 train:
   log_freq: 100

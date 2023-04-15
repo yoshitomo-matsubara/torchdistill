@@ -53,8 +53,8 @@ def load_model(model_config, device):
         repo_or_dir = model_config.get('repo_or_dir', None)
         model = get_model(model_config['key'], repo_or_dir, **model_config['kwargs'])
 
-    ckpt_file_path = model_config['ckpt']
-    load_ckpt(ckpt_file_path, model=model, strict=True)
+    src_ckpt_file_path = model_config.get('src_ckpt', None)
+    load_ckpt(src_ckpt_file_path, model=model, strict=True)
     return model.to(device)
 
 
@@ -155,7 +155,8 @@ def evaluate(model, data_loader, iou_types, device, device_ids, distributed, log
     return coco_evaluator
 
 
-def train(teacher_model, student_model, dataset_dict, ckpt_file_path, device, device_ids, distributed, config, args):
+def train(teacher_model, student_model, dataset_dict, dst_ckpt_file_path,
+          device, device_ids, distributed, config, args):
     logger.info('Start training')
     train_config = config['train']
     lr_factor = args.world_size if distributed and args.adjust_lr else 1
@@ -165,8 +166,8 @@ def train(teacher_model, student_model, dataset_dict, ckpt_file_path, device, de
                                   device, device_ids, distributed, lr_factor)
     best_val_map = 0.0
     optimizer, lr_scheduler = training_box.optimizer, training_box.lr_scheduler
-    if file_util.check_if_exists(ckpt_file_path):
-        best_val_map, _, _ = load_ckpt(ckpt_file_path, optimizer=optimizer, lr_scheduler=lr_scheduler)
+    if file_util.check_if_exists(dst_ckpt_file_path):
+        best_val_map, _, _ = load_ckpt(dst_ckpt_file_path, optimizer=optimizer, lr_scheduler=lr_scheduler)
 
     log_freq = train_config['log_freq']
     iou_types = args.iou_types
@@ -183,10 +184,10 @@ def train(teacher_model, student_model, dataset_dict, ckpt_file_path, device, de
         val_map = val_coco_evaluator.coco_eval[val_iou_type].stats[0]
         if val_map > best_val_map and is_main_process():
             logger.info('Best mAP ({}): {:.4f} -> {:.4f}'.format(val_iou_type, best_val_map, val_map))
-            logger.info('Updating ckpt at {}'.format(ckpt_file_path))
+            logger.info('Updating ckpt at {}'.format(dst_ckpt_file_path))
             best_val_map = val_map
             save_ckpt(student_model_without_ddp, optimizer, lr_scheduler,
-                      best_val_map, config, args, ckpt_file_path)
+                      best_val_map, config, args, dst_ckpt_file_path)
         training_box.post_epoch_process()
 
     if distributed:
@@ -215,16 +216,17 @@ def main(args):
     teacher_model = load_model(teacher_model_config, device) if teacher_model_config is not None else None
     student_model_config =\
         models_config['student_model'] if 'student_model' in models_config else models_config['model']
-    ckpt_file_path = student_model_config['ckpt']
+    dst_ckpt_file_path = student_model_config['dst_ckpt']
     student_model = load_model(student_model_config, device)
     if args.log_config:
         logger.info(config)
 
     if not args.test_only:
-        train(teacher_model, student_model, dataset_dict, ckpt_file_path, device, device_ids, distributed, config, args)
+        train(teacher_model, student_model, dataset_dict, dst_ckpt_file_path,
+              device, device_ids, distributed, config, args)
         student_model_without_ddp =\
             student_model.module if module_util.check_if_wrapped(student_model) else student_model
-        load_ckpt(student_model_config['ckpt'], model=student_model_without_ddp, strict=True)
+        load_ckpt(dst_ckpt_file_path, model=student_model_without_ddp, strict=True)
 
     test_config = config['test']
     test_data_loader_config = test_config['test_data_loader']

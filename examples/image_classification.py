@@ -47,8 +47,8 @@ def load_model(model_config, device, distributed):
         repo_or_dir = model_config.get('repo_or_dir', None)
         model = get_model(model_config['key'], repo_or_dir, **model_config['kwargs'])
 
-    ckpt_file_path = model_config['ckpt']
-    load_ckpt(ckpt_file_path, model=model, strict=True)
+    src_ckpt_file_path = model_config.get('src_ckpt', None)
+    load_ckpt(src_ckpt_file_path, model=model, strict=True)
     return model.to(device)
 
 
@@ -102,7 +102,8 @@ def evaluate(model, data_loader, device, device_ids, distributed, log_freq=1000,
     return metric_logger.acc1.global_avg
 
 
-def train(teacher_model, student_model, dataset_dict, ckpt_file_path, device, device_ids, distributed, config, args):
+def train(teacher_model, student_model, dataset_dict, dst_ckpt_file_path,
+          device, device_ids, distributed, config, args):
     logger.info('Start training')
     train_config = config['train']
     lr_factor = args.world_size if distributed and args.adjust_lr else 1
@@ -112,8 +113,8 @@ def train(teacher_model, student_model, dataset_dict, ckpt_file_path, device, de
                                   device, device_ids, distributed, lr_factor)
     best_val_top1_accuracy = 0.0
     optimizer, lr_scheduler = training_box.optimizer, training_box.lr_scheduler
-    if file_util.check_if_exists(ckpt_file_path):
-        best_val_top1_accuracy, _, _ = load_ckpt(ckpt_file_path, optimizer=optimizer, lr_scheduler=lr_scheduler)
+    if file_util.check_if_exists(dst_ckpt_file_path):
+        best_val_top1_accuracy, _, _ = load_ckpt(dst_ckpt_file_path, optimizer=optimizer, lr_scheduler=lr_scheduler)
 
     log_freq = train_config['log_freq']
     student_model_without_ddp = student_model.module if module_util.check_if_wrapped(student_model) else student_model
@@ -125,10 +126,10 @@ def train(teacher_model, student_model, dataset_dict, ckpt_file_path, device, de
                                      log_freq=log_freq, header='Validation:')
         if val_top1_accuracy > best_val_top1_accuracy and is_main_process():
             logger.info('Best top-1 accuracy: {:.4f} -> {:.4f}'.format(best_val_top1_accuracy, val_top1_accuracy))
-            logger.info('Updating ckpt at {}'.format(ckpt_file_path))
+            logger.info('Updating ckpt at {}'.format(dst_ckpt_file_path))
             best_val_top1_accuracy = val_top1_accuracy
             save_ckpt(student_model_without_ddp, optimizer, lr_scheduler,
-                      best_val_top1_accuracy, config, args, ckpt_file_path)
+                      best_val_top1_accuracy, config, args, dst_ckpt_file_path)
         training_box.post_epoch_process()
 
     if distributed:
@@ -158,16 +159,17 @@ def main(args):
         load_model(teacher_model_config, device, distributed) if teacher_model_config is not None else None
     student_model_config =\
         models_config['student_model'] if 'student_model' in models_config else models_config['model']
-    ckpt_file_path = student_model_config['ckpt']
+    dst_ckpt_file_path = student_model_config['dst_ckpt']
     student_model = load_model(student_model_config, device, distributed)
     if args.log_config:
         logger.info(config)
 
     if not args.test_only:
-        train(teacher_model, student_model, dataset_dict, ckpt_file_path, device, device_ids, distributed, config, args)
+        train(teacher_model, student_model, dataset_dict, dst_ckpt_file_path,
+              device, device_ids, distributed, config, args)
         student_model_without_ddp =\
             student_model.module if module_util.check_if_wrapped(student_model) else student_model
-        load_ckpt(student_model_config['ckpt'], model=student_model_without_ddp, strict=True)
+        load_ckpt(dst_ckpt_file_path, model=student_model_without_ddp, strict=True)
 
     test_config = config['test']
     test_data_loader_config = test_config['test_data_loader']

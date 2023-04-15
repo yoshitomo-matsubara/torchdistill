@@ -72,8 +72,8 @@ def load_tokenizer_and_model(model_config, task_name, prioritizes_ckpt=False):
     tokenizer_config = model_config['tokenizer_kwargs']
     tokenizer = AutoTokenizer.from_pretrained(**tokenizer_config)
     model_kwargs = model_config['model_kwargs']
-    if prioritizes_ckpt and file_util.check_if_exists(model_config.get('ckpt', None)):
-        model_kwargs['model_name_or_path'] = model_config['ckpt']
+    if prioritizes_ckpt and file_util.check_if_exists(model_config.get('src_ckpt', None)):
+        model_kwargs['model_name_or_path'] = model_config['src_ckpt']
     model = AutoModelForSequenceClassification.from_pretrained(config=config, **model_kwargs)
     return tokenizer, model
 
@@ -142,7 +142,7 @@ def evaluate(model, data_loader, metric, is_regression, accelerator, title=None,
     return eval_dict
 
 
-def train(teacher_model, student_model, dataset_dict, is_regression, ckpt_dir_path, metric,
+def train(teacher_model, student_model, dataset_dict, is_regression, dst_ckpt_dir_path, metric,
           device, device_ids, distributed, config, args, accelerator):
     logger.info('Start training')
     train_config = config['train']
@@ -161,11 +161,11 @@ def train(teacher_model, student_model, dataset_dict, is_regression, ckpt_dir_pa
                             accelerator, header='Validation: ')
         val_value = sum(val_dict.values())
         if val_value > best_val_number:
-            logger.info('Updating ckpt at {}'.format(ckpt_dir_path))
+            logger.info('Updating ckpt at {}'.format(dst_ckpt_dir_path))
             best_val_number = val_value
             accelerator.wait_for_everyone()
             unwrapped_model = accelerator.unwrap_model(student_model)
-            unwrapped_model.save_pretrained(ckpt_dir_path, save_function=accelerator.save)
+            unwrapped_model.save_pretrained(dst_ckpt_dir_path, save_function=accelerator.save)
         training_box.post_epoch_process()
 
 
@@ -244,7 +244,7 @@ def main(args):
     student_model_config =\
         models_config['student_model'] if 'student_model' in models_config else models_config['model']
     student_tokenizer, student_model = load_tokenizer_and_model(student_model_config, task_name)
-    ckpt_dir_path = student_model_config['ckpt']
+    dst_ckpt_dir_path = student_model_config['dst_ckpt']
     # Get the datasets: you can either provide your own CSV/JSON training and evaluation files (see below)
     # or specify a GLUE benchmark task (the dataset will be downloaded automatically from the datasets Hub).
     dataset_dict, label_names_dict, is_regression = \
@@ -261,9 +261,9 @@ def main(args):
     metric = get_metrics(task_name)
 
     if not args.test_only:
-        train(teacher_model, student_model, dataset_dict, is_regression, ckpt_dir_path, metric,
+        train(teacher_model, student_model, dataset_dict, is_regression, dst_ckpt_dir_path, metric,
               device, device_ids, distributed, config, args, accelerator)
-        student_tokenizer.save_pretrained(ckpt_dir_path)
+        student_tokenizer.save_pretrained(dst_ckpt_dir_path)
 
     test_config = config['test']
     test_data_loader_config = test_config['test_data_loader']
