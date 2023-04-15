@@ -35,7 +35,8 @@ models:
     model_kwargs:
       pretrained_model_name_or_path: *student_model_key
     experiment: &student_experiment !join [*dataset_name, '-', *student_model_key, '_from_', *teacher_model_key]
-    ckpt: !join ['./resource/ckpt/glue/', *dataset_name, '/kd/', *student_experiment]
+    src_ckpt:
+    dst_ckpt: !join ['./resource/ckpt/glue/', *dataset_name, '/kd/', *student_experiment]
 
 train:
   log_freq: 500

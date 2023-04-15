@@ -65,7 +65,8 @@ models:
       num_classes: 21
       aux_loss: True
     experiment: &student_experiment !join [*dataset_name, '-', *student_model_key]
-    ckpt: !join ['./resource/ckpt/pascal_voc2012/ce/', *student_experiment, '.pt']
+    src_ckpt:
+    dst_ckpt: !join ['./resource/ckpt/pascal_voc2012/ce/', *student_experiment, '.pt']
 
 train:
   log_freq: 1000

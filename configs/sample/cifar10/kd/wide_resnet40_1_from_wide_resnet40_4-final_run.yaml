@@ -50,8 +50,7 @@ models:
       dropout_p: 0.0
       num_classes: 10
       pretrained: True
-    experiment: &teacher_experiment !join [*dataset_name, '-', *teacher_model_key]
-    ckpt: !join ['./resource/ckpt/', *dataset_name, '/teacher/', *teacher_experiment, '.pt']
+    src_ckpt:
   student_model:
     key: &student_model_key 'wide_resnet'
     kwargs:
@@ -62,7 +61,8 @@ models:
       pretrained: False
       progress: True
     experiment: &student_experiment !join [*dataset_name, '-', *student_model_key, *s_depth, '-', *s_k, '_from_', *teacher_model_key]
-    ckpt: !join ['./resource/ckpt/', *dataset_name, '/kd/', *student_experiment, '-final_run.pt']
+    src_ckpt:
+    dst_ckpt: !join ['./resource/ckpt/', *dataset_name, '/kd/', *student_experiment, '-final_run.pt']
 
 train:
   log_freq: 100
