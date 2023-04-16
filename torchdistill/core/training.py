@@ -8,6 +8,8 @@ from .interfaces.registry import get_pre_epoch_proc_func, get_pre_forward_proc_f
     get_post_forward_proc_func, get_post_epoch_proc_func
 from .util import set_hooks, wrap_model, extract_io_dict, update_io_dict
 from ..common.constant import SELF_MODULE_PATH, def_logger
+from ..common.file_util import make_parent_dirs
+from ..common.main_util import load_ckpt, save_on_master
 from ..common.module_util import check_if_wrapped, freeze_module_params, get_module, \
     unfreeze_module_params, get_updatable_param_names
 from ..datasets.util import build_data_loaders
@@ -39,7 +41,6 @@ class TrainingBox(nn.Module):
             self.org_model.module if check_if_wrapped(self.org_model) else self.org_model
         self.target_model_pairs.clear()
         ref_model = unwrapped_org_model
-
         if len(model_config) > 0 or (len(model_config) == 0 and self.model is None):
             model_type = 'original'
             auxiliary_model_wrapper = \
@@ -48,7 +49,11 @@ class TrainingBox(nn.Module):
             if auxiliary_model_wrapper is not None:
                 ref_model = auxiliary_model_wrapper
                 model_type = type(ref_model).__name__
+
             self.model = redesign_model(ref_model, model_config, 'student', model_type)
+            src_ckpt_file_path = model_config.get('src_ckpt', None)
+            if src_ckpt_file_path is not None:
+                load_ckpt(src_ckpt_file_path, self.model)
 
         self.model_any_frozen = \
             len(model_config.get('frozen_modules', list())) > 0 or not model_config.get('requires_grad', True)
@@ -221,7 +226,15 @@ class MultiStagesTrainingBox(TrainingBox):
         self.current_epoch = 0
         logger.info('Started stage {}'.format(self.stage_number))
 
+    def save_stage_ckpt(self, model, local_model_config):
+        dst_ckpt_file_path = local_model_config.get('dst_ckpt', None)
+        if dst_ckpt_file_path is not None:
+            model_state_dict = model.module.state_dict() if check_if_wrapped(model) else model.state_dict()
+            make_parent_dirs(dst_ckpt_file_path)
+            save_on_master(model_state_dict, dst_ckpt_file_path)
+
     def advance_to_next_stage(self):
+        self.save_stage_ckpt(self.model, self.train_config.get('model', dict()))
         self.clean_modules()
         self.stage_grad_count = 0
         self.stage_number += 1

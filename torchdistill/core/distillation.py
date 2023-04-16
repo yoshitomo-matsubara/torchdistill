@@ -13,6 +13,7 @@ from .util import set_hooks, wrap_model, change_device, tensor2numpy2tensor, ext
     extract_sub_model_output_dict
 from ..common.constant import SELF_MODULE_PATH, def_logger
 from ..common.file_util import make_parent_dirs
+from ..common.main_util import load_ckpt, save_on_master
 from ..common.module_util import check_if_wrapped, freeze_module_params, get_module, \
     unfreeze_module_params, get_updatable_param_names
 from ..datasets.util import build_data_loaders
@@ -57,7 +58,11 @@ class DistillationBox(nn.Module):
             if auxiliary_teacher_model_wrapper is not None:
                 teacher_ref_model = auxiliary_teacher_model_wrapper
                 model_type = type(teacher_ref_model).__name__
+
             self.teacher_model = redesign_model(teacher_ref_model, teacher_config, 'teacher', model_type)
+            src_teacher_ckpt_file_path = teacher_config.get('src_ckpt', None)
+            if src_teacher_ckpt_file_path is not None:
+                load_ckpt(src_teacher_ckpt_file_path, self.teacher_model)
 
         if len(student_config) > 0 or (len(student_config) == 0 and self.student_model is None):
             model_type = 'original'
@@ -68,7 +73,11 @@ class DistillationBox(nn.Module):
             if auxiliary_student_model_wrapper is not None:
                 student_ref_model = auxiliary_student_model_wrapper
                 model_type = type(student_ref_model).__name__
+
             self.student_model = redesign_model(student_ref_model, student_config, 'student', model_type)
+            src_student_ckpt_file_path = student_config.get('src_ckpt', None)
+            if src_student_ckpt_file_path is not None:
+                load_ckpt(src_student_ckpt_file_path, self.student_model)
 
         self.teacher_any_frozen = \
             len(teacher_config.get('frozen_modules', list())) > 0 or not teacher_config.get('requires_grad', True)
@@ -347,7 +356,16 @@ class MultiStagesDistillationBox(DistillationBox):
         self.current_epoch = 0
         logger.info('Started stage {}'.format(self.stage_number))
 
+    def save_stage_ckpt(self, model, local_model_config):
+        dst_ckpt_file_path = local_model_config.get('dst_ckpt', None)
+        if dst_ckpt_file_path is not None:
+            model_state_dict = model.module.state_dict() if check_if_wrapped(model) else model.state_dict()
+            make_parent_dirs(dst_ckpt_file_path)
+            save_on_master(model_state_dict, dst_ckpt_file_path)
+
     def advance_to_next_stage(self):
+        self.save_stage_ckpt(self.teacher_model, self.train_config.get('teacher', dict()))
+        self.save_stage_ckpt(self.student_model, self.train_config.get('student', dict()))
         self.clean_modules()
         self.stage_grad_count = 0
         self.stage_number += 1
