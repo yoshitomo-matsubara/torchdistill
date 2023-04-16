@@ -36,6 +36,7 @@ def get_argparser():
     parser.add_argument('--iou_types', nargs='+', help='IoU types for evaluation '
                                                        '(the first IoU type is used for checkpoint selection)')
     parser.add_argument('--seed', type=int, help='seed in random number generator')
+    parser.add_argument('-disable_cudnn_benchmark', action='store_true', help='disable torch.backend.cudnn.benchmark')
     parser.add_argument('-test_only', action='store_true', help='only test the models')
     parser.add_argument('-student_only', action='store_true', help='test the student model only')
     parser.add_argument('-log_config', action='store_true', help='log config')
@@ -206,7 +207,9 @@ def main(args):
 
     distributed, device_ids = init_distributed_mode(args.world_size, args.dist_url)
     logger.info(args)
-    cudnn.benchmark = True
+    if not args.disable_cudnn_benchmark:
+        cudnn.benchmark = True
+
     set_seed(args.seed)
     config = yaml_util.load_yaml_file(os.path.expanduser(args.config))
     device = torch.device(args.device)

@@ -55,6 +55,7 @@ def get_argparser():
     parser.add_argument('--task_name', type=str, default=None, help='name of the glue task to train on.')
     parser.add_argument('--private_output', help='output dir path for private dataset(s)')
     parser.add_argument('--seed', type=int, default=None, help='a seed for reproducible training')
+    parser.add_argument('-disable_cudnn_benchmark', action='store_true', help='disable torch.backend.cudnn.benchmark')
     parser.add_argument('-test_only', action='store_true', help='only test the models')
     parser.add_argument('-student_only', action='store_true', help='test the student model only')
     # distributed training parameters
@@ -211,7 +212,9 @@ def main(args):
 
     world_size = args.world_size
     logger.info(args)
-    cudnn.benchmark = True
+    if not args.disable_cudnn_benchmark:
+        cudnn.benchmark = True
+
     set_seed(args.seed)
     config = yaml_util.load_yaml_file(os.path.expanduser(args.config))
 
