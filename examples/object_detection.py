@@ -70,7 +70,7 @@ def train_one_epoch(training_box, device, epoch, log_freq):
         sample_batch = list(image.to(device) for image in sample_batch)
         targets = [{k: v.to(device) for k, v in t.items()} for t in targets]
         supp_dict = default_collate(supp_dict)
-        loss = training_box(sample_batch, targets, supp_dict)
+        loss = training_box.forward_process(sample_batch, targets, supp_dict)
         training_box.post_forward_process(loss=loss)
         batch_size = len(sample_batch)
         metric_logger.update(loss=loss.item(), lr=training_box.optimizer.param_groups[0]['lr'])

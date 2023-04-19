@@ -21,7 +21,7 @@ from ..optim.registry import get_optimizer, get_scheduler
 logger = def_logger.getChild(__name__)
 
 
-class TrainingBox(nn.Module):
+class TrainingBox(object):
     def setup_data_loaders(self, train_config):
         train_data_loader_config = train_config.get('train_data_loader', dict())
         if 'requires_supp' not in train_data_loader_config:
@@ -159,7 +159,6 @@ class TrainingBox(nn.Module):
         self.setup_pre_post_processes(train_config)
 
     def __init__(self, model, dataset_dict, train_config, device, device_ids, distributed, lr_factor, accelerator=None):
-        super().__init__()
         # Key attributes (should not be modified)
         self.org_model = model
         self.dataset_dict = dataset_dict
@@ -186,7 +185,7 @@ class TrainingBox(nn.Module):
     def pre_epoch_process(self, *args, **kwargs):
         raise NotImplementedError()
 
-    def forward(self, sample_batch, targets=None, supp_dict=None, **kwargs):
+    def forward_process(self, sample_batch, targets=None, supp_dict=None, **kwargs):
         model_outputs = self.model_forward_proc(self.model, sample_batch, targets, supp_dict, **kwargs)
         extracted_model_io_dict = extract_io_dict(self.model_io_dict, self.device)
         extracted_model_io_dict[SELF_MODULE_PATH]['output'] = model_outputs
