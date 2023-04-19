@@ -25,7 +25,7 @@ from ..optim.registry import get_optimizer, get_scheduler
 logger = def_logger.getChild(__name__)
 
 
-class DistillationBox(nn.Module):
+class DistillationBox(object):
     def setup_data_loaders(self, train_config):
         train_data_loader_config = train_config.get('train_data_loader', dict())
         if 'requires_supp' not in train_data_loader_config:
@@ -219,7 +219,6 @@ class DistillationBox(nn.Module):
 
     def __init__(self, teacher_model, student_model, dataset_dict,
                  train_config, device, device_ids, distributed, lr_factor, accelerator=None):
-        super().__init__()
         # Key attributes (should not be modified)
         self.org_teacher_model = teacher_model
         self.org_student_model = student_model
@@ -310,7 +309,7 @@ class DistillationBox(nn.Module):
                 torch.save(cache_dict, cache_file_path)
         return teacher_outputs, extracted_teacher_io_dict
 
-    def forward(self, sample_batch, targets=None, supp_dict=None, **kwargs):
+    def forward_process(self, sample_batch, targets=None, supp_dict=None, **kwargs):
         teacher_outputs, extracted_teacher_io_dict =\
             self.get_teacher_output(sample_batch=sample_batch, targets=targets, supp_dict=supp_dict, **kwargs)
         student_outputs = self.student_forward_proc(self.student_model, sample_batch, targets, supp_dict, **kwargs)
