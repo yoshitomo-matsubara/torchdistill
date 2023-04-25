@@ -19,7 +19,11 @@ def import_dependencies(dependencies=None):
     if dependencies is None:
         return
 
+    if isinstance(dependencies, str):
+        dependencies = [dependencies]
+
     for dependency in dependencies:
+        name = None
         package = None
         if isinstance(dependency, dict):
             import_module(**dependency)
@@ -32,13 +36,30 @@ def import_dependencies(dependencies=None):
                 package = dependency[1]
         elif isinstance(dependency, str):
             import_module(dependency)
-            name = dependency
+            package = dependency
         else:
             raise TypeError(f'Failed to import module with `{dependency}`')
         if name is None:
-            logger.info(f'Imported `{name}`')
+            logger.info(f'Imported `{package}`')
         else:
-            logger.info(f'Imported `{name}` from package `{package}`')
+            logger.info(f'Imported `{package}` from `{name}`')
+
+
+def import_get(package, key):
+    logger.info(f'Getting `{key}` from `{package}`')
+    module = import_module(package)
+    return getattr(module, key)
+
+
+def import_call(package, key, init=None):
+    obj = import_get(package, key)
+    if init is None:
+        init = dict()
+
+    logger.info(f'Calling `{key}` from `{package}` with {init}')
+    args = init.get('args', list())
+    kwargs = init.get('kwargs', dict())
+    return obj(*args, **kwargs)
 
 
 def setup_for_distributed(is_master):
