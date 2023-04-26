@@ -14,8 +14,7 @@ from torchdistill.common.constant import def_logger
 from torchdistill.common.main_util import is_main_process, init_distributed_mode, load_ckpt, save_ckpt, set_seed
 from torchdistill.core.distillation import get_distillation_box
 from torchdistill.core.training import get_training_box
-from torchdistill.datasets import util
-from torchdistill.eval.classification import compute_accuracy
+from torchdistill.datasets.util import get_all_datasets, build_data_loader
 from torchdistill.misc.log import setup_log_file, SmoothedValue, MetricLogger
 from torchdistill.models.official import get_image_classification_model
 from torchdistill.models.registry import get_model
@@ -69,6 +68,21 @@ def train_one_epoch(training_box, device, epoch, log_freq):
         metric_logger.meters['img/s'].update(batch_size / (time.time() - start_time))
         if (torch.isnan(loss) or torch.isinf(loss)) and is_main_process():
             raise ValueError('The training loop was broken due to loss = {}'.format(loss))
+
+
+def compute_accuracy(outputs, targets, topk=(1,)):
+    """Computes the accuracy over the k top predictions for the specified values of k"""
+    with torch.no_grad():
+        maxk = max(topk)
+        batch_size = targets.size(0)
+        _, preds = outputs.topk(maxk, 1, True, True)
+        preds = preds.t()
+        corrects = preds.eq(targets[None])
+        result_list = []
+        for k in topk:
+            correct_k = corrects[:k].flatten().sum(dtype=torch.float32)
+            result_list.append(correct_k * (100.0 / batch_size))
+        return result_list
 
 
 @torch.inference_mode()
@@ -155,7 +169,7 @@ def main(args):
     set_seed(args.seed)
     config = yaml_util.load_yaml_file(os.path.expanduser(args.config))
     device = torch.device(args.device)
-    dataset_dict = util.get_all_datasets(config['datasets'])
+    dataset_dict = get_all_datasets(config['datasets'])
     models_config = config['models']
     teacher_model_config = models_config.get('teacher_model', None)
     teacher_model =\
@@ -176,8 +190,8 @@ def main(args):
 
     test_config = config['test']
     test_data_loader_config = test_config['test_data_loader']
-    test_data_loader = util.build_data_loader(dataset_dict[test_data_loader_config['dataset_id']],
-                                              test_data_loader_config, distributed)
+    test_data_loader = build_data_loader(dataset_dict[test_data_loader_config['dataset_id']],
+                                         test_data_loader_config, distributed)
     log_freq = test_config.get('log_freq', 1000)
     if not args.student_only and teacher_model is not None:
         evaluate(teacher_model, test_data_loader, device, device_ids, distributed, log_freq=log_freq,

@@ -5,30 +5,17 @@ import torch
 import torchvision
 from torch.utils.data import DataLoader, RandomSampler, SequentialSampler, random_split
 from torch.utils.data.distributed import DistributedSampler
-from torchvision.datasets import PhotoTour, Kinetics400, HMDB51, UCF101, Cityscapes, CocoCaptions, CocoDetection, \
+from torchvision.datasets import PhotoTour, HMDB51, UCF101, Cityscapes, CocoCaptions, CocoDetection, \
     SBDataset, VOCSegmentation, VOCDetection
 
 from ..common.constant import def_logger
-from ..datasets.coco import ImageToTensor, Compose, CocoRandomHorizontalFlip, get_coco
 from ..datasets.registry import DATASET_DICT, TRANSFORM_DICT, \
     get_collate_func, get_sample_loader, get_batch_sampler, get_dataset_wrapper
-from ..datasets.transform import CustomCompose
 from ..datasets.wrapper import default_idx2subpath, BaseDatasetWrapper, CacheableDataset
 
 logger = def_logger.getChild(__name__)
 
 TRANSFORM_DICT.update(torchvision.transforms.__dict__)
-
-
-def load_coco_dataset(img_dir_path, ann_file_path, annotated_only, random_horizontal_flip=None, is_segment=False,
-                      transforms=None, jpeg_quality=None):
-    if transforms is None:
-        transform_list = [ImageToTensor(jpeg_quality)]
-        if random_horizontal_flip is not None and not is_segment:
-            transform_list.append(CocoRandomHorizontalFlip(random_horizontal_flip))
-        transforms = Compose(transform_list)
-    return get_coco(img_dir_path=img_dir_path, ann_file_path=ann_file_path,
-                    transforms=transforms, annotated_only=annotated_only, is_segment=is_segment)
 
 
 def build_transform(transform_configs, compose_cls=None):
@@ -68,7 +55,7 @@ def get_torchvision_dataset(dataset_cls, dataset_kwargs):
         dataset_kwargs['loader'] = loader
 
     # For datasets without target_transform
-    if dataset_cls in (PhotoTour, Kinetics400, HMDB51, UCF101):
+    if dataset_cls in (PhotoTour, HMDB51, UCF101):
         return dataset_cls(transform=transform, **dataset_kwargs)
     # For datasets with transforms
     if dataset_cls in (Cityscapes, CocoCaptions, CocoDetection, SBDataset, VOCSegmentation, VOCDetection):
@@ -116,18 +103,7 @@ def split_dataset(org_dataset, random_split_config, dataset_id, dataset_dict):
 def get_dataset_dict(dataset_config):
     dataset_key = dataset_config['key']
     dataset_dict = dict()
-    if dataset_key == 'cocodetect':
-        dataset_splits_config = dataset_config['splits']
-        for split_name in dataset_splits_config.keys():
-            split_config = dataset_splits_config[split_name]
-            is_segment = split_config.get('is_segment', False)
-            compose_cls = CustomCompose if is_segment else None
-            transforms = build_transform(split_config.get('transforms_configs', None), compose_cls=compose_cls)
-            dataset_dict[split_config['dataset_id']] =\
-                load_coco_dataset(split_config['images'], split_config['annotations'],
-                                  split_config['annotated_only'], split_config.get('random_horizontal_flip', None),
-                                  is_segment, transforms, split_config.get('jpeg_quality', None))
-    elif dataset_key in DATASET_DICT:
+    if dataset_key in DATASET_DICT:
         dataset_cls_or_func = DATASET_DICT[dataset_key]
         is_torchvision = dataset_key in torchvision.datasets.__dict__
         dataset_splits_config = dataset_config['splits']
