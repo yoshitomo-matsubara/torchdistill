@@ -11,6 +11,8 @@ from pycocotools.coco import COCO
 from torchvision.datasets import CocoDetection
 from torchvision.transforms import functional
 
+from torchdistill.datasets.registry import register_dataset
+
 
 def _flip_coco_person_keypoints(kps, width):
     flip_inds = [0, 2, 1, 4, 3, 6, 5, 8, 7, 10, 9, 12, 11, 14, 13, 16, 15]
@@ -303,3 +305,15 @@ def get_coco(img_dir_path, ann_file_path, transforms, annotated_only, is_segment
     if annotated_only:
         dataset = remove_images_without_annotations(dataset)
     return dataset
+
+
+@register_dataset
+def coco_dataset(img_dir_path, ann_file_path, annotated_only, random_horizontal_flip=None, is_segment=False,
+                 transforms=None, jpeg_quality=None):
+    if transforms is None:
+        transform_list = [ImageToTensor(jpeg_quality)]
+        if random_horizontal_flip is not None and not is_segment:
+            transform_list.append(CocoRandomHorizontalFlip(random_horizontal_flip))
+        transforms = Compose(transform_list)
+    return get_coco(img_dir_path=img_dir_path, ann_file_path=ann_file_path,
+                    transforms=transforms, annotated_only=annotated_only, is_segment=is_segment)
