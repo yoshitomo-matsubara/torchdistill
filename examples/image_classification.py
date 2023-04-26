@@ -15,7 +15,6 @@ from torchdistill.common.main_util import is_main_process, init_distributed_mode
 from torchdistill.core.distillation import get_distillation_box
 from torchdistill.core.training import get_training_box
 from torchdistill.datasets import util
-from torchdistill.eval.classification import compute_accuracy
 from torchdistill.misc.log import setup_log_file, SmoothedValue, MetricLogger
 from torchdistill.models.official import get_image_classification_model
 from torchdistill.models.registry import get_model
@@ -69,6 +68,21 @@ def train_one_epoch(training_box, device, epoch, log_freq):
         metric_logger.meters['img/s'].update(batch_size / (time.time() - start_time))
         if (torch.isnan(loss) or torch.isinf(loss)) and is_main_process():
             raise ValueError('The training loop was broken due to loss = {}'.format(loss))
+
+
+def compute_accuracy(outputs, targets, topk=(1,)):
+    """Computes the accuracy over the k top predictions for the specified values of k"""
+    with torch.no_grad():
+        maxk = max(topk)
+        batch_size = targets.size(0)
+        _, preds = outputs.topk(maxk, 1, True, True)
+        preds = preds.t()
+        corrects = preds.eq(targets[None])
+        result_list = []
+        for k in topk:
+            correct_k = corrects[:k].flatten().sum(dtype=torch.float32)
+            result_list.append(correct_k * (100.0 / batch_size))
+        return result_list
 
 
 @torch.inference_mode()
