@@ -113,6 +113,14 @@ def register_dataset_wrapper(arg=None, **kwargs):
     return _register_dataset_wrapper
 
 
+def get_dataset(key):
+    if key is None:
+        return None
+    elif key in DATASET_DICT:
+        return DATASET_DICT[key]
+    raise ValueError('No dataset `{}` registered'.format(key))
+
+
 def get_collate_func(key):
     if key is None:
         return None
