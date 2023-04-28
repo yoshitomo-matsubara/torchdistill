@@ -14,7 +14,7 @@ def get_classes(package_name, require_names=False):
     return [obj for _, obj in members]
 
 
-def get_classes_as_dict(package_name, is_lower=True):
+def get_classes_as_dict(package_name, is_lower=False):
     members = get_classes(package_name, require_names=True)
     class_dict = dict()
     for name, obj in members:
@@ -29,7 +29,7 @@ def get_functions(package_name, require_names=False):
     return [obj for _, obj in members]
 
 
-def get_functions_as_dict(package_name, is_lower=True):
+def get_functions_as_dict(package_name, is_lower=False):
     members = get_functions(package_name, require_names=True)
     func_dict = dict()
     for name, obj in members:
