@@ -45,14 +45,24 @@ def import_dependencies(dependencies=None):
             logger.info(f'Imported `{package}` from `{name}`')
 
 
-def import_get(package, key):
+def import_get(key, package=None):
+    if package is None:
+        names = key.split('.')
+        key = names[-1]
+        package = '.'.join(names[:-1])
+
     logger.info(f'Getting `{key}` from `{package}`')
     module = import_module(package)
     return getattr(module, key)
 
 
-def import_call(package, key, init=None):
-    obj = import_get(package, key)
+def import_call(key, package=None, init=None):
+    if package is None:
+        names = key.split('.')
+        key = names[-1]
+        package = '.'.join(names[:-1])
+
+    obj = import_get(key, package)
     if init is None:
         init = dict()
 
