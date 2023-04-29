@@ -13,7 +13,7 @@ class AbstractLoss(nn.Module):
         if sub_terms is not None:
             for loss_name, loss_config in sub_terms.items():
                 sub_criterion_config = loss_config['criterion']
-                sub_criterion = get_mid_level_loss(sub_criterion_config, loss_config.get('criterion_wrapper', dict()))
+                sub_criterion = get_mid_level_loss(sub_criterion_config, loss_config.get('criterion_wrapper', None))
                 term_dict[loss_name] = (sub_criterion, loss_config['weight'])
         self.term_dict = term_dict
 
