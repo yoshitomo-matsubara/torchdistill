@@ -28,11 +28,17 @@ def yaml_import_call(loader, node):
     return import_call(**entry)
 
 
+def yaml_getattr(loader, node):
+    args = loader.construct_sequence(node, deep=True)
+    return getattr(*args)
+
+
 def load_yaml_file(yaml_file_path, custom_mode=True):
     if custom_mode:
         yaml.add_constructor('!join', yaml_join, Loader=yaml.FullLoader)
         yaml.add_constructor('!pathjoin', yaml_pathjoin, Loader=yaml.FullLoader)
         yaml.add_constructor('!import_get', yaml_import_get, Loader=yaml.FullLoader)
         yaml.add_constructor('!import_call', yaml_import_call, Loader=yaml.FullLoader)
+        yaml.add_constructor('!getattr', yaml_getattr, Loader=yaml.FullLoader)
     with open(yaml_file_path, 'r') as fp:
         return yaml.load(fp, Loader=yaml.FullLoader)
