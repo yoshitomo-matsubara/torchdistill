@@ -7,6 +7,7 @@ from torch.nn.parallel.scatter_gather import gather
 
 from ..common.constant import def_logger
 from ..common.module_util import get_module, check_if_wrapped
+from ..common.constant import SELF_MODULE_PATH
 from ..core.forward_hook import register_forward_hook_with_dict
 
 logger = def_logger.getChild(__name__)
@@ -93,7 +94,7 @@ def clear_io_dict(model_io_dict):
 
 def extract_io_dict(model_io_dict, target_device):
     uses_cuda = target_device.type == 'cuda'
-    gathered_io_dict = dict()
+    gathered_io_dict = {SELF_MODULE_PATH: dict()}
     for module_path, module_io_dict in model_io_dict.items():
         gathered_io_dict[module_path] = dict()
         for io_type in list(module_io_dict.keys()):
