@@ -88,7 +88,7 @@ def get_mid_level_loss(mid_level_criterion_config, criterion_wrapper_config=None
     loss_key = mid_level_criterion_config['key']
     mid_level_loss = MIDDLE_LEVEL_LOSS_DICT[loss_key](**mid_level_criterion_config['kwargs']) \
         if loss_key in MIDDLE_LEVEL_LOSS_DICT else get_loss(loss_key, **mid_level_criterion_config['kwargs'])
-    if criterion_wrapper_config is None:
+    if criterion_wrapper_config is None or len(criterion_wrapper_config) == 0:
         return mid_level_loss
     return get_loss_wrapper(mid_level_loss, criterion_wrapper_config)
 
