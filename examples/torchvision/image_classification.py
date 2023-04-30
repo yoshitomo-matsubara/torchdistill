@@ -26,7 +26,7 @@ def get_argparser():
     parser = argparse.ArgumentParser(description='Knowledge distillation for image classification models')
     parser.add_argument('--config', required=True, help='yaml file path')
     parser.add_argument('--device', default='cuda', help='device')
-    parser.add_argument('--log', help='log file path')
+    parser.add_argument('--run_log', help='log file path')
     parser.add_argument('--start_epoch', default=0, type=int, metavar='N', help='start epoch')
     parser.add_argument('--seed', type=int, help='seed in random number generator')
     parser.add_argument('-disable_cudnn_benchmark', action='store_true', help='disable torch.backend.cudnn.benchmark')
@@ -157,7 +157,7 @@ def train(teacher_model, student_model, dataset_dict, dst_ckpt_file_path,
 
 
 def main(args):
-    log_file_path = args.log
+    log_file_path = args.run_log
     if is_main_process() and log_file_path is not None:
         setup_log_file(os.path.expanduser(log_file_path))
 
