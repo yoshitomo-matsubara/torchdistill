@@ -108,10 +108,10 @@ def evaluate(model, data_loader, device, device_ids, distributed, num_classes,
 
 
 def train(teacher_model, student_model, dataset_dict, dst_ckpt_file_path,
-          device, device_ids, distributed, config, args):
+          device, device_ids, distributed, world_size, config, args):
     logger.info('Start training')
     train_config = config['train']
-    lr_factor = args.world_size if distributed and args.adjust_lr else 1
+    lr_factor = world_size if distributed and args.adjust_lr else 1
     training_box = get_training_box(student_model, dataset_dict, train_config,
                                     device, device_ids, distributed, lr_factor) if teacher_model is None \
         else get_distillation_box(teacher_model, student_model, dataset_dict, train_config,
@@ -155,8 +155,7 @@ def main(args):
     if is_main_process() and log_file_path is not None:
         setup_log_file(os.path.expanduser(log_file_path))
 
-    world_size = args.world_size
-    distributed, device_ids = init_distributed_mode(world_size, args.dist_url)
+    distributed, world_size, device_ids  = init_distributed_mode(args.world_size, args.dist_url)
     logger.info(args)
     if not args.disable_cudnn_benchmark:
         cudnn.benchmark = True
@@ -180,7 +179,7 @@ def main(args):
 
     if not args.test_only:
         train(teacher_model, student_model, dataset_dict, dst_ckpt_file_path,
-              device, device_ids, distributed, config, args)
+              device, device_ids, distributed, world_size, config, args)
         student_model_without_ddp =\
             student_model.module if module_util.check_if_wrapped(student_model) else student_model
         load_ckpt(dst_ckpt_file_path, model=student_model_without_ddp, strict=True)
@@ -191,6 +190,8 @@ def main(args):
                                          test_data_loader_config, distributed)
     log_freq = test_config.get('log_freq', 1000)
     num_classes = args.num_classes
+    cudnn.benchmark = False
+    cudnn.deterministic = True
     if not args.student_only and teacher_model is not None:
         evaluate(teacher_model, test_data_loader, device, device_ids, distributed, num_classes=num_classes,
                  log_freq=log_freq, title='[Teacher: {}]'.format(teacher_model_config['key']))
