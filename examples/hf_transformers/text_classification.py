@@ -273,6 +273,8 @@ def main(args):
     test_data_loader = util.build_data_loader(dataset_dict[test_data_loader_config['dataset_id']],
                                               test_data_loader_config, distributed)
     test_data_loader = accelerator.prepare(test_data_loader)
+    cudnn.benchmark = False
+    cudnn.deterministic = True
     if not args.student_only and teacher_model is not None:
         teacher_model = teacher_model.to(accelerator.device)
         evaluate(teacher_model, test_data_loader, metric, is_regression, accelerator,

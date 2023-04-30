@@ -35,7 +35,8 @@ export TASK_NAME=cola
 
 accelerate launch examples/hf_transformers/text_classification.py \
   --config configs/sample/glue/${TASK_NAME}/ce/bert_base_uncased.yaml \
-  --task ${TASK_NAME}
+  --task ${TASK_NAME} \
+  -disable_cudnn_benchmark
   
 # use `pipenv run accelerate launch ...` if you're using pipenv
 ```
@@ -54,7 +55,8 @@ export TEST_DIR=submission/standard/bert_base_uncased/
 accelerate launch examples/hf_transformers/text_classification.py \
   --config configs/sample/glue/${TASK_NAME}/ce/bert_base_uncased.yaml \
   --task ${TASK_NAME} \
-  --private_output ${TEST_DIR}
+  --private_output ${TEST_DIR} \
+  -disable_cudnn_benchmark
   
 # use `pipenv run accelerate launch ...` if you're using pipenv
 ```
