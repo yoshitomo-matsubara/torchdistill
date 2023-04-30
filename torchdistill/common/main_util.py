@@ -136,7 +136,7 @@ def init_distributed_mode(world_size=1, dist_url='env://'):
         device_id = rank % torch.cuda.device_count()
     else:
         logger.info('Not using distributed mode')
-        return False, None
+        return False, world_size, None
 
     torch.cuda.set_device(device_id)
     dist_backend = 'nccl'
@@ -145,7 +145,7 @@ def init_distributed_mode(world_size=1, dist_url='env://'):
                                          world_size=world_size, rank=rank)
     torch.distributed.barrier()
     setup_for_distributed(rank == 0)
-    return True, [device_id]
+    return True, world_size, [device_id]
 
 
 def load_ckpt(ckpt_file_path, model=None, optimizer=None, lr_scheduler=None, strict=True):
@@ -155,7 +155,9 @@ def load_ckpt(ckpt_file_path, model=None, optimizer=None, lr_scheduler=None, str
             (ckpt_file_path.startswith('https://') or ckpt_file_path.startswith('http://')):
         ckpt = torch.hub.load_state_dict_from_url(ckpt_file_path, map_location='cpu', progress=True)
     else:
-        logger.info('ckpt file is not found at `{}`'.format(ckpt_file_path))
+        message = 'ckpt file path is None' if ckpt_file_path is None \
+            else 'ckpt file is not found at `{}`'.format(ckpt_file_path)
+        logger.info(message)
         return None, None, None
 
     if model is not None:
