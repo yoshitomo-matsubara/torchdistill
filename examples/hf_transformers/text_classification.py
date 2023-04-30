@@ -51,7 +51,7 @@ logger = def_logger.getChild(__name__)
 def get_argparser():
     parser = argparse.ArgumentParser(description='Knowledge distillation for a text classification task')
     parser.add_argument('--config', required=True, help='yaml file path')
-    parser.add_argument('--log', help='log file path')
+    parser.add_argument('--run_log', help='log file path')
     parser.add_argument('--task_name', type=str, default=None, help='name of the glue task to train on.')
     parser.add_argument('--private_output', help='output dir path for private dataset(s)')
     parser.add_argument('--seed', type=int, default=None, help='a seed for reproducible training')
@@ -206,7 +206,7 @@ def predict_private(model, dataset_dict, label_names_dict, is_regression, accele
 
 
 def main(args):
-    log_file_path = args.log
+    log_file_path = args.run_log
     if is_main_process() and log_file_path is not None:
         setup_log_file(os.path.expanduser(log_file_path))
 
