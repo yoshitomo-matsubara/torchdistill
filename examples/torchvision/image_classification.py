@@ -14,7 +14,7 @@ from torchdistill.common.constant import def_logger
 from torchdistill.common.main_util import is_main_process, init_distributed_mode, load_ckpt, save_ckpt, set_seed
 from torchdistill.core.distillation import get_distillation_box
 from torchdistill.core.training import get_training_box
-from torchdistill.datasets.util import get_all_datasets, build_data_loader
+from torchdistill.datasets.util import build_data_loader
 from torchdistill.misc.log import setup_log_file, SmoothedValue, MetricLogger
 from torchdistill.models.official import get_image_classification_model
 from torchdistill.models.registry import get_model
@@ -129,7 +129,7 @@ def train(teacher_model, student_model, dataset_dict, dst_ckpt_file_path,
     best_val_top1_accuracy = 0.0
     optimizer, lr_scheduler = training_box.optimizer, training_box.lr_scheduler
     if file_util.check_if_exists(dst_ckpt_file_path):
-        best_val_top1_accuracy, _, _ = load_ckpt(dst_ckpt_file_path, optimizer=optimizer, lr_scheduler=lr_scheduler)
+        best_val_top1_accuracy, _ = load_ckpt(dst_ckpt_file_path, optimizer=optimizer, lr_scheduler=lr_scheduler)
 
     log_freq = train_config['log_freq']
     student_model_without_ddp = student_model.module if module_util.check_if_wrapped(student_model) else student_model
@@ -144,7 +144,7 @@ def train(teacher_model, student_model, dataset_dict, dst_ckpt_file_path,
             logger.info('Updating ckpt at {}'.format(dst_ckpt_file_path))
             best_val_top1_accuracy = val_top1_accuracy
             save_ckpt(student_model_without_ddp, optimizer, lr_scheduler,
-                      best_val_top1_accuracy, config, args, dst_ckpt_file_path)
+                      best_val_top1_accuracy, args, dst_ckpt_file_path)
         training_box.post_epoch_process()
 
     if distributed:
@@ -169,7 +169,7 @@ def main(args):
     set_seed(args.seed)
     config = yaml_util.load_yaml_file(os.path.expanduser(args.config))
     device = torch.device(args.device)
-    dataset_dict = get_all_datasets(config['datasets'])
+    dataset_dict = config['datasets']
     models_config = config['models']
     teacher_model_config = models_config.get('teacher_model', None)
     teacher_model =\
