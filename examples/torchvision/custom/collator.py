@@ -1,6 +1,6 @@
 import torch
 
-from .registry import register_collate_func
+from torchdistill.datasets.registry import register_collate_func
 
 
 @register_collate_func

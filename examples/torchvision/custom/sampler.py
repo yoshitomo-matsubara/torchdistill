@@ -10,9 +10,9 @@ from PIL import Image
 from torch.utils.data.sampler import BatchSampler, Sampler
 from torch.utils.model_zoo import tqdm
 
-from .registry import register_batch_sampler
-from ..common.constant import def_logger
-from ..datasets.wrapper import BaseDatasetWrapper
+from torchdistill.common.constant import def_logger
+from torchdistill.datasets.registry import register_batch_sampler
+from torchdistill.datasets.wrapper import BaseDatasetWrapper
 
 logger = def_logger.getChild(__name__)
 
