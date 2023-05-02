@@ -39,13 +39,13 @@ def import_dependencies(dependencies=None):
             package = dependency
         else:
             raise TypeError(f'Failed to import module with `{dependency}`')
-        if name is None:
-            logger.info(f'Imported `{package}`')
+        if package is None:
+            logger.info(f'Imported `{name}`')
         else:
-            logger.info(f'Imported `{package}` from `{name}`')
+            logger.info(f'Imported `{name}` from `{package}`')
 
 
-def import_get(key, package=None):
+def import_get(key, package=None, **kwargs):
     if package is None:
         names = key.split('.')
         key = names[-1]
@@ -56,7 +56,7 @@ def import_get(key, package=None):
     return getattr(module, key)
 
 
-def import_call(key, package=None, init=None):
+def import_call(key, package=None, init=None, **kwargs):
     if package is None:
         names = key.split('.')
         key = names[-1]
@@ -192,12 +192,12 @@ def load_ckpt(ckpt_file_path, model=None, optimizer=None, lr_scheduler=None, str
             lr_scheduler.load_state_dict(ckpt)
         else:
             logger.info('No scheduler parameters found')
-    return ckpt.get('best_value', 0.0), ckpt.get('config', None), ckpt.get('args', None)
+    return ckpt.get('best_value', 0.0), ckpt.get('args', None)
 
 
-def save_ckpt(model, optimizer, lr_scheduler, best_value, config, args, output_file_path):
+def save_ckpt(model, optimizer, lr_scheduler, best_value, args, output_file_path):
     make_parent_dirs(output_file_path)
     model_state_dict = model.module.state_dict() if check_if_wrapped(model) else model.state_dict()
     lr_scheduler_state_dict = lr_scheduler.state_dict() if lr_scheduler is not None else None
     save_on_master({'model': model_state_dict, 'optimizer': optimizer.state_dict(), 'best_value': best_value,
-                    'lr_scheduler': lr_scheduler_state_dict, 'config': config, 'args': args}, output_file_path)
+                    'lr_scheduler': lr_scheduler_state_dict, 'args': args}, output_file_path)

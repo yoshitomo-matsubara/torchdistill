@@ -119,7 +119,7 @@ def train(teacher_model, student_model, dataset_dict, dst_ckpt_file_path,
     best_val_miou = 0.0
     optimizer, lr_scheduler = training_box.optimizer, training_box.lr_scheduler
     if file_util.check_if_exists(dst_ckpt_file_path):
-        best_val_miou, _, _ = load_ckpt(dst_ckpt_file_path, optimizer=optimizer, lr_scheduler=lr_scheduler)
+        best_val_miou, _ = load_ckpt(dst_ckpt_file_path, optimizer=optimizer, lr_scheduler=lr_scheduler)
 
     log_freq = train_config['log_freq']
     student_model_without_ddp = student_model.module if module_util.check_if_wrapped(student_model) else student_model
@@ -138,7 +138,7 @@ def train(teacher_model, student_model, dataset_dict, dst_ckpt_file_path,
             logger.info('Updating ckpt at {}'.format(dst_ckpt_file_path))
             best_val_miou = val_miou
             save_ckpt(student_model_without_ddp, optimizer, lr_scheduler,
-                      best_val_miou, config, args, dst_ckpt_file_path)
+                      best_val_miou, args, dst_ckpt_file_path)
         training_box.post_epoch_process()
 
     if distributed:

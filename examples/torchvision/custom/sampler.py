@@ -10,9 +10,9 @@ from PIL import Image
 from torch.utils.data.sampler import BatchSampler, Sampler
 from torch.utils.model_zoo import tqdm
 
-from .registry import register_batch_sampler
-from ..common.constant import def_logger
-from ..datasets.wrapper import BaseDatasetWrapper
+from torchdistill.common.constant import def_logger
+from torchdistill.datasets.registry import register_batch_sampler
+from torchdistill.datasets.wrapper import BaseDatasetWrapper
 
 logger = def_logger.getChild(__name__)
 
@@ -184,9 +184,10 @@ def _quantize(x, bins):
     return quantized
 
 
-def create_aspect_ratio_groups(dataset, k=0):
+def create_aspect_ratio_groups(dataset, aspect_ratio_group_factor=0):
     aspect_ratios = compute_aspect_ratios(dataset)
-    bins = (2 ** np.linspace(-1, 1, 2 * k + 1)).tolist() if k > 0 else [1.0]
+    bins = (2 ** np.linspace(-1, 1, 2 * aspect_ratio_group_factor + 1)).tolist() if aspect_ratio_group_factor > 0 \
+        else [1.0]
     groups = _quantize(aspect_ratios, bins)
     # count number of elements per group
     counts = np.unique(groups, return_counts=True)[1]

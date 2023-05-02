@@ -9,8 +9,8 @@ from torchvision.transforms import RandomResizedCrop, Resize
 from torchvision.transforms import functional as F
 from torchvision.transforms.functional import InterpolationMode
 
-from .registry import register_transform
-from ..common.constant import def_logger
+from torchdistill.common.constant import def_logger
+from torchdistill.datasets.registry import register_transform
 
 logger = def_logger.getChild(__name__)
 

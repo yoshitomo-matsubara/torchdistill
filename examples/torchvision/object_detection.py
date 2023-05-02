@@ -11,18 +11,21 @@ from torch.nn.parallel import DistributedDataParallel
 from torch.utils.data._utils.collate import default_collate
 from torchvision.models.detection.keypoint_rcnn import KeypointRCNN
 from torchvision.models.detection.mask_rcnn import MaskRCNN
+import io
+from contextlib import redirect_stdout
 
+from coco.dataset import get_coco_api_from_dataset
+from coco.eval import CocoEvaluator
 from torchdistill.common import file_util, module_util, yaml_util
 from torchdistill.common.constant import def_logger
-from torchdistill.common.main_util import is_main_process, init_distributed_mode, load_ckpt, save_ckpt, set_seed
+from torchdistill.common.main_util import is_main_process, init_distributed_mode, load_ckpt, save_ckpt, set_seed, \
+    import_dependencies
 from torchdistill.core.distillation import get_distillation_box
 from torchdistill.core.training import get_training_box
-from torchdistill.datasets.util import get_all_datasets, build_data_loader
+from torchdistill.datasets.util import build_data_loader
 from torchdistill.misc.log import setup_log_file, SmoothedValue, MetricLogger
 from torchdistill.models.official import get_object_detection_model
 from torchdistill.models.registry import get_model
-from .coco.dataset import get_coco_api_from_dataset
-from .coco.eval import CocoEvaluator
 
 logger = def_logger.getChild(__name__)
 
@@ -111,10 +114,6 @@ def evaluate(model, data_loader, iou_types, device, device_ids, distributed, log
     # FIXME remove this and make paste_masks_in_image run on the GPU
     torch.set_num_threads(1)
 
-    # Replace built-in print function with logger.info to log summary printed by pycocotools
-    builtin_print = __builtin__.print
-    __builtin__.print = log_info
-
     cpu_device = torch.device('cpu')
     model.eval()
     metric_logger = MetricLogger(delimiter='  ')
@@ -132,8 +131,8 @@ def evaluate(model, data_loader, iou_types, device, device_ids, distributed, log
 
         outputs = [{k: v.to(cpu_device) for k, v in t.items()} for t in outputs]
         model_time = time.time() - model_time
-
         res = {target['image_id'].item(): output for target, output in zip(targets, outputs)}
+
         evaluator_time = time.time()
         coco_evaluator.update(res)
         evaluator_time = time.time() - evaluator_time
@@ -147,10 +146,9 @@ def evaluate(model, data_loader, iou_types, device, device_ids, distributed, log
 
     # accumulate predictions from all images
     coco_evaluator.accumulate()
-    coco_evaluator.summarize()
-
-    # Revert print function
-    __builtin__.print = builtin_print
+    with redirect_stdout(io.StringIO()) as printed_message:
+        coco_evaluator.summarize()
+        logger.info(printed_message.getvalue())
 
     torch.set_num_threads(n_threads)
     return coco_evaluator
@@ -168,7 +166,7 @@ def train(teacher_model, student_model, dataset_dict, dst_ckpt_file_path,
     best_val_map = 0.0
     optimizer, lr_scheduler = training_box.optimizer, training_box.lr_scheduler
     if file_util.check_if_exists(dst_ckpt_file_path):
-        best_val_map, _, _ = load_ckpt(dst_ckpt_file_path, optimizer=optimizer, lr_scheduler=lr_scheduler)
+        best_val_map, _ = load_ckpt(dst_ckpt_file_path, optimizer=optimizer, lr_scheduler=lr_scheduler)
 
     log_freq = train_config['log_freq']
     iou_types = args.iou_types
@@ -188,7 +186,7 @@ def train(teacher_model, student_model, dataset_dict, dst_ckpt_file_path,
             logger.info('Updating ckpt at {}'.format(dst_ckpt_file_path))
             best_val_map = val_map
             save_ckpt(student_model_without_ddp, optimizer, lr_scheduler,
-                      best_val_map, config, args, dst_ckpt_file_path)
+                      best_val_map, args, dst_ckpt_file_path)
         training_box.post_epoch_process()
 
     if distributed:
@@ -212,8 +210,10 @@ def main(args):
 
     set_seed(args.seed)
     config = yaml_util.load_yaml_file(os.path.expanduser(args.config))
+    import_dependencies(config.get('dependencies', None))
+
     device = torch.device(args.device)
-    dataset_dict = get_all_datasets(config['datasets'])
+    dataset_dict = config['datasets']
     models_config = config['models']
     teacher_model_config = models_config.get('teacher_model', None)
     teacher_model = load_model(teacher_model_config, device) if teacher_model_config is not None else None
