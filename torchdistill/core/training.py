@@ -42,6 +42,7 @@ class TrainingBox(object):
         self.target_model_pairs.clear()
         ref_model = unwrapped_org_model
         if len(model_config) > 0 or (len(model_config) == 0 and self.model is None):
+            logger.info('[student model]')
             model_type = 'original'
             auxiliary_model_wrapper = \
                 build_auxiliary_model_wrapper(model_config, student_model=unwrapped_org_model, device=self.device,
