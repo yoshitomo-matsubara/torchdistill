@@ -64,9 +64,8 @@ def register_func2extract_model_output(arg=None, **kwargs):
 
 
 def get_loss(key, **kwargs):
-    lower_loss_type = key.lower()
-    if lower_loss_type in LOSS_DICT:
-        return LOSS_DICT[lower_loss_type](**kwargs)
+    if key in LOSS_DICT:
+        return LOSS_DICT[key](**kwargs)
     raise ValueError('No loss `{}` registered'.format(key))
 
 
