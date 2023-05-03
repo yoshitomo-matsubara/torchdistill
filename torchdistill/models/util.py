@@ -9,16 +9,19 @@ from .registry import get_adaptation_module
 from ..common.constant import def_logger
 from ..common.file_util import make_parent_dirs
 from ..common.main_util import is_main_process, save_on_master
-from ..common.module_util import check_if_wrapped, get_module, get_frozen_param_names, freeze_module_params
+from ..common.module_util import check_if_wrapped, get_module, get_frozen_param_names, get_updatable_param_names,\
+    freeze_module_params
 
 logger = def_logger.getChild(__name__)
 
 
-def wrap_if_distributed(model, device, device_ids, distributed):
+def wrap_if_distributed(model, device, device_ids, distributed, find_unused_parameters=None):
     model.to(device)
-    if distributed:
+    if distributed and len(get_updatable_param_names(model)) > 0:
         any_frozen = len(get_frozen_param_names(model)) > 0
-        return DistributedDataParallel(model, device_ids=device_ids, find_unused_parameters=any_frozen)
+        if find_unused_parameters is None:
+            find_unused_parameters = any_frozen
+        return DistributedDataParallel(model, device_ids=device_ids, find_unused_parameters=find_unused_parameters)
     return model
 
 
@@ -67,11 +70,10 @@ def build_sequential_container(module_dict):
 
 
 def redesign_model(org_model, model_config, model_label, model_type='original'):
-    logger.info('[{} model]'.format(model_label))
     frozen_module_path_set = set(model_config.get('frozen_modules', list()))
     module_paths = model_config.get('sequential', list())
     if not isinstance(module_paths, list) or len(module_paths) == 0:
-        logger.info('Using the {} {} model'.format(model_type, model_label))
+        logger.info('Using the {} model'.format(model_type))
         if len(frozen_module_path_set) > 0:
             logger.info('Frozen module(s): {}'.format(frozen_module_path_set))
 
