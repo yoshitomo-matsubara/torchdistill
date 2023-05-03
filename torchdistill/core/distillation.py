@@ -50,6 +50,7 @@ class DistillationBox(object):
         teacher_ref_model = unwrapped_org_teacher_model
         student_ref_model = unwrapped_org_student_model
         if len(teacher_config) > 0 or (len(teacher_config) == 0 and self.teacher_model is None):
+            logger.info('[teacher model]')
             model_type = 'original'
             auxiliary_teacher_model_wrapper = \
                 build_auxiliary_model_wrapper(teacher_config, teacher_model=unwrapped_org_teacher_model,
@@ -65,6 +66,7 @@ class DistillationBox(object):
                 load_ckpt(src_teacher_ckpt_file_path, self.teacher_model)
 
         if len(student_config) > 0 or (len(student_config) == 0 and self.student_model is None):
+            logger.info('[student model]')
             model_type = 'original'
             auxiliary_student_model_wrapper = \
                 build_auxiliary_model_wrapper(student_config, student_model=unwrapped_org_student_model,
