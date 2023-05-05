@@ -31,7 +31,7 @@ def default_post_forward_process(self, loss, metrics=None, **kwargs):
             and self.stage_grad_count % self.scheduling_step == 0:
         if isinstance(self.lr_scheduler, ReduceLROnPlateau):
             self.lr_scheduler.step(metrics)
-        elif isinstance(self.lr_scheduler, (LambdaLR, CosineAnnealingWarmRestarts)):
+        elif isinstance(self.lr_scheduler, CosineAnnealingWarmRestarts):
             local_epoch = int(self.stage_grad_count / self.scheduling_step)
             self.lr_scheduler.step(local_epoch)
         else:
