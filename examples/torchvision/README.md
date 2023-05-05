@@ -1,4 +1,4 @@
-# Examples
+# Examples: torchvision
 ## 1. ImageNet (ILSVRC 2012): Image Classification
 ### 1.1 Download the datasets
 As the terms of use do not allow to distribute the URLs, you will have to create an account [here](http://image-net.org/download) to get the URLs, and replace `${TRAIN_DATASET_URL}` and `${VAL_DATASET_URL}` with them.
@@ -38,7 +38,7 @@ cd ../../../../
 e.g., Teacher: ResNet-152, Student: AlexNet  
 a) Use GPUs for multiple distributed training processes
 ```shell
-python3 -m torch.distributed.launch --nproc_per_node=${NUM_GPUS} --use_env examples/torchvision/image_classification.py --world_size ${NUM_GPUS} --config configs/sample/ilsvrc2012/single_stage/kd/alexnet_from_resnet152.yaml --log log/ilsvrc2012/kd/alexnet_from_resnet152.txt
+torchrun --nproc_per_node=${NUM_GPUS} examples/torchvision/image_classification.py --world_size ${NUM_GPUS} --config configs/sample/ilsvrc2012/single_stage/kd/alexnet_from_resnet152.yaml --log log/ilsvrc2012/kd/alexnet_from_resnet152.txt
 ```
 b) Use GPU(s) for single training process
 ```shell
@@ -76,15 +76,15 @@ cd ../../../
 e.g., Teacher: Faster R-CNN with ResNet-50-FPN backbone, Student: Faster R-CNN with ResNet-18-FPN backbone  
 a) Use GPUs for multiple distributed training processes
 ```shell
-python3 -m torch.distributed.launch --nproc_per_node=${NUM_GPUS} --use_env examples/torchvision/object_detection.py --world_size ${NUM_GPUS} --config configs/sample/coco2017/multi_stage/ft/custom_fasterrcnn_resnet18_fpn_from_fasterrcnn_resnet50_fpn.yaml --log log/coco2017/ft/custom_fasterrcnn_resnet18_fpn_from_fasterrcnn_resnet50_fpn.txt
+torchrun --nproc_per_node=${NUM_GPUS} examples/torchvision/object_detection.py --world_size ${NUM_GPUS} --config configs/sample/coco2017/multi_stage/ft/custom_fasterrcnn_resnet18_fpn_from_fasterrcnn_resnet50_fpn.yaml --log log/coco2017/ft/custom_fasterrcnn_resnet18_fpn_from_fasterrcnn_resnet50_fpn.txt -disable_cudnn_benchmark
 ```
 b) Use GPU(s) for single training process
 ```shell
-python3 examples/torchvision/object_detection.py --config configs/sample/coco2017/multi_stage/ft/custom_fasterrcnn_resnet18_fpn_from_fasterrcnn_resnet50_fpn.yaml --log log/coco2017/ft/custom_fasterrcnn_resnet18_fpn_from_fasterrcnn_resnet50_fpn.txt
+python3 examples/torchvision/object_detection.py --config configs/sample/coco2017/multi_stage/ft/custom_fasterrcnn_resnet18_fpn_from_fasterrcnn_resnet50_fpn.yaml --log log/coco2017/ft/custom_fasterrcnn_resnet18_fpn_from_fasterrcnn_resnet50_fpn.txt -disable_cudnn_benchmark
 ```  
 c) Use CPU
 ```shell
-python3 examples/torchvision/object_detection.py --device cpu --config configs/sample/coco2017/multi_stage/ft/custom_fasterrcnn_resnet18_fpn_from_fasterrcnn_resnet50_fpn.yaml --log log/coco2017/ft/custom_fasterrcnn_resnet18_fpn_from_fasterrcnn_resnet50_fpn.txt
+python3 examples/torchvision/object_detection.py --device cpu --config configs/sample/coco2017/multi_stage/ft/custom_fasterrcnn_resnet18_fpn_from_fasterrcnn_resnet50_fpn.yaml --log log/coco2017/ft/custom_fasterrcnn_resnet18_fpn_from_fasterrcnn_resnet50_fpn.txt -disable_cudnn_benchmark
 ```  
 
 
@@ -99,7 +99,7 @@ You can skip this process if you've already finished [2.2](https://github.com/yo
 e.g., Teacher: DeepLabv3 with ResNet-50 backbone, Student: LR-ASPP with MobileNetV3-Large backbone  
 a) Use GPUs for multiple distributed training processes
 ```shell
-python3 -m torch.distributed.launch --nproc_per_node=${NUM_GPUS} --use_env examples/torchvision/semantic_segmentation.py --world_size ${NUM_GPUS} --config configs/sample/coco2017/multi_stage/ktaad/lraspp_mobilenet_v3_large_from_deeplabv3_resnet50.yaml --log log/coco2017/ktaad/lraspp_mobilenet_v3_large_from_deeplabv3_resnet50.txt
+torchrun --nproc_per_node=${NUM_GPUS} examples/torchvision/semantic_segmentation.py --world_size ${NUM_GPUS} --config configs/sample/coco2017/multi_stage/ktaad/lraspp_mobilenet_v3_large_from_deeplabv3_resnet50.yaml --log log/coco2017/ktaad/lraspp_mobilenet_v3_large_from_deeplabv3_resnet50.txt
 ```
 b) Use GPU(s) for single training process
 ```shell
@@ -133,7 +133,7 @@ cd ../../
 e.g., DeepLabv3 with ResNet-50 backbone  
 a) Use GPUs for multiple distributed training processes
 ```shell
-python3 -m torch.distributed.launch --nproc_per_node=${NUM_GPUS} --use_env examples/torchvision/semantic_segmentation.py --world_size ${NUM_GPUS} --config configs/sample/pascal_voc2012/single_stage/ce/deeplabv3_resnet50.yaml --log log/pascal_voc2012/single_stage/ce/deeplabv3_resnet50.txt
+torchrun --nproc_per_node=${NUM_GPUS} examples/torchvision/semantic_segmentation.py --world_size ${NUM_GPUS} --config configs/sample/pascal_voc2012/single_stage/ce/deeplabv3_resnet50.yaml --log log/pascal_voc2012/single_stage/ce/deeplabv3_resnet50.txt
 ```
 b) Use GPU(s) for single training process
 ```shell

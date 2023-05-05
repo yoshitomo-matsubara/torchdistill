@@ -1,4 +1,4 @@
-# Examples of Use of Hugging Face Transformers
+# Examples: Hugging Face Transformers
 
 ## 0. Requirements
 ### Install additional packages
