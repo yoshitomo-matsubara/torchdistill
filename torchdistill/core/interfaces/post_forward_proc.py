@@ -1,5 +1,5 @@
 import torch
-from torch.optim.lr_scheduler import ReduceLROnPlateau, LambdaLR, CosineAnnealingWarmRestarts
+from torch.optim.lr_scheduler import ReduceLROnPlateau, CosineAnnealingWarmRestarts
 
 from .registry import register_post_forward_proc_func
 from ...common.constant import def_logger
