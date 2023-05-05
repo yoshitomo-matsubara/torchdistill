@@ -49,6 +49,33 @@ class SimpleLossWrapper(nn.Module):
         return self.mid_level_loss.__str__()
 
 
+@register_loss_wrapper
+class DictLossWrapper(SimpleLossWrapper):
+    def __init__(self, mid_level_loss, weights, **kwargs):
+        super().__init__(mid_level_loss, **kwargs)
+        self.weights = weights
+
+    def forward(self, student_io_dict, teacher_io_dict, targets, *args, **kwargs):
+        input_batch = self.extract_value(teacher_io_dict if self.is_input_from_teacher else student_io_dict,
+                                         self.input_module_path, self.input_key)
+        if self.target_module_path is None and self.target_key is None:
+            target_batch = targets
+        else:
+            target_batch = self.extract_value(teacher_io_dict if self.is_target_from_teacher else student_io_dict,
+                                              self.target_module_path, self.target_key)
+        loss = None
+        for key, weight in self.weights.items():
+            sub_loss = self.mid_level_loss(input_batch[key], target_batch, *args, **kwargs)
+            if loss is None:
+                loss = weight * sub_loss
+            else:
+                loss += weight * sub_loss
+        return loss
+
+    def __str__(self):
+        return str(self.weights) + ' * ' + self.mid_level_loss.__str__()
+
+
 @register_mid_level_loss
 class KDLoss(nn.KLDivLoss):
     """
