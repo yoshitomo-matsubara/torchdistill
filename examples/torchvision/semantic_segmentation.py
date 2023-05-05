@@ -15,12 +15,11 @@ from torchdistill.common.constant import def_logger
 from torchdistill.common.main_util import is_main_process, init_distributed_mode, load_ckpt, save_ckpt, set_seed
 from torchdistill.core.distillation import get_distillation_box
 from torchdistill.core.training import get_training_box
-from torchdistill.datasets.util import get_all_datasets, build_data_loader
+from torchdistill.datasets.util import build_data_loader
 from torchdistill.misc.log import setup_log_file, SmoothedValue, MetricLogger
 from torchdistill.models.official import get_semantic_segmentation_model
 from torchdistill.models.registry import get_model
-from torchdistill.optim.util import customize_lr_config
-from .utils.eval import SegEvaluator
+from utils.eval import SegEvaluator
 
 logger = def_logger.getChild(__name__)
 
@@ -163,9 +162,7 @@ def main(args):
     set_seed(args.seed)
     config = yaml_util.load_yaml_file(os.path.expanduser(args.config))
     device = torch.device(args.device)
-    dataset_dict = get_all_datasets(config['datasets'])
-    # Update config with dataset size len(data_loader)
-    customize_lr_config(config, dataset_dict, world_size)
+    dataset_dict = config['datasets']
 
     models_config = config['models']
     teacher_model_config = models_config.get('teacher_model', None)
