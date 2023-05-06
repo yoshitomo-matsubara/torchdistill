@@ -105,7 +105,7 @@ python3 examples/torchvision/image_classification.py \
 ```
 torchrun  --nproc_per_node=${NUM_GPUS} examples/torchvision/image_classification.py \
     --config configs/official/ilsvrc2012/yoshitomo-matsubara/rrpr2020/kd-resnet18_from_resnet34.yaml \
-    --log log/ilsvrc2012/kd-resnet18_from_resnet34.log \
+    --run_log log/ilsvrc2012/kd-resnet18_from_resnet34.log \
     --world_size ${NUM_GPUS} \
     -adjust_lr
 ```
@@ -114,7 +114,7 @@ torchrun  --nproc_per_node=${NUM_GPUS} examples/torchvision/image_classification
 ```
 torchrun  --nproc_per_node=${NUM_GPUS} examples/torchvision/image_classification.py \
     --config configs/official/ilsvrc2012/yoshitomo-matsubara/rrpr2020/at-resnet18_from_resnet34.yaml \
-    --log log/ilsvrc2012/at-resnet18_from_resnet34.log \
+    --run_log log/ilsvrc2012/at-resnet18_from_resnet34.log \
     --world_size ${NUM_GPUS} \
     -adjust_lr
 ```
@@ -123,7 +123,7 @@ torchrun  --nproc_per_node=${NUM_GPUS} examples/torchvision/image_classification
 ```
 torchrun  --nproc_per_node=${NUM_GPUS} examples/torchvision/image_classification.py \
     --config configs/official/ilsvrc2012/yoshitomo-matsubara/rrpr2020/ft-resnet18_from_resnet34.yaml \
-    --log log/ilsvrc2012/ft-resnet18_from_resnet34.log \
+    --run_log log/ilsvrc2012/ft-resnet18_from_resnet34.log \
     --world_size ${NUM_GPUS} \
     -adjust_lr
 ```
@@ -135,7 +135,7 @@ so that (batch size) * ${NUM_GPUS}  = 256. (e.g., `batch_size: 32` if you use 8 
 ```
 torchrun  --nproc_per_node=${NUM_GPUS} examples/torchvision/image_classification.py \
     --config configs/official/ilsvrc2012/yoshitomo-matsubara/rrpr2020/crd-resnet18_from_resnet34.yaml \
-    --log log/ilsvrc2012/crd-resnet18_from_resnet34.log \
+    --run_log log/ilsvrc2012/crd-resnet18_from_resnet34.log \
     --world_size ${NUM_GPUS} 
 ```
 
@@ -143,7 +143,7 @@ torchrun  --nproc_per_node=${NUM_GPUS} examples/torchvision/image_classification
 ```
 torchrun  --nproc_per_node=${NUM_GPUS} examples/torchvision/image_classification.py \
     --config configs/official/ilsvrc2012/yoshitomo-matsubara/rrpr2020/tfkd-resnet18_from_resnet18.yaml \
-    --log log/ilsvrc2012/tfkd-resnet18_from_resnet18.log \
+    --run_log log/ilsvrc2012/tfkd-resnet18_from_resnet18.log \
     --world_size ${NUM_GPUS} \
     -adjust_lr
 ```
@@ -155,7 +155,7 @@ so that (batch size) * ${NUM_GPUS}  = 256. (e.g., `batch_size: 32` if you use 8 
 ```
 torchrun  --nproc_per_node=${NUM_GPUS} examples/torchvision/image_classification.py \
     --config configs/official/ilsvrc2012/yoshitomo-matsubara/rrpr2020/sskd-resnet18_from_resnet34.yaml \
-    --log log/ilsvrc2012/sskd-resnet18_from_resnet34.log \
+    --run_log log/ilsvrc2012/sskd-resnet18_from_resnet34.log \
     --world_size ${NUM_GPUS} 
 ```
 
@@ -166,7 +166,7 @@ so that (batch size) * ${NUM_GPUS}  = 512. (e.g., `batch_size: 64` if you use 8 
 ```
 torchrun  --nproc_per_node=${NUM_GPUS} examples/torchvision/image_classification.py \
     --config configs/official/ilsvrc2012/yoshitomo-matsubara/rrpr2020/cse_l2-resnet18_from_resnet34.yaml \
-    --log log/ilsvrc2012/cse_l2-resnet18_from_resnet34.log \
+    --run_log log/ilsvrc2012/cse_l2-resnet18_from_resnet34.log \
     --world_size ${NUM_GPUS} 
 ```
 
@@ -180,7 +180,7 @@ so that (batch size) * ${NUM_GPUS}  = 512. (e.g., `batch_size: 64` if you use 8 
 ```
 torchrun  --nproc_per_node=${NUM_GPUS} examples/torchvision/image_classification.py \
     --config configs/official/ilsvrc2012/yoshitomo-matsubara/rrpr2020/pad_l2-resnet18_from_resnet34.yaml \
-    --log log/ilsvrc2012/pad_l2-resnet18_from_resnet34.log \
+    --run_log log/ilsvrc2012/pad_l2-resnet18_from_resnet34.log \
     --world_size ${NUM_GPUS} 
 ```
 Multi-stage methods can be defined in one yaml file like [this](https://github.com/yoshitomo-matsubara/torchdistill/blob/master/configs/sample/image_classification/multi_stage/pad), 
@@ -194,26 +194,26 @@ Make sure checkpoint files do not exist at `dst_ckpt` in `student_model` entry t
 ```
 python3 examples/torchvision/image_classification.py \
     --config configs/official/ilsvrc2012/yoshitomo-matsubara/rrpr2020/kd-resnet18_from_resnet34.yaml \
-    --log log/ilsvrc2012/kd-resnet18_from_resnet34.log
+    --run_log log/ilsvrc2012/kd-resnet18_from_resnet34.log
 ```
 
 #### Attention Transfer
 ```
 python3 examples/torchvision/image_classification.py \
     --config configs/official/ilsvrc2012/yoshitomo-matsubara/rrpr2020/at-resnet18_from_resnet34.yaml \
-    --log log/ilsvrc2012/at-resnet18_from_resnet34.log
+    --run_log log/ilsvrc2012/at-resnet18_from_resnet34.log
 ```
 
 #### Factor Transfer
 ```
 python3 examples/torchvision/image_classification.py \
     --config configs/official/ilsvrc2012/yoshitomo-matsubara/rrpr2020/ft-resnet18_from_resnet34.yaml \
-    --log log/ilsvrc2012/ft-resnet18_from_resnet34.log
+    --run_log log/ilsvrc2012/ft-resnet18_from_resnet34.log
 ```
 
 #### Teacher-free Knowledge Distillation
 ```
 python3 examples/torchvision/image_classification.py \
     --config configs/official/ilsvrc2012/yoshitomo-matsubara/rrpr2020/tfkd-resnet18_from_resnet18.yaml \
-    --log log/ilsvrc2012/tfkd-resnet18_from_resnet18.log
+    --run_log log/ilsvrc2012/tfkd-resnet18_from_resnet18.log
 ```
