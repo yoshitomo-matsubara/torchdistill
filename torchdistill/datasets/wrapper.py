@@ -47,7 +47,7 @@ class CacheableDataset(BaseDatasetWrapper):
 
 
 @register_dataset_wrapper
-class ContrastiveDataset(BaseDatasetWrapper):
+class CRDDatasetWrapper(BaseDatasetWrapper):
     def __init__(self, org_dataset, num_negative_samples, mode, ratio):
         super().__init__(org_dataset)
         self.num_negative_samples = num_negative_samples
@@ -72,8 +72,8 @@ class ContrastiveDataset(BaseDatasetWrapper):
             n = int(len(self.cls_negatives[0]) * ratio)
             self.cls_negatives = [np.random.permutation(self.cls_negatives[i])[0:n] for i in range(num_classes)]
 
-        self.cls_positives = np.asarray(self.cls_positives)
-        self.cls_negatives = np.asarray(self.cls_negatives)
+        self.cls_positives = self.cls_positives
+        self.cls_negatives = self.cls_negatives
 
     def __getitem__(self, index):
         sample, target, supp_dict = super().__getitem__(index)
