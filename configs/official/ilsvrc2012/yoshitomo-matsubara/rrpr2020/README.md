@@ -79,15 +79,15 @@ python3 examples/torchvision/image_classification.py \
     -test_only
 ```
 
-#### L2 (CSE + L2)
+#### L2 (CE + L2)
 ```
 python3 examples/torchvision/image_classification.py \
-    --config configs/official/ilsvrc2012/yoshitomo-matsubara/rrpr2020/cse_l2-resnet18_from_resnet34.yaml \
+    --config configs/official/ilsvrc2012/yoshitomo-matsubara/rrpr2020/ce_l2-resnet18_from_resnet34.yaml \
     -test_only
 ```
 
 #### PAD-L2 (2nd stage)
-Note that you first need to train a model with L2 (CSE + L2), and load the ckpt file designated in the following yaml file.  
+Note that you first need to train a model with L2 (CE + L2), and load the ckpt file designated in the following yaml file.  
 i.e., PAD-L2 is a two-stage training method.
 
 ```
@@ -159,19 +159,19 @@ torchrun  --nproc_per_node=${NUM_GPUS} examples/torchvision/image_classification
     --world_size ${NUM_GPUS} 
 ```
 
-#### L2 (CSE + L2)
+#### L2 (CE + L2)
 If you use fewer or more GPUs for distributed training, you should update `batch_size: 171` in `train_data_loader` entry 
 so that (batch size) * ${NUM_GPUS}  = 512. (e.g., `batch_size: 64` if you use 8 GPUs for distributed training.)  
 
 ```
 torchrun  --nproc_per_node=${NUM_GPUS} examples/torchvision/image_classification.py \
-    --config configs/official/ilsvrc2012/yoshitomo-matsubara/rrpr2020/cse_l2-resnet18_from_resnet34.yaml \
-    --run_log log/ilsvrc2012/cse_l2-resnet18_from_resnet34.log \
+    --config configs/official/ilsvrc2012/yoshitomo-matsubara/rrpr2020/ce_l2-resnet18_from_resnet34.yaml \
+    --run_log log/ilsvrc2012/ce_l2-resnet18_from_resnet34.log \
     --world_size ${NUM_GPUS} 
 ```
 
 #### PAD-L2 (2nd stage)
-Note that you first need to train a model with L2 (CSE + L2), and load the ckpt file designated in the following yaml file.  
+Note that you first need to train a model with L2 (CE + L2), and load the ckpt file designated in the following yaml file.  
 i.e., PAD-L2 is a two-stage training method.  
 
 If you use fewer or more GPUs for distributed training, you should update `batch_size: 171` in `train_data_loader` entry 
