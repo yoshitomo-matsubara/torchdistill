@@ -72,8 +72,8 @@ class ContrastiveDataset(BaseDatasetWrapper):
             n = int(len(self.cls_negatives[0]) * ratio)
             self.cls_negatives = [np.random.permutation(self.cls_negatives[i])[0:n] for i in range(num_classes)]
 
-        self.cls_positives = np.asarray(self.cls_positives)
-        self.cls_negatives = np.asarray(self.cls_negatives)
+        self.cls_positives = self.cls_positives
+        self.cls_negatives = self.cls_negatives
 
     def __getitem__(self, index):
         sample, target, supp_dict = super().__getitem__(index)
