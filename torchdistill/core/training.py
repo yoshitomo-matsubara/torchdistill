@@ -117,18 +117,18 @@ class TrainingBox(object):
             if 'lr' in optim_kwargs:
                 optim_kwargs['lr'] *= self.lr_factor
 
-            module_wise_kwargs_configs = optim_config.get('module_wise_kwargs', list())
-            if len(module_wise_kwargs_configs) > 0:
+            module_wise_configs = optim_config.get('module_wise_kwargs', list())
+            if len(module_wise_configs) > 0:
                 trainable_module_list = list()
-                for module_wise_kwargs_config in module_wise_kwargs_configs:
+                for module_wise_config in module_wise_configs:
                     module_wise_kwargs = dict()
-                    if isinstance(module_wise_kwargs_config.get('kwargs', None), dict):
-                        module_wise_kwargs.update(module_wise_kwargs_config['kwargs'])
+                    if isinstance(module_wise_config.get('kwargs', None), dict):
+                        module_wise_kwargs.update(module_wise_config['kwargs'])
 
                     if 'lr' in module_wise_kwargs:
                         module_wise_kwargs['lr'] *= self.lr_factor
 
-                    module = get_module(self.model, module_wise_kwargs_config['module'])
+                    module = get_module(self.model, module_wise_config['module'])
                     module_wise_kwargs['params'] = module.parameters()
                     trainable_module_list.append(module_wise_kwargs)
             else:
