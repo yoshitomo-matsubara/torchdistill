@@ -65,13 +65,13 @@ def register_auxiliary_model_wrapper(arg=None, **kwargs):
     return _register_auxiliary_model_wrapper
 
 
-def get_model(key, repo_or_dir=None, **kwargs):
+def get_model(key, repo_or_dir=None, *args, **kwargs):
     if key in MODEL_CLASS_DICT:
-        return MODEL_CLASS_DICT[key](**kwargs)
+        return MODEL_CLASS_DICT[key](*args, **kwargs)
     elif key in MODEL_FUNC_DICT:
-        return MODEL_FUNC_DICT[key](**kwargs)
+        return MODEL_FUNC_DICT[key](*args, **kwargs)
     elif repo_or_dir is not None:
-        return torch.hub.load(repo_or_dir, key, **kwargs)
+        return torch.hub.load(repo_or_dir, key, *args, **kwargs)
     raise ValueError('model_name `{}` is not expected'.format(key))
 
 

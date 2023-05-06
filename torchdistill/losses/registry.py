@@ -71,15 +71,27 @@ def get_loss(key, **kwargs):
 
 def get_high_level_loss(criterion_config):
     criterion_key = criterion_config['key']
+    args = criterion_config.get('args', None)
+    kwargs = criterion_config.get('kwargs', None)
+    if args is None:
+        args = list()
+    if kwargs is None:
+        kwargs = dict()
     if criterion_key in HIGH_LEVEL_LOSS_DICT:
-        return HIGH_LEVEL_LOSS_DICT[criterion_key](**criterion_config['kwargs'])
+        return HIGH_LEVEL_LOSS_DICT[criterion_key](*args, **kwargs)
     raise ValueError('No high-level loss `{}` registered'.format(criterion_key))
 
 
 def get_loss_wrapper(mid_level_loss, criterion_wrapper_config):
     wrapper_key = criterion_wrapper_config['key']
+    args = criterion_wrapper_config.get('args', None)
+    kwargs = criterion_wrapper_config.get('kwargs', None)
+    if args is None:
+        args = list()
+    if kwargs is None:
+        kwargs = dict()
     if wrapper_key in LOSS_WRAPPER_DICT:
-        return LOSS_WRAPPER_DICT[wrapper_key](mid_level_loss, **criterion_wrapper_config.get('kwargs', dict()))
+        return LOSS_WRAPPER_DICT[wrapper_key](mid_level_loss, *args, **kwargs)
     raise ValueError('No loss wrapper `{}` registered'.format(wrapper_key))
 
 
