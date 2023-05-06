@@ -100,7 +100,7 @@ train:
       lr: 0.001
       momentum: 0.9
       weight_decay: 0.0001
-    module_wise_kwargs:
+    module_wise_configs:
       - module: 'backbone'
         kwargs: {}
       - module: 'classifier'
