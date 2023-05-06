@@ -63,7 +63,7 @@ python3 examples/torchvision/object_detection.py \
 ```
 torchrun --nproc_per_node=${NUM_GPUS} examples/torchvision/object_detection.py \
     --config configs/official/coco2017/yoshitomo-matsubara/rrpr2020/ghnd-custom_fasterrcnn_resnet50_fpn_from_fasterrcnn_resnet50_fpn.yaml \
-    --log log/ghnd-custom_fasterrcnn_resnet50_fpn_from_fasterrcnn_resnet50_fpn.log \
+    --run_log log/ghnd-custom_fasterrcnn_resnet50_fpn_from_fasterrcnn_resnet50_fpn.log \
     --world_size ${NUM_GPUS} 
 ```
 
@@ -73,6 +73,6 @@ torchrun --nproc_per_node=${NUM_GPUS} examples/torchvision/object_detection.py \
 ```
 torchrun --nproc_per_node=${NUM_GPUS} examples/torchvision/object_detection.py \
     --config configs/official/coco2017/yoshitomo-matsubara/rrpr2020/ghnd-custom_maskrcnn_resnet50_fpn_from_maskrcnn_resnet50_fpn.yaml \
-    --log log/coco2017/ghnd-custom_maskrcnn_resnet50_fpn_from_maskrcnn_resnet50_fpn.log \
+    --run_log log/coco2017/ghnd-custom_maskrcnn_resnet50_fpn_from_maskrcnn_resnet50_fpn.log \
     --world_size ${NUM_GPUS} 
 ```
