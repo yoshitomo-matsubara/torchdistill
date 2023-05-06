@@ -1,8 +1,9 @@
 import argparse
-import builtins as __builtin__
 import datetime
+import io
 import os
 import time
+from contextlib import redirect_stdout
 
 import torch
 from torch import distributed as dist
@@ -11,8 +12,6 @@ from torch.nn.parallel import DistributedDataParallel
 from torch.utils.data._utils.collate import default_collate
 from torchvision.models.detection.keypoint_rcnn import KeypointRCNN
 from torchvision.models.detection.mask_rcnn import MaskRCNN
-import io
-from contextlib import redirect_stdout
 
 from coco.dataset import get_coco_api_from_dataset
 from coco.eval import CocoEvaluator
@@ -227,10 +226,10 @@ def main(args):
     if not args.test_only:
         train(teacher_model, student_model, dataset_dict, dst_ckpt_file_path,
               device, device_ids, distributed, world_size, config, args)
-        student_model_without_ddp =\
-            student_model.module if module_util.check_if_wrapped(student_model) else student_model
-        load_ckpt(dst_ckpt_file_path, model=student_model_without_ddp, strict=True)
 
+    student_model_without_ddp =\
+        student_model.module if module_util.check_if_wrapped(student_model) else student_model
+    load_ckpt(dst_ckpt_file_path, model=student_model_without_ddp, strict=True)
     test_config = config['test']
     test_data_loader_config = test_config['test_data_loader']
     test_data_loader = build_data_loader(dataset_dict[test_data_loader_config['dataset_id']],
