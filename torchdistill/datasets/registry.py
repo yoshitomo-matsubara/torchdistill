@@ -157,6 +157,6 @@ def get_transform(key, *args, **kwargs):
 
 
 def get_dataset_wrapper(key, *args, **kwargs):
-    if key not in DATASET_WRAPPER_DICT:
+    if key in DATASET_WRAPPER_DICT:
         return DATASET_WRAPPER_DICT[key](*args, **kwargs)
     raise ValueError('No dataset wrapper `{}` registered.'.format(key))
