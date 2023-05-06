@@ -1,8 +1,9 @@
 import argparse
-import builtins as __builtin__
 import datetime
+import io
 import os
 import time
+from contextlib import redirect_stdout
 
 import torch
 from torch import distributed as dist
@@ -11,8 +12,6 @@ from torch.nn.parallel import DistributedDataParallel
 from torch.utils.data._utils.collate import default_collate
 from torchvision.models.detection.keypoint_rcnn import KeypointRCNN
 from torchvision.models.detection.mask_rcnn import MaskRCNN
-import io
-from contextlib import redirect_stdout
 
 from coco.dataset import get_coco_api_from_dataset
 from coco.eval import CocoEvaluator
