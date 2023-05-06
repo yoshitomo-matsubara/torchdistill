@@ -47,7 +47,7 @@ class CacheableDataset(BaseDatasetWrapper):
 
 
 @register_dataset_wrapper
-class ContrastiveDataset(BaseDatasetWrapper):
+class CRDDatasetWrapper(BaseDatasetWrapper):
     def __init__(self, org_dataset, num_negative_samples, mode, ratio):
         super().__init__(org_dataset)
         self.num_negative_samples = num_negative_samples
