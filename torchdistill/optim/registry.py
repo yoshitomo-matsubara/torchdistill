@@ -34,19 +34,19 @@ def register_scheduler(arg=None, **kwargs):
     return _register_scheduler
 
 
-def get_optimizer(module, key, filters_params=True, **kwargs):
+def get_optimizer(module, key, filters_params=True, *args, **kwargs):
     is_module = isinstance(module, nn.Module)
     if key in OPTIM_DICT:
         optim_cls_or_func = OPTIM_DICT[key]
         if is_module and filters_params:
             params = module.parameters() if is_module else module
             updatable_params = [p for p in params if p.requires_grad]
-            return optim_cls_or_func(updatable_params, **kwargs)
-        return optim_cls_or_func(module, **kwargs)
+            return optim_cls_or_func(updatable_params, *args, **kwargs)
+        return optim_cls_or_func(module, *args, **kwargs)
     raise ValueError('No optimizer `{}` registered'.format(key))
 
 
-def get_scheduler(optimizer, key, **kwargs):
+def get_scheduler(optimizer, key, *args, **kwargs):
     if key in SCHEDULER_DICT:
-        return SCHEDULER_DICT[key](optimizer, **kwargs)
+        return SCHEDULER_DICT[key](optimizer, *args, **kwargs)
     raise ValueError('No scheduler `{}` registered'.format(key))
