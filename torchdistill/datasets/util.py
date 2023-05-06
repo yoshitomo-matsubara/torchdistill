@@ -80,7 +80,14 @@ def build_data_loader(dataset, data_loader_config, distributed, accelerator=None
     cache_dir_path = data_loader_config.get('cache_output', None)
     dataset_wrapper_config = data_loader_config.get('dataset_wrapper', None)
     if isinstance(dataset_wrapper_config, dict) and len(dataset_wrapper_config) > 0:
-        dataset = get_dataset_wrapper(dataset_wrapper_config['key'], dataset, **dataset_wrapper_config['kwargs'])
+        dataset_wrapper_args = dataset_wrapper_config.get('args', None)
+        dataset_wrapper_kwargs = dataset_wrapper_config.get('kwargs', None)
+        if dataset_wrapper_args is None:
+            dataset_wrapper_args = list()
+        if dataset_wrapper_kwargs is None:
+            dataset_wrapper_kwargs = dict()
+        dataset = get_dataset_wrapper(dataset_wrapper_config['key'], dataset, *dataset_wrapper_args,
+                                      **dataset_wrapper_kwargs)
     elif cache_dir_path is not None:
         dataset = CacheableDataset(dataset, cache_dir_path, idx2subpath_func=default_idx2subpath)
     elif data_loader_config.get('requires_supp', False):
