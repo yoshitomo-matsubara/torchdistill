@@ -154,7 +154,7 @@ train:
               reduction: 'mean'
               ignore_index: 255
           criterion_wrapper:
-            key: 'SimpleLossWrapper'
+            key: 'DictLossWrapper'
             kwargs:
               input:
                 is_from_teacher: False
@@ -162,9 +162,10 @@ train:
                 io: 'output'
               target:
                 uses_label: True
-          weight:
+          weights:
             out: 1.0
             aux: 0.5
+        weight: 1.0
 
 test:
   test_data_loader:
