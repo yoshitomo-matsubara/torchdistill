@@ -8,7 +8,6 @@ datasets:
     key: 'coco.dataset.coco_dataset'
     init:
       kwargs:
-      train:
         img_dir_path: !join [*root_dir, '/train2017']
         ann_file_path: !join [*root_dir, '/annotations/instances_train2017.json']
         annotated_only: True
@@ -19,50 +18,57 @@ datasets:
             kwargs:
               transforms:
                 - !import_call
-                  key: 'CustomRandomResize'
+                  key: 'custom.transform.CustomRandomResize'
                   init:
                     kwargs:
                       min_size: 260
                       max_size: 1040
                 - !import_call
-                  key: 'CustomRandomHorizontalFlip'
+                  key: 'custom.transform.CustomRandomHorizontalFlip'
                   init:
                     kwargs:
                       p: 0.5
                 - !import_call
-                  key: 'CustomRandomCrop'
+                  key: 'custom.transform.CustomRandomCrop'
                   init:
                     kwargs:
                       size: 480
                 - !import_call
-                  key: 'CustomToTensor'
+                  key: 'custom.transform.CustomToTensor'
                   init:
                 - !import_call
-                  key: 'CustomNormalize'
+                  key: 'custom.transform.CustomNormalize'
                   init:
                     kwargs: &normalize_kwargs
                       mean: [0.485, 0.456, 0.406]
                       std: [0.229, 0.224, 0.225]
-      val:
-        dataset_id: &coco_val !join [*dataset_name, '/val']
-        images: !join [*root_dir, '/val2017']
-        annotations: !join [*root_dir, '/annotations/instances_val2017.json']
+
+  &coco_val coco2017/val: !import_call
+    key: 'coco.dataset.coco_dataset'
+    init:
+      kwargs:
+        img_dir_path: !join [ *root_dir, '/val2017' ]
+        ann_file_path: !join [ *root_dir, '/annotations/instances_val2017.json' ]
         annotated_only: False
         is_segment: True
-        transforms_configs:
-          - !import_call
-            key: 'CustomRandomResize'
-            init:
-              kwargs:
-                min_size: 520
-                max_size: 520
-          - !import_call
-            key: 'CustomToTensor'
-            init:
-          - !import_call
-            key: 'CustomNormalize'
-            init:
-              kwargs: *normalize_kwargs
+        transforms: !import_call
+          key: 'custom.transform.CustomCompose'
+          init:
+            kwargs:
+              transforms:
+                - !import_call
+                  key: 'custom.transform.CustomRandomResize'
+                  init:
+                    kwargs:
+                      min_size: 520
+                      max_size: 520
+                - !import_call
+                  key: 'custom.transform.CustomToTensor'
+                  init:
+                - !import_call
+                  key: 'custom.transform.CustomNormalize'
+                  init:
+                    kwargs: *normalize_kwargs
 
 models:
   model:
@@ -142,7 +148,6 @@ train:
     scheduling_step: 1
   criterion:
     key: 'WeightedSumLoss'
-    func2extract_model_loss: 'extract_model_loss_dict'
     kwargs:
       sub_terms:
         ce:
@@ -160,10 +165,10 @@ train:
                 io: 'output'
               target:
                 uses_label: True
-          weights:
-            out: 1.0
-            aux: 0.5
-        weight: 1.0
+              weights:
+                out: 1.0
+                aux: 0.5
+          weight: 1.0
 
 test:
   test_data_loader:

@@ -144,7 +144,6 @@ train:
     scheduling_step: 1
   criterion:
     key: 'WeightedSumLoss'
-    func2extract_model_loss: 'extract_model_loss_dict'
     kwargs:
       sub_terms:
         ce:
@@ -162,10 +161,10 @@ train:
                 io: 'output'
               target:
                 uses_label: True
-          weights:
-            out: 1.0
-            aux: 0.5
-        weight: 1.0
+              weights:
+                out: 1.0
+                aux: 0.5
+          weight: 1.0
 
 test:
   test_data_loader:
