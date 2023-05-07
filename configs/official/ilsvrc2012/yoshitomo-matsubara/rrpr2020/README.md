@@ -80,6 +80,8 @@ python3 examples/torchvision/image_classification.py \
 ```
 
 #### L2 (CE + L2)
+Note: rename `cse_l2/` directory in the unzipped checkpoint directory with `ce_l2/`
+
 ```
 python3 examples/torchvision/image_classification.py \
     --config configs/official/ilsvrc2012/yoshitomo-matsubara/rrpr2020/ce_l2-resnet18_from_resnet34.yaml \
