@@ -1,57 +1,85 @@
+dependencies:
+  - name: 'custom'
+
 datasets:
-  coco2017:
-    name: &dataset_name 'coco2017'
-    key: 'cocodetect'
-    root: &root_dir !join ['./resource/dataset/', *dataset_name]
-    splits:
-      train:
-        dataset_id: &coco_train !join [*dataset_name, '/train']
-        images: !join [*root_dir, '/train2017']
-        annotations: !join [*root_dir, '/annotations/instances_train2017.json']
+  &coco_train coco2017/train: &coco_train_dataset !import_call
+    _name: &dataset_name 'coco2017'
+    _root: &root_dir !join ['~/datasets/', *dataset_name]
+    key: 'coco.dataset.coco_dataset'
+    init:
+      kwargs:
+        img_dir_path: !join [*root_dir, '/train2017']
+        ann_file_path: !join [*root_dir, '/annotations/instances_train2017.json']
         annotated_only: True
         is_segment: True
-        transforms_configs:
-          - key: 'CustomRandomResize'
+        transforms: !import_call
+          key: 'custom.transform.CustomCompose'
+          init:
             kwargs:
-              min_size: 260
-              max_size: 1040
-          - key: 'CustomRandomHorizontalFlip'
-            kwargs:
-              p: 0.5
-          - key: 'CustomRandomCrop'
-            kwargs:
-              size: 480
-          - &totensor
-            key: 'CustomToTensor'
-            kwargs:
-          - &normalize
-            key: 'CustomNormalize'
-            kwargs:
-              mean: [0.485, 0.456, 0.406]
-              std: [0.229, 0.224, 0.225]
-      val:
-        dataset_id: &coco_val !join [*dataset_name, '/val']
-        images: !join [*root_dir, '/val2017']
-        annotations: !join [*root_dir, '/annotations/instances_val2017.json']
+              transforms:
+                - !import_call
+                  key: 'custom.transform.CustomRandomResize'
+                  init:
+                    kwargs:
+                      min_size: 260
+                      max_size: 1040
+                - !import_call
+                  key: 'custom.transform.CustomRandomHorizontalFlip'
+                  init:
+                    kwargs:
+                      p: 0.5
+                - !import_call
+                  key: 'custom.transform.CustomRandomCrop'
+                  init:
+                    kwargs:
+                      size: 480
+                - !import_call
+                  key: 'custom.transform.CustomToTensor'
+                  init:
+                - !import_call
+                  key: 'custom.transform.CustomNormalize'
+                  init:
+                    kwargs: &normalize_kwargs
+                      mean: [0.485, 0.456, 0.406]
+                      std: [0.229, 0.224, 0.225]
+
+  &coco_val coco2017/val: !import_call
+    key: 'coco.dataset.coco_dataset'
+    init:
+      kwargs:
+        img_dir_path: !join [ *root_dir, '/val2017' ]
+        ann_file_path: !join [ *root_dir, '/annotations/instances_val2017.json' ]
         annotated_only: False
         is_segment: True
-        transforms_configs:
-          - key: 'CustomRandomResize'
+        transforms: !import_call
+          key: 'custom.transform.CustomCompose'
+          init:
             kwargs:
-              min_size: 520
-              max_size: 520
-          - *totensor
-          - *normalize
+              transforms:
+                - !import_call
+                  key: 'custom.transform.CustomRandomResize'
+                  init:
+                    kwargs:
+                      min_size: 520
+                      max_size: 520
+                - !import_call
+                  key: 'custom.transform.CustomToTensor'
+                  init:
+                - !import_call
+                  key: 'custom.transform.CustomNormalize'
+                  init:
+                    kwargs: *normalize_kwargs
 
 models:
   model:
     key: &student_model_key 'deeplabv3_resnet50'
+    _backbone_weights: &student_backbone_weights !import_get
+      key: 'torchvision.models.resnet.ResNet50_Weights'
     kwargs:
-      pretrained: False
-      pretrained_backbone: True
+      weights_backbone: !getattr [*student_backbone_weights, 'IMAGENET1K_V1']
       num_classes: 21
       aux_loss: True
-    experiment: &student_experiment !join [*dataset_name, '-', *student_model_key]
+    _experiment: &student_experiment !join [*dataset_name, '-', *student_model_key]
     src_ckpt:
     dst_ckpt: !join ['./resource/ckpt/coco2017/ce/', *student_experiment, '.pt']
 
@@ -60,17 +88,27 @@ train:
   num_epochs: &num_epochs 30
   train_data_loader:
     dataset_id: *coco_train
-    random_sample: True
-    num_workers: 16
-    batch_size: 4
+    sampler:
+      class_or_func: !import_get
+        key: 'torch.utils.data.RandomSampler'
+      kwargs:
     collate_fn: 'coco_seg_collate_fn'
-    drop_last: True
+    kwargs:
+      batch_size: &train_batch_size 4
+      num_workers: 16
+      pin_memory: True
+      drop_last: True
     cache_output:
   val_data_loader:
     dataset_id: *coco_val
-    random_sample: False
-    batch_size: 1
-    num_workers: 16
+    sampler: &val_sampler
+      class_or_func: !import_get
+        key: 'torch.utils.data.SequentialSampler'
+      kwargs:
+    kwargs:
+      batch_size: 1
+      num_workers: 16
+      pin_memory: True
     collate_fn: 'coco_seg_eval_collate_fn'
   model:
     adaptations:
@@ -98,13 +136,18 @@ train:
   scheduler:
     key: 'poly_lr_scheduler'
     kwargs:
-      num_iterations: None
+      num_iterations: !import_call
+        key: 'utils.dataset.get_num_iterations'
+        init:
+          kwargs:
+            dataset: *coco_train_dataset
+            batch_size: *train_batch_size
+            world_size: 1
       num_epochs: *num_epochs
       power: 0.9
     scheduling_step: 1
   criterion:
     key: 'WeightedSumLoss'
-    func2extract_model_loss: 'extract_simple_model_loss_dict'
     kwargs:
       sub_terms:
         ce:
@@ -114,7 +157,7 @@ train:
               reduction: 'mean'
               ignore_index: 255
           criterion_wrapper:
-            key: 'SimpleLossWrapper'
+            key: 'DictLossWrapper'
             kwargs:
               input:
                 is_from_teacher: False
@@ -122,14 +165,16 @@ train:
                 io: 'output'
               target:
                 uses_label: True
-          weight:
-            out: 1.0
-            aux: 0.5
+              weights:
+                out: 1.0
+                aux: 0.5
+          weight: 1.0
 
 test:
   test_data_loader:
     dataset_id: *coco_val
-    random_sample: False
-    batch_size: 1
-    num_workers: 16
+    sampler: *val_sampler
+    kwargs:
+      batch_size: 1
+      num_workers: 16
     collate_fn: 'coco_seg_eval_collate_fn'
