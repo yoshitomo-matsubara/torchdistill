@@ -17,7 +17,7 @@ def update_num_iterations(train_config, dataset_dict, world_size):
     train_data_loader_config = train_config['train_data_loader']
     grad_accum_step = train_config.get('grad_accum_step', 1)
     num_iterations = math.ceil(len(dataset_dict[train_data_loader_config['dataset_id']]) /
-                               train_data_loader_config['batch_size'] / grad_accum_step / world_size)
+                               train_data_loader_config['kwargs']['batch_size'] / grad_accum_step / world_size)
     scheduler_config = train_config['scheduler']
     scheduler_config['kwargs']['num_training_steps'] = num_iterations * train_config['num_epochs']
 
@@ -49,11 +49,11 @@ def optimizer_no_decay(model, optimizer_key, weight_decay, no_decay=None, **kwar
 
     optimizer_grouped_parameters = [
         {
-            'kwargs': [p for n, p in model if not any(nd in n for nd in no_decay)],
+            'params': [p for n, p in model if not any(nd in n for nd in no_decay)],
             'weight_decay': weight_decay,
         },
         {
-            'kwargs': [p for n, p in model if any(nd in n for nd in no_decay)],
+            'params': [p for n, p in model if any(nd in n for nd in no_decay)],
             'weight_decay': 0.0
         }
     ]
