@@ -20,7 +20,7 @@ def default_post_forward_process(self, loss, metrics=None, **kwargs):
 
     if self.stage_grad_count % self.grad_accum_step == 0:
         if self.max_grad_norm is not None:
-            target_params = [p for group in self.optimizer.param_groups for p in group['kwargs']]
+            target_params = [p for group in self.optimizer.param_groups for p in group['params']]
             torch.nn.utils.clip_grad_norm_(target_params, self.max_grad_norm)
 
         self.optimizer.step()
@@ -28,7 +28,7 @@ def default_post_forward_process(self, loss, metrics=None, **kwargs):
 
     # Step-wise scheduler step
     if self.lr_scheduler is not None and self.scheduling_step > 0 \
-            and self.stage_grad_count % self.scheduling_step == 0:
+            and self.stage_grad_count % self.scheduling_step == 0 and self.stage_grad_count % self.grad_accum_step == 0:
         if isinstance(self.lr_scheduler, ReduceLROnPlateau):
             self.lr_scheduler.step(metrics)
         elif isinstance(self.lr_scheduler, CosineAnnealingWarmRestarts):
