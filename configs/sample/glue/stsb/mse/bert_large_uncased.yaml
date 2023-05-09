@@ -1,3 +1,6 @@
+dependencies:
+  - name: 'custom'
+
 datasets:
   glue:
     name: &dataset_name 'stsb'
@@ -22,7 +25,7 @@ models:
       use_fast: True
     model_kwargs:
       pretrained_model_name_or_path: *student_model_key
-    experiment: &student_experiment !join [*dataset_name, '-', *student_model_key]
+    _experiment: &student_experiment !join [*dataset_name, '-', *student_model_key]
     src_ckpt:
     dst_ckpt: !join ['./resource/ckpt/glue/', *dataset_name, '/mse/', *student_experiment]
 
@@ -31,17 +34,29 @@ train:
   num_epochs: 3
   train_data_loader:
     dataset_id: *glue_train
-    random_sample: True
-    batch_size: 32
-    num_workers: 0
+    sampler:
+      class_or_func: !import_get
+        key: 'torch.utils.data.RandomSampler'
+      kwargs:
+    kwargs:
+      batch_size: 32
+      num_workers: 0
+      pin_memory: True
+      drop_last: False
     collate_fn: 'DataCollatorWithPadding'
     requires_supp: False
     cache_output:
   val_data_loader:
     dataset_id: *glue_val
-    random_sample: False
-    batch_size: 32
-    num_workers: 0
+    sampler: &val_sampler
+      class_or_func: !import_get
+        key: 'torch.utils.data.SequentialSampler'
+      kwargs:
+    kwargs:
+      batch_size: 32
+      num_workers: 0
+      pin_memory: True
+      drop_last: False
     collate_fn: 'DataCollatorWithPadding'
     requires_supp: False
   model:
@@ -76,18 +91,24 @@ train:
 test:
   test_data_loader:
     dataset_id: *glue_val
-    random_sample: False
-    batch_size: 32
-    num_workers: 0
+    sampler: *val_sampler
+    kwargs:
+      batch_size: 32
+      num_workers: 0
+      pin_memory: True
+      drop_last: False
     collate_fn: 'DataCollatorWithPadding'
 
 private:
   - private_data_loader:
       dataset_id: *glue_test
       task_name: stsb
-      random_sample: False
-      batch_size: 32
-      num_workers: 0
+      sampler: *val_sampler
+      kwargs:
+        batch_size: 32
+        num_workers: 0
+        pin_memory: True
+        drop_last: False
       collate_fn: 'DataCollatorWithPadding'
     idx2str: False
     pred_output: 'STS-B.tsv'

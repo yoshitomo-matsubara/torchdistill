@@ -25,12 +25,12 @@ import os
 import time
 
 import datasets
+import evaluate as hf_evaluate
 import numpy as np
 import pandas as pd
 import torch
 import transformers
 from accelerate import Accelerator, DistributedType
-from datasets import load_metric
 from torch.backends import cudnn
 from transformers import AutoConfig, AutoModelForSequenceClassification, AutoTokenizer, DataCollatorWithPadding
 
@@ -65,7 +65,7 @@ def get_argparser():
     return parser
 
 
-def load_tokenizer_and_model(model_config, task_name, prioritizes_ckpt=False):
+def load_tokenizer_and_model(model_config, task_name, prioritizes_dst_ckpt=False):
     # In distributed training, the .from_pretrained methods guarantee that only one local process can concurrently
     # download model & vocab.
     config_config = model_config['config_kwargs']
@@ -73,8 +73,10 @@ def load_tokenizer_and_model(model_config, task_name, prioritizes_ckpt=False):
     tokenizer_config = model_config['tokenizer_kwargs']
     tokenizer = AutoTokenizer.from_pretrained(**tokenizer_config)
     model_kwargs = model_config['model_kwargs']
-    if prioritizes_ckpt and file_util.check_if_exists(model_config.get('src_ckpt', None)):
-        model_kwargs['model_name_or_path'] = model_config['src_ckpt']
+    if prioritizes_dst_ckpt and file_util.check_if_exists(model_config.get('dst_ckpt', None)):
+        model_kwargs['pretrained_model_name_or_path'] = model_config['dst_ckpt']
+    elif file_util.check_if_exists(model_config.get('src_ckpt', None)):
+        model_kwargs['pretrained_model_name_or_path'] = model_config['src_ckpt']
     model = AutoModelForSequenceClassification.from_pretrained(config=config, **model_kwargs)
     return tokenizer, model
 
@@ -102,9 +104,7 @@ def get_all_datasets(datasets_config, task_name, student_tokenizer, student_mode
 
 
 def get_metrics(task_name):
-    metric = None
-    if task_name is not None:
-        metric = load_metric('glue', task_name)
+    metric = hf_evaluate.load('glue', task_name)
     return metric
 
 
@@ -246,7 +246,7 @@ def main(args):
         else load_tokenizer_and_model(teacher_model_config, task_name, True)
     student_model_config =\
         models_config['student_model'] if 'student_model' in models_config else models_config['model']
-    student_tokenizer, student_model = load_tokenizer_and_model(student_model_config, task_name)
+    student_tokenizer, student_model = load_tokenizer_and_model(student_model_config, task_name, False)
     dst_ckpt_dir_path = student_model_config['dst_ckpt']
     # Get the datasets: you can either provide your own CSV/JSON training and evaluation files (see below)
     # or specify a GLUE benchmark task (the dataset will be downloaded automatically from the datasets Hub).
@@ -280,7 +280,7 @@ def main(args):
         evaluate(teacher_model, test_data_loader, metric, is_regression, accelerator,
                  title='[Teacher: {}]'.format(teacher_model_config['key']))
 
-    # Reload best checkpoint based on validation result
+    # Reload the best checkpoint based on validation result
     student_tokenizer, student_model = load_tokenizer_and_model(student_model_config, task_name, True)
     student_model = accelerator.prepare(student_model)
     evaluate(student_model, test_data_loader, metric, is_regression, accelerator,

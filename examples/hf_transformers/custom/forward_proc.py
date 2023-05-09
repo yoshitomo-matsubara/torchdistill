@@ -1,4 +1,4 @@
-from torchdistill.core.forward_proc import register_forward_proc_func
+from torchdistill.core.interfaces.forward_proc import register_forward_proc_func
 
 
 @register_forward_proc_func
