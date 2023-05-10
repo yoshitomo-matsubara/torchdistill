@@ -60,7 +60,7 @@ models:
       num_classes: 10
       pretrained: False
       progress: True
-    experiment: &student_experiment !join [*dataset_name, '-', *student_model_key, *s_depth, '-', *s_k, '_from_', *teacher_model_key]
+    _experiment: &student_experiment !join [*dataset_name, '-', *student_model_key, *s_depth, '-', *s_k, '_from_', *teacher_model_key]
     src_ckpt:
     dst_ckpt: !join ['./resource/ckpt/', *dataset_name, '/kd/', *student_experiment, '-final_run.pt']
 
@@ -69,15 +69,27 @@ train:
   num_epochs: 200
   train_data_loader:
     dataset_id: *cifar10_train
-    random_sample: True
-    batch_size: 128
-    num_workers: 16
+    sampler:
+      class_or_func: !import_get
+        key: 'torch.utils.data.RandomSampler'
+      kwargs:
+    kwargs:
+      batch_size: 64
+      num_workers: 16
+      pin_memory: True
+      drop_last: False
     cache_output:
   val_data_loader:
-    dataset_id: *cifar10_val
-    random_sample: False
-    batch_size: 128
-    num_workers: 16
+    dataset_id: *cifar10_test
+    sampler: &val_sampler
+      class_or_func: !import_get
+        key: 'torch.utils.data.SequentialSampler'
+      kwargs:
+    kwargs:
+      batch_size: 128
+      num_workers: 16
+      pin_memory: True
+      drop_last: False
   teacher:
     sequential: []
     wrapper: 'DataParallel'
@@ -120,6 +132,9 @@ train:
 test:
   test_data_loader:
     dataset_id: *cifar10_test
-    random_sample: False
-    batch_size: 1
-    num_workers: 16
+    sampler: *val_sampler
+    kwargs:
+      batch_size: 1
+      num_workers: 16
+      pin_memory: True
+      drop_last: False
