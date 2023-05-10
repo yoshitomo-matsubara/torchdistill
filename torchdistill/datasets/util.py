@@ -1,40 +1,42 @@
 import copy
-import time
 
 import torch
 from torch.utils.data import DataLoader, random_split
 from torch.utils.data.distributed import DistributedSampler
 
 from ..common.constant import def_logger
-from ..datasets.registry import get_dataset, get_collate_func, get_batch_sampler, get_dataset_wrapper
+from ..datasets.registry import get_collate_func, get_batch_sampler, get_dataset_wrapper
 from ..datasets.wrapper import default_idx2subpath, BaseDatasetWrapper, CacheableDataset
 
 logger = def_logger.getChild(__name__)
 
 
-def split_dataset(org_dataset, random_split_config, dataset_id, dataset_dict):
-    org_dataset_length = len(org_dataset)
-    logger.info('Splitting `{}` dataset ({} samples in total)'.format(dataset_id, org_dataset_length))
-    lengths = random_split_config['lengths']
+def split_dataset(dataset, lengths=None, generator_seed=None, sub_splits_configs=None, dataset_id=None):
+    org_dataset_length = len(dataset)
+    if dataset_id is not None:
+        logger.info('Splitting `{}` dataset ({} samples in total)'.format(dataset_id, org_dataset_length))
+    if lengths is None:
+        lengths = (9, 1)
+
     total_length = sum(lengths)
     if total_length != org_dataset_length:
         lengths = [int((l / total_length) * org_dataset_length) for l in lengths]
         if len(lengths) > 1 and sum(lengths) != org_dataset_length:
             lengths[-1] = org_dataset_length - sum(lengths[:-1])
 
-    manual_seed = random_split_config.get('generator_seed', None)
-    sub_datasets = random_split(org_dataset, lengths) if manual_seed is None \
-        else random_split(org_dataset, lengths, generator=torch.Generator().manual_seed(manual_seed))
+    sub_datasets = random_split(dataset, lengths) if generator_seed is None \
+        else random_split(dataset, lengths, generator=torch.Generator().manual_seed(generator_seed))
+    if sub_splits_configs is None:
+        return sub_datasets
+
     # Deep-copy dataset to configure transforms independently as dataset in Subset class is shallow-copied
     for sub_dataset in sub_datasets:
         sub_dataset.dataset = copy.deepcopy(sub_dataset.dataset)
 
-    sub_splits_config = random_split_config['sub_splits']
-    assert len(sub_datasets) == len(sub_splits_config), \
-        'len(lengths) `{}` should be equal to len(sub_splits) `{}`'.format(len(sub_datasets), len(sub_splits_config))
-    for sub_dataset, sub_split_kwargs in zip(sub_datasets, sub_splits_config):
-        sub_dataset_id = sub_split_kwargs['dataset_id']
-        logger.info('new dataset_id: `{}` ({} samples)'.format(sub_dataset_id, len(sub_dataset)))
+    assert len(sub_datasets) == len(sub_splits_configs), \
+        'len(lengths) `{}` should be equal to len(sub_splits_configs) `{}`'.format(len(sub_datasets),
+                                                                                   len(sub_splits_configs))
+    for sub_dataset, sub_split_kwargs in zip(sub_datasets, sub_splits_configs):
         sub_split_kwargs = sub_split_kwargs.copy()
         transform = sub_split_kwargs.pop('transform', None)
         target_transform = sub_split_kwargs.pop('target_transform', None)
@@ -45,35 +47,7 @@ def split_dataset(org_dataset, random_split_config, dataset_id, dataset_dict):
             sub_dataset.dataset.target_transform = target_transform
         if hasattr(sub_dataset.dataset, 'transforms') and transforms is not None:
             sub_dataset.dataset.transforms = transforms
-        dataset_dict[sub_dataset_id] = sub_dataset
-
-
-def get_dataset_dict(dataset_config):
-    dataset_key = dataset_config['key']
-    dataset_dict = dict()
-    dataset_cls_or_func = get_dataset(dataset_key)
-    dataset_splits_config = dataset_config['splits']
-    for split_name in dataset_splits_config.keys():
-        st = time.time()
-        logger.info('Loading {} data'.format(split_name))
-        split_config = dataset_splits_config[split_name]
-        org_dataset = dataset_cls_or_func(**split_config['kwargs'])
-        dataset_id = split_config['dataset_id']
-        random_split_config = split_config.get('random_split', None)
-        if random_split_config is None:
-            dataset_dict[dataset_id] = org_dataset
-        else:
-            split_dataset(org_dataset, random_split_config, dataset_id, dataset_dict)
-        logger.info('dataset_id `{}`: {} sec'.format(dataset_id, time.time() - st))
-    return dataset_dict
-
-
-def get_all_datasets(datasets_config):
-    dataset_dict = dict()
-    for dataset_name in datasets_config.keys():
-        sub_dataset_dict = get_dataset_dict(datasets_config[dataset_name])
-        dataset_dict.update(sub_dataset_dict)
-    return dataset_dict
+    return sub_datasets
 
 
 def build_data_loader(dataset, data_loader_config, distributed, accelerator=None):
