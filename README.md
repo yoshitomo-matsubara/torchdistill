@@ -71,7 +71,7 @@ Sample GLUE benchmark results and details can be found [here](https://github.com
 
 ## Google Colab Examples
 The following examples are available in [demo/](https://github.com/yoshitomo-matsubara/torchdistill/tree/main/demo/). 
-Note that the examples are for Google Colab users. Usually, [examples/](https://github.com/yoshitomo-matsubara/torchdistill/tree/main/examples/) would be a better reference 
+Note that these examples are for Google Colab users. Usually, [examples/](https://github.com/yoshitomo-matsubara/torchdistill/tree/main/examples/) would be a better reference 
 if you have your own GPU(s).
 
 ### CIFAR-10 and CIFAR-100
