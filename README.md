@@ -141,6 +141,12 @@ If you use ***torchdistill*** in your research, please cite the following paper.
 }
 ```
 
+## Acknowledgments
+
+Since June 2022, this project has been supported by [JetBrain's Free License Programs (Open Source)](https://www.jetbrains.com/community/opensource/?utm_campaign=opensource&utm_content=approved&utm_medium=email&utm_source=newsletter&utm_term=jblogo#support).  
+![PyCharm logo](https://resources.jetbrains.com/storage/products/company/brand/logos/PyCharm.svg)
+
+
 ## References
 - [:mag:](https://github.com/yoshitomo-matsubara/torchdistill/tree/main/examples/image_classification.py) [pytorch/vision/references/classification/](https://github.com/pytorch/vision/blob/main/references/classification/)
 - [:mag:](https://github.com/yoshitomo-matsubara/torchdistill/tree/main/examples/object_detection.py) [pytorch/vision/references/detection/](https://github.com/pytorch/vision/tree/main/references/detection/)
