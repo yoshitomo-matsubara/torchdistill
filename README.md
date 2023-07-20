@@ -88,7 +88,7 @@ These examples write out test prediction files for you to see the test performan
 If you find models on [PyTorch Hub](https://pytorch.org/hub/) or GitHub repositories supporting PyTorch Hub,
 you can import them as teacher/student models simply by editing a declarative yaml config file.  
 
-e.g., If you use a pretrained ResNeSt-50 available in [rwightman/pytorch-image-models](https://github.com/rwightman/pytorch-image-models)
+e.g., If you use a pretrained ResNeSt-50 available in [huggingface/pytorch-image-models](https://github.com/huggingface/pytorch-image-models)
 (aka *timm*) as a teacher model for ImageNet dataset, you can import the model via PyTorch Hub with the following entry 
 in your declarative yaml config file.
 
@@ -96,7 +96,7 @@ in your declarative yaml config file.
 models:
   teacher_model:
     name: 'resnest50d'
-    repo_or_dir: 'rwightman/pytorch-image-models'
+    repo_or_dir: 'huggingface/pytorch-image-models'
     kwargs:
       num_classes: 1000
       pretrained: True
