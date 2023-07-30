@@ -38,7 +38,7 @@ from custom.dataset import load_raw_glue_datasets_and_misc, preprocess_glue_data
 from custom.optim import customize_lr_config
 from torchdistill.common import file_util, yaml_util
 from torchdistill.common.constant import def_logger
-from torchdistill.common.main_util import is_main_process, setup_for_distributed, set_seed
+from torchdistill.common.main_util import is_main_process, setup_for_distributed, set_seed, import_dependencies
 from torchdistill.core.distillation import get_distillation_box
 from torchdistill.core.training import get_training_box
 from torchdistill.datasets import util
@@ -217,6 +217,7 @@ def main(args):
 
     set_seed(args.seed)
     config = yaml_util.load_yaml_file(os.path.expanduser(args.config))
+    import_dependencies(config.get('dependencies', None))
 
     # Initialize the accelerator. We will let the accelerator handle device placement for us in this example.
     accelerator = Accelerator()
