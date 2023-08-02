@@ -11,7 +11,8 @@ from torch.nn.parallel import DistributedDataParallel
 
 from torchdistill.common import file_util, yaml_util, module_util
 from torchdistill.common.constant import def_logger
-from torchdistill.common.main_util import is_main_process, init_distributed_mode, load_ckpt, save_ckpt, set_seed
+from torchdistill.common.main_util import is_main_process, init_distributed_mode, load_ckpt, save_ckpt, set_seed, \
+    import_dependencies
 from torchdistill.core.distillation import get_distillation_box
 from torchdistill.core.training import get_training_box
 from torchdistill.datasets.util import build_data_loader
@@ -168,6 +169,7 @@ def main(args):
 
     set_seed(args.seed)
     config = yaml_util.load_yaml_file(os.path.expanduser(args.config))
+    import_dependencies(config.get('dependencies', None))
     device = torch.device(args.device)
     dataset_dict = config['datasets']
     models_config = config['models']
