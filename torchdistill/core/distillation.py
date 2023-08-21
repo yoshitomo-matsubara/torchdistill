@@ -174,7 +174,7 @@ class DistillationBox(object):
                     target_model = \
                         self.teacher_model if module_wise_config.get('is_teacher', False) else self.student_model
                     module = get_module(target_model, module_wise_config['module'])
-                    module_wise_kwargs['params'] = module.parameters()
+                    module_wise_kwargs['params'] = module.parameters() if isinstance(module, nn.Module) else [module]
                     trainable_module_list.append(module_wise_kwargs)
             else:
                 trainable_module_list = nn.ModuleList([self.student_model])

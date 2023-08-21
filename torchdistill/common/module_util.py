@@ -1,6 +1,6 @@
 from collections import OrderedDict
 
-from torch.nn import DataParallel, Sequential, ModuleList
+from torch.nn import DataParallel, Sequential, ModuleList, Module, Parameter
 from torch.nn.parallel import DistributedDataParallel
 
 from .constant import def_logger
@@ -17,14 +17,19 @@ def count_params(model):
 
 
 def freeze_module_params(module):
-    for param in module.parameters():
-        param.requires_grad = False
+    if isinstance(module, Module):
+        for param in module.parameters():
+            param.requires_grad = False
+    elif isinstance(module, Parameter):
+        module.requires_grad = False
 
 
 def unfreeze_module_params(module):
-    for param in module.parameters():
-        param.requires_grad = True
-
+    if isinstance(module, Module):
+        for param in module.parameters():
+            param.requires_grad = True
+    elif isinstance(module, Parameter):
+        module.requires_grad = True
 
 def get_updatable_param_names(module):
     return [name for name, param in module.named_parameters() if param.requires_grad]

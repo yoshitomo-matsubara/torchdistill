@@ -129,7 +129,7 @@ class TrainingBox(object):
                         module_wise_kwargs['lr'] *= self.lr_factor
 
                     module = get_module(self.model, module_wise_config['module'])
-                    module_wise_kwargs['params'] = module.parameters()
+                    module_wise_kwargs['params'] = module.parameters() if isinstance(module, nn.Module) else [module]
                     trainable_module_list.append(module_wise_kwargs)
             else:
                 trainable_module_list = nn.ModuleList([self.model])
