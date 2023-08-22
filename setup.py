@@ -15,18 +15,18 @@ setup(
     long_description=long_description,
     long_description_content_type='text/markdown',
     url='https://github.com/yoshitomo-matsubara/torchdistill',
-    packages=find_packages(exclude=('tests', 'examples', 'demo', 'configs')),
-    python_requires='>=3.7',
+    packages=find_packages(exclude=('tests', 'examples', 'demo', 'docs', 'configs')),
+    python_requires='>=3.8',
     install_requires=[
-        'torch>=1.11.0',
-        'torchvision>=0.12.0',
+        'torch>=2.0.0,<=2.0.1',
+        'torchvision>=0.15.1,<=0.15.2',
         'numpy',
         'pyyaml>=5.4.1',
         'scipy',
-        'cython',
-        'pycocotools>=2.0.2'
+        'cython'
     ],
     extras_require={
-        'test': ['pytest']
+        'test': ['pytest'],
+        'docs': ['sphinx', 'sphinx_rtd_theme']
     }
 )
