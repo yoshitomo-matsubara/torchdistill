@@ -16,6 +16,12 @@ logger = def_logger.getChild(__name__)
 
 
 def import_dependencies(dependencies=None):
+    """
+    Imports specified packages.
+
+    :param dependencies: package names
+    :type dependencies: list[dict or list[str] or (str, str) or str] or str or None
+    """
     if dependencies is None:
         return
 
@@ -46,6 +52,16 @@ def import_dependencies(dependencies=None):
 
 
 def import_get(key, package=None, **kwargs):
+    """
+    Imports module and get its attribute.
+
+    :param key: attribute name or package path separated by period(.)
+    :type key: str
+    :param package: package path if `key` is just an attribute name
+    :type package: str or None
+    :return: attribute of the imported module
+    :rtype: Any
+    """
     if package is None:
         names = key.split('.')
         key = names[-1]
@@ -57,6 +73,18 @@ def import_get(key, package=None, **kwargs):
 
 
 def import_call(key, package=None, init=None, **kwargs):
+    """
+    Imports module and call the module/function e.g., instantiation.
+
+    :param key: module name or package path separated by period(.)
+    :type key: str
+    :param package: package path if `key` is just an attribute name
+    :type package: str or None
+    :param package: instantiate the imported module
+    :type package: bool
+    :return: object imported and called
+    :rtype: Any
+    """
     if package is None:
         names = key.split('.')
         key = names[-1]
@@ -74,7 +102,10 @@ def import_call(key, package=None, init=None, **kwargs):
 
 def setup_for_distributed(is_master):
     """
-    This function disables logging when not in master process
+    Disables logging when not in master process
+
+    :param is_master: True if it is the master process
+    :type is_master: bool
     """
     def_logger.setLevel(logging.INFO if is_master else logging.WARN)
     builtin_print = __builtin__.print
@@ -88,6 +119,12 @@ def setup_for_distributed(is_master):
 
 
 def set_seed(seed):
+    """
+    Sets a random seed for `random`, `numpy`, and `torch` (torch.manual_seed, torch.cuda.manual_seed_all)
+
+    :param seed: random seed
+    :type seed: int
+    """
     if not isinstance(seed, int):
         return
 
@@ -98,6 +135,12 @@ def set_seed(seed):
 
 
 def is_dist_avail_and_initialized():
+    """
+    Checks if distributed model is available and initialized
+
+    :return: True if distributed mode is available and initialized
+    :rtype: bool
+    """
     if not dist.is_available():
         return False
     if not dist.is_initialized():
@@ -106,27 +149,61 @@ def is_dist_avail_and_initialized():
 
 
 def get_world_size():
+    """
+    Gets world size
+
+    :return: world size
+    :rtype: int
+    """
     if not is_dist_avail_and_initialized():
         return 1
     return dist.get_world_size()
 
 
 def get_rank():
+    """
+    Gets the rank of the current process in the provided ``group`` or the default group if none was provided.
+
+    :return: rank of the current process in the provided ``group`` or the default group if none was provided.
+    :rtype: int
+    """
     if not is_dist_avail_and_initialized():
         return 0
     return dist.get_rank()
 
 
 def is_main_process():
+    """
+    Checks if this is the main process.
+
+    :return: True if this is the main process.
+    :rtype: bool
+    """
     return get_rank() == 0
 
 
 def save_on_master(*args, **kwargs):
+    """
+    Use `torch.save` for `args` if this is the main process.
+
+    :return: True if this is the main process.
+    :rtype: bool
+    """
     if is_main_process():
         torch.save(*args, **kwargs)
 
 
 def init_distributed_mode(world_size=1, dist_url='env://'):
+    """
+    Initialize the distributed mode.
+
+    :param world_size: world size.
+    :type world_size: int
+    :param dist_url: URL specifying how to initialize the process group.
+    :type dist_url: str
+    :return: tuple of 1) whether or not distributed mode is initialized, 2) world size, and 3) list of device IDs.
+    :rtype: (bool, int, list[int] or None)
+    """
     if 'RANK' in os.environ and 'WORLD_SIZE' in os.environ:
         rank = int(os.environ['RANK'])
         world_size = int(os.environ['WORLD_SIZE'])
@@ -149,6 +226,22 @@ def init_distributed_mode(world_size=1, dist_url='env://'):
 
 
 def load_ckpt(ckpt_file_path, model=None, optimizer=None, lr_scheduler=None, strict=True):
+    """
+    Load a checkpoint file with model, optimizer, and/or lr_scheduler.
+
+    :param ckpt_file_path: checkpoint file path.
+    :type ckpt_file_path: str
+    :param model: model.
+    :type model: nn.Module
+    :param optimizer: optimizer.
+    :type optimizer: nn.Module
+    :param lr_scheduler: learning rate scheduler.
+    :type lr_scheduler: nn.Module
+    :param strict: `strict` as a keyword argument of `load_state_dict`.
+    :type strict: bool
+    :return: tuple of best value (e.g., best validation result) and parsed args.
+    :rtype: (float or None, argparse.Namespace or None)
+    """
     if check_if_exists(ckpt_file_path):
         ckpt = torch.load(ckpt_file_path, map_location='cpu')
     elif isinstance(ckpt_file_path, str) and \
@@ -158,7 +251,7 @@ def load_ckpt(ckpt_file_path, model=None, optimizer=None, lr_scheduler=None, str
         message = 'ckpt file path is None' if ckpt_file_path is None \
             else 'ckpt file is not found at `{}`'.format(ckpt_file_path)
         logger.info(message)
-        return None, None, None
+        return None, None
 
     if model is not None:
         if 'model' in ckpt:
@@ -196,6 +289,22 @@ def load_ckpt(ckpt_file_path, model=None, optimizer=None, lr_scheduler=None, str
 
 
 def save_ckpt(model, optimizer, lr_scheduler, best_value, args, output_file_path):
+    """
+    Save a checkpoint file including model, optimizer, best value, parsed args, and learning rate scheduler.
+
+    :param model: model.
+    :type model: nn.Module
+    :param optimizer: optimizer.
+    :type optimizer: nn.Module
+    :param lr_scheduler: learning rate scheduler.
+    :type lr_scheduler: nn.Module
+    :param best_value: best value e.g., best validation result.
+    :type best_value: float
+    :param args: parsed args.
+    :type args: argparse.Namespace
+    :param output_file_path: output file path.
+    :type output_file_path: str
+    """
     make_parent_dirs(output_file_path)
     model_state_dict = model.module.state_dict() if check_if_wrapped(model) else model.state_dict()
     lr_scheduler_state_dict = lr_scheduler.state_dict() if lr_scheduler is not None else None
