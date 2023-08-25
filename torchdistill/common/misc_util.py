@@ -36,7 +36,7 @@ def get_classes_as_dict(package_name, is_lower=False):
 
     :param package_name: package name.
     :type package_name: str
-    :param is_lower: if True, lower module names.
+    :param is_lower: if True, use lowercase module names.
     :type is_lower: bool
     :return: dict of classes defined in the given package
     :rtype: dict
@@ -71,7 +71,7 @@ def get_functions_as_dict(package_name, is_lower=False):
 
     :param package_name: package name.
     :type package_name: str
-    :param is_lower: if True, lower module names.
+    :param is_lower: if True, use lowercase module names.
     :type is_lower: bool
     :return: dict of classes defined in the given package
     :rtype: dict
