@@ -19,7 +19,7 @@ def import_dependencies(dependencies=None):
     """
     Imports specified packages.
 
-    :param dependencies: package names
+    :param dependencies: package names.
     :type dependencies: list[dict or list[str] or (str, str) or str] or str or None
     """
     if dependencies is None:
@@ -55,11 +55,11 @@ def import_get(key, package=None, **kwargs):
     """
     Imports module and get its attribute.
 
-    :param key: attribute name or package path separated by period(.)
+    :param key: attribute name or package path separated by period(.).
     :type key: str
-    :param package: package path if `key` is just an attribute name
+    :param package: package path if `key` is just an attribute name.
     :type package: str or None
-    :return: attribute of the imported module
+    :return: attribute of the imported module.
     :rtype: Any
     """
     if package is None:
@@ -78,11 +78,11 @@ def import_call(key, package=None, init=None, **kwargs):
 
     :param key: module name or package path separated by period(.)
     :type key: str
-    :param package: package path if `key` is just an attribute name
+    :param package: package path if `key` is just an attribute name.
     :type package: str or None
-    :param package: instantiate the imported module
+    :param package: instantiate the imported module.
     :type package: bool
-    :return: object imported and called
+    :return: object imported and called.
     :rtype: Any
     """
     if package is None:
@@ -102,9 +102,9 @@ def import_call(key, package=None, init=None, **kwargs):
 
 def setup_for_distributed(is_master):
     """
-    Disables logging when not in master process
+    Disables logging when not in master process.
 
-    :param is_master: True if it is the master process
+    :param is_master: True if it is the master process.
     :type is_master: bool
     """
     def_logger.setLevel(logging.INFO if is_master else logging.WARN)
@@ -120,9 +120,9 @@ def setup_for_distributed(is_master):
 
 def set_seed(seed):
     """
-    Sets a random seed for `random`, `numpy`, and `torch` (torch.manual_seed, torch.cuda.manual_seed_all)
+    Sets a random seed for `random`, `numpy`, and `torch` (torch.manual_seed, torch.cuda.manual_seed_all).
 
-    :param seed: random seed
+    :param seed: random seed.
     :type seed: int
     """
     if not isinstance(seed, int):
@@ -136,9 +136,9 @@ def set_seed(seed):
 
 def is_dist_avail_and_initialized():
     """
-    Checks if distributed model is available and initialized
+    Checks if distributed model is available and initialized.
 
-    :return: True if distributed mode is available and initialized
+    :return: True if distributed mode is available and initialized.
     :rtype: bool
     """
     if not dist.is_available():
@@ -150,9 +150,9 @@ def is_dist_avail_and_initialized():
 
 def get_world_size():
     """
-    Gets world size
+    Gets world size.
 
-    :return: world size
+    :return: world size.
     :rtype: int
     """
     if not is_dist_avail_and_initialized():

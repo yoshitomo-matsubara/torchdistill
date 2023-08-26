@@ -21,7 +21,7 @@ def get_classes(package_name, require_names=False):
     :type package_name: str
     :param require_names: whether to preserve member names.
     :type require_names: bool
-    :return: collection of classes defined in the given package
+    :return: collection of classes defined in the given package.
     :rtype: list[(str, class)] or list[class]
     """
     members = inspect.getmembers(sys.modules[package_name], inspect.isclass)
@@ -38,7 +38,7 @@ def get_classes_as_dict(package_name, is_lower=False):
     :type package_name: str
     :param is_lower: if True, use lowercase module names.
     :type is_lower: bool
-    :return: dict of classes defined in the given package
+    :return: dict of classes defined in the given package.
     :rtype: dict
     """
     members = get_classes(package_name, require_names=True)
@@ -56,7 +56,7 @@ def get_functions(package_name, require_names=False):
     :type package_name: str
     :param require_names: whether to preserve function names.
     :type require_names: bool
-    :return: collection of functions defined in the given package
+    :return: collection of functions defined in the given package.
     :rtype: list[(str, typing.Callable)] or list[typing.Callable]
     """
     members = inspect.getmembers(sys.modules[package_name], inspect.isfunction)
@@ -73,7 +73,7 @@ def get_functions_as_dict(package_name, is_lower=False):
     :type package_name: str
     :param is_lower: if True, use lowercase module names.
     :type is_lower: bool
-    :return: dict of classes defined in the given package
+    :return: dict of classes defined in the given package.
     :rtype: dict
     """
     members = get_functions(package_name, require_names=True)
