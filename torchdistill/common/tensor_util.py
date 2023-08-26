@@ -36,7 +36,7 @@ def dequantize_tensor(q_x):
 
     Benoit Jacob, Skirmantas Kligys, Bo Chen, Menglong Zhu, Matthew Tang, Andrew Howard, Hartwig Adam, Dmitry Kalenichenko: `"Quantization and Training of Neural Networks for Efficient Integer-Arithmetic-Only Inference" <https://openaccess.thecvf.com/content_cvpr_2018/html/Jacob_Quantization_and_Training_CVPR_2018_paper.html>`_ @ CVPR 2018 (2018)
 
-    :param q_x: quantized tensor to be quantized.
+    :param q_x: quantized tensor to be dequantized.
     :type q_x: QuantizedTensor
     :return: dequantized tensor.
     :rtype: torch.Tensor
