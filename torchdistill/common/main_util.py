@@ -76,7 +76,7 @@ def import_call(key, package=None, init=None, **kwargs):
     """
     Imports module and call the module/function e.g., instantiation.
 
-    :param key: module name or package path separated by period(.)
+    :param key: module name or package path separated by period(.).
     :type key: str
     :param package: package path if `key` is just an attribute name.
     :type package: str or None
