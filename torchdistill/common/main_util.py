@@ -201,7 +201,7 @@ def init_distributed_mode(world_size=1, dist_url='env://'):
     :type world_size: int
     :param dist_url: URL specifying how to initialize the process group.
     :type dist_url: str
-    :return: tuple of 1) whether or not distributed mode is initialized, 2) world size, and 3) list of device IDs.
+    :return: tuple of 1) whether distributed mode is initialized, 2) world size, and 3) list of device IDs.
     :rtype: (bool, int, list[int] or None)
     """
     if 'RANK' in os.environ and 'WORLD_SIZE' in os.environ:
