@@ -32,7 +32,7 @@ def quantize_tensor(x, num_bits=8):
 
 def dequantize_tensor(q_x):
     """
-    Deuantizes a quantized tensor.
+    Dequantizes a quantized tensor.
 
     Benoit Jacob, Skirmantas Kligys, Bo Chen, Menglong Zhu, Matthew Tang, Andrew Howard, Hartwig Adam, Dmitry Kalenichenko: `"Quantization and Training of Neural Networks for Efficient Integer-Arithmetic-Only Inference" <https://openaccess.thecvf.com/content_cvpr_2018/html/Jacob_Quantization_and_Training_CVPR_2018_paper.html>`_ @ CVPR 2018 (2018)
 
