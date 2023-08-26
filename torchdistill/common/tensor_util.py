@@ -6,6 +6,18 @@ QuantizedTensor = namedtuple('QuantizedTensor', ['tensor', 'scale', 'zero_point'
 # Referred to https://github.com/eladhoffer/utils.pytorch/blob/master/quantize.py
 #  and http://openaccess.thecvf.com/content_cvpr_2018/papers/Jacob_Quantization_and_Training_CVPR_2018_paper.pdf
 def quantize_tensor(x, num_bits=8):
+    """
+    Quantizes a tensor using `num_bits` int and float.
+
+    Benoit Jacob, Skirmantas Kligys, Bo Chen, Menglong Zhu, Matthew Tang, Andrew Howard, Hartwig Adam, Dmitry Kalenichenko: `"Quantization and Training of Neural Networks for Efficient Integer-Arithmetic-Only Inference" <https://openaccess.thecvf.com/content_cvpr_2018/html/Jacob_Quantization_and_Training_CVPR_2018_paper.html>`_ @ CVPR 2018 (2018)
+
+    :param x: tensor to be quantized.
+    :type x: torch.Tensor
+    :param num_bits: the number of bits for quantization.
+    :type num_bits: int
+    :return: quantized tensor.
+    :rtype: QuantizedTensor
+    """
     qmin = 0.0
     qmax = 2.0 ** num_bits - 1.0
     min_val, max_val = x.min(), x.max()
@@ -19,4 +31,14 @@ def quantize_tensor(x, num_bits=8):
 
 
 def dequantize_tensor(q_x):
+    """
+    Deuantizes a quantized tensor.
+
+    Benoit Jacob, Skirmantas Kligys, Bo Chen, Menglong Zhu, Matthew Tang, Andrew Howard, Hartwig Adam, Dmitry Kalenichenko: `"Quantization and Training of Neural Networks for Efficient Integer-Arithmetic-Only Inference" <https://openaccess.thecvf.com/content_cvpr_2018/html/Jacob_Quantization_and_Training_CVPR_2018_paper.html>`_ @ CVPR 2018 (2018)
+
+    :param q_x: quantized tensor to be quantized.
+    :type q_x: QuantizedTensor
+    :return: dequantized tensor.
+    :rtype: torch.Tensor
+    """
     return q_x.scale * (q_x.tensor.float() - q_x.zero_point)
