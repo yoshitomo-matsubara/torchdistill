@@ -13,9 +13,9 @@ def yaml_join(loader, node):
     Joins a sequence of strings.
 
     :param loader: yaml loader.
-    :type loader: yaml.loader.Loader
+    :type loader: yaml.loader.FullLoader
     :param node: node.
-    :type node: yaml.nodes.SequenceNode
+    :type node: yaml.nodes.Node
     :return: joined string.
     :rtype: str
     """
@@ -28,9 +28,9 @@ def yaml_pathjoin(loader, node):
     Joins a sequence of strings as a (file) path.
 
     :param loader: yaml loader.
-    :type loader: yaml.loader.Loader
+    :type loader: yaml.loader.FullLoader
     :param node: node.
-    :type node: yaml.nodes.SequenceNode
+    :type node: yaml.nodes.Node
     :return: joined (file) path.
     :rtype: str
     """
@@ -43,9 +43,9 @@ def yaml_import_get(loader, node):
     Imports module and get its attribute.
 
     :param loader: yaml loader.
-    :type loader: yaml.loader.Loader
+    :type loader: yaml.loader.FullLoader
     :param node: node.
-    :type node: yaml.nodes.MappingNode
+    :type node: yaml.nodes.Node
     :return: module attribute.
     :rtype: Any
     """
@@ -58,9 +58,9 @@ def yaml_import_call(loader, node):
     Imports module and call the module/function e.g., instantiation.
 
     :param loader: yaml loader.
-    :type loader: yaml.loader.Loader
+    :type loader: yaml.loader.FullLoader
     :param node: node.
-    :type node: yaml.nodes.MappingNode
+    :type node: yaml.nodes.Node
     :return: result of callable module.
     :rtype: Any
     """
@@ -73,9 +73,9 @@ def yaml_getattr(loader, node):
     Gets an attribute of the first argument.
 
     :param loader: yaml loader.
-    :type loader: yaml.loader.Loader
+    :type loader: yaml.loader.FullLoader
     :param node: node.
-    :type node: yaml.nodes.SequenceNode
+    :type node: yaml.nodes.Node
     :return: module attribute.
     :rtype: Any
     """
@@ -88,9 +88,9 @@ def yaml_simple_access(loader, node):
     Obtains a value from a specified data
 
     :param loader: yaml loader.
-    :type loader: yaml.loader.Loader
+    :type loader: yaml.loader.FullLoader
     :param node: node.
-    :type node: yaml.nodes.MappingNode
+    :type node: yaml.nodes.Node
     :return: accessed object.
     :rtype: Any
     """
