@@ -86,13 +86,13 @@ def get_frozen_param_names(module):
 
 def get_module(root_module, module_path):
     """
-    Gets a module specified by `module_path`.
+    Gets a module specified by ``module_path``.
 
     :param root_module: module.
     :type root_module: nn.Module
-    :param module_path: module path for extracting the module from `root_module`.
+    :param module_path: module path for extracting the module from ``root_module``.
     :type module_path: str
-    :return: module extracted from `root_module` if exists.
+    :return: module extracted from ``root_module`` if exists.
     :rtype: nn.Module or None
     """
     module_names = module_path.split('.')
@@ -126,7 +126,7 @@ def get_hierarchized_dict(module_paths):
 
     :param module_paths: module paths.
     :type module_paths: list[str]
-    :return: module extracted from `root_module` if exists.
+    :return: module extracted from ``root_module`` if exists.
     :rtype: dict
     """
     children_dict = OrderedDict()
@@ -181,13 +181,13 @@ def get_components(module_paths):
 
 def extract_target_modules(parent_module, target_class, module_list):
     """
-    Extracts modules that are instance of `target_class` and update `module_list` with the extracted modules.
+    Extracts modules that are instance of ``target_class`` and update ``module_list`` with the extracted modules.
 
     :param parent_module: parent module.
     :type parent_module: nn.Module
     :param target_class: target class.
     :type target_class: class
-    :param module_list: (empty) list to be filled with modules that are instances of `target_class`.
+    :param module_list: (empty) list to be filled with modules that are instances of ``target_class``.
     :type module_list: list[nn.Module]
     """
     if isinstance(parent_module, target_class):
@@ -200,7 +200,7 @@ def extract_target_modules(parent_module, target_class, module_list):
 
 def extract_all_child_modules(parent_module, module_list):
     """
-    Extracts all the child modules and update `module_list` with the extracted modules.
+    Extracts all the child modules and update ``module_list`` with the extracted modules.
 
     :param parent_module: parent module.
     :type parent_module: nn.Module

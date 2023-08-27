@@ -117,7 +117,7 @@ def get_binary_object_size(obj, unit_size=1024):
     :type obj: Any
     :param unit_size: unit file size
     :type unit_size: int or float
-    :return: size of object in bytes, divided by the `unit_size`
+    :return: size of object in bytes, divided by the ``unit_size``
     :rtype: float
     """
     return sys.getsizeof(pickle.dumps(obj)) / unit_size

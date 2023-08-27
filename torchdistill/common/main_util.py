@@ -57,7 +57,7 @@ def import_get(key, package=None, **kwargs):
 
     :param key: attribute name or package path separated by period(.).
     :type key: str
-    :param package: package path if `key` is just an attribute name.
+    :param package: package path if ``key`` is just an attribute name.
     :type package: str or None
     :return: attribute of the imported module.
     :rtype: Any
@@ -78,7 +78,7 @@ def import_call(key, package=None, init=None, **kwargs):
 
     :param key: module name or package path separated by period(.).
     :type key: str
-    :param package: package path if `key` is just an attribute name.
+    :param package: package path if ``key`` is just an attribute name.
     :type package: str or None
     :param package: instantiate the imported module.
     :type package: bool
@@ -237,7 +237,7 @@ def load_ckpt(ckpt_file_path, model=None, optimizer=None, lr_scheduler=None, str
     :type optimizer: nn.Module
     :param lr_scheduler: learning rate scheduler.
     :type lr_scheduler: nn.Module
-    :param strict: `strict` as a keyword argument of `load_state_dict`.
+    :param strict: ``strict`` as a keyword argument of ``load_state_dict``.
     :type strict: bool
     :return: tuple of best value (e.g., best validation result) and parsed args.
     :rtype: (float or None, argparse.Namespace or None)
