@@ -10,6 +10,14 @@ logger = def_logger.getChild(__name__)
 
 @register_post_epoch_proc_func
 def default_post_epoch_process_with_teacher(self, metrics=None, **kwargs):
+    """
+    Performs post-epoch process for distillation box.
+
+    :param self: distillation box.
+    :type self: torchdistill.core.distillation.DistillationBox
+    :param metrics: `metric` for ReduceLROnPlateau.step.
+    :type metrics: Any
+    """
     # Epoch-wise scheduler step
     if self.lr_scheduler is not None and self.scheduling_step <= 0:
         if isinstance(self.lr_scheduler, ReduceLROnPlateau):
@@ -29,6 +37,14 @@ def default_post_epoch_process_with_teacher(self, metrics=None, **kwargs):
 
 @register_post_epoch_proc_func
 def default_post_epoch_process_without_teacher(self, metrics=None, **kwargs):
+    """
+    Performs post-epoch process for training box.
+
+    :param self: training box.
+    :type self: torchdistill.core.training.TrainingBox
+    :param metrics: `metric` for ReduceLROnPlateau.step.
+    :type metrics: Any
+    """
     # Epoch-wise scheduler step
     if self.lr_scheduler is not None and self.scheduling_step <= 0:
         if isinstance(self.lr_scheduler, ReduceLROnPlateau):
