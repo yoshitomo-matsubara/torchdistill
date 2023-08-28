@@ -12,7 +12,7 @@ def default_pre_epoch_process_with_teacher(self, epoch=None, **kwargs):
 
     :param self: distillation box.
     :type self: torchdistill.core.distillation.DistillationBox or torchdistill.core.training.TrainingBox
-    :param epoch: `epoch` for DistributedSampler.
+    :param epoch: ``epoch`` for DistributedSampler.
     :type epoch: int
     """
     clear_io_dict(self.teacher_io_dict)
@@ -29,7 +29,7 @@ def default_pre_epoch_process_without_teacher(self, epoch=None, **kwargs):
 
     :param self: distillation box.
     :type self: torchdistill.core.distillation.DistillationBox or torchdistill.core.training.TrainingBox
-    :param epoch: `epoch` for DistributedSampler.
+    :param epoch: ``epoch`` for DistributedSampler.
     :type epoch: int
     """
     clear_io_dict(self.model_io_dict)

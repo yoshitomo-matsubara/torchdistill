@@ -16,7 +16,7 @@ def default_post_forward_process(self, loss, metrics=None, **kwargs):
     :type self: torchdistill.core.distillation.DistillationBox or torchdistill.core.training.TrainingBox
     :param loss: loss tensor.
     :type loss: torch.Tensor
-    :param metrics: `metric` for ReduceLROnPlateau.step.
+    :param metrics: ``metric`` for ReduceLROnPlateau.step.
     :type metrics: Any
     """
     self.stage_grad_count += 1

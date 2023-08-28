@@ -15,7 +15,7 @@ def default_post_epoch_process_with_teacher(self, metrics=None, **kwargs):
 
     :param self: distillation box.
     :type self: torchdistill.core.distillation.DistillationBox
-    :param metrics: `metric` for ReduceLROnPlateau.step.
+    :param metrics: ``metric`` for ReduceLROnPlateau.step.
     :type metrics: Any
     """
     # Epoch-wise scheduler step
@@ -42,7 +42,7 @@ def default_post_epoch_process_without_teacher(self, metrics=None, **kwargs):
 
     :param self: training box.
     :type self: torchdistill.core.training.TrainingBox
-    :param metrics: `metric` for ReduceLROnPlateau.step.
+    :param metrics: ``metric`` for ReduceLROnPlateau.step.
     :type metrics: Any
     """
     # Epoch-wise scheduler step
