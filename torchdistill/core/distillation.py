@@ -10,7 +10,7 @@ from .interfaces.pre_forward_proc import default_pre_forward_process
 from .interfaces.registry import get_pre_epoch_proc_func, get_pre_forward_proc_func, get_forward_proc_func, \
     get_post_forward_proc_func, get_post_epoch_proc_func
 from .util import set_hooks, wrap_model, change_device, tensor2numpy2tensor, extract_io_dict, update_io_dict, \
-    extract_sub_model_output_dict
+    extract_sub_model_io_dict
 from ..common.constant import SELF_MODULE_PATH, def_logger
 from ..common.file_util import make_parent_dirs
 from ..common.main_util import load_ckpt, save_on_master
@@ -392,7 +392,7 @@ class DistillationBox(object):
 
             cpu_device = torch.device('cpu')
             for i, (teacher_output, cache_file_path) in enumerate(zip(teacher_outputs.cpu().numpy(), cache_file_paths)):
-                sub_dict = extract_sub_model_output_dict(teacher_io_dict4cache, i)
+                sub_dict = extract_sub_model_io_dict(teacher_io_dict4cache, i)
                 sub_dict = tensor2numpy2tensor(sub_dict, cpu_device)
                 cache_dict = {'teacher_outputs': torch.Tensor(teacher_output), 'extracted_outputs': sub_dict}
                 make_parent_dirs(cache_file_path)
