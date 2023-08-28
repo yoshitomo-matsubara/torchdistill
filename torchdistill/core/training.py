@@ -22,7 +22,35 @@ logger = def_logger.getChild(__name__)
 
 
 class TrainingBox(object):
+    """
+    A single-stage training framework.
+
+    :param model: model.
+    :type model: nn.Module
+    :param dataset_dict: dict that contains datasets with IDs of your choice.
+    :type dataset_dict: dict
+    :param train_config: training configuration.
+    :type train_config: dict
+    :param device: target device.
+    :type device: torch.device
+    :param device_ids: target device IDs.
+    :type device_ids: list[int]
+    :param distributed: whether to be in distributed training mode.
+    :type distributed: bool
+    :param lr_factor: multiplier for learning rate.
+    :type lr_factor: float or int
+    :param accelerator: Hugging Face accelerator.
+    :type accelerator: accelerate.Accelerator or None
+    """
     def setup_data_loaders(self, train_config):
+        """
+        Sets up training and validation data loaders for the current training stage.
+        This method will be internally called when instantiating this class and when calling
+        :meth:`MultiStagesTrainingBox.advance_to_next_stage`.
+
+        :param train_config: training configuration.
+        :type train_config: dict
+        """
         train_data_loader_config = train_config.get('train_data_loader', dict())
         if 'requires_supp' not in train_data_loader_config:
             train_data_loader_config['requires_supp'] = True
@@ -37,6 +65,14 @@ class TrainingBox(object):
             self.val_data_loader = val_data_loader
 
     def setup_model(self, model_config):
+        """
+        Sets up a model for the current training stage.
+        This method will be internally called when instantiating this class and when calling
+        :meth:`MultiStagesTrainingBox.advance_to_next_stage`.
+
+        :param model_config: model configuration.
+        :type model_config: dict
+        """
         unwrapped_org_model = \
             self.org_model.module if check_if_wrapped(self.org_model) else self.org_model
         self.target_model_pairs.clear()
@@ -62,12 +98,28 @@ class TrainingBox(object):
         self.model_forward_proc = get_forward_proc_func(model_config.get('forward_proc', None))
 
     def setup_loss(self, train_config):
+        """
+        Sets up a training loss module for the current training stage.
+        This method will be internally called when instantiating this class and when calling
+        :meth:`MultiStagesTrainingBox.advance_to_next_stage`.
+
+        :param train_config: training configuration.
+        :type train_config: dict
+        """
         criterion_config = train_config['criterion']
         self.criterion = get_high_level_loss(criterion_config)
         logger.info(self.criterion)
         self.extract_model_loss = get_func2extract_model_output(criterion_config.get('func2extract_model_loss', None))
 
     def setup_pre_post_processes(self, train_config):
+        """
+        Sets up pre/post-epoch/forward processes for the current training stage.
+        This method will be internally called when instantiating this class and when calling
+        :meth:`MultiStagesTrainingBox.advance_to_next_stage`.
+
+        :param train_config: training configuration.
+        :type train_config: dict
+        """
         pre_epoch_process = default_pre_epoch_process_without_teacher
         if 'pre_epoch_process' in train_config:
             pre_epoch_process = get_pre_epoch_proc_func(train_config['pre_epoch_process'])
@@ -87,6 +139,14 @@ class TrainingBox(object):
         setattr(TrainingBox, 'post_epoch_process', post_epoch_process)
 
     def setup(self, train_config):
+        """
+        Configures a :class:`TrainingBox`/:class:`MultiStagesTrainingBox` for the current training stage.
+        This method will be internally called when instantiating this class and when calling
+        :meth:`MultiStagesTrainingBox.advance_to_next_stage`.
+
+        :param train_config: training configuration.
+        :type train_config: dict
+        """
         # Set up train and val data loaders
         self.setup_data_loaders(train_config)
 
@@ -184,9 +244,34 @@ class TrainingBox(object):
         self.num_epochs = train_config['num_epochs']
 
     def pre_epoch_process(self, *args, **kwargs):
+        """
+        Performs a pre-epoch process Shows the summary of results.
+
+        This should be overridden by all subclasses or defined through :meth:`setup_pre_post_processes`.
+        """
+        raise NotImplementedError()
+
+    def pre_forward_process(self, *args, **kwargs):
+        """
+        Performs a pre-forward process Shows the summary of results.
+
+        This should be overridden by all subclasses or defined through :meth:`setup_pre_post_processes`.
+        """
         raise NotImplementedError()
 
     def forward_process(self, sample_batch, targets=None, supp_dict=None, **kwargs):
+        """
+        Performs forward computations for a model.
+
+        :param sample_batch: sample batch.
+        :type sample_batch: Any
+        :param targets: training targets.
+        :type targets: Any
+        :param supp_dict: supplementary dict.
+        :type supp_dict: dict
+        :return: loss tensor.
+        :rtype: torch.Tensor
+        """
         model_outputs = self.model_forward_proc(self.model, sample_batch, targets, supp_dict, **kwargs)
         extracted_model_io_dict = extract_io_dict(self.model_io_dict, self.device)
         extracted_model_io_dict[SELF_MODULE_PATH]['output'] = model_outputs
@@ -200,12 +285,26 @@ class TrainingBox(object):
         return total_loss
 
     def post_forward_process(self, *args, **kwargs):
+        """
+        Performs a post-forward process.
+
+        This should be overridden by all subclasses or defined through :meth:`setup_pre_post_processes`.
+        """
         raise NotImplementedError()
 
     def post_epoch_process(self, *args, **kwargs):
+        """
+        Performs a post-epoch process.
+
+        This should be overridden by all subclasses or defined through :meth:`setup_pre_post_processes`.
+        """
         raise NotImplementedError()
 
     def clean_modules(self):
+        """
+        Unfreezes all the modules, clears an I/O dict, unregisters forward hook handles,
+        and clears the handle lists.
+        """
         unfreeze_module_params(self.org_model)
         self.model_io_dict.clear()
         for _, module_handle in self.target_model_pairs:
@@ -214,10 +313,30 @@ class TrainingBox(object):
 
 
 class MultiStagesTrainingBox(TrainingBox):
-    def __init__(self, model, data_loader_dict, train_config,
+    """
+    A multi-stage training framework. This is a subclass of :class:`TrainingBox`.
+
+    :param model: model.
+    :type model: nn.Module
+    :param dataset_dict: dict that contains datasets with IDs of your choice.
+    :type dataset_dict: dict
+    :param train_config: training configuration.
+    :type train_config: dict
+    :param device: target device.
+    :type device: torch.device
+    :param device_ids: target device IDs.
+    :type device_ids: list[int]
+    :param distributed: whether to be in distributed training mode.
+    :type distributed: bool
+    :param lr_factor: multiplier for learning rate.
+    :type lr_factor: float or int
+    :param accelerator: Hugging Face accelerator.
+    :type accelerator: accelerate.Accelerator or None
+    """
+    def __init__(self, model, dataset_dict, train_config,
                  device, device_ids, distributed, lr_factor, accelerator=None):
         stage1_config = train_config['stage1']
-        super().__init__(model, data_loader_dict,
+        super().__init__(model, dataset_dict,
                          stage1_config, device, device_ids, distributed, lr_factor, accelerator)
         self.train_config = train_config
         self.stage_number = 1
@@ -227,6 +346,14 @@ class MultiStagesTrainingBox(TrainingBox):
         logger.info('Started stage {}'.format(self.stage_number))
 
     def save_stage_ckpt(self, model, local_model_config):
+        """
+        Saves the checkpoint of ``model`` for the current training stage.
+
+        :param model: model to be saved.
+        :type model: nn.Module
+        :param local_model_config: model configuration at the current training stage.
+        :type local_model_config: dict
+        """
         dst_ckpt_file_path = local_model_config.get('dst_ckpt', None)
         if dst_ckpt_file_path is not None:
             model_state_dict = model.module.state_dict() if check_if_wrapped(model) else model.state_dict()
@@ -234,6 +361,9 @@ class MultiStagesTrainingBox(TrainingBox):
             save_on_master(model_state_dict, dst_ckpt_file_path)
 
     def advance_to_next_stage(self):
+        """
+        Reads the next training stage's configuration in ``train_config`` and advances to the next training stage.
+        """
         self.save_stage_ckpt(self.model, self.train_config.get('model', dict()))
         self.clean_modules()
         self.stage_grad_count = 0
@@ -244,15 +374,43 @@ class MultiStagesTrainingBox(TrainingBox):
         logger.info('Advanced to stage {}'.format(self.stage_number))
 
     def post_epoch_process(self, *args, **kwargs):
+        """
+        Performs a post-epoch process.
+
+        The superclass's post_epoch_process should be overridden by all subclasses or
+        defined through :meth:`TrainingBox.setup_pre_post_processes`.
+        """
         super().post_epoch_process(*args, **kwargs)
         self.current_epoch += 1
         if self.current_epoch == self.stage_end_epoch and self.current_epoch < self.num_epochs:
             self.advance_to_next_stage()
 
 
-def get_training_box(model, data_loader_dict, train_config, device, device_ids, distributed,
+def get_training_box(model, dataset_dict, train_config, device, device_ids, distributed,
                      lr_factor, accelerator=None):
+    """
+    Gets a training box.
+
+    :param model: model.
+    :type model: nn.Module
+    :param dataset_dict: dict that contains datasets with IDs of your choice.
+    :type dataset_dict: dict
+    :param train_config: training configuration.
+    :type train_config: dict
+    :param device: target device.
+    :type device: torch.device
+    :param device_ids: target device IDs.
+    :type device_ids: list[int]
+    :param distributed: whether to be in distributed training mode.
+    :type distributed: bool
+    :param lr_factor: multiplier for learning rate.
+    :type lr_factor: float or int
+    :param accelerator: Hugging Face accelerator.
+    :type accelerator: accelerate.Accelerator or None
+    :return: training box.
+    :rtype: TrainingBox or MultiStagesTrainingBox
+    """
     if 'stage1' in train_config:
-        return MultiStagesTrainingBox(model, data_loader_dict,
+        return MultiStagesTrainingBox(model, dataset_dict,
                                       train_config, device, device_ids, distributed, lr_factor, accelerator)
-    return TrainingBox(model, data_loader_dict, train_config, device, device_ids, distributed, lr_factor, accelerator)
+    return TrainingBox(model, dataset_dict, train_config, device, device_ids, distributed, lr_factor, accelerator)
