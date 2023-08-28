@@ -9,6 +9,16 @@ logger = def_logger.getChild(__name__)
 
 @register_post_forward_proc_func
 def default_post_forward_process(self, loss, metrics=None, **kwargs):
+    """
+    Performs post-forward process for distillation box.
+
+    :param self: distillation box.
+    :type self: torchdistill.core.distillation.DistillationBox or torchdistill.core.training.TrainingBox
+    :param loss: loss tensor.
+    :type loss: torch.Tensor
+    :param metrics: ``metric`` for ReduceLROnPlateau.step.
+    :type metrics: Any
+    """
     self.stage_grad_count += 1
     if self.grad_accum_step > 1:
         loss /= self.grad_accum_step
