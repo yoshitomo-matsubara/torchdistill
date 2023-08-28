@@ -175,7 +175,7 @@ class DistillationBox(object):
 
     def setup(self, train_config):
         """
-        Configures a DistillationBox/MultiStagesDistillationBox for the current training stage.
+        Configures a :class:`DistillationBox`/:class:`MultiStagesDistillationBox` for the current training stage.
         This method will be internally called when instantiating this class and when calling
         :meth:`MultiStagesDistillationBox.advance_to_next_stage`.
 
@@ -495,9 +495,9 @@ class MultiStagesDistillationBox(DistillationBox):
 
     def save_stage_ckpt(self, model, local_model_config):
         """
-        Saves the checkpoint of `model` for the current training stage.
+        Saves the checkpoint of ``model`` for the current training stage.
 
-        :param model: model.
+        :param model: model to be saved.
         :type model: nn.Module
         :param local_model_config: model configuration at the current training stage.
         :type local_model_config: dict
@@ -527,7 +527,7 @@ class MultiStagesDistillationBox(DistillationBox):
         Performs a post-epoch process.
 
         The superclass's post_epoch_process should be overridden by all subclasses or
-        defined through :meth:`setup_pre_post_processes`.
+        defined through :meth:`DistillationBox.setup_pre_post_processes`.
         """
         super().post_epoch_process(*args, **kwargs)
         self.current_epoch += 1
