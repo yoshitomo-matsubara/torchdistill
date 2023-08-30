@@ -60,8 +60,8 @@ def build_data_loader(dataset, data_loader_config, distributed, accelerator=None
             dataset_wrapper_args = list()
         if dataset_wrapper_kwargs is None:
             dataset_wrapper_kwargs = dict()
-        dataset = get_dataset_wrapper(dataset_wrapper_config['key'], dataset, *dataset_wrapper_args,
-                                      **dataset_wrapper_kwargs)
+        dataset_wrapper_cls_or_func = get_dataset_wrapper(dataset_wrapper_config['key'])
+        dataset = dataset_wrapper_cls_or_func(dataset, *dataset_wrapper_args, **dataset_wrapper_kwargs)
     elif cache_dir_path is not None:
         dataset = CacheableDataset(dataset, cache_dir_path, idx2subpath_func=default_idx2subpath)
     elif data_loader_config.get('requires_supp', False):
@@ -79,8 +79,9 @@ def build_data_loader(dataset, data_loader_config, distributed, accelerator=None
         sampler = sampler_cls_or_func(dataset, **sampler_kwargs)
 
     batch_sampler_config = data_loader_config.get('batch_sampler', None)
-    batch_sampler = None if batch_sampler_config is None \
-        else get_batch_sampler(batch_sampler_config['key'], sampler, **batch_sampler_config['kwargs'])
+    batch_sampler_cls_or_func = None if batch_sampler_config is None else get_batch_sampler(batch_sampler_config['key'])
+    batch_sampler = None if batch_sampler_cls_or_func is None \
+        else batch_sampler_cls_or_func(sampler, **batch_sampler_config['kwargs'])
     collate_fn = get_collate_func(data_loader_config.get('collate_fn', None))
     data_loader_kwargs = data_loader_config['kwargs']
     if batch_sampler is not None:
