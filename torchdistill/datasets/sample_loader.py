@@ -2,13 +2,13 @@ from io import BytesIO
 
 from PIL import Image
 
-from .registry import register_sample_loader_class
+from .registry import register_sample_loader
 from ..common.constant import def_logger
 
 logger = def_logger.getChild(__name__)
 
 
-@register_sample_loader_class
+@register_sample_loader
 class JpegCompressionLoader(object):
     def __init__(self, jpeg_quality=None):
         self.jpeg_quality = jpeg_quality
