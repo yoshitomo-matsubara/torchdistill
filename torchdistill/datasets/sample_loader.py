@@ -2,14 +2,20 @@ from io import BytesIO
 
 from PIL import Image
 
-from .registry import register_sample_loader_class
+from .registry import register_sample_loader
 from ..common.constant import def_logger
 
 logger = def_logger.getChild(__name__)
 
 
-@register_sample_loader_class
+@register_sample_loader
 class JpegCompressionLoader(object):
+    """
+    A sample loader with JPEG compression.
+
+    :param jpeg_quality: ``quality`` for JPEG compression with PIL.
+    :type jpeg_quality: int
+    """
     def __init__(self, jpeg_quality=None):
         self.jpeg_quality = jpeg_quality
         logger.info('{} uses jpeg quality = `{}`'.format(self.__class__.__name__, jpeg_quality))

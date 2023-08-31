@@ -4,9 +4,9 @@ from torchdistill.core.interfaces.registry import register_forward_proc_func, ge
     register_pre_epoch_proc_func, register_pre_forward_proc_func, register_post_forward_proc_func, \
     register_post_epoch_proc_func, get_pre_epoch_proc_func, get_pre_forward_proc_func, get_post_forward_proc_func, \
     get_post_epoch_proc_func
-from torchdistill.datasets.registry import register_dataset, register_collate_func, register_sample_loader_class, \
-    register_sample_loader_func, register_batch_sampler, register_transform, register_dataset_wrapper, \
-    DATASET_DICT, COLLATE_FUNC_DICT, SAMPLE_LOADER_CLASS_DICT, SAMPLE_LOADER_FUNC_DICT, BATCH_SAMPLER_DICT, \
+from torchdistill.datasets.registry import register_dataset, register_collate_func, register_sample_loader, \
+    register_batch_sampler, register_transform, register_dataset_wrapper, \
+    DATASET_DICT, COLLATE_FUNC_DICT, SAMPLE_LOADER_DICT, BATCH_SAMPLER_DICT, \
     TRANSFORM_DICT, DATASET_WRAPPER_DICT
 from torchdistill.losses.registry import register_high_level_loss, HIGH_LEVEL_LOSS_DICT, register_loss_wrapper, \
     register_mid_level_loss, LOSS_WRAPPER_DICT, MIDDLE_LEVEL_LOSS_DICT, register_func2extract_model_output, \
@@ -82,46 +82,27 @@ class RegistryTest(TestCase):
         assert COLLATE_FUNC_DICT[random_name] == test_collate2
 
     def test_register_sample_loader(self):
-        @register_sample_loader_class
+        @register_sample_loader
         class TestSampleLoader0(object):
             def __init__(self):
                 self.name = 'test0'
 
-        assert SAMPLE_LOADER_CLASS_DICT['TestSampleLoader0'] == TestSampleLoader0
+        assert SAMPLE_LOADER_DICT['TestSampleLoader0'] == TestSampleLoader0
 
-        @register_sample_loader_class()
+        @register_sample_loader()
         class TestSampleLoader1(object):
             def __init__(self):
                 self.name = 'test1'
 
-        assert SAMPLE_LOADER_CLASS_DICT['TestSampleLoader1'] == TestSampleLoader1
-        random_name = 'custom_sample_loader_class_name2'
+        assert SAMPLE_LOADER_DICT['TestSampleLoader1'] == TestSampleLoader1
+        random_name = 'custom_sample_loader_name2'
 
-        @register_sample_loader_class(key=random_name)
+        @register_sample_loader(key=random_name)
         class TestSampleLoader2(object):
             def __init__(self):
                 self.name = 'test2'
 
-        assert SAMPLE_LOADER_CLASS_DICT[random_name] == TestSampleLoader2
-
-        @register_sample_loader_func
-        def test_sample_loader0(batch):
-            pass
-
-        assert SAMPLE_LOADER_FUNC_DICT['test_sample_loader0'] == test_sample_loader0
-
-        @register_sample_loader_func()
-        def test_sample_loader1(batch, label):
-            pass
-
-        assert SAMPLE_LOADER_FUNC_DICT['test_sample_loader1'] == test_sample_loader1
-        random_name = 'custom_sample_loader_func_name2'
-
-        @register_sample_loader_func(key=random_name)
-        def test_sample_loader2(batch, label):
-            pass
-
-        assert SAMPLE_LOADER_FUNC_DICT[random_name] == test_sample_loader2
+        assert SAMPLE_LOADER_DICT[random_name] == TestSampleLoader2
 
     def test_register_sampler(self):
         @register_batch_sampler

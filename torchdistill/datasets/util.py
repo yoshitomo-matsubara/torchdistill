@@ -12,6 +12,22 @@ logger = def_logger.getChild(__name__)
 
 
 def split_dataset(dataset, lengths=None, generator_seed=None, sub_splits_configs=None, dataset_id=None):
+    """
+    Randomly splits ``dataset`` into sub datasets.
+
+    :param dataset: dataset to be split.
+    :type dataset: torch.utils.data.Dataset
+    :param lengths: length ratios e.g., (9, 1) by default (if None).
+    :type lengths: list[int]
+    :param generator_seed: random seed for :meth:`torch.Generator().manual_seed`.
+    :type generator_seed: int or None
+    :param sub_splits_configs: sub-split configurations.
+    :type sub_splits_configs: list[dict] or None
+    :param dataset_id: dataset ID to be printed just for debugging purpose.
+    :type dataset_id: str or None
+    :return: sub-splits of ``dataset``.
+    :rtype: list[torch.utils.data.Subset]
+    """
     org_dataset_length = len(dataset)
     if dataset_id is not None:
         logger.info('Splitting `{}` dataset ({} samples in total)'.format(dataset_id, org_dataset_length))
@@ -51,6 +67,20 @@ def split_dataset(dataset, lengths=None, generator_seed=None, sub_splits_configs
 
 
 def build_data_loader(dataset, data_loader_config, distributed, accelerator=None):
+    """
+    Builds a data loader for ``dataset``.
+
+    :param dataset: dataset.
+    :type dataset: torch.utils.data.Dataset
+    :param data_loader_config: data loader configuration.
+    :type data_loader_config: dict
+    :param distributed: whether to be in distributed training mode.
+    :type distributed: bool
+    :param accelerator: Hugging Face accelerator.
+    :type accelerator: accelerate.Accelerator or None
+    :return: data loader.
+    :rtype: torch.utils.data.DataLoader
+    """
     cache_dir_path = data_loader_config.get('cache_output', None)
     dataset_wrapper_config = data_loader_config.get('dataset_wrapper', None)
     if isinstance(dataset_wrapper_config, dict) and len(dataset_wrapper_config) > 0:
@@ -60,8 +90,8 @@ def build_data_loader(dataset, data_loader_config, distributed, accelerator=None
             dataset_wrapper_args = list()
         if dataset_wrapper_kwargs is None:
             dataset_wrapper_kwargs = dict()
-        dataset = get_dataset_wrapper(dataset_wrapper_config['key'], dataset, *dataset_wrapper_args,
-                                      **dataset_wrapper_kwargs)
+        dataset_wrapper_cls_or_func = get_dataset_wrapper(dataset_wrapper_config['key'])
+        dataset = dataset_wrapper_cls_or_func(dataset, *dataset_wrapper_args, **dataset_wrapper_kwargs)
     elif cache_dir_path is not None:
         dataset = CacheableDataset(dataset, cache_dir_path, idx2subpath_func=default_idx2subpath)
     elif data_loader_config.get('requires_supp', False):
@@ -79,8 +109,9 @@ def build_data_loader(dataset, data_loader_config, distributed, accelerator=None
         sampler = sampler_cls_or_func(dataset, **sampler_kwargs)
 
     batch_sampler_config = data_loader_config.get('batch_sampler', None)
-    batch_sampler = None if batch_sampler_config is None \
-        else get_batch_sampler(batch_sampler_config['key'], sampler, **batch_sampler_config['kwargs'])
+    batch_sampler_cls_or_func = None if batch_sampler_config is None else get_batch_sampler(batch_sampler_config['key'])
+    batch_sampler = None if batch_sampler_cls_or_func is None \
+        else batch_sampler_cls_or_func(sampler, **batch_sampler_config['kwargs'])
     collate_fn = get_collate_func(data_loader_config.get('collate_fn', None))
     data_loader_kwargs = data_loader_config['kwargs']
     if batch_sampler is not None:
@@ -89,6 +120,20 @@ def build_data_loader(dataset, data_loader_config, distributed, accelerator=None
 
 
 def build_data_loaders(dataset_dict, data_loader_configs, distributed, accelerator=None):
+    """
+    Builds data loaders for ``dataset_dict``.
+
+    :param dataset_dict: dict of dataset tied with dataset ID as a key.
+    :type dataset_dict: dict
+    :param data_loader_configs: data loader configurations.
+    :type data_loader_configs: list[dict]
+    :param distributed: whether to be in distributed training mode.
+    :type distributed: bool
+    :param accelerator: Hugging Face accelerator.
+    :type accelerator: accelerate.Accelerator or None
+    :return: data loaders.
+    :rtype: list[torch.utils.data.DataLoader]
+    """
     data_loader_list = list()
     for data_loader_config in data_loader_configs:
         dataset_id = data_loader_config.get('dataset_id', None)
