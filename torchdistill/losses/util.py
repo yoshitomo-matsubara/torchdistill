@@ -8,7 +8,7 @@ def extract_model_loss_dict(student_outputs, targets, **kwargs):
 
     :param student_outputs: student model's output.
     :type student_outputs: Amy
-    :param targets: training target (won't be used).
+    :param targets: training targets (won't be used).
     :type targets: Amy
     :return: registered function to extract model output.
     :rtype: dict
