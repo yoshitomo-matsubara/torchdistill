@@ -24,7 +24,7 @@ def register_dataset(arg=None, **kwargs):
 
     .. note::
         The dataset will be registered as an option.
-        You can choose the registered function by specifying the name of the class/function or ``key``
+        You can choose the registered class/function by specifying the name of the class/function or ``key``
         you used for the registration, in a training configuration used for
         :class:`torchdistill.core.distillation.DistillationBox` or :class:`torchdistill.core.training.TrainingBox`.
 
