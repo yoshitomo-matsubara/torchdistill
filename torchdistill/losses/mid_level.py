@@ -10,7 +10,7 @@ from ..common.constant import def_logger
 logger = def_logger.getChild(__name__)
 
 
-def extract_feature_map(io_dict, feature_map_config):
+def _extract_feature_map(io_dict, feature_map_config):
     io_type = feature_map_config['io']
     module_path = feature_map_config['path']
     return io_dict[module_path][io_type]
@@ -18,9 +18,31 @@ def extract_feature_map(io_dict, feature_map_config):
 
 @register_loss_wrapper
 class SimpleLossWrapper(nn.Module):
-    def __init__(self, mid_level_loss, **kwargs):
+    """
+    A simple loss wrapper module designed to use low-level loss modules (e.g., loss modules in PyTorch)
+    in torchdistill's pipelines.
+
+    :param low_level_loss: low-level loss module e.g., torch.nn.CrossEntropyLoss.
+    :type low_level_loss: nn.Module
+    :param kwargs: kwargs to configure what the wrapper passes ``low_level_loss``.
+    :type kwargs: dict or None
+
+    .. code-block:: YAML
+       :caption: An example yaml of ``kwargs`` to instantiate :class:`SimpleLossWrapper`.
+
+        criterion_wrapper:
+          key: 'SimpleLossWrapper'
+          kwargs:
+            input:
+              is_from_teacher: False
+              module_path: '.'
+              io: 'output'
+            target:
+              uses_label: True
+    """
+    def __init__(self, low_level_loss, **kwargs):
         super().__init__()
-        self.mid_level_loss = mid_level_loss
+        self.low_level_loss = low_level_loss
         input_config = kwargs['input']
         self.is_input_from_teacher = input_config['is_from_teacher']
         self.input_module_path = input_config['module_path']
@@ -43,7 +65,7 @@ class SimpleLossWrapper(nn.Module):
         else:
             target_batch = self.extract_value(teacher_io_dict if self.is_target_from_teacher else student_io_dict,
                                               self.target_module_path, self.target_key)
-        return self.mid_level_loss(input_batch, target_batch, *args, **kwargs)
+        return self.low_level_loss(input_batch, target_batch, *args, **kwargs)
 
     def __str__(self):
         return self.mid_level_loss.__str__()
@@ -51,8 +73,36 @@ class SimpleLossWrapper(nn.Module):
 
 @register_loss_wrapper
 class DictLossWrapper(SimpleLossWrapper):
-    def __init__(self, mid_level_loss, weights, **kwargs):
-        super().__init__(mid_level_loss, **kwargs)
+    """
+    A dict-based wrapper module designed to use low-level loss modules (e.g., loss modules in PyTorch)
+    in torchdistill's pipelines. This is a subclass of :class:`SimpleLossWrapper` and useful for models whose forward
+    output is dict.
+
+    :param low_level_loss: low-level loss module e.g., torch.nn.CrossEntropyLoss.
+    :type low_level_loss: nn.Module
+    :param weights: dict contains keys that match the model's output dict keys and corresponding loss weights.
+    :type weights: dict
+    :param kwargs: kwargs to configure what the wrapper passes ``low_level_loss``.
+    :type kwargs: dict or None
+
+    .. code-block:: yaml
+       :caption: An example yaml of ``kwargs`` and ``weights`` to instantiate :class:`DictLossWrapper` for deeplabv3_resnet50 in torchvision, whose default output is a dict of outputs from its main and auxiliary branches with keys 'out' and 'aux' respectively.
+
+        criterion_wrapper:
+          key: 'DictLossWrapper'
+          kwargs:
+            input:
+              is_from_teacher: False
+              module_path: '.'
+              io: 'output'
+            target:
+              uses_label: True
+            weights:
+              out: 1.0
+              aux: 0.5
+    """
+    def __init__(self, low_level_loss, weights, **kwargs):
+        super().__init__(low_level_loss, **kwargs)
         self.weights = weights
 
     def forward(self, student_io_dict, teacher_io_dict, targets, *args, **kwargs):
@@ -65,7 +115,7 @@ class DictLossWrapper(SimpleLossWrapper):
                                               self.target_module_path, self.target_key)
         loss = None
         for key, weight in self.weights.items():
-            sub_loss = self.mid_level_loss(input_batch[key], target_batch, *args, **kwargs)
+            sub_loss = self.low_level_loss(input_batch[key], target_batch, *args, **kwargs)
             if loss is None:
                 loss = weight * sub_loss
             else:
@@ -79,7 +129,30 @@ class DictLossWrapper(SimpleLossWrapper):
 @register_mid_level_loss
 class KDLoss(nn.KLDivLoss):
     """
-    "Distilling the Knowledge in a Neural Network"
+    A standard knowledge distillation loss module.
+
+    .. math::
+
+       L_{KD} = \\alpha \cdot L_{CE} + (1 - \\alpha) \cdot \\tau^2 \cdot L_{KL}
+
+    Geoffrey Hinton, Oriol Vinyals, Jeff Dean: `"Distilling the Knowledge in a Neural Network" <https://arxiv.org/abs/1503.02531>`_ @ NIPS 2014 Deep Learning and Representation Learning Workshop (2014)
+
+    :param student_module_path: student model's logit module path.
+    :type student_module_path: str
+    :param student_module_io: 'input' or 'output' of the module in the student model.
+    :type student_module_io: str
+    :param teacher_module_path: teacher model's logit module path.
+    :type teacher_module_path: str
+    :param teacher_module_io: 'input' or 'output' of the module in the teacher model.
+    :type teacher_module_io: str
+    :param temperature: hyperparameter :math:`\\tau` to soften class-probability distributions.
+    :type temperature: float
+    :param alpha: balancing factor.
+    :type alpha: float
+    :param beta: balancing factor (default: :math:`1 - \\alpha`).
+    :type beta: float or None
+    :param reduction: ``reduction`` for KLDivLoss. If ``reduction`` = 'batchmean', CrossEntropyLoss's ``reduction`` will be 'mean'.
+    :type reduction: str or None
     """
     def __init__(self, student_module_path, student_module_io, teacher_module_path, teacher_module_io,
                  temperature, alpha=None, beta=None, reduction='batchmean', **kwargs):
@@ -135,11 +208,11 @@ class FSPLoss(nn.Module):
         fsp_loss = 0
         batch_size = None
         for pair_name, pair_config in self.fsp_pairs.items():
-            student_first_feature_map = extract_feature_map(student_io_dict, pair_config['student_first'])
-            student_second_feature_map = extract_feature_map(student_io_dict, pair_config['student_second'])
+            student_first_feature_map = _extract_feature_map(student_io_dict, pair_config['student_first'])
+            student_second_feature_map = _extract_feature_map(student_io_dict, pair_config['student_second'])
             student_fsp_matrices = self.compute_fsp_matrix(student_first_feature_map, student_second_feature_map)
-            teacher_first_feature_map = extract_feature_map(teacher_io_dict, pair_config['teacher_first'])
-            teacher_second_feature_map = extract_feature_map(teacher_io_dict, pair_config['teacher_second'])
+            teacher_first_feature_map = _extract_feature_map(teacher_io_dict, pair_config['teacher_first'])
+            teacher_second_feature_map = _extract_feature_map(teacher_io_dict, pair_config['teacher_second'])
             teacher_fsp_matrices = self.compute_fsp_matrix(teacher_first_feature_map, teacher_second_feature_map)
             factor = pair_config.get('weight', 1)
             fsp_loss += factor * (student_fsp_matrices - teacher_fsp_matrices).norm(dim=1).sum()
@@ -188,8 +261,8 @@ class ATLoss(nn.Module):
         at_loss = 0
         batch_size = None
         for pair_name, pair_config in self.at_pairs.items():
-            student_feature_map = extract_feature_map(student_io_dict, pair_config['student'])
-            teacher_feature_map = extract_feature_map(teacher_io_dict, pair_config['teacher'])
+            student_feature_map = _extract_feature_map(student_io_dict, pair_config['student'])
+            teacher_feature_map = _extract_feature_map(teacher_io_dict, pair_config['teacher'])
             factor = pair_config.get('weight', 1)
             if self.mode == 'paper':
                 at_loss += factor * self.compute_at_loss_paper(student_feature_map, teacher_feature_map)
@@ -294,8 +367,8 @@ class AltActTransferLoss(nn.Module):
         dab_loss = 0
         batch_size = None
         for pair_name, pair_config in self.feature_pairs.items():
-            student_feature_map = extract_feature_map(student_io_dict, pair_config['student'])
-            teacher_feature_map = extract_feature_map(teacher_io_dict, pair_config['teacher'])
+            student_feature_map = _extract_feature_map(student_io_dict, pair_config['student'])
+            teacher_feature_map = _extract_feature_map(teacher_io_dict, pair_config['teacher'])
             factor = pair_config.get('weight', 1)
             dab_loss += \
                 factor * self.compute_alt_act_transfer_loss(student_feature_map, teacher_feature_map, self.margin)
@@ -379,8 +452,8 @@ class VIDLoss(nn.Module):
     def forward(self, student_io_dict, teacher_io_dict, *args, **kwargs):
         vid_loss = 0
         for pair_name, pair_config in self.feature_pairs.items():
-            pred_mean, pred_var = extract_feature_map(student_io_dict, pair_config['student'])
-            teacher_feature_map = extract_feature_map(teacher_io_dict, pair_config['teacher'])
+            pred_mean, pred_var = _extract_feature_map(student_io_dict, pair_config['student'])
+            teacher_feature_map = _extract_feature_map(teacher_io_dict, pair_config['teacher'])
             factor = pair_config.get('weight', 1)
             neg_log_prob = 0.5 * ((pred_mean - teacher_feature_map) ** 2 / pred_var + torch.log(pred_var))
             vid_loss += factor * neg_log_prob.mean()
