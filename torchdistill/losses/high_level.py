@@ -7,6 +7,34 @@ logger = def_logger.getChild(__name__)
 
 
 class AbstractLoss(nn.Module):
+    """
+    An abstract loss module.
+
+    :meth:`forward` and :meth:`__str__` should be overridden by all subclasses.
+
+    :param sub_terms: loss module configurations.
+    :type sub_terms: dict or None
+
+    .. code-block:: YAML
+       :caption: An example yaml of ``sub_terms``
+
+        sub_terms:
+          ce:
+            criterion:
+              key: 'CrossEntropyLoss'
+              kwargs:
+                reduction: 'mean'
+            criterion_wrapper:
+              key: 'SimpleLossWrapper'
+              kwargs:
+                input:
+                  is_from_teacher: False
+                  module_path: '.'
+                  io: 'output'
+                target:
+                  uses_label: True
+            weight: 1.0
+    """
     def __init__(self, sub_terms=None, **kwargs):
         super().__init__()
         term_dict = dict()
@@ -26,8 +54,21 @@ class AbstractLoss(nn.Module):
 
 @register_high_level_loss
 class WeightedSumLoss(AbstractLoss):
-    def __init__(self, model_term=None, **kwargs):
-        super().__init__(**kwargs)
+    """
+    A weighted sum (linear combination) of mid-/low-level loss modules.
+
+    If ``model_term`` contains a numerical value with ``weight`` key, it will be a multiplier :math:`W_{model}`
+    for the sum of model-driven loss values :math:`\sum_{i} L_{model, i}`.
+
+    .. math:: L_{total} = W_{model} \cdot (\sum_{i} L_{model, i}) + \sum_{k} W_{sub, k} \cdot L_{sub, k}
+
+    :param model_term: model-driven loss module configurations.
+    :type model_term: dict or None
+    :param sub_terms: loss module configurations.
+    :type sub_terms: dict or None
+    """
+    def __init__(self, model_term=None, sub_terms=None, **kwargs):
+        super().__init__(sub_terms=sub_terms, **kwargs)
         if model_term is None:
             model_term = dict()
         self.model_loss_factor = model_term.get('weight', None)

@@ -10,7 +10,7 @@ from ..common.constant import def_logger
 logger = def_logger.getChild(__name__)
 
 
-def extract_feature_map(io_dict, feature_map_config):
+def _extract_feature_map(io_dict, feature_map_config):
     io_type = feature_map_config['io']
     module_path = feature_map_config['path']
     return io_dict[module_path][io_type]
@@ -18,9 +18,31 @@ def extract_feature_map(io_dict, feature_map_config):
 
 @register_loss_wrapper
 class SimpleLossWrapper(nn.Module):
-    def __init__(self, mid_level_loss, **kwargs):
+    """
+    A simple loss wrapper module designed to use low-level loss modules (e.g., loss modules in PyTorch)
+    in torchdistill's pipelines.
+
+    :param low_level_loss: low-level loss module e.g., torch.nn.CrossEntropyLoss.
+    :type low_level_loss: nn.Module
+    :param kwargs: kwargs to configure what the wrapper passes ``low_level_loss``.
+    :type kwargs: dict or None
+
+    .. code-block:: YAML
+       :caption: An example YAML to instantiate :class:`SimpleLossWrapper`.
+
+        criterion_wrapper:
+          key: 'SimpleLossWrapper'
+          kwargs:
+            input:
+              is_from_teacher: False
+              module_path: '.'
+              io: 'output'
+            target:
+              uses_label: True
+    """
+    def __init__(self, low_level_loss, **kwargs):
         super().__init__()
-        self.mid_level_loss = mid_level_loss
+        self.low_level_loss = low_level_loss
         input_config = kwargs['input']
         self.is_input_from_teacher = input_config['is_from_teacher']
         self.input_module_path = input_config['module_path']
@@ -43,7 +65,7 @@ class SimpleLossWrapper(nn.Module):
         else:
             target_batch = self.extract_value(teacher_io_dict if self.is_target_from_teacher else student_io_dict,
                                               self.target_module_path, self.target_key)
-        return self.mid_level_loss(input_batch, target_batch, *args, **kwargs)
+        return self.low_level_loss(input_batch, target_batch, *args, **kwargs)
 
     def __str__(self):
         return self.mid_level_loss.__str__()
@@ -51,8 +73,36 @@ class SimpleLossWrapper(nn.Module):
 
 @register_loss_wrapper
 class DictLossWrapper(SimpleLossWrapper):
-    def __init__(self, mid_level_loss, weights, **kwargs):
-        super().__init__(mid_level_loss, **kwargs)
+    """
+    A dict-based wrapper module designed to use low-level loss modules (e.g., loss modules in PyTorch)
+    in torchdistill's pipelines. This is a subclass of :class:`SimpleLossWrapper` and useful for models whose forward
+    output is dict.
+
+    :param low_level_loss: low-level loss module e.g., torch.nn.CrossEntropyLoss.
+    :type low_level_loss: nn.Module
+    :param weights: dict contains keys that match the model's output dict keys and corresponding loss weights.
+    :type weights: dict
+    :param kwargs: kwargs to configure what the wrapper passes ``low_level_loss``.
+    :type kwargs: dict or None
+
+    .. code-block:: yaml
+       :caption: An example YAML to instantiate :class:`DictLossWrapper` for deeplabv3_resnet50 in torchvision, whose default output is a dict of outputs from its main and auxiliary branches with keys 'out' and 'aux' respectively.
+
+        criterion_wrapper:
+          key: 'DictLossWrapper'
+          kwargs:
+            input:
+              is_from_teacher: False
+              module_path: '.'
+              io: 'output'
+            target:
+              uses_label: True
+            weights:
+              out: 1.0
+              aux: 0.5
+    """
+    def __init__(self, low_level_loss, weights, **kwargs):
+        super().__init__(low_level_loss, **kwargs)
         self.weights = weights
 
     def forward(self, student_io_dict, teacher_io_dict, targets, *args, **kwargs):
@@ -65,7 +115,7 @@ class DictLossWrapper(SimpleLossWrapper):
                                               self.target_module_path, self.target_key)
         loss = None
         for key, weight in self.weights.items():
-            sub_loss = self.mid_level_loss(input_batch[key], target_batch, *args, **kwargs)
+            sub_loss = self.low_level_loss(input_batch[key], target_batch, *args, **kwargs)
             if loss is None:
                 loss = weight * sub_loss
             else:
@@ -79,7 +129,30 @@ class DictLossWrapper(SimpleLossWrapper):
 @register_mid_level_loss
 class KDLoss(nn.KLDivLoss):
     """
-    "Distilling the Knowledge in a Neural Network"
+    A standard knowledge distillation (KD) loss module.
+
+    .. math::
+
+       L_{KD} = \\alpha \cdot L_{CE} + (1 - \\alpha) \cdot \\tau^2 \cdot L_{KL}
+
+    Geoffrey Hinton, Oriol Vinyals, Jeff Dean: `"Distilling the Knowledge in a Neural Network" <https://arxiv.org/abs/1503.02531>`_ @ NIPS 2014 Deep Learning and Representation Learning Workshop (2014)
+
+    :param student_module_path: student model's logit module path.
+    :type student_module_path: str
+    :param student_module_io: 'input' or 'output' of the module in the student model.
+    :type student_module_io: str
+    :param teacher_module_path: teacher model's logit module path.
+    :type teacher_module_path: str
+    :param teacher_module_io: 'input' or 'output' of the module in the teacher model.
+    :type teacher_module_io: str
+    :param temperature: hyperparameter :math:`\\tau` to soften class-probability distributions.
+    :type temperature: float
+    :param alpha: balancing factor for :math:`L_{CE}`, cross-entropy.
+    :type alpha: float
+    :param beta: balancing factor (default: :math:`1 - \\alpha`) for :math:`L_{KL}`, KL divergence between class-probability distributions softened by :math:`\\tau`.
+    :type beta: float or None
+    :param reduction: ``reduction`` for KLDivLoss. If ``reduction`` = 'batchmean', CrossEntropyLoss's ``reduction`` will be 'mean'.
+    :type reduction: str or None
     """
     def __init__(self, student_module_path, student_module_io, teacher_module_path, teacher_module_io,
                  temperature, alpha=None, beta=None, reduction='batchmean', **kwargs):
@@ -109,7 +182,48 @@ class KDLoss(nn.KLDivLoss):
 @register_mid_level_loss
 class FSPLoss(nn.Module):
     """
-    "A Gift From Knowledge Distillation: Fast Optimization, Network Minimization and Transfer Learning"
+    A loss module for the flow of solution procedure (FSP) matrix.
+
+    Junho Yim, Donggyu Joo, Jihoon Bae, Junmo Kim: `"A Gift From Knowledge Distillation: Fast Optimization, Network Minimization and Transfer Learning" <https://openaccess.thecvf.com/content_cvpr_2017/html/Yim_A_Gift_From_CVPR_2017_paper.html>`_ @ CVPR 2017 (2017)
+
+    :param fsp_pairs: configuration of teacher-student module pairs to compute the loss for the FSP matrix.
+    :type fsp_pairs: dict
+
+    .. code-block:: yaml
+       :caption: An example YAML to instantiate :class:`FSPLoss` for a teacher-student pair of ResNet-34 and ResNet-18 in torchvision.
+
+        criterion:
+          key: 'FSPLoss'
+          kwargs:
+            fsp_pairs:
+              pair1:
+                teacher_first:
+                  io: 'input'
+                  path: 'layer1'
+                teacher_second:
+                  io: 'output'
+                  path: 'layer1'
+                student_first:
+                  io: 'input'
+                  path: 'layer1'
+                student_second:
+                  io: 'output'
+                  path: 'layer1'
+                weight: 1
+              pair2:
+                teacher_first:
+                  io: 'input'
+                  path: 'layer2.1'
+                teacher_second:
+                  io: 'output'
+                  path: 'layer2'
+                student_first:
+                  io: 'input'
+                  path: 'layer2.1'
+                student_second:
+                  io: 'output'
+                  path: 'layer2'
+                weight: 1
     """
     def __init__(self, fsp_pairs, **kwargs):
         super().__init__()
@@ -135,11 +249,11 @@ class FSPLoss(nn.Module):
         fsp_loss = 0
         batch_size = None
         for pair_name, pair_config in self.fsp_pairs.items():
-            student_first_feature_map = extract_feature_map(student_io_dict, pair_config['student_first'])
-            student_second_feature_map = extract_feature_map(student_io_dict, pair_config['student_second'])
+            student_first_feature_map = _extract_feature_map(student_io_dict, pair_config['student_first'])
+            student_second_feature_map = _extract_feature_map(student_io_dict, pair_config['student_second'])
             student_fsp_matrices = self.compute_fsp_matrix(student_first_feature_map, student_second_feature_map)
-            teacher_first_feature_map = extract_feature_map(teacher_io_dict, pair_config['teacher_first'])
-            teacher_second_feature_map = extract_feature_map(teacher_io_dict, pair_config['teacher_second'])
+            teacher_first_feature_map = _extract_feature_map(teacher_io_dict, pair_config['teacher_first'])
+            teacher_second_feature_map = _extract_feature_map(teacher_io_dict, pair_config['teacher_second'])
             teacher_fsp_matrices = self.compute_fsp_matrix(teacher_first_feature_map, teacher_second_feature_map)
             factor = pair_config.get('weight', 1)
             fsp_loss += factor * (student_fsp_matrices - teacher_fsp_matrices).norm(dim=1).sum()
@@ -151,13 +265,44 @@ class FSPLoss(nn.Module):
 @register_mid_level_loss
 class ATLoss(nn.Module):
     """
-    "Paying More Attention to Attention: Improving the Performance of
-     Convolutional Neural Networks via Attention Transfer"
-    Referred to https://github.com/szagoruyko/attention-transfer/blob/master/utils.py
-    Discrepancy between Eq. (2) in the paper and the author's implementation
-    https://github.com/szagoruyko/attention-transfer/blob/893df5488f93691799f082a70e2521a9dc2ddf2d/utils.py#L18-L23
-    as partly pointed out at https://github.com/szagoruyko/attention-transfer/issues/34
-    To follow the equations in the paper, use mode='paper' in place of 'code'
+    A loss module for attention transfer (AT). Referred to https://github.com/szagoruyko/attention-transfer/blob/master/utils.py
+
+    Sergey Zagoruyko, Nikos Komodakis: `"Paying More Attention to Attention: Improving the Performance of Convolutional Neural Networks via Attention Transfer" <https://openreview.net/forum?id=Sks9_ajex>`_ @ ICLR 2017 (2017)
+
+    :param at_pairs: configuration of teacher-student module pairs to compute the loss for attention transfer.
+    :type at_pairs: dict
+    :param mode: reference to follow 'paper' or 'code'.
+    :type mode: dict
+
+    .. warning::
+        There is a discrepancy between Eq. (2) in the paper and `the authors' implementation <https://github.com/szagoruyko/attention-transfer/blob/893df5488f93691799f082a70e2521a9dc2ddf2d/utils.py#L18-L23>`_
+        as pointed out in `a paper <https://link.springer.com/chapter/10.1007/978-3-030-76423-4_3>`_ and `an issue at the repository <https://github.com/szagoruyko/attention-transfer/issues/34>`_.
+        Use ``mode`` = 'paper' instead of 'code' if you want to follow the equations in the paper.
+
+    .. code-block:: yaml
+       :caption: An example YAML to instantiate :class:`ATLoss` for a teacher-student pair of ResNet-34 and ResNet-18 in torchvision.
+
+        criterion:
+          key: 'ATLoss'
+          kwargs:
+            at_pairs:
+              pair1:
+                teacher:
+                  io: 'output'
+                  path: 'layer3'
+                student:
+                  io: 'output'
+                  path: 'layer3'
+                weight: 1
+              pair2:
+                teacher:
+                  io: 'output'
+                  path: 'layer4'
+                student:
+                  io: 'output'
+                  path: 'layer4'
+                weight: 1
+            mode: 'code'
     """
     def __init__(self, at_pairs, mode='code', **kwargs):
         super().__init__()
@@ -188,8 +333,8 @@ class ATLoss(nn.Module):
         at_loss = 0
         batch_size = None
         for pair_name, pair_config in self.at_pairs.items():
-            student_feature_map = extract_feature_map(student_io_dict, pair_config['student'])
-            teacher_feature_map = extract_feature_map(teacher_io_dict, pair_config['teacher'])
+            student_feature_map = _extract_feature_map(student_io_dict, pair_config['student'])
+            teacher_feature_map = _extract_feature_map(teacher_io_dict, pair_config['teacher'])
             factor = pair_config.get('weight', 1)
             if self.mode == 'paper':
                 at_loss += factor * self.compute_at_loss_paper(student_feature_map, teacher_feature_map)
@@ -203,8 +348,32 @@ class ATLoss(nn.Module):
 @register_mid_level_loss
 class PKTLoss(nn.Module):
     """
-    "Paraphrasing Complex Network: Network Compression via Factor Transfer"
-    Refactored https://github.com/passalis/probabilistic_kt/blob/master/nn/pkt.py
+    A loss module for probabilistic knowledge transfer (PKT). Refactored https://github.com/passalis/probabilistic_kt/blob/master/nn/pkt.py
+
+    Nikolaos Passalis, Anastasios Tefas: `"Learning Deep Representations with Probabilistic Knowledge Transfer" <https://openaccess.thecvf.com/content_ECCV_2018/html/Nikolaos_Passalis_Learning_Deep_Representations_ECCV_2018_paper.html>`_ @ ECCV 2018 (2018)
+
+    :param student_module_path: student model's logit module path.
+    :type student_module_path: str
+    :param student_module_io: 'input' or 'output' of the module in the student model.
+    :type student_module_io: str
+    :param teacher_module_path: teacher model's logit module path.
+    :type teacher_module_path: str
+    :param teacher_module_io: 'input' or 'output' of the module in the teacher model.
+    :type teacher_module_io: str
+    :param eps: constant to avoid zero division.
+    :type eps: float
+
+    .. code-block:: yaml
+       :caption: An example YAML to instantiate :class:`PKTLoss` for a teacher-student pair of ResNet-34 and ResNet-18 in torchvision.
+
+        criterion:
+          key: 'PKTLoss'
+          kwargs:
+            student_module_path: 'fc'
+            student_module_io: 'input'
+            teacher_module_path: 'fc'
+            teacher_module_io: 'input'
+            eps: 0.0000001
     """
 
     def __init__(self, student_module_path, student_module_io, teacher_module_path, teacher_module_io, eps=0.0000001):
@@ -250,7 +419,29 @@ class PKTLoss(nn.Module):
 @register_mid_level_loss
 class FTLoss(nn.Module):
     """
-    "Paraphrasing Complex Network: Network Compression via Factor Transfer"
+    A loss module for factor transfer (FT). This loss module is used at the 2nd stage of FT method.
+
+    Jangho Kim, Seonguk Park, Nojun Kwak: `"Paraphrasing Complex Network: Network Compression via Factor Transfer" <https://papers.neurips.cc/paper_files/paper/2018/hash/6d9cb7de5e8ac30bd5e8734bc96a35c1-Abstract.html>`_ @ NeurIPS 2018 (2018)
+
+    :param p: the order of norm.
+    :type p: int
+    :param reduction: loss reduction type.
+    :type reduction: str
+    :param paraphraser_path: teacher model's paraphrase module path.
+    :type paraphraser_path: str
+    :param translator_path: student model's translator module path.
+    :type translator_path: str
+
+    .. code-block:: yaml
+       :caption: An example YAML to instantiate :class:`FTLoss` for a teacher-student pair of ResNet-34 and ResNet-18 in torchvision, using auxiliary modules :class:`torchdistill.models.wrapper.Teacher4FactorTransfer` and :class:`torchdistill.models.wrapper.Student4FactorTransfer`.
+
+        criterion:
+          key: 'FTLoss'
+          kwargs:
+            p: 1
+            reduction: 'mean'
+            paraphraser_path: 'paraphraser'
+            translator_path: 'translator'
     """
     def __init__(self, p=1, reduction='mean', paraphraser_path='paraphraser',
                  translator_path='translator', **kwargs):
@@ -275,8 +466,58 @@ class FTLoss(nn.Module):
 @register_mid_level_loss
 class AltActTransferLoss(nn.Module):
     """
-    "Knowledge Transfer via Distillation of Activation Boundaries Formed by Hidden Neurons"
-    Refactored https://github.com/bhheo/AB_distillation/blob/master/cifar10_AB_distillation.py
+    A loss module for distillation of activation boundaries (DAB). Refactored https://github.com/bhheo/AB_distillation/blob/master/cifar10_AB_distillation.py
+
+    Byeongho Heo, Minsik Lee, Sangdoo Yun, Jin Young Choi: `"Knowledge Transfer via Distillation of Activation Boundaries Formed by Hidden Neurons" <https://ojs.aaai.org/index.php/AAAI/article/view/4264>`_ @ AAAI 2019 (2019)
+
+    :param feature_pairs: configuration of teacher-student module pairs to compute the loss for distillation of activation boundaries.
+    :type feature_pairs: dict
+    :param margin: margin.
+    :type margin: float
+    :param reduction: loss reduction type.
+    :type reduction: str
+
+    .. code-block:: yaml
+       :caption: An example YAML to instantiate :class:`AltActTransferLoss` for a teacher-student pair of ResNet-34 and ResNet-18 in torchvision, using an auxiliary module :class:`torchdistill.models.wrapper.Connector4DAB`.
+
+        criterion:
+          key: 'AltActTransferLoss'
+          kwargs:
+            feature_pairs:
+              pair1:
+                teacher:
+                  io: 'output'
+                  path: 'layer1'
+                student:
+                  io: 'output'
+                  path: 'connector_dict.connector1'
+                weight: 1
+              pair2:
+                teacher:
+                  io: 'output'
+                  path: 'layer2'
+                student:
+                  io: 'output'
+                  path: 'connector_dict.connector2'
+                weight: 1
+              pair3:
+                teacher:
+                  io: 'output'
+                  path: 'layer3'
+                student:
+                  io: 'output'
+                  path: 'connector_dict.connector3'
+                weight: 1
+              pair4:
+                teacher:
+                  io: 'output'
+                  path: 'layer4'
+                student:
+                  io: 'output'
+                  path: 'connector_dict.connector4'
+                weight: 1
+            margin: 1.0
+            reduction: 'mean'
     """
     def __init__(self, feature_pairs, margin, reduction, **kwargs):
         super().__init__()
@@ -294,8 +535,8 @@ class AltActTransferLoss(nn.Module):
         dab_loss = 0
         batch_size = None
         for pair_name, pair_config in self.feature_pairs.items():
-            student_feature_map = extract_feature_map(student_io_dict, pair_config['student'])
-            teacher_feature_map = extract_feature_map(teacher_io_dict, pair_config['teacher'])
+            student_feature_map = _extract_feature_map(student_io_dict, pair_config['student'])
+            teacher_feature_map = _extract_feature_map(teacher_io_dict, pair_config['teacher'])
             factor = pair_config.get('weight', 1)
             dab_loss += \
                 factor * self.compute_alt_act_transfer_loss(student_feature_map, teacher_feature_map, self.margin)
@@ -307,8 +548,32 @@ class AltActTransferLoss(nn.Module):
 @register_mid_level_loss
 class RKDLoss(nn.Module):
     """
-    "Relational Knowledge Distillation"
-    Refactored https://github.com/lenscloth/RKD/blob/master/metric/loss.py
+    A loss module for relational knowledge distillation (RKD). Refactored https://github.com/lenscloth/RKD/blob/master/metric/loss.py
+
+    Wonpyo Park, Dongju Kim, Yan Lu, Minsu Cho: `"Relational Knowledge Distillation" <https://openaccess.thecvf.com/content_CVPR_2019/html/Park_Relational_Knowledge_Distillation_CVPR_2019_paper.html>`_ @ CVPR 2019 (2019)
+
+    :param student_output_path: student module path whose output is used in this loss module.
+    :type student_output_path: str
+    :param teacher_output_path: teacher module path whose output is used in this loss module.
+    :type teacher_output_path: str
+    :param dist_factor: weight on distance-based RKD loss.
+    :type dist_factor: float
+    :param angle_factor: weight on angle-based RKD loss.
+    :type angle_factor: float
+    :param reduction: ``reduction`` for SmoothL1Loss.
+    :type reduction: str
+
+    .. code-block:: yaml
+       :caption: An example YAML to instantiate :class:`RKDLoss` for a teacher-student pair of ResNet-34 and ResNet-18 in torchvision.
+
+        criterion:
+          key: 'RKDLoss'
+          kwargs:
+            teacher_output_path: 'layer4'
+            student_output_path: 'layer4'
+            dist_factor: 1.0
+            angle_factor: 2.0
+            reduction: 'mean'
     """
     def __init__(self, student_output_path, teacher_output_path, dist_factor, angle_factor, reduction, **kwargs):
         super().__init__()
@@ -369,8 +634,53 @@ class RKDLoss(nn.Module):
 @register_mid_level_loss
 class VIDLoss(nn.Module):
     """
-    "Variational Information Distillation for Knowledge Transfer"
-    Referred to https://github.com/HobbitLong/RepDistiller/blob/master/distiller_zoo/VID.py
+    A loss module for variational information distillation (VID). Referred to https://github.com/HobbitLong/RepDistiller/blob/master/distiller_zoo/VID.py
+
+    Sungsoo Ahn, Shell Xu Hu, Andreas Damianou, Neil D. Lawrence, Zhenwen Dai: `"Variational Information Distillation for Knowledge Transfer" <https://openaccess.thecvf.com/content_CVPR_2019/html/Ahn_Variational_Information_Distillation_for_Knowledge_Transfer_CVPR_2019_paper.html>`_ @ CVPR 2019 (2019)
+
+    :param feature_pairs: configuration of teacher-student module pairs to compute the loss for variational information distillation.
+    :type feature_pairs: dict
+
+    .. code-block:: yaml
+       :caption: An example YAML to instantiate :class:`VIDLoss` for a teacher-student pair of ResNet-50 and ResNet-18 in torchvision, using an auxiliary module :class:`torchdistill.models.wrapper.VariationalDistributor4VID` for the student model.
+
+        criterion:
+          key: 'VIDLoss'
+          kwargs:
+            feature_pairs:
+              pair1:
+                teacher:
+                  io: 'output'
+                  path: 'layer1'
+                student:
+                  io: 'output'
+                  path: 'regressor_dict.regressor1'
+                weight: 1
+              pair2:
+                teacher:
+                  io: 'output'
+                  path: 'layer2'
+                student:
+                  io: 'output'
+                  path: 'regressor_dict.regressor2'
+                weight: 1
+              pair3:
+                teacher:
+                  io: 'output'
+                  path: 'layer3'
+                student:
+                  io: 'output'
+                  path: 'regressor_dict.regressor3'
+                weight: 1
+              pair4:
+                teacher:
+                  io: 'output'
+                  path: 'layer4'
+                student:
+                  io: 'output'
+                  path: 'regressor_dict.regressor4'
+                weight: 1
+            margin: 1.0
     """
     def __init__(self, feature_pairs, **kwargs):
         super().__init__()
@@ -379,8 +689,8 @@ class VIDLoss(nn.Module):
     def forward(self, student_io_dict, teacher_io_dict, *args, **kwargs):
         vid_loss = 0
         for pair_name, pair_config in self.feature_pairs.items():
-            pred_mean, pred_var = extract_feature_map(student_io_dict, pair_config['student'])
-            teacher_feature_map = extract_feature_map(teacher_io_dict, pair_config['teacher'])
+            pred_mean, pred_var = _extract_feature_map(student_io_dict, pair_config['student'])
+            teacher_feature_map = _extract_feature_map(teacher_io_dict, pair_config['teacher'])
             factor = pair_config.get('weight', 1)
             neg_log_prob = 0.5 * ((pred_mean - teacher_feature_map) ** 2 / pred_var + torch.log(pred_var))
             vid_loss += factor * neg_log_prob.mean()
@@ -390,8 +700,32 @@ class VIDLoss(nn.Module):
 @register_mid_level_loss
 class CCKDLoss(nn.Module):
     """
-    "Correlation Congruence for Knowledge Distillation"
-    Configure KDLoss in a yaml file to meet eq. (7), using WeightedSumLoss
+    A loss module for correlation congruence for knowledge distillation (CCKD).
+
+    Baoyun Peng, Xiao Jin, Jiaheng Liu, Dongsheng Li, Yichao Wu, Yu Liu, Shunfeng Zhou, Zhaoning Zhang: `"Correlation Congruence for Knowledge Distillation" <https://openaccess.thecvf.com/content_ICCV_2019/html/Peng_Correlation_Congruence_for_Knowledge_Distillation_ICCV_2019_paper.html>`_ @ ICCV 2019 (2019)
+
+    :param student_linear_path: student model's linear module path in an auxiliary wrapper :class:`torchdistill.models.wrapper.Linear4CCKD`.
+    :type student_linear_path: str
+    :param teacher_linear_path: teacher model's linear module path in an auxiliary wrapper :class:`torchdistill.models.wrapper.Linear4CCKD`.
+    :type teacher_linear_path: str
+    :param kernel_config: kernel ('gaussian' or 'bilinear') configuration.
+    :type kernel_config: dict
+    :param reduction: loss reduction type.
+    :type reduction: str
+
+    .. code-block:: yaml
+       :caption: An example YAML to instantiate :class:`CCKDLoss` for a teacher-student pair of ResNet-50 and ResNet-18 in torchvision, using an auxiliary module :class:`torchdistill.models.wrapper.Linear4CCKD` for the teacher and student models.
+
+        criterion:
+          key: 'CCKDLoss'
+          kwargs:
+            teacher_linear_path: 'linear'
+            student_linear_path: 'linear'
+            kernel_params:
+              key: 'gaussian'
+              gamma: 0.4
+              max_p: 2
+            reduction: 'batchmean'
     """
     def __init__(self, student_linear_path, teacher_linear_path, kernel_config, reduction, **kwargs):
         super().__init__()
@@ -442,7 +776,26 @@ class CCKDLoss(nn.Module):
 @register_mid_level_loss
 class SPKDLoss(nn.Module):
     """
-    "Similarity-Preserving Knowledge Distillation"
+    A loss module for similarity-preserving knowledge distillation (SPKD).
+
+    Frederick Tung, Greg Mori: `"Similarity-Preserving Knowledge Distillation" <https://openaccess.thecvf.com/content_ICCV_2019/html/Tung_Similarity-Preserving_Knowledge_Distillation_ICCV_2019_paper.html>`_ @ ICCV2019 (2019)
+
+    :param student_output_path: student module path whose output is used in this loss module.
+    :type student_output_path: str
+    :param teacher_output_path: teacher module path whose output is used in this loss module.
+    :type teacher_output_path: str
+    :param reduction: loss reduction type.
+    :type reduction: str
+
+    .. code-block:: yaml
+       :caption: An example YAML to instantiate :class:`SPKDLoss` for a teacher-student pair of ResNet-34 and ResNet-18 in torchvision.
+
+        criterion:
+          key: 'SPKDLoss'
+          kwargs:
+            teacher_output_path: 'layer4'
+            student_output_path: 'layer4'
+            reduction: 'batchmean'
     """
     def __init__(self, student_output_path, teacher_output_path, reduction, **kwargs):
         super().__init__()
@@ -471,8 +824,47 @@ class SPKDLoss(nn.Module):
 @register_mid_level_loss
 class CRDLoss(nn.Module):
     """
-    "Contrastive Representation Distillation"
-    Refactored https://github.com/HobbitLong/RepDistiller/blob/master/crd/criterion.py
+    A loss module for contrastive representation distillation (CRD). Refactored https://github.com/HobbitLong/RepDistiller/blob/master/crd/criterion.py
+
+    Yonglong Tian, Dilip Krishnan, Phillip Isola: `"Contrastive Representation Distillation" <https://openreview.net/forum?id=SkgpBJrtvS>`_ @ ICLR 2020 (2020)
+
+    :param student_norm_module_path: student model's normalizer module path (:class:`torchdistill.models.wrapper.Normalizer4CRD` in an auxiliary wrapper :class:`torchdistill.models.wrapper.Linear4CRD`).
+    :type student_norm_module_path: str
+    :param student_empty_module_path: student model's empty module path in an auxiliary wrapper :class:`torchdistill.models.wrapper.Linear4CRD`.
+    :type student_empty_module_path: str
+    :param teacher_norm_module_path: teacher model's normalizer module path (:class:`torchdistill.models.wrapper.Normalizer4CRD` in an auxiliary wrapper :class:`torchdistill.models.wrapper.Linear4CRD`).
+    :type teacher_norm_module_path: str
+    :param input_size: number of input features.
+    :type input_size: int
+    :param output_size: number of output features.
+    :type output_size: int
+    :param num_negative_samples: number of negative samples.
+    :type num_negative_samples: int
+    :param num_samples: number of samples.
+    :type num_samples: int
+    :param temperature: temperature to adjust concentration level (not the temperature for :class:`KDLoss`).
+    :type temperature: float
+    :param momentum: momentum.
+    :type momentum: float
+    :param eps: eps.
+    :type eps: float
+
+    .. code-block:: yaml
+       :caption: An example YAML to instantiate :class:`CRDLoss` for a teacher-student pair of ResNet-34 and ResNet-18 in torchvision, using an auxiliary module :class:`torchdistill.models.wrapper.Linear4CRD` for the teacher and student models.
+
+        criterion:
+          key: 'CRDLoss'
+          kwargs:
+            teacher_norm_module_path: 'normalizer'
+            student_norm_module_path: 'normalizer'
+            student_empty_module_path: 'empty'
+            input_size: *feature_dim
+            output_size: &num_samples 1281167
+            num_negative_samples: *num_negative_samples
+            num_samples: *num_samples
+            temperature: 0.07
+            momentum: 0.5
+            eps: 0.0000001
     """
 
     def init_prob_alias(self, probs):
@@ -530,7 +922,7 @@ class CRDLoss(nn.Module):
         self.init_prob_alias(self.unigrams)
 
     def draw(self, n):
-        """ Draw n samples from multinomial """
+        # Draw n samples from multinomial
         k = self.alias.size(0)
         kk = torch.zeros(n, dtype=torch.long, device=self.prob.device).random_(0, k)
         prob = self.probs.index_select(0, kk)
@@ -618,10 +1010,8 @@ class CRDLoss(nn.Module):
         return loss
 
     def forward(self, student_io_dict, teacher_io_dict, *args, **kwargs):
-        """
-        pos_idx: the indices of these positive samples in the dataset, size [batch_size]
-        contrast_idx: the indices of negative samples, size [batch_size, nce_k]
-        """
+        # pos_idx: the indices of these positive samples in the dataset, size [batch_size]
+        # contrast_idx: the indices of negative samples, size [batch_size, nce_k]
         teacher_linear_outputs = teacher_io_dict[self.teacher_norm_module_path]['output']
         student_linear_outputs = student_io_dict[self.student_norm_module_path]['output']
         supp_dict = student_io_dict[self.student_empty_module_path]['input']
@@ -646,9 +1036,28 @@ class CRDLoss(nn.Module):
 @register_mid_level_loss
 class AuxSSKDLoss(nn.CrossEntropyLoss):
     """
-    Loss of contrastive prediction as self-supervision task (auxiliary task)
-    "Knowledge Distillation Meets Self-Supervision"
+    A loss module for self-supervision knowledge distillation (SSKD) that treats contrastive prediction as
+    a self-supervision task (auxiliary task). This loss module is used at the 1st stage of SSKD method.
     Refactored https://github.com/xuguodong03/SSKD/blob/master/student.py
+
+    Guodong Xu, Ziwei Liu, Xiaoxiao Li, Chen Change Loy: `"Knowledge Distillation Meets Self-Supervision" <https://www.ecva.net/papers/eccv_2020/papers_ECCV/html/898_ECCV_2020_paper.php>`_ @ ECCV 2020 (2020)
+
+    :param module_path: model's self-supervision module path.
+    :type module_path: str
+    :param module_io: 'input' or 'output' of the module in the model.
+    :type module_io: str
+    :param reduction: ``reduction`` for CrossEntropyLoss.
+    :type reduction: str
+
+    .. code-block:: yaml
+       :caption: An example YAML to instantiate :class:`AuxSSKDLoss` for a teacher-student pair of ResNet-34 and ResNet-18 in torchvision, using an auxiliary module :class:`torchdistill.models.wrapper.SSWrapper4SSKD` for teacher model.
+
+        criterion:
+          key: 'AuxSSKDLoss'
+          kwargs:
+            module_path: 'ss_module'
+            module_io: 'output'
+            reduction: 'mean'
     """
     def __init__(self, module_path='ss_module', module_io='output', reduction='mean', **kwargs):
         super().__init__(reduction=reduction, **kwargs)
@@ -676,9 +1085,59 @@ class AuxSSKDLoss(nn.CrossEntropyLoss):
 @register_mid_level_loss
 class SSKDLoss(nn.Module):
     """
-    Loss of contrastive prediction as self-supervision task (auxiliary task)
-    "Knowledge Distillation Meets Self-Supervision"
-    Refactored https://github.com/xuguodong03/SSKD/blob/master/student.py
+    A loss module for self-supervision knowledge distillation (SSKD).
+    This loss module is used at the 2nd stage of SSKD method. Refactored https://github.com/xuguodong03/SSKD/blob/master/student.py
+
+    Guodong Xu, Ziwei Liu, Xiaoxiao Li, Chen Change Loy: `"Knowledge Distillation Meets Self-Supervision" <https://www.ecva.net/papers/eccv_2020/papers_ECCV/html/898_ECCV_2020_paper.php>`_ @ ECCV 2020 (2020)
+
+    :param student_linear_path: student model's linear module path in an auxiliary wrapper :class:`torchdistill.models.wrapper.SSWrapper4SSKD`.
+    :type student_linear_path: str
+    :param teacher_linear_path: teacher model's linear module path in an auxiliary wrapper :class:`torchdistill.models.wrapper.SSWrapper4SSKD`.
+    :type teacher_linear_path: str
+    :param student_ss_module_path: student model's self-supervision module path.
+    :type student_ss_module_path: str
+    :param teacher_ss_module_path: teacher model's self-supervision module path.
+    :type teacher_ss_module_path: str
+    :param kl_temp: temperature to soften teacher and student's class-probability distributions for KL divergence given original data.
+    :type kl_temp: float
+    :param ss_temp: temperature to soften teacher and student's self-supervision cosine similarities for KL divergence.
+    :type ss_temp: float
+    :param tf_temp: temperature to soften teacher and student's class-probability distributions for KL divergence given augmented data by transform.
+    :type tf_temp: float
+    :param ss_ratio: ratio of samples with the smallest error levels used for self-supervision.
+    :type ss_ratio: float
+    :param tf_ratio: ratio of samples with the smallest error levels used for transform.
+    :type tf_ratio: float
+    :param student_linear_module_io: 'input' or 'output' of the linear module in the student model.
+    :type student_linear_module_io: str
+    :param teacher_linear_module_io: 'input' or 'output' of the linear module in the teacher model.
+    :type teacher_linear_module_io: str
+    :param student_ss_module_io: 'input' or 'output' of the self-supervision module in the student model.
+    :type student_ss_module_io: str
+    :param teacher_ss_module_io: 'input' or 'output' of the self-supervision module in the teacher model.
+    :type teacher_ss_module_io: str
+    :param loss_weights: weights for 1) cross-entropy, 2) KL divergence for the original data, 3) KL divergence for self-supervision cosine similarities, and 4) KL divergence for the augmented data by transform.
+    :type loss_weights: list[float] or None
+    :param reduction: ``reduction`` for KLDivLoss. If ``reduction`` = 'batchmean', CrossEntropyLoss's ``reduction`` will be 'mean'.
+    :type reduction: str or None
+
+    .. code-block:: yaml
+       :caption: An example YAML to instantiate :class:`SSKDLoss` for a teacher-student pair of ResNet-34 and ResNet-18 in torchvision, using an auxiliary module :class:`torchdistill.models.wrapper.SSWrapper4SSKD` for the teacher and student models.
+
+        criterion:
+          key: 'SSKDLoss'
+          kwargs:
+            student_linear_module_path: 'model.fc'
+            teacher_linear_module_path: 'model.fc'
+            student_ss_module_path: 'ss_module'
+            teacher_ss_module_path: 'ss_module'
+            kl_temp: 4.0
+            ss_temp: 0.5
+            tf_temp: 4.0
+            ss_ratio: 0.75
+            tf_ratio: 1.0
+            loss_weights: [1.0, 0.9, 10.0, 2.7]
+            reduction: 'batchmean'
     """
     def __init__(self, student_linear_module_path, teacher_linear_module_path, student_ss_module_path,
                  teacher_ss_module_path, kl_temp, ss_temp, tf_temp, ss_ratio, tf_ratio,
@@ -778,11 +1237,45 @@ class SSKDLoss(nn.Module):
 @register_mid_level_loss
 class PADL2Loss(nn.Module):
     """
-    "Prime-Aware Adaptive Distillation"
+    A loss module for prime-aware adaptive distillation (PAD) with L2 loss. This loss module is used at the 2nd stage of PAD method.
+
+    Youcai Zhang, Zhonghao Lan, Yuchen Dai, Fangao Zeng, Yan Bai, Jie Chang, Yichen Wei: `"Prime-Aware Adaptive Distillation" <https://www.ecva.net/papers/eccv_2020/papers_ECCV/html/3317_ECCV_2020_paper.php>`_ @ ECCV 2020 (2020)
+
+    :param student_embed_module_path: student model's embedding module path in an auxiliary wrapper :class:`torchdistill.models.wrapper.VarianceBranch4PAD`.
+    :type student_embed_module_path: str
+    :param teacher_embed_module_path: teacher model's embedding module path.
+    :type teacher_embed_module_path: str
+    :param student_embed_module_io: 'input' or 'output' of the embedding module in the student model.
+    :type student_embed_module_io: str
+    :param teacher_embed_module_io: 'input' or 'output' of the embedding module in the teacher model.
+    :type teacher_embed_module_io: str
+    :param module_path: student model's variance estimator module path in an auxiliary wrapper :class:`torchdistill.models.wrapper.VarianceBranch4PAD`.
+    :type module_path: str
+    :param module_io: 'input' or 'output' of the variance estimator module in the student model.
+    :type module_io: str
+    :param eps: constant to avoid zero division.
+    :type eps: float
+    :param reduction: loss reduction type.
+    :type reduction: str
+
+    .. code-block:: yaml
+       :caption: An example YAML to instantiate :class:`PADL2Loss` for a teacher-student pair of ResNet-34 and ResNet-18 in torchvision, using an auxiliary module :class:`torchdistill.models.wrapper.VarianceBranch4PAD` for the student model.
+
+        criterion:
+          key: 'PADL2Loss'
+          kwargs:
+            student_embed_module_path: 'student_model.avgpool'
+            student_embed_module_io: 'output'
+            teacher_embed_module_path: 'avgpool'
+            teacher_embed_module_io: 'output'
+            module_path: 'var_estimator'
+            module_io: 'output'
+            eps: 0.000001
+            reduction: 'mean'
     """
     def __init__(self, student_embed_module_path, teacher_embed_module_path,
                  student_embed_module_io='output', teacher_embed_module_io='output',
-                 module_path='var_estimator', module_io='output', eps=1e-6, reduction='sum', **kwargs):
+                 module_path='var_estimator', module_io='output', eps=1e-6, reduction='mean', **kwargs):
         super().__init__()
         self.student_embed_module_path = student_embed_module_path
         self.teacher_embed_module_path = teacher_embed_module_path
@@ -802,27 +1295,54 @@ class PADL2Loss(nn.Module):
             (teacher_embed_outputs - student_embed_outputs) ** 2 / (self.eps + torch.exp(log_variances))
             + log_variances, dim=1
         )
-        return squared_losses.mean()
+        return squared_losses.mean() if self.reduction == 'mean' else squared_losses.sum()
 
 
 @register_mid_level_loss
 class HierarchicalContextLoss(nn.Module):
     """
-    "Distilling Knowledge via Knowledge Review"
-    Referred to https://github.com/dvlab-research/ReviewKD/blob/master/ImageNet/models/reviewkd.py
+    A loss module for knowledge review (KR) method. Referred to https://github.com/dvlab-research/ReviewKD/blob/master/ImageNet/models/reviewkd.py
+
+    Pengguang Chen, Shu Liu, Hengshuang Zhao, Jiaya Jia: `"Distilling Knowledge via Knowledge Review" <https://openaccess.thecvf.com/content/CVPR2021/html/Chen_Distilling_Knowledge_via_Knowledge_Review_CVPR_2021_paper.html>`_ @ CVPR 2021 (2021)
+
+    :param student_module_path: student model's module path in an auxiliary wrapper :class:`torchdistill.models.wrapper.Student4KnowledgeReview`.
+    :type student_module_path: str
+    :param student_module_io: 'input' or 'output' of the module in the student model.
+    :type student_module_io: str
+    :param teacher_module_path: teacher model's module path.
+    :type teacher_module_path: str
+    :param teacher_module_io: 'input' or 'output' of the module in the teacher model.
+    :type teacher_module_io: str
+    :param reduction: ``reduction`` for MSELoss.
+    :type reduction: str or None
+    :param output_sizes: output sizes of adaptive_avg_pool2d.
+    :type output_sizes: list[int] or None
+
+    .. code-block:: yaml
+       :caption: An example YAML to instantiate :class:`HierarchicalContextLoss` for a teacher-student pair of ResNet-34 and ResNet-18 in torchvision, using an auxiliary module :class:`torchdistill.models.wrapper.Student4KnowledgeReview` for the student model.
+
+        criterion:
+          key: 'HierarchicalContextLoss'
+          kwargs:
+            student_module_path: 'abf_modules.4'
+            student_module_io: 'output'
+            teacher_module_path: 'layer1.-1.relu'
+            teacher_module_io: 'input'
+            reduction: 'mean'
+            output_sizes: [4, 2, 1]
     """
     def __init__(self, student_module_path, student_module_io, teacher_module_path, teacher_module_io,
-                 reduction='mean', kernel_sizes=None, **kwargs):
+                 reduction='mean', output_sizes=None, **kwargs):
         super().__init__()
-        if kernel_sizes is None:
-            kernel_sizes = [4, 2, 1]
+        if output_sizes is None:
+            output_sizes = [4, 2, 1]
 
         self.student_module_path = student_module_path
         self.student_module_io = student_module_io
         self.teacher_module_path = teacher_module_path
         self.teacher_module_io = teacher_module_io
         self.criteria = nn.MSELoss(reduction=reduction)
-        self.kernel_sizes = kernel_sizes
+        self.output_sizes = output_sizes
 
     def forward(self, student_io_dict, teacher_io_dict, *args, **kwargs):
         student_features, _ = student_io_dict[self.student_module_path][self.student_module_io]
@@ -831,7 +1351,7 @@ class HierarchicalContextLoss(nn.Module):
         loss = self.criteria(student_features, teacher_features)
         weight = 1.0
         total_weight = 1.0
-        for k in self.kernel_sizes:
+        for k in self.output_sizes:
             if k >= h:
                 continue
 
@@ -845,6 +1365,18 @@ class HierarchicalContextLoss(nn.Module):
 
 @register_mid_level_loss
 class RegularizationLoss(nn.Module):
+    """
+    A regularization loss module.
+
+    :param module_path: module path.
+    :type module_path: str
+    :param module_io: 'input' or 'output' of the module in the student model.
+    :type module_io: str
+    :param is_from_teacher: True if you use teacher's I/O dict. Otherwise, you use student's I/O dict.
+    :type is_from_teacher: bool
+    :param p: the order of norm.
+    :type p: int
+    """
     def __init__(self, module_path, io_type='output', is_from_teacher=False, p=1, **kwargs):
         super().__init__()
         self.module_path = module_path
@@ -861,7 +1393,33 @@ class RegularizationLoss(nn.Module):
 @register_mid_level_loss
 class KTALoss(nn.Module):
     """
-    "Knowledge Adaptation for Efficient Semantic Segmentation"
+    A loss module for knowledge translation and adaptation (KTA).
+    This loss module is used at the 2nd stage of KTAAD method.
+
+    Tong He, Chunhua Shen, Zhi Tian, Dong Gong, Changming Sun, Youliang Yan.: `"Knowledge Adaptation for Efficient Semantic Segmentation" <https://openaccess.thecvf.com/content_CVPR_2019/html/He_Knowledge_Adaptation_for_Efficient_Semantic_Segmentation_CVPR_2019_paper.html>`_ @ CVPR 2019 (2019)
+
+    :param p: the order of norm for differences between normalized feature adapter's (flattened) output and knowledge translator's (flattened) output.
+    :type p: int
+    :param q: the order of norm for the denominator to normalize feature adapter (flattened) output.
+    :type q: int
+    :param reduction: loss reduction type.
+    :type reduction: str
+    :param knowledge_translator_path: knowledge translator module path.
+    :type knowledge_translator_path: str
+    :param feature_adapter_path: feature adapter module path.
+    :type feature_adapter_path: str
+
+    .. code-block:: yaml
+       :caption: An example YAML to instantiate :class:`KTALoss` for a teacher-student pair of DeepLabv3 with ResNet50 and LRASPP with MobileNet v3 (Large) in torchvision, using an auxiliary module :class:`torchdistill.models.wrapper.Teacher4FactorTransfer` and :class:`torchdistill.models.wrapper.Student4KTAAD` for the teacher and student models.
+
+        criterion:
+          key: 'KTALoss'
+          kwargs:
+            p: 1
+            q: 2
+            reduction: 'mean'
+            knowledge_translator_path: 'paraphraser.encoder'
+            feature_adapter_path: 'feature_adapter'
     """
     def __init__(self, p=1, q=2, reduction='mean', knowledge_translator_path='paraphraser',
                  feature_adapter_path='feature_adapter', **kwargs):
@@ -891,7 +1449,32 @@ class KTALoss(nn.Module):
 @register_mid_level_loss
 class AffinityLoss(nn.Module):
     """
-    "Knowledge Adaptation for Efficient Semantic Segmentation"
+    A loss module for affinity distillation in KTA. This loss module is used at the 2nd stage of KTAAD method.
+
+    Tong He, Chunhua Shen, Zhi Tian, Dong Gong, Changming Sun, Youliang Yan.: `"Knowledge Adaptation for Efficient Semantic Segmentation" <https://openaccess.thecvf.com/content_CVPR_2019/html/He_Knowledge_Adaptation_for_Efficient_Semantic_Segmentation_CVPR_2019_paper.html>`_ @ CVPR 2019 (2019)
+
+    :param student_module_path: student model's module path in an auxiliary wrapper :class:`torchdistill.models.wrapper.Student4KTAAD`.
+    :type student_module_path: str
+    :param student_module_io: 'input' or 'output' of the module in the student model.
+    :type student_module_io: str
+    :param teacher_module_path: teacher model's module path in an auxiliary wrapper :class:`torchdistill.models.wrapper.Teacher4FactorTransfer`
+    :type teacher_module_path: str
+    :param teacher_module_io: 'input' or 'output' of the module in the teacher model.
+    :type teacher_module_io: str
+    :param reduction: loss reduction type.
+    :type reduction: str or None
+
+    .. code-block:: yaml
+       :caption: An example YAML to instantiate :class:`AffinityLoss` for a teacher-student pair of DeepLabv3 with ResNet50 and LRASPP with MobileNet v3 (Large) in torchvision, using an auxiliary module :class:`torchdistill.models.wrapper.Teacher4FactorTransfer` and :class:`torchdistill.models.wrapper.Student4KTAAD` for the teacher and student models.
+
+        criterion:
+          key: 'AffinityLoss'
+          kwargs:
+            student_module_path: 'affinity_adapter'
+            student_module_io: 'output'
+            teacher_module_path: 'paraphraser.encoder'
+            teacher_module_io: 'output'
+            reduction: 'mean'
     """
     def __init__(self, student_module_path, teacher_module_path,
                  student_module_io='output', teacher_module_io='output', reduction='mean', **kwargs):
