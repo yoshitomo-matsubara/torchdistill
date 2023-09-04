@@ -4,7 +4,7 @@ import torch
 import torch.nn as nn
 from torch import Tensor
 
-from ..registry import register_model_func
+from ..registry import register_model
 from ...common.constant import def_logger
 
 logger = def_logger.getChild(__name__)
@@ -127,7 +127,7 @@ class WideResNet4Cifar(nn.Module):
         return self._forward_impl(x)
 
 
-@register_model_func
+@register_model
 def wide_resnet(
         depth: int,
         k: int,
@@ -168,7 +168,7 @@ def wide_resnet(
     return model
 
 
-@register_model_func
+@register_model
 def wide_resnet40_4(dropout_p=0.3, num_classes=10, pretrained=False, progress=True, **kwargs: Any):
     """
     WRN-40-4 model.
@@ -189,7 +189,7 @@ def wide_resnet40_4(dropout_p=0.3, num_classes=10, pretrained=False, progress=Tr
     return wide_resnet(40, 4, dropout_p, num_classes, pretrained, progress, **kwargs)
 
 
-@register_model_func
+@register_model
 def wide_resnet28_10(dropout_p=0.3, num_classes=10, pretrained=False, progress=True, **kwargs: Any):
     """
     WRN-28-10 model.
@@ -210,7 +210,7 @@ def wide_resnet28_10(dropout_p=0.3, num_classes=10, pretrained=False, progress=T
     return wide_resnet(28, 10, dropout_p, num_classes, pretrained, progress, **kwargs)
 
 
-@register_model_func
+@register_model
 def wide_resnet16_8(dropout_p=0.3, num_classes=10, pretrained=False, progress=True, **kwargs: Any):
     """
     WRN-16-8 model.

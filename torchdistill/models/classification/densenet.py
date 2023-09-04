@@ -7,7 +7,7 @@ import torch.nn.functional as F
 from torch import Tensor
 from torchvision.models.densenet import _DenseBlock, _Transition
 
-from ..registry import register_model_func
+from ..registry import register_model
 from ...common.constant import def_logger
 
 logger = def_logger.getChild(__name__)
@@ -104,7 +104,7 @@ class DenseNet4Cifar(nn.Module):
         return out
 
 
-@register_model_func
+@register_model
 def densenet(
     growth_rate: int,
     depth: int,
@@ -153,7 +153,7 @@ def densenet(
     return model
 
 
-@register_model_func
+@register_model
 def densenet_bc_k12_depth100(num_classes=10, pretrained=False, progress=True, **kwargs: Any):
     """
     DenseNet-BC (k=12, depth=100) model.
@@ -172,7 +172,7 @@ def densenet_bc_k12_depth100(num_classes=10, pretrained=False, progress=True, **
     return densenet(12, 100, 16, True, num_classes, pretrained, progress, **kwargs)
 
 
-@register_model_func
+@register_model
 def densenet_bc_k24_depth250(num_classes=10, pretrained=False, progress=True, **kwargs: Any):
     """
     DenseNet-BC (k=24, depth=250) model.
@@ -191,7 +191,7 @@ def densenet_bc_k24_depth250(num_classes=10, pretrained=False, progress=True, **
     return densenet(24, 250, 16, True, num_classes, pretrained, progress, **kwargs)
 
 
-@register_model_func
+@register_model
 def densenet_bc_k40_depth190(num_classes=10, pretrained=False, progress=True, **kwargs: Any):
     """
     DenseNet-BC (k=40, depth=190) model.

@@ -6,10 +6,10 @@ from torchvision.models import densenet169, densenet201
 
 from ..base import BottleneckBase
 from ..registry import get_bottleneck_processor
-from ....registry import register_model_class, register_model_func
+from ....registry import register_model, register_model
 
 
-@register_model_class
+@register_model
 class Bottleneck4DenseNet(BottleneckBase):
     """
     Head Network Distillation: Splitting Distilled Deep Neural Networks for Resource-constrained Edge Computing Systems
@@ -45,7 +45,7 @@ class Bottleneck4DenseNet(BottleneckBase):
         super().__init__(encoder=encoder, decoder=decoder, compressor=compressor, decompressor=decompressor)
 
 
-@register_model_class
+@register_model
 class CustomDenseNet(nn.Module):
     def __init__(self, bottleneck, short_feature_names, org_densenet):
         super().__init__()
@@ -72,7 +72,7 @@ class CustomDenseNet(nn.Module):
         return self.classifier(z)
 
 
-@register_model_func
+@register_model
 def custom_densenet169(bottleneck_channel=12, bottleneck_idx=7, compressor=None, decompressor=None,
                        short_feature_names=None, **kwargs):
     if short_feature_names is None:
@@ -89,7 +89,7 @@ def custom_densenet169(bottleneck_channel=12, bottleneck_idx=7, compressor=None,
     return CustomDenseNet(bottleneck, short_feature_names, org_model)
 
 
-@register_model_func
+@register_model
 def custom_densenet201(bottleneck_channel=12, bottleneck_idx=7, compressor=None, decompressor=None,
                        short_feature_names=None, **kwargs):
     if short_feature_names is None:

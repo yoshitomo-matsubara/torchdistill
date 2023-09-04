@@ -5,7 +5,7 @@ import torch.nn as nn
 from torch import Tensor
 from torchvision.models.resnet import BasicBlock, conv1x1
 
-from ..registry import register_model_func
+from ..registry import register_model
 from ...common.constant import def_logger
 
 logger = def_logger.getChild(__name__)
@@ -138,7 +138,7 @@ class ResNet4Cifar(nn.Module):
         return self._forward_impl(x)
 
 
-@register_model_func
+@register_model
 def resnet(
         depth: int,
         num_classes: int,
@@ -174,7 +174,7 @@ def resnet(
     return model
 
 
-@register_model_func
+@register_model
 def resnet20(num_classes=10, pretrained=False, progress=True, **kwargs: Any):
     """
     ResNet-20 model.
@@ -193,7 +193,7 @@ def resnet20(num_classes=10, pretrained=False, progress=True, **kwargs: Any):
     return resnet(20, num_classes, pretrained, progress, **kwargs)
 
 
-@register_model_func
+@register_model
 def resnet32(num_classes=10, pretrained=False, progress=True, **kwargs: Any) -> ResNet4Cifar:
     """
     ResNet-32 model.
@@ -212,7 +212,7 @@ def resnet32(num_classes=10, pretrained=False, progress=True, **kwargs: Any) -> 
     return resnet(32, num_classes, pretrained, progress, **kwargs)
 
 
-@register_model_func
+@register_model
 def resnet44(num_classes=10, pretrained=False, progress=True, **kwargs: Any) -> ResNet4Cifar:
     """
     ResNet-44 model.
@@ -231,7 +231,7 @@ def resnet44(num_classes=10, pretrained=False, progress=True, **kwargs: Any) -> 
     return resnet(44, num_classes, pretrained, progress, **kwargs)
 
 
-@register_model_func
+@register_model
 def resnet56(num_classes=10, pretrained=False, progress=True, **kwargs: Any) -> ResNet4Cifar:
     """
     ResNet-56 model.
@@ -250,7 +250,7 @@ def resnet56(num_classes=10, pretrained=False, progress=True, **kwargs: Any) -> 
     return resnet(56, num_classes, pretrained, progress, **kwargs)
 
 
-@register_model_func
+@register_model
 def resnet110(num_classes=10, pretrained=False, progress=True, **kwargs: Any) -> ResNet4Cifar:
     """
     ResNet-110 model.
@@ -269,7 +269,7 @@ def resnet110(num_classes=10, pretrained=False, progress=True, **kwargs: Any) ->
     return resnet(110, num_classes, pretrained, progress, **kwargs)
 
 
-@register_model_func
+@register_model
 def resnet1202(num_classes=10, pretrained=False, progress=True, **kwargs: Any) -> ResNet4Cifar:
     """
     ResNet-1202 model.
