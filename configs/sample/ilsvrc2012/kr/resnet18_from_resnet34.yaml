@@ -118,33 +118,33 @@ train:
           - path: 'student_model.layer1.-1.relu'
             io: 'input'
             kwargs:
-              in_channel: 64
-              mid_channel: 512
-              out_channel: 64
+              in_channels: 64
+              mid_channels: 512
+              out_channels: 64
           - path: 'student_model.layer2.-1.relu'
             io: 'input'
             kwargs:
-              in_channel: 128
-              mid_channel: 512
-              out_channel: 128
+              in_channels: 128
+              mid_channels: 512
+              out_channels: 128
           - path: 'student_model.layer3.-1.relu'
             io: 'input'
             kwargs:
-              in_channel: 256
-              mid_channel: 512
-              out_channel: 256
+              in_channels: 256
+              mid_channels: 512
+              out_channels: 256
           - path: 'student_model.layer4.-1.relu'
             io: 'input'
             kwargs:
-              in_channel: 512
-              mid_channel: 512
-              out_channel: 512
+              in_channels: 512
+              mid_channels: 512
+              out_channels: 512
           - path: 'student_model.avgpool'
             io: 'output'
             kwargs:
-              in_channel: 512
-              mid_channel: 512
-              out_channel: 512
+              in_channels: 512
+              mid_channels: 512
+              out_channels: 512
         sizes: [1, 7, 14, 28, 56]
     forward_hook:
       input: ['student_model.layer1.-1.relu', 'student_model.layer2.-1.relu', 'student_model.layer3.-1.relu', 'student_model.layer4.-1.relu']
