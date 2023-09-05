@@ -5,10 +5,10 @@ from torchvision.models.detection.mask_rcnn import MaskRCNN
 from torchvision.ops import MultiScaleRoIAlign
 
 from .resnet_backbone import custom_resnet_fpn_backbone
-from ....registry import register_model_func
+from ....registry import register_model
 
 
-@register_model_func
+@register_model
 def custom_fasterrcnn_resnet_fpn(backbone, weights=None, progress=True,
                                  num_classes=91, trainable_backbone_layers=3, **kwargs):
     backbone_key = backbone['key']
@@ -31,7 +31,7 @@ def custom_fasterrcnn_resnet_fpn(backbone, weights=None, progress=True,
     return model
 
 
-@register_model_func
+@register_model
 def custom_maskrcnn_resnet_fpn(backbone, weights=None, progress=True,
                                num_classes=91, trainable_backbone_layers=3, **kwargs):
     backbone_key = backbone['key']
@@ -58,7 +58,7 @@ def custom_maskrcnn_resnet_fpn(backbone, weights=None, progress=True,
     return model
 
 
-@register_model_func
+@register_model
 def custom_keypointrcnn_resnet_fpn(backbone, weights=None, progress=True, num_classes=2, num_keypoints=17,
                                    trainable_backbone_layers=3, **kwargs):
     backbone_key = backbone['key']

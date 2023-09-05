@@ -5,10 +5,10 @@ from torchvision.models import inception_v3
 
 from ..base import BottleneckBase
 from ..registry import get_bottleneck_processor
-from ....registry import register_model_class, register_model_func
+from ....registry import register_model, register_model
 
 
-@register_model_class
+@register_model
 class Bottleneck4Inception3(BottleneckBase):
     """
     Head Network Distillation: Splitting Distilled Deep Neural Networks for Resource-constrained Edge Computing Systems
@@ -38,7 +38,7 @@ class Bottleneck4Inception3(BottleneckBase):
         super().__init__(encoder=encoder, decoder=decoder, compressor=compressor, decompressor=decompressor)
 
 
-@register_model_class
+@register_model
 class CustomInception3(nn.Sequential):
     def __init__(self, bottleneck, short_module_names, org_model):
         module_dict = OrderedDict()
@@ -65,7 +65,7 @@ class CustomInception3(nn.Sequential):
         super().__init__(module_dict)
 
 
-@register_model_func
+@register_model
 def custom_inception_v3(bottleneck_channel=12, bottleneck_idx=7, compressor=None, decompressor=None,
                         short_module_names=None, **kwargs):
     if short_module_names is None:

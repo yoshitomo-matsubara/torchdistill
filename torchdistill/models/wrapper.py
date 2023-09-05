@@ -14,6 +14,11 @@ logger = def_logger.getChild(__name__)
 
 
 class AuxiliaryModelWrapper(nn.Module):
+    """
+    An abstract auxiliary model wrapper.
+
+    :meth:`forward`, :meth:`secondary_forward`, and :meth:`post_epoch_process` should be overridden by all subclasses.
+    """
     def __init__(self):
         super().__init__()
 
@@ -26,6 +31,11 @@ class AuxiliaryModelWrapper(nn.Module):
 
 @register_auxiliary_model_wrapper
 class EmptyModule(AuxiliaryModelWrapper):
+    """
+    An empty auxiliary model wrapper. This module returns input as output and is useful when you want to replace
+    your teacher/student model with an empty model for saving inference time.
+    e.g., Multi-stage knowledge distillation may have some stages that do not require either teacher or student models.
+    """
     def __init__(self, **kwargs):
         super().__init__()
 
@@ -35,8 +45,24 @@ class EmptyModule(AuxiliaryModelWrapper):
 
 class Paraphraser4FactorTransfer(nn.Module):
     """
-    Paraphraser for factor transfer described in the supplementary material of
-    "Paraphrasing Complex Network: Network Compression via Factor Transfer"
+    Paraphraser for factor transfer (FT). This module is used at the 1st and 2nd stages of FT method.
+
+    Jangho Kim, Seonguk Park, Nojun Kwak: `"Paraphrasing Complex Network: Network Compression via Factor Transfer" <https://papers.neurips.cc/paper_files/paper/2018/hash/6d9cb7de5e8ac30bd5e8734bc96a35c1-Abstract.html>`_ @ NeurIPS 2018 (2018)
+
+    :param k: paraphrase rate.
+    :type k: float
+    :param num_input_channels: number of input channels.
+    :type num_input_channels: int
+    :param kernel_size: ``kernel_size`` for Conv2d.
+    :type kernel_size: int
+    :param stride: ``stride`` for Conv2d.
+    :type stride: int
+    :param padding: ``padding`` for Conv2d.
+    :type padding: int
+    :param uses_bn: if True, uses BatchNorm2d.
+    :type uses_bn: bool
+    :param uses_decoder: if True, uses decoder in :meth:`forward`.
+    :type uses_decoder: bool
     """
     @staticmethod
     def make_tail_modules(num_output_channels, uses_bn):
@@ -89,9 +115,21 @@ class Paraphraser4FactorTransfer(nn.Module):
 
 class Translator4FactorTransfer(nn.Sequential):
     """
-    Translator for factor transfer described in the supplementary material of
-    "Paraphrasing Complex Network: Network Compression via Factor Transfer"
-    Note that "the student translator has the same three convolution layers as the paraphraser"
+    Translator for factor transfer (FT). This module is used at the 2nd stage of FT method.
+    Note that "the student translator has the same three convolution layers as the paraphraser".
+
+    Jangho Kim, Seonguk Park, Nojun Kwak: `"Paraphrasing Complex Network: Network Compression via Factor Transfer" <https://papers.neurips.cc/paper_files/paper/2018/hash/6d9cb7de5e8ac30bd5e8734bc96a35c1-Abstract.html>`_ @ NeurIPS 2018 (2018)
+
+    :param num_input_channels: number of input channels.
+    :type num_input_channels: int
+    :param kernel_size: ``kernel_size`` for Conv2d.
+    :type kernel_size: int
+    :param stride: ``stride`` for Conv2d.
+    :type stride: int
+    :param padding: ``padding`` for Conv2d.
+    :type padding: int
+    :param uses_bn: if True, uses BatchNorm2d.
+    :type uses_bn: bool
     """
     def __init__(self, num_input_channels, num_output_channels, kernel_size=3, stride=1, padding=1, uses_bn=True):
         super().__init__(
@@ -107,7 +145,28 @@ class Translator4FactorTransfer(nn.Sequential):
 @register_auxiliary_model_wrapper
 class Teacher4FactorTransfer(AuxiliaryModelWrapper):
     """
-    Teacher for factor transfer proposed in "Paraphrasing Complex Network: Network Compression via Factor Transfer"
+    An auxiliary teacher model wrapper for factor transfer (FT), including paraphraser :class:`Paraphraser4FactorTransfer`.
+
+    Jangho Kim, Seonguk Park, Nojun Kwak: `"Paraphrasing Complex Network: Network Compression via Factor Transfer" <https://papers.neurips.cc/paper_files/paper/2018/hash/6d9cb7de5e8ac30bd5e8734bc96a35c1-Abstract.html>`_ @ NeurIPS 2018 (2018)
+
+    :param teacher_model: teacher model.
+    :type teacher_model: nn.Module
+    :param minimal: ``model_config`` for :meth:`build_auxiliary_model_wrapper` if you want to.
+    :type minimal: dict or None
+    :param input_module_path: path of module whose output is used as input to paraphraser.
+    :type input_module_path: str
+    :param paraphraser_kwargs: kwargs to instantiate :class:`Paraphraser4FactorTransfer`.
+    :type paraphraser_kwargs: dict
+    :param uses_decoder: ``uses_decoder`` for :class:`Paraphraser4FactorTransfer`.
+    :type uses_decoder: bool
+    :param device: target device.
+    :type device: torch.device
+    :param device_ids: target device IDs.
+    :type device_ids: list[int]
+    :param distributed: whether to be in distributed training mode.
+    :type distributed: bool
+    :param find_unused_parameters: ``find_unused_parameters`` for DistributedDataParallel.
+    :type find_unused_parameters: bool or None
     """
     def __init__(self, teacher_model, minimal, input_module_path,
                  paraphraser_kwargs, paraphraser_ckpt, uses_decoder, device, device_ids, distributed,
@@ -150,7 +209,24 @@ class Teacher4FactorTransfer(AuxiliaryModelWrapper):
 @register_auxiliary_model_wrapper
 class Student4FactorTransfer(AuxiliaryModelWrapper):
     """
-    Student for factor transfer proposed in "Paraphrasing Complex Network: Network Compression via Factor Transfer"
+    An auxiliary student model wrapper for factor transfer (FT), including translator :class:`Translator4FactorTransfer`.
+
+    Jangho Kim, Seonguk Park, Nojun Kwak: `"Paraphrasing Complex Network: Network Compression via Factor Transfer" <https://papers.neurips.cc/paper_files/paper/2018/hash/6d9cb7de5e8ac30bd5e8734bc96a35c1-Abstract.html>`_ @ NeurIPS 2018 (2018)
+
+    :param student_model: student model.
+    :type student_model: nn.Module
+    :param input_module_path: path of module whose output is used as input to paraphraser.
+    :type input_module_path: str
+    :param translator_kwargs: kwargs to instantiate :class:`Translator4FactorTransfer`.
+    :type translator_kwargs: dict
+    :param device: target device.
+    :type device: torch.device
+    :param device_ids: target device IDs.
+    :type device_ids: list[int]
+    :param distributed: whether to be in distributed training mode.
+    :type distributed: bool
+    :param find_unused_parameters: ``find_unused_parameters`` for DistributedDataParallel.
+    :type find_unused_parameters: bool or None
     """
     def __init__(self, student_model, input_module_path, translator_kwargs, device, device_ids, distributed,
                  find_unused_parameters=None, **kwargs):
@@ -172,7 +248,22 @@ class Student4FactorTransfer(AuxiliaryModelWrapper):
 @register_auxiliary_model_wrapper
 class Connector4DAB(AuxiliaryModelWrapper):
     """
-    Connector proposed in "Knowledge Transfer via Distillation of Activation Boundaries Formed by Hidden Neurons"
+    An auxiliary student model wrapper with connector for distillation of activation boundaries (DAB).
+
+    Byeongho Heo, Minsik Lee, Sangdoo Yun, Jin Young Choi: `"Knowledge Transfer via Distillation of Activation Boundaries Formed by Hidden Neurons" <https://ojs.aaai.org/index.php/AAAI/article/view/4264>`_ @ AAAI 2019 (2019)
+
+    :param student_model: student model.
+    :type student_model: nn.Module
+    :param connectors: connector keys and configurations.
+    :type connectors: dict
+    :param device: target device.
+    :type device: torch.device
+    :param device_ids: target device IDs.
+    :type device_ids: list[int]
+    :param distributed: whether to be in distributed training mode.
+    :type distributed: bool
+    :param find_unused_parameters: ``find_unused_parameters`` for DistributedDataParallel.
+    :type find_unused_parameters: bool or None
     """
     @staticmethod
     def build_connector(conv2d_kwargs, bn2d_kwargs=None):
@@ -204,6 +295,22 @@ class Connector4DAB(AuxiliaryModelWrapper):
 
 
 class Regressor4VID(nn.Module):
+    """
+    An auxiliary module for variational information distillation (VID).
+
+    Sungsoo Ahn, Shell Xu Hu, Andreas Damianou, Neil D. Lawrence, Zhenwen Dai: `"Variational Information Distillation for Knowledge Transfer" <https://openaccess.thecvf.com/content_CVPR_2019/html/Ahn_Variational_Information_Distillation_for_Knowledge_Transfer_CVPR_2019_paper.html>`_ @ CVPR 2019 (2019)
+
+    :param in_channels: number of input channels for the first convolution layer.
+    :type in_channels: int
+    :param mid_channels: number of output/input channels for the first/second convolution layer.
+    :type mid_channels: int
+    :param out_channels: number of output channels for the third convolution layer.
+    :type out_channels: int
+    :param eps: eps.
+    :type eps: float
+    :param init_pred_var: minimum variance introduced for numerical stability.
+    :type init_pred_var: float
+    """
     def __init__(self, in_channels, middle_channels, out_channels, eps, init_pred_var, **kwargs):
         super().__init__()
         self.regressor = nn.Sequential(
@@ -228,7 +335,24 @@ class Regressor4VID(nn.Module):
 @register_auxiliary_model_wrapper
 class VariationalDistributor4VID(AuxiliaryModelWrapper):
     """
-    "Variational Information Distillation for Knowledge Transfer"
+    An auxiliary student model wrapper for variational information distillation (VID), including translator :class:`Regressor4VID`.
+
+    Sungsoo Ahn, Shell Xu Hu, Andreas Damianou, Neil D. Lawrence, Zhenwen Dai: `"Variational Information Distillation for Knowledge Transfer" <https://openaccess.thecvf.com/content_CVPR_2019/html/Ahn_Variational_Information_Distillation_for_Knowledge_Transfer_CVPR_2019_paper.html>`_ @ CVPR 2019 (2019)
+
+    :param student_model: student model.
+    :type student_model: nn.Module
+    :param in_channels: number of input channels for the first convolution layer.
+    :type in_channels: int
+    :param regressors: regressor keys and configurations.
+    :type regressors: dict
+    :param device: target device.
+    :type device: torch.device
+    :param device_ids: target device IDs.
+    :type device_ids: list[int]
+    :param distributed: whether to be in distributed training mode.
+    :type distributed: bool
+    :param find_unused_parameters: ``find_unused_parameters`` for DistributedDataParallel.
+    :type find_unused_parameters: bool or None
     """
     def __init__(self, student_model, regressors, device, device_ids, distributed, find_unused_parameters=None,
                  **kwargs):
@@ -254,8 +378,27 @@ class VariationalDistributor4VID(AuxiliaryModelWrapper):
 @register_auxiliary_model_wrapper
 class Linear4CCKD(AuxiliaryModelWrapper):
     """
-    Fully-connected layer to cope with a mismatch of feature representations of teacher and student network for
-    "Correlation Congruence for Knowledge Distillation"
+    An auxiliary teacher/student model wrapper for correlation congruence for knowledge distillation (CCKD).
+    Fully-connected layers cope with a mismatch of feature representations of teacher and student models.
+
+    Baoyun Peng, Xiao Jin, Jiaheng Liu, Dongsheng Li, Yichao Wu, Yu Liu, Shunfeng Zhou, Zhaoning Zhang: `"Correlation Congruence for Knowledge Distillation" <https://openaccess.thecvf.com/content_ICCV_2019/html/Peng_Correlation_Congruence_for_Knowledge_Distillation_ICCV_2019_paper.html>`_ @ ICCV 2019 (2019)
+
+    :param input_module: input module configuration.
+    :type input_module: dict
+    :param linear_kwargs: kwargs for Linear.
+    :type linear_kwargs: dict
+    :param device: target device.
+    :type device: torch.device
+    :param device_ids: target device IDs.
+    :type device_ids: list[int]
+    :param distributed: whether to be in distributed training mode.
+    :type distributed: bool
+    :param teacher_model: teacher model.
+    :type teacher_model: nn.Module or None
+    :param student_model: student model.
+    :type student_model: nn.Module or None
+    :param find_unused_parameters: ``find_unused_parameters`` for DistributedDataParallel.
+    :type find_unused_parameters: bool or None
     """
     def __init__(self, input_module, linear_kwargs, device, device_ids, distributed,
                  teacher_model=None, student_model=None, find_unused_parameters=None, **kwargs):
@@ -283,6 +426,16 @@ class Linear4CCKD(AuxiliaryModelWrapper):
 
 
 class Normalizer4CRD(nn.Module):
+    """
+    An auxiliary module for contrastive representation distillation (CRD).
+
+    Yonglong Tian, Dilip Krishnan, Phillip Isola: `"Contrastive Representation Distillation" <https://openreview.net/forum?id=SkgpBJrtvS>`_ @ ICLR 2020 (2020)
+
+    :param linear: linear module.
+    :type linear: nn.Module
+    :param power: the exponents.
+    :type power: int
+    """
     def __init__(self, linear, power=2):
         super().__init__()
         self.linear = linear
@@ -298,8 +451,29 @@ class Normalizer4CRD(nn.Module):
 @register_auxiliary_model_wrapper
 class Linear4CRD(AuxiliaryModelWrapper):
     """
-    "Contrastive Representation Distillation"
+    An auxiliary teacher/student model wrapper for contrastive representation distillation (CRD), including translator :class:`Normalizer4CRD`.
     Refactored https://github.com/HobbitLong/RepDistiller/blob/master/crd/memory.py
+
+    Yonglong Tian, Dilip Krishnan, Phillip Isola: `"Contrastive Representation Distillation" <https://openreview.net/forum?id=SkgpBJrtvS>`_ @ ICLR 2020 (2020)
+
+    :param input_module_path: path of module whose output will be flattened and then used as input to normalizer.
+    :type input_module_path: str
+    :param linear_kwargs: kwargs for Linear.
+    :type linear_kwargs: dict
+    :param device: target device.
+    :type device: torch.device
+    :param device_ids: target device IDs.
+    :type device_ids: list[int]
+    :param distributed: whether to be in distributed training mode.
+    :type distributed: bool
+    :param power: ``power`` for :class:`Normalizer4CRD`.
+    :type power: int
+    :param teacher_model: teacher model.
+    :type teacher_model: nn.Module or None
+    :param student_model: student model.
+    :type student_model: nn.Module or None
+    :param find_unused_parameters: ``find_unused_parameters`` for DistributedDataParallel.
+    :type find_unused_parameters: bool or None
     """
     def __init__(self, input_module_path, linear_kwargs, device, device_ids, distributed, power=2,
                  teacher_model=None, student_model=None, find_unused_parameters=None, **kwargs):
@@ -331,6 +505,17 @@ class Linear4CRD(AuxiliaryModelWrapper):
 
 @register_auxiliary_model_wrapper
 class HeadRCNN(AuxiliaryModelWrapper):
+    """
+    An auxiliary teacher/student model wrapper for head network distillation (HND) and generalized head network distillation (GHND).
+
+    * Yoshitomo Matsubara, Sabur Baidya, Davide Callegaro, Marco Levorato, Sameer Singh: `"Distilled Split Deep Neural Networks for Edge-Assisted Real-Time Systems" <https://dl.acm.org/doi/10.1145/3349614.3356022>`_ @ MobiCom 2019 Workshop on Hot Topics in Video Analytics and Intelligent Edges (2019)
+    * Yoshitomo Matsubara, Marco Levorato: `"Neural Compression and Filtering for Edge-assisted Real-time Object Detection in Challenged Networks"  <https://arxiv.org/abs/2007.15818>`_ @ ICPR 2020 (2021)
+
+    :param head_rcnn: head R-CNN configuration as ``model_config`` in :meth:`torchdistill.models.util.redesign_model`.
+    :type head_rcnn: dict
+    :param kwargs: ``teacher_model`` or ``student_model`` keys must be included. If both ``teacher_model`` and ``student_model`` are provided, ``student_model`` will be prioritized.
+    :type kwargs: dict
+    """
     def __init__(self, head_rcnn, **kwargs):
         super().__init__()
         tmp_ref_model = kwargs.get('teacher_model', None)
@@ -355,7 +540,31 @@ class HeadRCNN(AuxiliaryModelWrapper):
 @register_auxiliary_model_wrapper
 class SSWrapper4SSKD(AuxiliaryModelWrapper):
     """
-    Semi-supervision wrapper for "Knowledge Distillation Meets Self-Supervision"
+    An auxiliary teacher/student model wrapper for self-supervision knowledge distillation (SSKD).
+    If both ``teacher_model`` and ``student_model`` are provided, ``student_model`` will be prioritized
+
+    Guodong Xu, Ziwei Liu, Xiaoxiao Li, Chen Change Loy: `"Knowledge Distillation Meets Self-Supervision" <https://www.ecva.net/papers/eccv_2020/papers_ECCV/html/898_ECCV_2020_paper.php>`_ @ ECCV 2020 (2020)
+
+    :param input_module: input module configuration.
+    :type input_module: dict
+    :param feat_dim: number of input/output features for self-supervision module.
+    :type feat_dim: int
+    :param ss_module_ckpt: self-supervision module checkpoint file path.
+    :type ss_module_ckpt: str
+    :param device: target device.
+    :type device: torch.device
+    :param device_ids: target device IDs.
+    :type device_ids: list[int]
+    :param distributed: whether to be in distributed training mode.
+    :type distributed: bool
+    :param freezes_ss_module: if True, freezes self-supervision module.
+    :type freezes_ss_module: bool
+    :param teacher_model: teacher model.
+    :type teacher_model: nn.Module or None
+    :param student_model: student model.
+    :type student_model: nn.Module or None
+    :param find_unused_parameters: ``find_unused_parameters`` for DistributedDataParallel.
+    :type find_unused_parameters: bool or None
     """
     def __init__(self, input_module, feat_dim, ss_module_ckpt, device, device_ids, distributed, freezes_ss_module=False,
                  teacher_model=None, student_model=None, find_unused_parameters=None, **kwargs):
@@ -397,7 +606,26 @@ class SSWrapper4SSKD(AuxiliaryModelWrapper):
 @register_auxiliary_model_wrapper
 class VarianceBranch4PAD(AuxiliaryModelWrapper):
     """
-    Variance branch wrapper for "Prime-Aware Adaptive Distillation"
+    An auxiliary teacher/student model wrapper for prime-aware adaptive distillation (PAD).
+
+    Youcai Zhang, Zhonghao Lan, Yuchen Dai, Fangao Zeng, Yan Bai, Jie Chang, Yichen Wei: `"Prime-Aware Adaptive Distillation" <https://www.ecva.net/papers/eccv_2020/papers_ECCV/html/3317_ECCV_2020_paper.php>`_ @ ECCV 2020 (2020)
+
+    :param student_model: student model.
+    :type student_model: nn.Module
+    :param input_module: input module configuration.
+    :type input_module: dict
+    :param feat_dim: number of input/output features for self-supervision module.
+    :type feat_dim: int
+    :param var_estimator_ckpt: variance estimator module checkpoint file path.
+    :type var_estimator_ckpt: str
+    :param device: target device.
+    :type device: torch.device
+    :param device_ids: target device IDs.
+    :type device_ids: list[int]
+    :param distributed: whether to be in distributed training mode.
+    :type distributed: bool
+    :param find_unused_parameters: ``find_unused_parameters`` for DistributedDataParallel.
+    :type find_unused_parameters: bool or None
     """
     def __init__(self, student_model, input_module, feat_dim, var_estimator_ckpt,
                  device, device_ids, distributed, find_unused_parameters=None, **kwargs):
@@ -428,21 +656,29 @@ class VarianceBranch4PAD(AuxiliaryModelWrapper):
 
 class AttentionBasedFusion(nn.Module):
     """
-    Attention based fusion module in "Distilling Knowledge via Knowledge Review"
-    Refactored https://github.com/dvlab-research/ReviewKD/blob/master/ImageNet/models/reviewkd.py
+    An auxiliary module for knowledge review (KR). Refactored https://github.com/dvlab-research/ReviewKD/blob/master/ImageNet/models/reviewkd.py
+
+    Pengguang Chen, Shu Liu, Hengshuang Zhao, Jiaya Jia: `"Distilling Knowledge via Knowledge Review" <https://openaccess.thecvf.com/content/CVPR2021/html/Chen_Distilling_Knowledge_via_Knowledge_Review_CVPR_2021_paper.html>`_ @ CVPR 2021 (2021)
+
+    :param in_channels: number of input channels for the first convolution layer.
+    :type in_channels: int
+    :param mid_channels: number of output/input channels for the first/second convolution layer.
+    :type mid_channels: int
+    :param out_channels: number of output channels for the third convolution layer.
+    :type out_channels: int
     """
-    def __init__(self, in_channel, mid_channel, out_channel, uses_attention):
+    def __init__(self, in_channels, mid_channels, out_channels, uses_attention):
         super().__init__()
         self.conv1 = nn.Sequential(
-            nn.Conv2d(in_channel, mid_channel, kernel_size=1, bias=False),
-            nn.BatchNorm2d(mid_channel),
+            nn.Conv2d(in_channels, mid_channels, kernel_size=1, bias=False),
+            nn.BatchNorm2d(mid_channels),
         )
         self.conv2 = nn.Sequential(
-            nn.Conv2d(mid_channel, out_channel, kernel_size=3, stride=1, padding=1, bias=False),
-            nn.BatchNorm2d(out_channel),
+            nn.Conv2d(mid_channels, out_channels, kernel_size=3, stride=1, padding=1, bias=False),
+            nn.BatchNorm2d(out_channels),
         )
         self.attention_conv = None if not uses_attention \
-            else nn.Sequential(nn.Conv2d(mid_channel*2, 2, kernel_size=1), nn.Sigmoid())
+            else nn.Sequential(nn.Conv2d(mid_channels * 2, 2, kernel_size=1), nn.Sigmoid())
         nn.init.kaiming_uniform_(self.conv1[0].weight, a=1)
         nn.init.kaiming_uniform_(self.conv2[0].weight, a=1)
 
@@ -464,8 +700,22 @@ class AttentionBasedFusion(nn.Module):
 @register_auxiliary_model_wrapper
 class Student4KnowledgeReview(AuxiliaryModelWrapper):
     """
-    Student for knowledge review proposed in "Distilling Knowledge via Knowledge Review"
-    Refactored https://github.com/dvlab-research/ReviewKD/blob/master/ImageNet/models/reviewkd.py
+    An auxiliary student model wrapper for knowledge review (KR). Refactored https://github.com/dvlab-research/ReviewKD/blob/master/ImageNet/models/reviewkd.py
+
+    Pengguang Chen, Shu Liu, Hengshuang Zhao, Jiaya Jia: `"Distilling Knowledge via Knowledge Review" <https://openaccess.thecvf.com/content/CVPR2021/html/Chen_Distilling_Knowledge_via_Knowledge_Review_CVPR_2021_paper.html>`_ @ CVPR 2021 (2021)
+
+    :param student_model: student model.
+    :type student_model: nn.Module
+    :param abfs: attention based fusion configurations.
+    :type abfs: list[dict]
+    :param device: target device.
+    :type device: torch.device
+    :param device_ids: target device IDs.
+    :type device_ids: list[int]
+    :param distributed: whether to be in distributed training mode.
+    :type distributed: bool
+    :param find_unused_parameters: ``find_unused_parameters`` for DistributedDataParallel.
+    :type find_unused_parameters: bool or None
     """
     def __init__(self, student_model, abfs, device, device_ids, distributed, sizes=None,
                  find_unused_parameters=None, **kwargs):
@@ -501,8 +751,27 @@ class Student4KnowledgeReview(AuxiliaryModelWrapper):
 @register_auxiliary_model_wrapper
 class Student4KTAAD(AuxiliaryModelWrapper):
     """
-    Student for knowledge translation and adaptation + affinity distillation proposed in
-    "Knowledge Adaptation for Efficient Semantic Segmentation"
+    An auxiliary student model wrapper for knowledge translation and adaptation + affinity distillation (KTAAD).
+    Refactored https://github.com/dvlab-research/ReviewKD/blob/master/ImageNet/models/reviewkd.py
+
+    Tong He, Chunhua Shen, Zhi Tian, Dong Gong, Changming Sun, Youliang Yan.: `"Knowledge Adaptation for Efficient Semantic Segmentation" <https://openaccess.thecvf.com/content_CVPR_2019/html/He_Knowledge_Adaptation_for_Efficient_Semantic_Segmentation_CVPR_2019_paper.html>`_ @ CVPR 2019 (2019)
+
+    :param student_model: student model.
+    :type student_model: nn.Module
+    :param input_module_path: path of module whose output is used as input to feature adapter and affinity adapter.
+    :type input_module_path: str
+    :param feature_adapter_config: feature adapter configuration.
+    :type feature_adapter_config: dict
+    :param affinity_adapter_config: affinity adapter configuration.
+    :type affinity_adapter_config: dict
+    :param device: target device.
+    :type device: torch.device
+    :param device_ids: target device IDs.
+    :type device_ids: list[int]
+    :param distributed: whether to be in distributed training mode.
+    :type distributed: bool
+    :param find_unused_parameters: ``find_unused_parameters`` for DistributedDataParallel.
+    :type find_unused_parameters: bool or None
     """
     def __init__(self, student_model, input_module_path, feature_adapter_config, affinity_adapter_config,
                  device, device_ids, distributed, find_unused_parameters=None, **kwargs):
@@ -531,6 +800,14 @@ class Student4KTAAD(AuxiliaryModelWrapper):
 
 
 def build_auxiliary_model_wrapper(model_config, **kwargs):
+    """
+    Builds an auxiliary model wrapper for either teacher or student models.
+
+    :param model_config: configuration to build the auxiliary model wrapper. Should contain either 'teacher_model' or `student_model'.
+    :type model_config: dict
+    :return: auxiliary model wrapper.
+    :rtype: nn.Module
+    """
     auxiliary_model_wrapper_config = model_config.get('auxiliary_model_wrapper', dict())
     auxiliary_model_wrapper_key = auxiliary_model_wrapper_config.get('key', None)
     if auxiliary_model_wrapper_key is None:

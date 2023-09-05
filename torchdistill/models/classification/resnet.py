@@ -5,13 +5,10 @@ import torch.nn as nn
 from torch import Tensor
 from torchvision.models.resnet import BasicBlock, conv1x1
 
-from ..registry import register_model_func
+from ..registry import register_model
+from ...common.constant import def_logger
 
-"""
-Refactored https://github.com/pytorch/vision/blob/master/torchvision/models/resnet.py
-for CIFAR datasets, referring to https://github.com/facebookarchive/fb.resnet.torch
-"""
-
+logger = def_logger.getChild(__name__)
 ROOT_URL = 'https://github.com/yoshitomo-matsubara/torchdistill/releases/download'
 MODEL_URL_DICT = {
     'cifar10-resnet20': ROOT_URL + '/v0.1.1/cifar10-resnet20.pt',
@@ -23,6 +20,29 @@ MODEL_URL_DICT = {
 
 
 class ResNet4Cifar(nn.Module):
+    """
+    ResNet model for CIFAR datasets. Refactored https://github.com/pytorch/vision/blob/master/torchvision/models/resnet.py
+    for CIFAR datasets, referring to https://github.com/facebookarchive/fb.resnet.torch
+
+    Kaiming He, Xiangyu Zhang, Shaoqing Ren, Jian Sun: `"Deep Residual Learning for Image Recognition" <https://openaccess.thecvf.com/content_cvpr_2016/html/He_Deep_Residual_Learning_CVPR_2016_paper.html>`_ @ CVPR 2016 (2016).
+
+    :param block: block class.
+    :type block: BasicBlock
+    :param layers: three numbers of layers in each pooling block.
+    :type layers: list[int]
+    :param num_classes: number of classification classes.
+    :type num_classes: int
+    :param zero_init_residual: if True, zero-initializes the last BN in each residual branch
+    :type zero_init_residual: bool
+    :param groups: ``groups`` for Conv2d.
+    :type groups: int
+    :param width_per_group: base width for Conv2d.
+    :type width_per_group: int
+    :param replace_stride_with_dilation: indicates if we should replace the 2x2 stride with a dilated convolution instead.
+    :type replace_stride_with_dilation: list[bool] or None
+    :param norm_layer: normalization module class or callable object.
+    :type norm_layer: typing.Callable or nn.Module or None
+    """
     def __init__(
             self,
             block: Type[Union[BasicBlock]],
@@ -118,14 +138,30 @@ class ResNet4Cifar(nn.Module):
         return self._forward_impl(x)
 
 
-@register_model_func
+@register_model
 def resnet(
         depth: int,
         num_classes: int,
         pretrained: bool,
         progress: bool,
         **kwargs: Any
-) -> ResNet4Cifar:
+):
+    """
+    Instantiates a ResNet model for CIFAR datasets.
+
+    Kaiming He, Xiangyu Zhang, Shaoqing Ren, Jian Sun: `"Deep Residual Learning for Image Recognition" <https://openaccess.thecvf.com/content_cvpr_2016/html/He_Deep_Residual_Learning_CVPR_2016_paper.html>`_ @ CVPR 2016 (2016).
+
+    :param depth: depth.
+    :type depth: int
+    :param num_classes: number of classification classes.
+    :type num_classes: int
+    :param pretrained: if True, returns a model pre-trained on CIFAR dataset.
+    :type pretrained: bool
+    :param progress: if True, displays a progress bar of the download to stderr.
+    :type progress: bool
+    :return: ResNet model.
+    :rtype: ResNet4Cifar
+    """
     assert (depth - 2) % 6 == 0, 'depth should be one of 20, 32, 44, 56, 110, 1202'
     n = (depth - 2) // 6
     model = ResNet4Cifar(BasicBlock, [n, n, n], num_classes, **kwargs)
@@ -133,76 +169,120 @@ def resnet(
     if pretrained and model_key in MODEL_URL_DICT:
         state_dict = torch.hub.load_state_dict_from_url(MODEL_URL_DICT[model_key], progress=progress)
         model.load_state_dict(state_dict)
+    elif pretrained:
+        logger.warning(f'`pretrained` = True, but pretrained {model_key} model is not available')
     return model
 
 
-@register_model_func
-def resnet20(num_classes=10, pretrained=False, progress=True, **kwargs: Any) -> ResNet4Cifar:
-    r"""ResNet-20 model from
-    `"Deep Residual Learning for Image Recognition" <https://arxiv.org/pdf/1512.03385.pdf>`_.
-    Args:
-        num_classes (int): 10 and 100 for CIFAR-10 and CIFAR-100, respectively
-        pretrained (bool): If True, returns a model pre-trained on CIFAR-10/100
-        progress (bool): If True, displays a progress bar of the download to stderr
+@register_model
+def resnet20(num_classes=10, pretrained=False, progress=True, **kwargs: Any):
+    """
+    ResNet-20 model.
+
+    Kaiming He, Xiangyu Zhang, Shaoqing Ren, Jian Sun: `"Deep Residual Learning for Image Recognition" <https://openaccess.thecvf.com/content_cvpr_2016/html/He_Deep_Residual_Learning_CVPR_2016_paper.html>`_ @ CVPR 2016 (2016).
+
+    :param num_classes: 10 or 100 for CIFAR-10 or CIFAR-100, respectively.
+    :type num_classes: int
+    :param pretrained: if True, returns a model pre-trained on CIFAR dataset.
+    :type pretrained: bool
+    :param progress: if True, displays a progress bar of the download to stderr.
+    :type progress: bool
+    :return: ResNet-20 model.
+    :rtype: ResNet4Cifar
     """
     return resnet(20, num_classes, pretrained, progress, **kwargs)
 
 
-@register_model_func
+@register_model
 def resnet32(num_classes=10, pretrained=False, progress=True, **kwargs: Any) -> ResNet4Cifar:
-    r"""ResNet-32 model from
-    `"Deep Residual Learning for Image Recognition" <https://arxiv.org/pdf/1512.03385.pdf>`_.
-    Args:
-        num_classes (int): 10 and 100 for CIFAR-10 and CIFAR-100, respectively
-        pretrained (bool): If True, returns a model pre-trained on CIFAR-10/100
-        progress (bool): If True, displays a progress bar of the download to stderr
+    """
+    ResNet-32 model.
+
+    Kaiming He, Xiangyu Zhang, Shaoqing Ren, Jian Sun: `"Deep Residual Learning for Image Recognition" <https://openaccess.thecvf.com/content_cvpr_2016/html/He_Deep_Residual_Learning_CVPR_2016_paper.html>`_ @ CVPR 2016 (2016).
+
+    :param num_classes: 10 or 100 for CIFAR-10 or CIFAR-100, respectively.
+    :type num_classes: int
+    :param pretrained: if True, returns a model pre-trained on CIFAR dataset.
+    :type pretrained: bool
+    :param progress: if True, displays a progress bar of the download to stderr.
+    :type progress: bool
+    :return: ResNet-32 model.
+    :rtype: ResNet4Cifar
     """
     return resnet(32, num_classes, pretrained, progress, **kwargs)
 
 
-@register_model_func
+@register_model
 def resnet44(num_classes=10, pretrained=False, progress=True, **kwargs: Any) -> ResNet4Cifar:
-    r"""ResNet-44 model from
-    `"Deep Residual Learning for Image Recognition" <https://arxiv.org/pdf/1512.03385.pdf>`_.
-    Args:
-        num_classes (int): 10 and 100 for CIFAR-10 and CIFAR-100, respectively
-        pretrained (bool): If True, returns a model pre-trained on CIFAR-10/100
-        progress (bool): If True, displays a progress bar of the download to stderr
+    """
+    ResNet-44 model.
+
+    Kaiming He, Xiangyu Zhang, Shaoqing Ren, Jian Sun: `"Deep Residual Learning for Image Recognition" <https://openaccess.thecvf.com/content_cvpr_2016/html/He_Deep_Residual_Learning_CVPR_2016_paper.html>`_ @ CVPR 2016 (2016).
+
+    :param num_classes: 10 or 100 for CIFAR-10 or CIFAR-100, respectively.
+    :type num_classes: int
+    :param pretrained: if True, returns a model pre-trained on CIFAR dataset.
+    :type pretrained: bool
+    :param progress: if True, displays a progress bar of the download to stderr.
+    :type progress: bool
+    :return: ResNet-44 model.
+    :rtype: ResNet4Cifar
     """
     return resnet(44, num_classes, pretrained, progress, **kwargs)
 
 
-@register_model_func
+@register_model
 def resnet56(num_classes=10, pretrained=False, progress=True, **kwargs: Any) -> ResNet4Cifar:
-    r"""ResNet-56 model from
-    `"Deep Residual Learning for Image Recognition" <https://arxiv.org/pdf/1512.03385.pdf>`_.
-    Args:
-        num_classes (int): 10 and 100 for CIFAR-10 and CIFAR-100, respectively
-        pretrained (bool): If True, returns a model pre-trained on CIFAR-10/100
-        progress (bool): If True, displays a progress bar of the download to stderr
+    """
+    ResNet-56 model.
+
+    Kaiming He, Xiangyu Zhang, Shaoqing Ren, Jian Sun: `"Deep Residual Learning for Image Recognition" <https://openaccess.thecvf.com/content_cvpr_2016/html/He_Deep_Residual_Learning_CVPR_2016_paper.html>`_ @ CVPR 2016 (2016).
+
+    :param num_classes: 10 or 100 for CIFAR-10 or CIFAR-100, respectively.
+    :type num_classes: int
+    :param pretrained: if True, returns a model pre-trained on CIFAR dataset.
+    :type pretrained: bool
+    :param progress: if True, displays a progress bar of the download to stderr.
+    :type progress: bool
+    :return: ResNet-56 model.
+    :rtype: ResNet4Cifar
     """
     return resnet(56, num_classes, pretrained, progress, **kwargs)
 
 
-@register_model_func
+@register_model
 def resnet110(num_classes=10, pretrained=False, progress=True, **kwargs: Any) -> ResNet4Cifar:
-    r"""ResNet-110 model from
-    `"Deep Residual Learning for Image Recognition" <https://arxiv.org/pdf/1512.03385.pdf>`_.
-    Args:
-        num_classes (int): 10 and 100 for CIFAR-10 and CIFAR-100, respectively
-        pretrained (bool): If True, returns a model pre-trained on CIFAR-10/100
-        progress (bool): If True, displays a progress bar of the download to stderr
+    """
+    ResNet-110 model.
+
+    Kaiming He, Xiangyu Zhang, Shaoqing Ren, Jian Sun: `"Deep Residual Learning for Image Recognition" <https://openaccess.thecvf.com/content_cvpr_2016/html/He_Deep_Residual_Learning_CVPR_2016_paper.html>`_ @ CVPR 2016 (2016).
+
+    :param num_classes: 10 or 100 for CIFAR-10 or CIFAR-100, respectively.
+    :type num_classes: int
+    :param pretrained: if True, returns a model pre-trained on CIFAR dataset.
+    :type pretrained: bool
+    :param progress: if True, displays a progress bar of the download to stderr.
+    :type progress: bool
+    :return: ResNet-110 model.
+    :rtype: ResNet4Cifar
     """
     return resnet(110, num_classes, pretrained, progress, **kwargs)
 
 
-@register_model_func
+@register_model
 def resnet1202(num_classes=10, pretrained=False, progress=True, **kwargs: Any) -> ResNet4Cifar:
-    r"""ResNet-1202 model from
-    `"Deep Residual Learning for Image Recognition" <https://arxiv.org/pdf/1512.03385.pdf>`_.
-    Args:
-        num_classes (int): 10 and 100 for CIFAR-10 and CIFAR-100, respectively
-        pretrained (bool): If True, returns a model pre-trained on CIFAR-10/100
-        progress (bool): If True, displays a progress bar of the download to stderr
+    """
+    ResNet-1202 model.
+
+    Kaiming He, Xiangyu Zhang, Shaoqing Ren, Jian Sun: `"Deep Residual Learning for Image Recognition" <https://openaccess.thecvf.com/content_cvpr_2016/html/He_Deep_Residual_Learning_CVPR_2016_paper.html>`_ @ CVPR 2016 (2016).
+
+    :param num_classes: 10 or 100 for CIFAR-10 or CIFAR-100, respectively.
+    :type num_classes: int
+    :param pretrained: if True, returns a model pre-trained on CIFAR dataset.
+    :type pretrained: bool
+    :param progress: if True, displays a progress bar of the download to stderr.
+    :type progress: bool
+    :return: ResNet-1202 model.
+    :rtype: ResNet4Cifar
     """
     return resnet(1202, num_classes, pretrained, progress, **kwargs)

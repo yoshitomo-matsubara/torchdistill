@@ -108,7 +108,7 @@ class ForwardHookManager(object):
     :param target_device: target device.
     :type target_device: torch.device or str
 
-    Example::
+    Example:
         >>> import torch
         >>> from torchvision import models
         >>> from torchdistill.core.forward_hook import ForwardHookManager

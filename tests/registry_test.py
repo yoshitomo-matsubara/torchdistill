@@ -12,8 +12,7 @@ from torchdistill.losses.registry import register_high_level_loss, HIGH_LEVEL_LO
     register_mid_level_loss, LOSS_WRAPPER_DICT, MIDDLE_LEVEL_LOSS_DICT, register_func2extract_model_output, \
     FUNC2EXTRACT_MODEL_OUTPUT_DICT
 from torchdistill.models.registry import register_adaptation_module, ADAPTATION_MODULE_DICT, \
-    register_model_class, register_model_func, MODEL_CLASS_DICT, MODEL_FUNC_DICT, register_auxiliary_model_wrapper, \
-    AUXILIARY_MODEL_WRAPPER_DICT
+    register_model, MODEL_DICT, register_auxiliary_model_wrapper, AUXILIARY_MODEL_WRAPPER_DICT
 from torchdistill.optim.registry import register_optimizer, register_scheduler, OPTIM_DICT, SCHEDULER_DICT
 
 
@@ -331,48 +330,28 @@ class RegistryTest(TestCase):
 
         assert ADAPTATION_MODULE_DICT[random_name] == TestAdaptationModule2
 
-    def test_register_model_class(self):
-        @register_model_class
+    def test_register_model(self):
+        @register_model
         class TestModel0(object):
             def __init__(self):
                 self.name = 'test0'
 
-        assert MODEL_CLASS_DICT['TestModel0'] == TestModel0
+        assert MODEL_DICT['TestModel0'] == TestModel0
 
-        @register_model_class()
+        @register_model()
         class TestModel1(object):
             def __init__(self):
                 self.name = 'test1'
 
-        assert MODEL_CLASS_DICT['TestModel1'] == TestModel1
+        assert MODEL_DICT['TestModel1'] == TestModel1
         random_name = 'custom_model_class_name2'
 
-        @register_model_class(key=random_name)
+        @register_model(key=random_name)
         class TestModel2(object):
             def __init__(self):
                 self.name = 'test2'
 
-        assert MODEL_CLASS_DICT[random_name] == TestModel2
-
-    def test_register_model_func(self):
-        @register_model_func
-        def test_model_func0():
-            pass
-
-        assert MODEL_FUNC_DICT['test_model_func0'] == test_model_func0
-
-        @register_model_func()
-        def test_model_func1():
-            pass
-
-        assert MODEL_FUNC_DICT['test_model_func1'] == test_model_func1
-        random_name = 'custom_model_func_name2'
-
-        @register_model_func(key=random_name)
-        def test_model_func2():
-            pass
-
-        assert MODEL_FUNC_DICT[random_name] == test_model_func2
+        assert MODEL_DICT[random_name] == TestModel2
 
     def test_register_auxiliary_model_wrapper(self):
         @register_auxiliary_model_wrapper

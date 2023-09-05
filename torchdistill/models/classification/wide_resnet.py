@@ -4,13 +4,10 @@ import torch
 import torch.nn as nn
 from torch import Tensor
 
-from ..registry import register_model_func
+from ..registry import register_model
+from ...common.constant import def_logger
 
-"""
-Refactored https://github.com/pytorch/vision/blob/master/torchvision/models/resnet.py
-for CIFAR datasets, referring to https://github.com/szagoruyko/wide-residual-networks
-"""
-
+logger = def_logger.getChild(__name__)
 ROOT_URL = 'https://github.com/yoshitomo-matsubara/torchdistill/releases/download'
 MODEL_URL_DICT = {
     'cifar10-wide_resnet40_4': ROOT_URL + '/v0.1.1/cifar10-wide_resnet40_4.pt',
@@ -23,6 +20,18 @@ MODEL_URL_DICT = {
 
 
 class WideBasicBlock(nn.Module):
+    """
+    A basic block of Wide ResNet for CIFAR datasets.
+
+    :param in_planes: number of input feature planes.
+    :type in_planes: int
+    :param planes: number of output feature planes.
+    :type planes: int
+    :param dropout_rate: dropout rate.
+    :type dropout_rate: float
+    :param stride: stride for Conv2d.
+    :type stride: int
+    """
     def __init__(self, in_planes, planes, dropout_rate, stride=1):
         super().__init__()
         self.bn1 = nn.BatchNorm2d(in_planes)
@@ -49,7 +58,26 @@ class WideBasicBlock(nn.Module):
         return out
 
 
-class WideResNet(nn.Module):
+class WideResNet4Cifar(nn.Module):
+    """
+    Wide ResNet (WRN) model for CIFAR datasets. Refactored https://github.com/pytorch/vision/blob/master/torchvision/models/resnet.py
+    for CIFAR datasets, referring to https://github.com/szagoruyko/wide-residual-networks
+
+    Sergey Zagoruyko, Nikos Komodakis: `"Wide Residual Networks" <https://bmva-archive.org.uk/bmvc/2016/papers/paper087/index.html>`_ @ BMVC 2016 (2016)
+
+    :param depth: depth.
+    :type depth: int
+    :param k: widening factor.
+    :type k: int
+    :param dropout_p: dropout rate.
+    :type dropout_p: float
+    :param block: block class.
+    :type block: WideBasicBlock
+    :param num_classes: number of classification classes.
+    :type num_classes: int
+    :param norm_layer: normalization module class or callable object.
+    :type norm_layer: typing.Callable or nn.Module or None
+    """
     def __init__(self, depth, k, dropout_p, block, num_classes, norm_layer=None):
         super().__init__()
         n = (depth - 4) / 6
@@ -99,7 +127,7 @@ class WideResNet(nn.Module):
         return self._forward_impl(x)
 
 
-@register_model_func
+@register_model
 def wide_resnet(
         depth: int,
         k: int,
@@ -108,50 +136,96 @@ def wide_resnet(
         pretrained: bool,
         progress: bool,
         **kwargs: Any
-) -> WideResNet:
+):
+    """
+    Instantiates a Wide ResNet model for CIFAR datasets.
+
+    Sergey Zagoruyko, Nikos Komodakis: `"Wide Residual Networks" <https://bmva-archive.org.uk/bmvc/2016/papers/paper087/index.html>`_ @ BMVC 2016 (2016)
+
+    :param depth: depth.
+    :type depth: int
+    :param k: widening factor.
+    :type k: int
+    :param dropout_p: dropout rate.
+    :type dropout_p: float
+    :param num_classes: number of classification classes.
+    :type num_classes: int
+    :param pretrained: if True, returns a model pre-trained on CIFAR dataset.
+    :type pretrained: bool
+    :param progress: if True, displays a progress bar of the download to stderr.
+    :type progress: bool
+    :return: Wide ResNet model.
+    :rtype: WideResNet4Cifar
+    """
     assert (depth - 4) % 6 == 0, 'depth of Wide ResNet (WRN) should be 6n + 4'
-    model = WideResNet(depth, k, dropout_p, WideBasicBlock, num_classes, **kwargs)
+    model = WideResNet4Cifar(depth, k, dropout_p, WideBasicBlock, num_classes, **kwargs)
     model_key = 'cifar{}-wide_resnet{}_{}'.format(num_classes, depth, k)
     if pretrained and model_key in MODEL_URL_DICT:
         state_dict = torch.hub.load_state_dict_from_url(MODEL_URL_DICT[model_key], progress=progress)
         model.load_state_dict(state_dict)
+    elif pretrained:
+        logger.warning(f'`pretrained` = True, but pretrained {model_key} model is not available')
     return model
 
 
-@register_model_func
-def wide_resnet40_4(dropout_p=0.3, num_classes=10, pretrained=False, progress=True, **kwargs: Any) -> WideResNet:
-    r"""WRN-40-4 model from
-    `"Wide Residual Networks" <https://arxiv.org/pdf/1512.03385.pdf>`_.
-    Args:
-        dropout_p (float): p in Dropout
-        num_classes (int): 10 and 100 for CIFAR-10 and CIFAR-100, respectively
-        pretrained (bool): If True, returns a model pre-trained on CIFAR-10/100
-        progress (bool): If True, displays a progress bar of the download to stderr
+@register_model
+def wide_resnet40_4(dropout_p=0.3, num_classes=10, pretrained=False, progress=True, **kwargs: Any):
+    """
+    WRN-40-4 model.
+
+    Sergey Zagoruyko, Nikos Komodakis: `"Wide Residual Networks" <https://bmva-archive.org.uk/bmvc/2016/papers/paper087/index.html>`_ @ BMVC 2016 (2016)
+
+    :param dropout_p: dropout rate.
+    :type dropout_p: float
+    :param num_classes: number of classification classes.
+    :type num_classes: int
+    :param pretrained: if True, returns a model pre-trained on CIFAR dataset.
+    :type pretrained: bool
+    :param progress: if True, displays a progress bar of the download to stderr.
+    :type progress: bool
+    :return: WRN-40-4 model.
+    :rtype: WideResNet4Cifar
     """
     return wide_resnet(40, 4, dropout_p, num_classes, pretrained, progress, **kwargs)
 
 
-@register_model_func
-def wide_resnet28_10(dropout_p=0.3, num_classes=10, pretrained=False, progress=True, **kwargs: Any) -> WideResNet:
-    r"""WRN-28-10 model from
-    `"Wide Residual Networks" <https://arxiv.org/pdf/1512.03385.pdf>`_.
-    Args:
-        dropout_p: p in Dropout
-        num_classes (int): 10 and 100 for CIFAR-10 and CIFAR-100, respectively
-        pretrained (bool): If True, returns a model pre-trained on CIFAR-10/100
-        progress (bool): If True, displays a progress bar of the download to stderr
+@register_model
+def wide_resnet28_10(dropout_p=0.3, num_classes=10, pretrained=False, progress=True, **kwargs: Any):
+    """
+    WRN-28-10 model.
+
+    Sergey Zagoruyko, Nikos Komodakis: `"Wide Residual Networks" <https://bmva-archive.org.uk/bmvc/2016/papers/paper087/index.html>`_ @ BMVC 2016 (2016)
+
+    :param dropout_p: dropout rate.
+    :type dropout_p: float
+    :param num_classes: number of classification classes.
+    :type num_classes: int
+    :param pretrained: if True, returns a model pre-trained on CIFAR dataset.
+    :type pretrained: bool
+    :param progress: if True, displays a progress bar of the download to stderr.
+    :type progress: bool
+    :return: WRN-28-10 model.
+    :rtype: WideResNet4Cifar
     """
     return wide_resnet(28, 10, dropout_p, num_classes, pretrained, progress, **kwargs)
 
 
-@register_model_func
-def wide_resnet16_8(dropout_p=0.3, num_classes=10, pretrained=False, progress=True, **kwargs: Any) -> WideResNet:
-    r"""WRN-16-8 model from
-    `"Wide Residual Networks" <https://arxiv.org/pdf/1512.03385.pdf>`_.
-    Args:
-        dropout_p: p in Dropout
-        num_classes (int): 10 and 100 for CIFAR-10 and CIFAR-100, respectively
-        pretrained (bool): If True, returns a model pre-trained on CIFAR-10/100
-        progress (bool): If True, displays a progress bar of the download to stderr
+@register_model
+def wide_resnet16_8(dropout_p=0.3, num_classes=10, pretrained=False, progress=True, **kwargs: Any):
+    """
+    WRN-16-8 model.
+
+    Sergey Zagoruyko, Nikos Komodakis: `"Wide Residual Networks" <https://bmva-archive.org.uk/bmvc/2016/papers/paper087/index.html>`_ @ BMVC 2016 (2016)
+
+    :param dropout_p: dropout rate.
+    :type dropout_p: float
+    :param num_classes: number of classification classes.
+    :type num_classes: int
+    :param pretrained: if True, returns a model pre-trained on CIFAR dataset.
+    :type pretrained: bool
+    :param progress: if True, displays a progress bar of the download to stderr.
+    :type progress: bool
+    :return: WRN-16-8 model.
+    :rtype: WideResNet4Cifar
     """
     return wide_resnet(16, 8, dropout_p, num_classes, pretrained, progress, **kwargs)

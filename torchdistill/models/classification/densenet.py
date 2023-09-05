@@ -7,13 +7,10 @@ import torch.nn.functional as F
 from torch import Tensor
 from torchvision.models.densenet import _DenseBlock, _Transition
 
-from ..registry import register_model_func
+from ..registry import register_model
+from ...common.constant import def_logger
 
-"""
-Refactored https://github.com/pytorch/vision/blob/master/torchvision/models/densenet.py
-for CIFAR datasets, referring to https://github.com/liuzhuang13/DenseNet
-"""
-
+logger = def_logger.getChild(__name__)
 ROOT_URL = 'https://github.com/yoshitomo-matsubara/torchdistill/releases/download'
 MODEL_URL_DICT = {
     'cifar10-densenet_bc_k12_depth100': ROOT_URL + '/v0.1.1/cifar10-densenet_bc_k12_depth100.pt',
@@ -22,18 +19,26 @@ MODEL_URL_DICT = {
 
 
 class DenseNet4Cifar(nn.Module):
-    r"""DenseNet-BC model class, based on
-    `"Densely Connected Convolutional Networks" <https://arxiv.org/pdf/1608.06993.pdf>`_.
-    Args:
-        growth_rate (int) - how many filters to add each layer (`k` in paper)
-        block_config (list of 4 ints) - how many layers in each pooling block
-        num_init_features (int) - the number of filters to learn in the first convolution layer
-        bn_size (int) - multiplicative factor for number of bottle neck layers
-          (i.e. bn_size * k features in the bottleneck layer)
-        drop_rate (float) - dropout rate after each dense layer
-        num_classes (int) - number of classification classes
-        memory_efficient (bool) - If True, uses checkpointing. Much more memory efficient,
-          but slower. Default: *False*. See `"paper" <https://arxiv.org/pdf/1707.06990.pdf>`_.
+    """
+    DenseNet-BC model for CIFAR datasets. Refactored https://github.com/pytorch/vision/blob/master/torchvision/models/densenet.py
+    for CIFAR datasets, referring to https://github.com/liuzhuang13/DenseNet
+
+    Gao Huang, Zhuang Liu, Laurens van der Maaten, Kilian Q. Weinberger: `"Densely Connected Convolutional Networks" <https://openaccess.thecvf.com/content_cvpr_2017/html/Huang_Densely_Connected_Convolutional_CVPR_2017_paper.html>`_ @ CVPR 2017 (2017).
+
+    :param growth_rate: number of filters to add each layer (`k` in paper).
+    :type growth_rate: int
+    :param block_config: three numbers of layers in each pooling block.
+    :type block_config: list[int]
+    :param num_init_features: number of filters to learn in the first convolution layer.
+    :type num_init_features: int
+    :param bn_size: multiplicative factor for number of bottleneck layers. (i.e. bn_size * k features in the bottleneck layer)
+    :type bn_size: int
+    :param drop_rate: dropout rate after each dense layer.
+    :type drop_rate: float
+    :param num_classes: number of classification classes.
+    :type num_classes: int
+    :param memory_efficient: if True, uses checkpointing. Much more memory efficient, but slower. Refer to `"the paper" <https://openaccess.thecvf.com/content_cvpr_2017/html/Huang_Densely_Connected_Convolutional_CVPR_2017_paper.html>`_ for details.
+    :type memory_efficient: bool
     """
 
     def __init__(
@@ -99,7 +104,7 @@ class DenseNet4Cifar(nn.Module):
         return out
 
 
-@register_model_func
+@register_model
 def densenet(
     growth_rate: int,
     depth: int,
@@ -109,7 +114,30 @@ def densenet(
     pretrained: bool,
     progress: bool,
     **kwargs: Any
-) -> DenseNet4Cifar:
+):
+    """
+    Instantiates a DenseNet model for CIFAR datasets.
+
+    Gao Huang, Zhuang Liu, Laurens van der Maaten, Kilian Q. Weinberger: `"Densely Connected Convolutional Networks" <https://openaccess.thecvf.com/content_cvpr_2017/html/Huang_Densely_Connected_Convolutional_CVPR_2017_paper.html>`_ @ CVPR 2017 (2017).
+
+    :param growth_rate: number of filters to add each layer (`k` in paper).
+    :type growth_rate: int
+    :param depth: depth.
+    :type depth: int
+    :param num_init_features: number of filters to learn in the first convolution layer.
+    :type num_init_features: int
+    :param bottleneck: if True, uses bottleneck.
+    :type bottleneck: bool
+    :param num_classes: 10 or 100 for CIFAR-10 or CIFAR-100, respectively.
+    :type num_classes: int
+    :param pretrained: if True, returns a model pre-trained on CIFAR dataset.
+    :type pretrained: bool
+    :param progress: if True, displays a progress bar of the download to stderr.
+    :type progress: bool
+    :return: DenseNet model.
+    :rtype: DenseNet4Cifar
+    """
+
     n = (depth - 4) // 3
     if bottleneck:
         n //= 2
@@ -120,40 +148,63 @@ def densenet(
     if pretrained and model_key in MODEL_URL_DICT:
         state_dict = torch.hub.load_state_dict_from_url(MODEL_URL_DICT[model_key], progress=progress)
         model.load_state_dict(state_dict)
+    elif pretrained:
+        logger.warning(f'`pretrained` = True, but pretrained {model_key} model is not available')
     return model
 
 
-@register_model_func
-def densenet_bc_k12_depth100(num_classes=10, pretrained=False, progress=True, **kwargs: Any) -> DenseNet4Cifar:
-    r"""DenseNet-BC (k=12, depth=100) model from
-    `"Densely Connected Convolutional Networks" <https://arxiv.org/pdf/1608.06993.pdf>`_.
-    Args:
-        num_classes (int): 10 and 100 for CIFAR-10 and CIFAR-100, respectively
-        pretrained (bool): If True, returns a model pre-trained on CIFAR-10/100
-        progress (bool): If True, displays a progress bar of the download to stderr
+@register_model
+def densenet_bc_k12_depth100(num_classes=10, pretrained=False, progress=True, **kwargs: Any):
+    """
+    DenseNet-BC (k=12, depth=100) model.
+
+    Gao Huang, Zhuang Liu, Laurens van der Maaten, Kilian Q. Weinberger: `"Densely Connected Convolutional Networks" <https://openaccess.thecvf.com/content_cvpr_2017/html/Huang_Densely_Connected_Convolutional_CVPR_2017_paper.html>`_ @ CVPR 2017 (2017).
+
+    :param num_classes: 10 or 100 for CIFAR-10 or CIFAR-100, respectively.
+    :type num_classes: int
+    :param pretrained: if True, returns a model pre-trained on CIFAR dataset.
+    :type pretrained: bool
+    :param progress: if True, displays a progress bar of the download to stderr.
+    :type progress: bool
+    :return: DenseNet-BC (k=12, depth=100) model.
+    :rtype: DenseNet4Cifar
     """
     return densenet(12, 100, 16, True, num_classes, pretrained, progress, **kwargs)
 
 
-@register_model_func
-def densenet_bc_k24_depth250(num_classes=10, pretrained=False, progress=True, **kwargs: Any) -> DenseNet4Cifar:
-    r"""DenseNet-BC (k=24, depth=250) model from
-    `"Densely Connected Convolutional Networks" <https://arxiv.org/pdf/1608.06993.pdf>`_.
-    Args:
-        num_classes (int): 10 and 100 for CIFAR-10 and CIFAR-100, respectively
-        pretrained (bool): If True, returns a model pre-trained on CIFAR-10/100
-        progress (bool): If True, displays a progress bar of the download to stderr
+@register_model
+def densenet_bc_k24_depth250(num_classes=10, pretrained=False, progress=True, **kwargs: Any):
+    """
+    DenseNet-BC (k=24, depth=250) model.
+
+    Gao Huang, Zhuang Liu, Laurens van der Maaten, Kilian Q. Weinberger: `"Densely Connected Convolutional Networks" <https://openaccess.thecvf.com/content_cvpr_2017/html/Huang_Densely_Connected_Convolutional_CVPR_2017_paper.html>`_ @ CVPR 2017 (2017).
+
+    :param num_classes: 10 or 100 for CIFAR-10 or CIFAR-100, respectively.
+    :type num_classes: int
+    :param pretrained: if True, returns a model pre-trained on CIFAR dataset.
+    :type pretrained: bool
+    :param progress: if True, displays a progress bar of the download to stderr.
+    :type progress: bool
+    :return: DenseNet-BC (k=24, depth=250) model.
+    :rtype: DenseNet4Cifar
     """
     return densenet(24, 250, 16, True, num_classes, pretrained, progress, **kwargs)
 
 
-@register_model_func
-def densenet_bc_k40_depth190(num_classes=10, pretrained=False, progress=True, **kwargs: Any) -> DenseNet4Cifar:
-    r"""DenseNet-BC (k=40, depth=190) model from
-    `"Densely Connected Convolutional Networks" <https://arxiv.org/pdf/1608.06993.pdf>`_.
-    Args:
-        num_classes (int): 10 and 100 for CIFAR-10 and CIFAR-100, respectively
-        pretrained (bool): If True, returns a model pre-trained on CIFAR-10/100
-        progress (bool): If True, displays a progress bar of the download to stderr
+@register_model
+def densenet_bc_k40_depth190(num_classes=10, pretrained=False, progress=True, **kwargs: Any):
+    """
+    DenseNet-BC (k=40, depth=190) model.
+
+    Gao Huang, Zhuang Liu, Laurens van der Maaten, Kilian Q. Weinberger: `"Densely Connected Convolutional Networks" <https://openaccess.thecvf.com/content_cvpr_2017/html/Huang_Densely_Connected_Convolutional_CVPR_2017_paper.html>`_ @ CVPR 2017 (2017).
+
+    :param num_classes: 10 or 100 for CIFAR-10 or CIFAR-100, respectively.
+    :type num_classes: int
+    :param pretrained: if True, returns a model pre-trained on CIFAR dataset.
+    :type pretrained: bool
+    :param progress: if True, displays a progress bar of the download to stderr.
+    :type progress: bool
+    :return: DenseNet-BC (k=40, depth=190) model.
+    :rtype: DenseNet4Cifar
     """
     return densenet(40, 190, 16, True, num_classes, pretrained, progress, **kwargs)
