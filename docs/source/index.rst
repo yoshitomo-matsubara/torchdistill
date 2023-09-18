@@ -24,6 +24,7 @@ instead of this GitHub repository.
 .. toctree::
    usage
    package
+   benchmarks
    projects
    :maxdepth: 2
    :caption: Overview
