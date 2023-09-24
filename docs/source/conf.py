@@ -52,7 +52,10 @@ html_context = {
     'conf_py_path': '/docs/source/'
 }
 
+html_logo = '_static/images/logo-white.png'
+
 html_theme_options = {
+    'logo_only': True,
     'display_version': True,
     'style_external_links': True
 }

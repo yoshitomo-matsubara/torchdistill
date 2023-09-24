@@ -3,11 +3,12 @@
    You can adapt this file completely to your liking, but it should at least
    contain the root `toctree` directive.
 
-torchdistill documentation
-========================================
 
 .. image:: _static/images/logo-color.png
   :alt: torchdistill logo
+
+torchdistill documentation
+========================================
 
 **torchdistill** (formerly *kdkit*) offers various state-of-the-art knowledge distillation methods
 and enables you to design (new) experiments simply by editing a declarative yaml config file instead of Python code.
