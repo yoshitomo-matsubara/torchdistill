@@ -1,3 +1,5 @@
+![torchdistill logo](https://github.com/yoshitomo-matsubara/torchdistill/blob/main/docs/source/_static/images/logo-color.png)
+
 # torchdistill: A Modular, Configuration-Driven Framework for Knowledge Distillation
 [![PyPI version](https://badge.fury.io/py/torchdistill.svg)](https://badge.fury.io/py/torchdistill)
 [![Build Status](https://travis-ci.com/yoshitomo-matsubara/torchdistill.svg?branch=master)](https://travis-ci.com/github/yoshitomo-matsubara/torchdistill)

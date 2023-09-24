@@ -6,6 +6,9 @@
 torchdistill documentation
 ========================================
 
+.. image:: _static/images/logo-color.png
+  :alt: torchdistill logo
+
 **torchdistill** (formerly *kdkit*) offers various state-of-the-art knowledge distillation methods
 and enables you to design (new) experiments simply by editing a declarative yaml config file instead of Python code.
 Even when you need to extract intermediate representations in teacher/student models,
