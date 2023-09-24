@@ -21,7 +21,9 @@ instead of this GitHub repository.
 **If you use** ***torchdistill*** **as part of your work, your citation is appreciated and motivates me to maintain and upgrade this framework!** 
 
 ## Important Notice
-To run the scripts in `examples/`, please use a PyPI packages (i.e., `pip3 install torchdistill`) instead of local package files in `torchdistill/` because 
+***torchdistill v1.0.0*** is coming soon! The documentation is around the corner too!
+
+Until then, to run the scripts in `examples/`, please use a PyPI packages (i.e., `pip3 install torchdistill`) instead of local package files in `torchdistill/` because 
 I am preparing for next major release, and the example scripts have not been synced with the local package files in `torchdistill/`  
 On top of that, you can add your modules (models, loss functions, datasets, etc) without editing code in the local package `torchdistill/`
 (See [Discussions](https://github.com/yoshitomo-matsubara/torchdistill/discussions) for more details)
@@ -103,7 +105,7 @@ models:
 ```
 
 ## How to setup
-- Python >= 3.7
+- Python >= 3.8
 - pipenv (optional)
 
 ### Install by pip/pipenv
