@@ -7,6 +7,7 @@ Projects
    :caption: Overview
 
 This page is a showcase of OSS (open source software) and papers which have used **torchdistill** in the projects.
+If your work is built on **torchdistill**, start `a "Show and tell" discussion at GitHub <https://github.com/yoshitomo-matsubara/torchdistill/discussions/new?category=show-and-tell>`_
 
 
 OSS

@@ -57,7 +57,7 @@ References
 Questions / Requests
 ==================
 
-If you have either a question or feature request, start `a new GitHub discussion <https://github.com/yoshitomo-matsubara/torchdistill/discussions>`_ instead of a GitHub issue.
+If you have either a question or feature request, start `a new "Q&A" discussion at GitHub <https://github.com/yoshitomo-matsubara/torchdistill/discussions>`_ instead of a GitHub issue.
 Please make sure the issue/question/request has not been addressed yet by searching through the open/closed issues and discussions.
 
 
