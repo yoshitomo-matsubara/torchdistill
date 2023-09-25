@@ -26,12 +26,19 @@ instead of this GitHub repository.
 **If you use torchdistill as part of your work, your citation is appreciated and motivates me to maintain and upgrade this framework!**
 
 .. toctree::
+   :maxdepth: 2
+   :caption: 📚 Overview
+
    usage
    package
+
+.. toctree::
+   :maxdepth: 2
+   :caption: 🧑🏻‍💻 Research
+
    benchmarks
    projects
-   :maxdepth: 2
-   :caption: Overview
+
 
 References
 *********
