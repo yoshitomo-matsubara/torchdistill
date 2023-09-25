@@ -3,11 +3,12 @@
    You can adapt this file completely to your liking, but it should at least
    contain the root `toctree` directive.
 
-torchdistill documentation
-========================================
 
 .. image:: _static/images/logo-color.png
   :alt: torchdistill logo
+
+torchdistill documentation
+========================================
 
 **torchdistill** (formerly *kdkit*) offers various state-of-the-art knowledge distillation methods
 and enables you to design (new) experiments simply by editing a declarative yaml config file instead of Python code.
@@ -25,12 +26,19 @@ instead of this GitHub repository.
 **If you use torchdistill as part of your work, your citation is appreciated and motivates me to maintain and upgrade this framework!**
 
 .. toctree::
+   :maxdepth: 2
+   :caption: 📚 Overview
+
    usage
    package
+
+.. toctree::
+   :maxdepth: 2
+   :caption: 🧑🏻‍💻 Research
+
    benchmarks
    projects
-   :maxdepth: 2
-   :caption: Overview
+
 
 References
 *********
@@ -49,7 +57,7 @@ References
 Questions / Requests
 ==================
 
-If you have either a question or feature request, start `a new GitHub discussion <https://github.com/yoshitomo-matsubara/torchdistill/discussions>`_ instead of a GitHub issue.
+If you have either a question or feature request, start `a new "Q&A" discussion at GitHub <https://github.com/yoshitomo-matsubara/torchdistill/discussions>`_ instead of a GitHub issue.
 Please make sure the issue/question/request has not been addressed yet by searching through the open/closed issues and discussions.
 
 
