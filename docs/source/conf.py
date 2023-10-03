@@ -55,7 +55,7 @@ html_context = {
 html_logo = '_static/images/logo-white.png'
 
 html_theme_options = {
-    'analytics_id': 'G-5ZP208NTBV',
+    'analytics_id': 'G-LYK8SSJ7R5',
     'logo_only': True,
     'display_version': True,
     'style_external_links': True
