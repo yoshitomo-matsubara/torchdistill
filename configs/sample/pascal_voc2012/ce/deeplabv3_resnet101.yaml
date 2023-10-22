@@ -69,10 +69,10 @@ datasets:
 models:
   model:
     key: &student_model_key 'deeplabv3_resnet101'
-    _backbone_weights: &student_backbone_weights !import_get
-      key: 'torchvision.models.resnet.ResNet101_Weights'
+    _weights: &student_weights !import_get
+      key: 'torchvision.models.segmentation.DeepLabV3_ResNet101_Weights'
     kwargs:
-      weights_backbone: !getattr [*student_backbone_weights, 'IMAGENET1K_V1']
+      weights: !getattr [*student_weights, 'COCO_WITH_VOC_LABELS_V1']
       num_classes: 21
       aux_loss: True
     _experiment: &student_experiment !join [*dataset_name, '-', *student_model_key]
