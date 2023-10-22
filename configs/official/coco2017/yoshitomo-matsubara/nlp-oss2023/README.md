@@ -28,7 +28,7 @@
 - Student: LRASPP with MobileNetV3-Large
 
 ```
-python3 examples/torchvision/object_detection.py \
+python3 examples/torchvision/semantic_segmentation.py \
     --config configs/official/coco2017/yoshitomo-matsubara/nlp-oss2023/ktaad-lraspp_mobilenet_v3_large_from_deeplabv3_resnet50.yaml \
     -test_only
 ```
@@ -43,7 +43,7 @@ python3 examples/torchvision/object_detection.py \
 - Student: LRASPP with MobileNetV3-Large
 
 ```
-torchrun --nproc_per_node=${NUM_GPUS} examples/torchvision/object_detection.py \
+torchrun --nproc_per_node=${NUM_GPUS} examples/torchvision/semantic_segmentation.py \
     --config configs/official/coco2017/yoshitomo-matsubara/nlp-oss2023/ktaad-lraspp_mobilenet_v3_large_from_deeplabv3_resnet50.yaml \
     --run_log log/ktaad-lraspp_mobilenet_v3_large_from_deeplabv3_resnet50.log \
     --world_size ${NUM_GPUS} \
