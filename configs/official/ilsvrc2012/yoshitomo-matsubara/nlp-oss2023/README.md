@@ -12,10 +12,7 @@
 ```
 
 ## Configuration
-The configuration and log files in this directory are used for either 1) distributed training on 3 GPUs or 
-2) training on 1 GPU that resulted in better accuracy.  
-
-You can find configuration and log files for both 1) and 2) in `imagenet.zip`.
+The configuration and log files in this directory are used for distributed training on 3 GPUs.  
 
 ### Models
 - Teacher: ResNet-34
@@ -53,15 +50,4 @@ torchrun  --nproc_per_node=${NUM_GPUS} examples/torchvision/image_classification
     --run_log log/ilsvrc2012/kr-resnet18_from_resnet34.log \
     --world_size ${NUM_GPUS} \
     -adjust_lr
-```
-
----
-### Command for training without distributed processes
-Make sure checkpoint files do not exist at `dst_ckpt` in `student_model` entry to train models from scratch.
-
-#### Knowledge Review
-```
-python3 examples/torchvision/image_classification.py \
-    --config configs/official/ilsvrc2012/yoshitomo-matsubara/nlp-oss2023/kr-resnet18_from_resnet34.yaml \
-    --run_log log/ilsvrc2012/kd-resnet18_from_resnet34.log
 ```
