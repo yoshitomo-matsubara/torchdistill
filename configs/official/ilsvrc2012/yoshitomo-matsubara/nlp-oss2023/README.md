@@ -28,7 +28,7 @@ The configuration and log files in this directory are used for distributed train
 ---
 ### Command to test with checkpoints
 - Download https://github.com/yoshitomo-matsubara/torchdistill/releases/download/v0.2.5/ilsvrc2012-resnet18_from_resnet34.pt
-- Update `dst_ckpt` of student models defined in the yaml file in this directory with unzipped checkpoint file path
+- Update `dst_ckpt` of student models defined in the yaml file in this directory with the checkpoint file path
 
 #### Knowledge Review
 ```
