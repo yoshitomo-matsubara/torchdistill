@@ -8,4 +8,4 @@ Tf-KD  	70.42	70.52	`torchdistill/configs/official/ <https://github.com/yoshitom
 SSKD  	71.62	70.09	`torchdistill/configs/official/ <https://github.com/yoshitomo-matsubara/torchdistill/tree/main/configs/official/ilsvrc2012/yoshitomo-matsubara/rrpr2020>`_
 :math:`L_2`  	70.90	71.08	`torchdistill/configs/official/ <https://github.com/yoshitomo-matsubara/torchdistill/tree/main/configs/official/ilsvrc2012/yoshitomo-matsubara/rrpr2020>`_
 PAD-:math:`L_2`  	71.71	71.71	`torchdistill/configs/official/ <https://github.com/yoshitomo-matsubara/torchdistill/tree/main/configs/official/ilsvrc2012/yoshitomo-matsubara/rrpr2020>`_
-KR  	71.61	71.64	`torchdistill/configs/sample/ <https://github.com/yoshitomo-matsubara/torchdistill/blob/main/configs/sample/ilsvrc2012/kr/resnet18_from_resnet34.yaml>`_
+KR  	71.61	71.64	`torchdistill/configs/official/ <https://github.com/yoshitomo-matsubara/torchdistill/blob/main/configs/official/ilsvrc2012/yoshitomo-matsubara/nlp-oss2023>`_

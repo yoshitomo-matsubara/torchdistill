@@ -72,7 +72,7 @@ python3 examples/torchvision/image_classification.py \
     -test_only
 ```
 
-#### Semi-supervisioned Knowledge Distillation
+#### Self-supervision with Knowledge Distillation
 ```
 python3 examples/torchvision/image_classification.py \
     --config configs/official/ilsvrc2012/yoshitomo-matsubara/rrpr2020/sskd-resnet18_from_resnet34.yaml \
@@ -150,7 +150,7 @@ torchrun  --nproc_per_node=${NUM_GPUS} examples/torchvision/image_classification
     -adjust_lr
 ```
 
-#### Semi-supervisioned Knowledge Distillation
+#### Self-supervision with Knowledge Distillation
 If you use fewer or more GPUs for distributed training, you should update `batch_size: 85` in `train_data_loader` entry 
 so that (batch size) * ${NUM_GPUS}  = 256. (e.g., `batch_size: 32` if you use 8 GPUs for distributed training.)  
 
