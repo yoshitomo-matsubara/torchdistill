@@ -47,7 +47,7 @@ accelerate launch examples/hf_transformers/text_classification.py \
 
 ### GLUE Benchmark Submission
 
-Check the following notebooks:
+Check the following Google Colab examples:
 - Fine-tuning without teacher models [![Open In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/yoshitomo-matsubara/torchdistill/blob/master/demo/glue_finetuning_and_submission.ipynb)
 - Knowledge distillation [![Open In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/yoshitomo-matsubara/torchdistill/blob/master/demo/glue_kd_and_submission.ipynb)
 
