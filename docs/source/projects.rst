@@ -27,9 +27,28 @@ It is pip-installable and published as a PyPI package i.e., you can install it b
 Papers
 *****
 
+torchdistill Meets Hugging Face Libraries for Reproducible, Coding-Free Deep Learning Studies: A Case Study on NLP
+----
+* Author(s): Yoshitomo Matsubara
+* Venue: EMNLP 2023 Workshop for Natural Language Processing Open Source Software (NLP-OSS)
+* PDF: `Preprint <https://arxiv.org/abs/2310.17644>`_
+* Code: `GitHub <https://github.com/yoshitomo-matsubara/torchdistill>`_
+
+**Abstract**: Reproducibility in scientific work has been becoming increasingly important in research communities
+such as machine learning, natural language processing, and computer vision communities due to the rapid development of
+the research domains supported by recent advances in deep learning. In this work, we present a significantly upgraded
+version of torchdistill, a modular-driven coding-free deep learning framework significantly upgraded from the initial
+release, which supports only image classification and object detection tasks for reproducible knowledge distillation
+experiments. To demonstrate that the upgraded framework can support more tasks with third-party libraries, we reproduce
+the GLUE benchmark results of BERT models using a script based on the upgraded torchdistill, harmonizing with various
+Hugging Face libraries. All the 27 fine-tuned BERT models and configurations to reproduce the results are published at
+Hugging Face, and the model weights have already been widely used in research communities. We also reimplement popular
+small-sized models and new knowledge distillation methods and perform additional experiments for computer vision tasks.
+
+
 SC2 Benchmark: Supervised Compression for Split Computing
 ----
-* Authors: Yoshitomo Matsubara, Ruihan Yang, Marco Levorato, Stephan Mandt
+* Author(s): Yoshitomo Matsubara, Ruihan Yang, Marco Levorato, Stephan Mandt
 * Venue: TMLR
 * PDF: `Paper + Supp <https://openreview.net/forum?id=p28wv4G65d>`_
 * Code: `GitHub <https://github.com/yoshitomo-matsubara/sc2-benchmark>`_
@@ -49,7 +68,7 @@ researchers better understand the tradeoffs of supervised compression in split c
 
 Supervised Compression for Resource-Constrained Edge Computing Systems
 ----
-* Authors: Yoshitomo Matsubara, Ruihan Yang, Marco Levorato, Stephan Mandt
+* Author(s): Yoshitomo Matsubara, Ruihan Yang, Marco Levorato, Stephan Mandt
 * Venue: WACV 2022
 * PDF: `Paper + Supp <https://openaccess.thecvf.com/content/WACV2022/html/Matsubara_Supervised_Compression_for_Resource-Constrained_Edge_Computing_Systems_WACV_2022_paper.html>`_
 * Code: `GitHub <https://github.com/yoshitomo-matsubara/supervised-compression>`_
@@ -70,7 +89,7 @@ latency. We furthermore show that the learned feature representations can be tun
 
 torchdistill: A Modular, Configuration-Driven Framework for Knowledge Distillation
 ----
-* Author: Yoshitomo Matsubara
+* Author(s): Yoshitomo Matsubara
 * Venue: ICPR 2020 International Workshop on Reproducible Research in Pattern Recognition
 * PDF: `Paper <https://link.springer.com/chapter/10.1007/978-3-030-76423-4_3>`_
 * Code: `GitHub <https://github.com/yoshitomo-matsubara/torchdistill>`_
