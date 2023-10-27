@@ -21,7 +21,7 @@ In addition to knowledge distillation, this framework helps you design and perfo
 simply by excluding teacher entries from a declarative yaml config file.
 You can find such examples in `configs/sample/ of the official repository <https://github.com/yoshitomo-matsubara/torchdistill/tree/main/configs/sample/>`_.
 
-When you refer to **torchdistill** in your paper, please cite `this paper <https://github.com/yoshitomo-matsubara/torchdistill#citation>`_
+When you refer to **torchdistill** in your paper, please cite `these papers <https://github.com/yoshitomo-matsubara/torchdistill#citation>`_
 instead of this GitHub repository.
 **If you use torchdistill as part of your work, your citation is appreciated and motivates me to maintain and upgrade this framework!**
 
@@ -51,6 +51,13 @@ References
      pages={24--44},
      year={2021},
      organization={Springer}
+   }
+
+   @article{matsubara2023torchdistill,
+     title={{torchdistill Meets Hugging Face Libraries for Reproducible, Coding-Free Deep Learning Studies: A Case Study on NLP}},
+     author={Matsubara, Yoshitomo},
+     journal={arXiv preprint arXiv:2310.17644},
+     year={2023}
    }
 
 

@@ -11,14 +11,14 @@
 and enables you to design (new) experiments simply by editing a declarative yaml config file instead of Python code. 
 Even when you need to extract intermediate representations in teacher/student models, 
 you will **NOT** need to reimplement the models, that often change the interface of the forward, but instead 
-specify the module path(s) in the yaml file. Refer to [this paper](https://github.com/yoshitomo-matsubara/torchdistill#citation) for more details.  
+specify the module path(s) in the yaml file. Refer to [these papers](https://github.com/yoshitomo-matsubara/torchdistill#citation) for more details.  
 
 In addition to knowledge distillation, this framework helps you design and perform general deep learning experiments
 (**WITHOUT coding**) for reproducible deep learning studies. i.e., it enables you to train models without teachers 
 simply by excluding teacher entries from a declarative yaml config file. 
 You can find such examples below and in [configs/sample/](https://github.com/yoshitomo-matsubara/torchdistill/tree/main/configs/sample/).  
 
-When you refer to ***torchdistill*** in your paper, please cite [this paper](https://github.com/yoshitomo-matsubara/torchdistill#citation) 
+When you refer to ***torchdistill*** in your paper, please cite [these papers](https://github.com/yoshitomo-matsubara/torchdistill#citation) 
 instead of this GitHub repository.  
 **If you use** ***torchdistill*** **as part of your work, your citation is appreciated and motivates me to maintain and upgrade this framework!** 
 
@@ -127,12 +127,12 @@ pipenv install "-e ."
 ```
 
 ## Issues / Questions / Requests
-The documentation is work-in-progress. In the meantime, feel free to create an issue if you find a bug.  
+Feel free to create an issue if you find a bug.  
 If you have either a question or feature request, start a new discussion [here](https://github.com/yoshitomo-matsubara/torchdistill/discussions).
 Please make sure the issue/question/request has not been addressed yet by searching through the issues and discussions.
 
 ## Citation
-If you use ***torchdistill*** in your research, please cite the following paper.  
+If you use ***torchdistill*** in your research, please cite the following papers:  
 [[Paper](https://link.springer.com/chapter/10.1007/978-3-030-76423-4_3)] [[Preprint](https://arxiv.org/abs/2011.12913)]  
 ```bibtex
 @inproceedings{matsubara2021torchdistill,
@@ -145,10 +145,22 @@ If you use ***torchdistill*** in your research, please cite the following paper.
 }
 ```
 
+[[Preprint](https://arxiv.org/abs/2310.17644)]  
+```bibtex
+@article{matsubara2023torchdistill,
+  title={{torchdistill Meets Hugging Face Libraries for Reproducible, Coding-Free Deep Learning Studies: A Case Study on NLP}},
+  author={Matsubara, Yoshitomo},
+  journal={arXiv preprint arXiv:2310.17644},
+  year={2023}
+}
+```
+
 ## Acknowledgments
 
-Since June 2022, this project has been supported by [JetBrain's Free License Programs (Open Source)](https://www.jetbrains.com/community/opensource/?utm_campaign=opensource&utm_content=approved&utm_medium=email&utm_source=newsletter&utm_term=jblogo#support).  
+This project has been supported by Travis CI's OSS credits and [JetBrain's Free License Programs (Open Source)](https://www.jetbrains.com/community/opensource/?utm_campaign=opensource&utm_content=approved&utm_medium=email&utm_source=newsletter&utm_term=jblogo#support) 
+since November 2021 and June 2022, respectively.  
 ![PyCharm logo](https://resources.jetbrains.com/storage/products/company/brand/logos/PyCharm.svg)
+
 
 
 ## References

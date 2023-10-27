@@ -45,3 +45,4 @@ Original work
 References
 ^^^^
 * Yoshitomo Matsubara: `"torchdistill: A Modular, Configuration-Driven Framework for Knowledge Distillation" <https://link.springer.com/chapter/10.1007/978-3-030-76423-4_3>`_
+* Yoshitomo Matsubara: `"torchdistill Meets Hugging Face Libraries for Reproducible, Coding-Free Deep Learning Studies: A Case Study on NLP" <https://arxiv.org/abs/2310.17644>`_
