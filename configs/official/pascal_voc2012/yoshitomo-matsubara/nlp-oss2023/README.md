@@ -1,12 +1,11 @@
 # torchdistill Meets Hugging Face Libraries for Reproducible, Coding-Free Deep Learning Studies: A Case Study on NLP
 ## Citation
-[[OpenReview](https://openreview.net/forum?id=A5Axeeu1Bo)]
+[[OpenReview](https://openreview.net/forum?id=A5Axeeu1Bo)] [[Preprint](https://arxiv.org/abs/2310.17644)]  
 ```bibtex
-@inproceedings{matsubara2023torchdistill,
+@article{matsubara2023torchdistill,
   title={{torchdistill Meets Hugging Face Libraries for Reproducible, Coding-Free Deep Learning Studies: A Case Study on NLP}},
   author={Matsubara, Yoshitomo},
-  booktitle={Proceedings of Third Workshop for NLP Open Source Software (NLP-OSS)},
-  pages={},
+  journal={arXiv preprint arXiv:2310.17644},
   year={2023}
 }
 ```
