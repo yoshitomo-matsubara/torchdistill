@@ -89,12 +89,23 @@ def wrap_model(model, model_config, device, device_ids=None, distributed=False,
     :rtype: nn.Module
     """
     wrapper = model_config.get('wrapper', None) if model_config is not None else None
+    wrapper_kwargs = dict()
+    if isinstance(wrapper, dict):
+        wrapper_key = wrapper.get('key', None)
+        wrapper_kwargs = wrapper.get('kwargs', wrapper_kwargs)
+    else:
+        wrapper_key = wrapper
+
+    wrapper_kwargs['device_ids'] = device_ids
     model.to(device)
-    if wrapper is not None and device.type.startswith('cuda') and not check_if_wrapped(model):
-        if wrapper == 'DistributedDataParallel' and distributed and any_updatable:
-            model = DistributedDataParallel(model, device_ids=device_ids, find_unused_parameters=find_unused_parameters)
-        elif wrapper in {'DataParallel', 'DistributedDataParallel'}:
-            model = DataParallel(model, device_ids=device_ids)
+    if wrapper_key is not None and device.type.startswith('cuda') and not check_if_wrapped(model):
+        if wrapper_key == 'DistributedDataParallel' and distributed and any_updatable:
+            if 'find_unused_parameters' not in wrapper_kwargs:
+                wrapper_kwargs['find_unused_parameters'] = find_unused_parameters
+
+            model = DistributedDataParallel(model, **wrapper_kwargs)
+        elif wrapper_key in {'DataParallel', 'DistributedDataParallel'}:
+            model = DataParallel(model, **wrapper_kwargs)
     return model
 
 
