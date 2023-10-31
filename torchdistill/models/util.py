@@ -15,7 +15,7 @@ from ..common.module_util import check_if_wrapped, get_module, get_frozen_param_
 logger = def_logger.getChild(__name__)
 
 
-def wrap_if_distributed(module, device, device_ids, distributed, find_unused_parameters=None):
+def wrap_if_distributed(module, device, device_ids, distributed, find_unused_parameters=None, **kwargs):
     """
     Wraps ``module`` with DistributedDataParallel if ``distributed`` = True and ``module`` has any updatable parameters.
 
@@ -37,7 +37,8 @@ def wrap_if_distributed(module, device, device_ids, distributed, find_unused_par
         any_frozen = len(get_frozen_param_names(module)) > 0
         if find_unused_parameters is None:
             find_unused_parameters = any_frozen
-        return DistributedDataParallel(module, device_ids=device_ids, find_unused_parameters=find_unused_parameters)
+        return DistributedDataParallel(module, device_ids=device_ids, find_unused_parameters=find_unused_parameters,
+                                       **kwargs)
     return module
 
 
