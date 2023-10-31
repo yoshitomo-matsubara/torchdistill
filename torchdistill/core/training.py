@@ -164,10 +164,9 @@ class TrainingBox(object):
 
         # Wrap models if necessary
         any_updatable = len(get_updatable_param_names(self.model)) > 0
-        model_unused_parameters = model_config.get('find_unused_parameters', self.model_any_frozen)
         self.model =\
             wrap_model(self.model, model_config, self.device, self.device_ids, self.distributed,
-                       model_unused_parameters, any_updatable)
+                       self.model_any_frozen, any_updatable)
 
         # Set up optimizer and scheduler
         optim_config = train_config.get('optimizer', dict())
