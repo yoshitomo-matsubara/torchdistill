@@ -103,6 +103,7 @@ train:
         pin_memory: True
         drop_last: False
     teacher: &teacher
+      forward_proc: 'forward_batch_only'
       sequential: []
       forward_hook:
         input: []
@@ -110,6 +111,7 @@ train:
       wrapper: 'DistributedDataParallel'
       requires_grad: False
     student:
+      forward_proc: 'forward_batch_only'
       adaptations:
       sequential: []
       frozen_modules: []
@@ -169,6 +171,7 @@ train:
     num_epochs: 10
     teacher: *teacher
     student:
+      forward_proc: 'forward_batch_only'
       adaptations:
       sequential: []
       auxiliary_model_wrapper:

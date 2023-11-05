@@ -109,6 +109,7 @@ train:
       pin_memory: True
       drop_last: False
   teacher:
+    forward_proc: 'forward_batch_only'
     adaptations:
       maxpool1:
         key: 'MaxPool2d'
@@ -128,6 +129,7 @@ train:
     wrapper: 'DataParallel'
     requires_grad: False
   student:
+    forward_proc: 'forward_batch_only'
     adaptations:
     sequential: ['bottleneck']
     frozen_modules: []

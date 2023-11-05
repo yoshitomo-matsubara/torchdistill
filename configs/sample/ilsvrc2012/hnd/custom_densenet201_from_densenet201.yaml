@@ -109,6 +109,7 @@ train:
       pin_memory: True
       drop_last: False
   teacher:
+    forward_proc: 'forward_batch_only'
     sequential: ['features']
     frozen_modules: []
     forward_hook:
@@ -117,6 +118,7 @@ train:
     wrapper: 'DataParallel'
     requires_grad: False
   student:
+    forward_proc: 'forward_batch_only'
     adaptations:
     sequential: ['features']
     frozen_modules: []
