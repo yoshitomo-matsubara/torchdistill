@@ -2,7 +2,7 @@ from .registry import register_forward_proc_func
 
 
 @register_forward_proc_func
-def forward_default(model, *args, **kwargs):
+def forward_all(model, *args, **kwargs):
     """
     Performs forward computation using `*args` and `**kwargs`.
 
