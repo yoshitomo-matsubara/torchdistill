@@ -120,6 +120,7 @@ train:
         pin_memory: True
       collate_fn: 'coco_seg_eval_collate_fn'
     teacher:
+      forward_proc: 'forward_batch_only'
       sequential: []
       auxiliary_model_wrapper:
         key: &teacher4ft 'Teacher4FactorTransfer'
@@ -142,6 +143,7 @@ train:
       requires_grad: True
       frozen_modules: ['teacher_model']
     student:
+      forward_proc: 'forward_batch_only'
       adaptations:
       auxiliary_model_wrapper:
         key: 'EmptyModule'
@@ -204,6 +206,7 @@ train:
         drop_last: True
       cache_output:
     teacher:
+      forward_proc: 'forward_batch_only'
       sequential: []
       auxiliary_model_wrapper:
         key: *teacher4ft
@@ -219,6 +222,7 @@ train:
       wrapper:
       requires_grad: False
     student:
+      forward_proc: 'forward_batch_only'
       adaptations:
       sequential: []
       auxiliary_model_wrapper:

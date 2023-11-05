@@ -107,6 +107,7 @@ train:
       pin_memory: True
     collate_fn: 'coco_seg_eval_collate_fn'
   model:
+    forward_proc: 'forward_batch_only'
     adaptations:
     sequential: []
     forward_hook:

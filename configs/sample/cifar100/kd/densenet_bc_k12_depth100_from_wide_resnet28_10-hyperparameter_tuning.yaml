@@ -124,11 +124,13 @@ train:
       pin_memory: True
       drop_last: False
   teacher:
+    forward_proc: 'forward_batch_only'
     sequential: []
     wrapper: 'DataParallel'
     requires_grad: False
     frozen_modules: []
   student:
+    forward_proc: 'forward_batch_only'
     adaptations:
     sequential: []
     wrapper: 'DistributedDataParallel'

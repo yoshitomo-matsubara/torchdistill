@@ -102,6 +102,7 @@ train:
       pin_memory: True
       drop_last: False
   teacher:
+    forward_proc: 'forward_batch_only'
     sequential: []
     forward_hook:
       input: ['layer1.-1.relu', 'layer2.-1.relu', 'layer3.-1.relu', 'layer4.-1.relu']
@@ -109,6 +110,7 @@ train:
     wrapper: 'DataParallel'
     requires_grad: False
   student:
+    forward_proc: 'forward_batch_only'
     adaptations:
     sequential: []
     auxiliary_model_wrapper:

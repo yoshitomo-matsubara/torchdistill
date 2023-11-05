@@ -103,6 +103,7 @@ train:
         pin_memory: True
         drop_last: False
     teacher:
+      forward_proc: 'forward_batch_only'
       sequential: ['conv1', 'bn1', 'relu', 'maxpool', 'layer1', 'layer2', 'layer3', 'layer4']
       forward_hook:
         input: []
@@ -110,6 +111,7 @@ train:
       wrapper: 'DistributedDataParallel'
       requires_grad: False
     student:
+      forward_proc: 'forward_batch_only'
       adaptations:
       sequential: []
       auxiliary_model_wrapper:
@@ -223,10 +225,12 @@ train:
   stage2:
     num_epochs: 19
     teacher:
+      forward_proc: 'forward_batch_only'
       sequential: []
       wrapper: 'DistributedDataParallel'
       requires_grad: False
     student:
+      forward_proc: 'forward_batch_only'
       adaptations:
       sequential: []
       wrapper: 'DistributedDataParallel'

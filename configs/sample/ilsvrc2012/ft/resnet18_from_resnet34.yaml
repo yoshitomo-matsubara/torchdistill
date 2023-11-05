@@ -103,6 +103,7 @@ train:
         pin_memory: True
         drop_last: False
     teacher:
+      forward_proc: 'forward_batch_only'
       sequential: []
       auxiliary_model_wrapper:
         key: &teacher4ft 'Teacher4FactorTransfer'
@@ -126,6 +127,7 @@ train:
       requires_grad: True
       frozen_modules: ['teacher_model']
     student:
+      forward_proc: 'forward_batch_only'
       adaptations:
       auxiliary_model_wrapper:
         key: 'EmptyModule'
@@ -166,6 +168,7 @@ train:
   stage2:
     num_epochs: 19
     teacher:
+      forward_proc: 'forward_batch_only'
       sequential: []
       auxiliary_model_wrapper:
         key: *teacher4ft
@@ -181,6 +184,7 @@ train:
       wrapper:
       requires_grad: False
     student:
+      forward_proc: 'forward_batch_only'
       adaptations:
       sequential: []
       auxiliary_model_wrapper:
