@@ -123,7 +123,7 @@ class DictLossWrapper(SimpleLossWrapper):
         return loss
 
     def __str__(self):
-        return str(self.weights) + ' * ' + self.mid_level_loss.__str__()
+        return str(self.weights) + ' * ' + self.low_level_loss.__str__()
 
 
 @register_mid_level_loss
