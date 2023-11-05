@@ -116,6 +116,7 @@ train:
       pin_memory: True
       drop_last: False
   model:
+    forward_proc: 'forward_batch_only'
     adaptations:
     sequential: []
     wrapper: 'DistributedDataParallel'
