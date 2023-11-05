@@ -124,6 +124,7 @@ train:
       requires_grad: True
       frozen_modules: ['model']
     student:
+      forward_proc: 'forward_batch_only'
       adaptations:
       auxiliary_model_wrapper:
         key: 'EmptyModule'
