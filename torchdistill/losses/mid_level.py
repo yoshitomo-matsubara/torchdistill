@@ -68,7 +68,7 @@ class SimpleLossWrapper(nn.Module):
         return self.low_level_loss(input_batch, target_batch, *args, **kwargs)
 
     def __str__(self):
-        return self.mid_level_loss.__str__()
+        return self.low_level_loss.__str__()
 
 
 @register_loss_wrapper
