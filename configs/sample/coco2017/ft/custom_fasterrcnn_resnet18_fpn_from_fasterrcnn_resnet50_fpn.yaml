@@ -82,6 +82,7 @@ train:
         batch_size: 1
         num_workers: 4
     teacher:
+      forward_proc: 'forward_batch_only'
       sequential: []
       auxiliary_model_wrapper:
         key: &teacher4ft 'Teacher4FactorTransfer'
@@ -109,6 +110,7 @@ train:
       requires_grad: True
       frozen_modules: ['teacher_model']
     student:
+      forward_proc: 'forward_batch_only'
       adaptations:
       auxiliary_model_wrapper:
         key: 'EmptyModule'
