@@ -1,4 +1,4 @@
-![torchdistill logo](https://github.com/yoshitomo-matsubara/torchdistill/blob/main/docs/source/_static/images/logo-color.png)
+![torchdistill logo](https://raw.githubusercontent.com/yoshitomo-matsubara/torchdistill/main/docs/source/_static/images/logo-color.png)
 
 # torchdistill: A Modular, Configuration-Driven Framework for Knowledge Distillation
 [![PyPI version](https://img.shields.io/pypi/v/torchdistill?color=00cc00)](https://pypi.org/project/torchdistill/)
