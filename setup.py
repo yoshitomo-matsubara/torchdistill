@@ -18,15 +18,15 @@ setup(
     packages=find_packages(exclude=('tests', 'examples', 'demo', 'docs', 'configs')),
     python_requires='>=3.8',
     install_requires=[
-        'torch>=2.0.0,<=2.0.1',
-        'torchvision>=0.15.1,<=0.15.2',
+        'torch>=2.0.0,<=2.1.0',
+        'torchvision>=0.15.1,<=0.16.0',
         'numpy',
-        'pyyaml>=5.4.1',
+        'pyyaml>=6.0',
         'scipy',
         'cython'
     ],
     extras_require={
         'test': ['pytest'],
-        'docs': ['sphinx', 'sphinx_rtd_theme']
+        'docs': ['sphinx', 'sphinx_rtd_theme', 'sphinx_sitemap']
     }
 )
