@@ -16,36 +16,30 @@ specify the module path(s) in the yaml file. Refer to [these papers](https://git
 In addition to knowledge distillation, this framework helps you design and perform general deep learning experiments
 (**WITHOUT coding**) for reproducible deep learning studies. i.e., it enables you to train models without teachers 
 simply by excluding teacher entries from a declarative yaml config file. 
-You can find such examples below and in [configs/sample/](https://github.com/yoshitomo-matsubara/torchdistill/tree/main/configs/sample/).  
+You can find such examples below and in [configs/sample/](https://github.com/yoshitomo-matsubara/torchdistill/tree/main/configs/sample/).   
 
 When you refer to ***torchdistill*** in your paper, please cite [these papers](https://github.com/yoshitomo-matsubara/torchdistill#citation) 
 instead of this GitHub repository.  
 **If you use** ***torchdistill*** **as part of your work, your citation is appreciated and motivates me to maintain and upgrade this framework!** 
 
-## Important Notice
-***torchdistill v1.0.0*** is coming soon! The documentation is around the corner too!
-
-Until then, to run the scripts in `examples/`, please use a PyPI packages (i.e., `pip3 install torchdistill`) instead of local package files in `torchdistill/` because 
-I am preparing for next major release, and the example scripts have not been synced with the local package files in `torchdistill/`  
-On top of that, you can add your modules (models, loss functions, datasets, etc) without editing code in the local package `torchdistill/`
-(See [Discussions](https://github.com/yoshitomo-matsubara/torchdistill/discussions) for more details)
-
-While waiting for the next major release of ***torchdistill***, I strongly suggest that you
-- use torchdistill v0.3.3 (`pip install torchdistill`) with torchvision=<v0.13.1
-- use executable scripts under [`examples/legacy/`](https://github.com/yoshitomo-matsubara/torchdistill/tree/main/examples/legacy)
-- refer to [`configs/legacy/`](https://github.com/yoshitomo-matsubara/torchdistill/tree/main/configs/legacy)
 
 ## Forward hook manager
 Using **ForwardHookManager**, you can extract intermediate representations in model without modifying the interface of its forward function.  
 [This example notebook](https://github.com/yoshitomo-matsubara/torchdistill/tree/main/demo/extract_intermediate_representations.ipynb) [![Open In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/yoshitomo-matsubara/torchdistill/blob/master/demo/extract_intermediate_representations.ipynb) 
 will give you a better idea of the usage such as knowledge distillation and analysis of intermediate representations.
 
+
 ## 1 experiment → 1 declarative PyYAML config file
 In ***torchdistill***, many components and PyTorch modules are abstracted e.g., models, datasets, optimizers, losses, 
 and more! You can define them in a declarative PyYAML config file so that can be seen as a summary of your experiment, 
 and in many cases, you will **NOT need to write Python code at all**. 
-Take a look at some configurations available in [configs/](https://github.com/yoshitomo-matsubara/torchdistill/tree/main/configs/). You'll see what modules are abstracted and 
-how they are defined in a declarative PyYAML config file to design an experiment.
+Take a look at some configurations available in [configs/](https://github.com/yoshitomo-matsubara/torchdistill/tree/main/configs/). 
+You'll see what modules are abstracted and how they are defined in a declarative PyYAML config file to design an experiment.  
+
+If you want to use your own modules (models, loss functions, datasets, etc) with this framework, 
+you can do so without editing code in the local package `torchdistill/`.  
+See [the official documentation](https://yoshitomo-matsubara.net/torchdistill/usage.html) and [Discussions](https://github.com/yoshitomo-matsubara/torchdistill/discussions) for more details. 
+
 
 ## Top-1 validation accuracy for ILSVRC 2012 (ImageNet)
 | T: ResNet-34\*  | Pretrained | KD    | AT    | FT         | CRD   | Tf-KD | SSKD  | L2    | PAD-L2 | KR    |  
@@ -60,6 +54,7 @@ For the 2nd row (S: ResNet-18), most of the results are reported in [this paper]
 and their checkpoints (trained weights), configuration and log files are [available](https://github.com/yoshitomo-matsubara/torchdistill/tree/main/configs/official/ilsvrc2012/yoshitomo-matsubara/), 
 and the configurations reuse the hyperparameters such as number of epochs used in the original work except for KD.
 
+
 ## Examples
 Executable code can be found in [examples/](https://github.com/yoshitomo-matsubara/torchdistill/tree/main/examples/) such as
 - [Image classification](https://github.com/yoshitomo-matsubara/torchdistill/tree/main/examples/torchvision/image_classification.py): ImageNet (ILSVRC 2012), CIFAR-10, CIFAR-100, etc
@@ -72,6 +67,7 @@ More details can be found [here](https://github.com/yoshitomo-matsubara/torchdis
 
 Some Transformer models fine-tuned by ***torchdistill*** for GLUE tasks are available at [Hugging Face Model Hub](https://huggingface.co/yoshitomo-matsubara). 
 Sample GLUE benchmark results and details can be found [here](https://github.com/yoshitomo-matsubara/torchdistill/tree/master/examples/hf_transformers#sample-benchmark-results-and-fine-tuned-models).
+
 
 ## Google Colab Examples
 The following examples are available in [demo/](https://github.com/yoshitomo-matsubara/torchdistill/tree/main/demo/). 
@@ -87,6 +83,7 @@ if you have your own GPU(s).
 - Knowledge distillation [![Open In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/yoshitomo-matsubara/torchdistill/blob/master/demo/glue_kd_and_submission.ipynb)
 
 These examples write out test prediction files for you to see the test performance at [the GLUE leaderboard system](https://gluebenchmark.com/).
+
 
 ## PyTorch Hub
 If you find models on [PyTorch Hub](https://pytorch.org/hub/) or GitHub repositories supporting PyTorch Hub,
@@ -105,6 +102,7 @@ models:
       num_classes: 1000
       pretrained: True
 ```
+
 
 ## How to setup
 - Python >= 3.8
@@ -126,10 +124,12 @@ pip3 install -e .
 pipenv install "-e ."
 ```
 
+
 ## Issues / Questions / Requests
 Feel free to create an issue if you find a bug.  
 If you have either a question or feature request, start a new discussion [here](https://github.com/yoshitomo-matsubara/torchdistill/discussions).
 Please make sure the issue/question/request has not been addressed yet by searching through the issues and discussions.
+
 
 ## Citation
 If you use ***torchdistill*** in your research, please cite the following papers:  
@@ -155,12 +155,12 @@ If you use ***torchdistill*** in your research, please cite the following papers
 }
 ```
 
+
 ## Acknowledgments
 
 This project has been supported by Travis CI's OSS credits and [JetBrain's Free License Programs (Open Source)](https://www.jetbrains.com/community/opensource/?utm_campaign=opensource&utm_content=approved&utm_medium=email&utm_source=newsletter&utm_term=jblogo#support) 
 since November 2021 and June 2022, respectively.  
 ![PyCharm logo](https://resources.jetbrains.com/storage/products/company/brand/logos/PyCharm.svg)
-
 
 
 ## References
