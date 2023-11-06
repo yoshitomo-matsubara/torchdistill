@@ -1,5 +1,5 @@
 # ***legacy/***
-The configurations in `legacy/` are for torchdistill <= v0.3.3.
+The configurations in `legacy/` are designed for torchdistill <= v0.3.3 with torchvision =< v0.13.1.
 
 # ***official/***
 The results obtained with the configurations in `official/` are confirmed and reported in papers, 
