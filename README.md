@@ -2,7 +2,7 @@
 
 # torchdistill: A Modular, Configuration-Driven Framework for Knowledge Distillation
 [![PyPI version](https://img.shields.io/pypi/v/torchdistill?color=00cc00)](https://pypi.org/project/torchdistill/)
-[![Build Status](https://travis-ci.com/yoshitomo-matsubara/torchdistill.svg?branch=master)](https://travis-ci.com/github/yoshitomo-matsubara/torchdistill)
+[![Build Status](https://travis-ci.com/yoshitomo-matsubara/torchdistill.svg?branch=main)](https://travis-ci.com/github/yoshitomo-matsubara/torchdistill)
 [![GitHub Discussions](https://img.shields.io/github/discussions/yoshitomo-matsubara/torchdistill)](https://github.com/yoshitomo-matsubara/torchdistill/discussions)
 [![DOI:10.1007/978-3-030-76423-4_3](https://zenodo.org/badge/DOI/10.1007/978-3-030-76423-4_3.svg)](https://doi.org/10.1007/978-3-030-76423-4_3)
 
@@ -25,7 +25,7 @@ instead of this GitHub repository.
 
 ## Forward hook manager
 Using **ForwardHookManager**, you can extract intermediate representations in model without modifying the interface of its forward function.  
-[This example notebook](https://github.com/yoshitomo-matsubara/torchdistill/tree/main/demo/extract_intermediate_representations.ipynb) [![Open In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/yoshitomo-matsubara/torchdistill/blob/master/demo/extract_intermediate_representations.ipynb) 
+[This example notebook](https://github.com/yoshitomo-matsubara/torchdistill/tree/main/demo/extract_intermediate_representations.ipynb) [![Open In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/yoshitomo-matsubara/torchdistill/blob/main/demo/extract_intermediate_representations.ipynb) [![Open In Studio Lab](https://studiolab.sagemaker.aws/studiolab.svg)](https://studiolab.sagemaker.aws/import/github/yoshitomo-matsubara/torchdistill/blob/main/demo/extract_intermediate_representations.ipynb) 
 will give you a better idea of the usage such as knowledge distillation and analysis of intermediate representations.
 
 
@@ -66,21 +66,22 @@ For CIFAR-10 and CIFAR-100, some models are reimplemented and available as pretr
 More details can be found [here](https://github.com/yoshitomo-matsubara/torchdistill/releases/tag/v0.1.1).  
 
 Some Transformer models fine-tuned by ***torchdistill*** for GLUE tasks are available at [Hugging Face Model Hub](https://huggingface.co/yoshitomo-matsubara). 
-Sample GLUE benchmark results and details can be found [here](https://github.com/yoshitomo-matsubara/torchdistill/tree/master/examples/hf_transformers#sample-benchmark-results-and-fine-tuned-models).
+Sample GLUE benchmark results and details can be found [here](https://github.com/yoshitomo-matsubara/torchdistill/tree/main/examples/hf_transformers#sample-benchmark-results-and-fine-tuned-models).
 
 
 ## Google Colab Examples
 The following examples are available in [demo/](https://github.com/yoshitomo-matsubara/torchdistill/tree/main/demo/). 
-Note that these examples are for Google Colab users. Usually, [examples/](https://github.com/yoshitomo-matsubara/torchdistill/tree/main/examples/) would be a better reference 
+Note that these examples are for Google Colab users and compatible with Amazon SageMaker Studio Lab. 
+Usually, [examples/](https://github.com/yoshitomo-matsubara/torchdistill/tree/main/examples/) would be a better reference 
 if you have your own GPU(s).
 
 ### CIFAR-10 and CIFAR-100
-- Training without teacher models [![Open In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/yoshitomo-matsubara/torchdistill/blob/master/demo/cifar_training.ipynb)
-- Knowledge distillation [![Open In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/yoshitomo-matsubara/torchdistill/blob/master/demo/cifar_kd.ipynb)
+- Training without teacher models [![Open In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/yoshitomo-matsubara/torchdistill/blob/main/demo/cifar_training.ipynb) [![Open In Studio Lab](https://studiolab.sagemaker.aws/studiolab.svg)](https://studiolab.sagemaker.aws/import/github/yoshitomo-matsubara/torchdistill/blob/main/demo/cifar_training.ipynb)
+- Knowledge distillation [![Open In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/yoshitomo-matsubara/torchdistill/blob/main/demo/cifar_kd.ipynb) [![Open In Studio Lab](https://studiolab.sagemaker.aws/studiolab.svg)](https://studiolab.sagemaker.aws/import/github/yoshitomo-matsubara/torchdistill/blob/main/demo/cifar_kd.ipynb)
 
 ### GLUE
-- Fine-tuning without teacher models [![Open In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/yoshitomo-matsubara/torchdistill/blob/master/demo/glue_finetuning_and_submission.ipynb)
-- Knowledge distillation [![Open In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/yoshitomo-matsubara/torchdistill/blob/master/demo/glue_kd_and_submission.ipynb)
+- Fine-tuning without teacher models [![Open In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/yoshitomo-matsubara/torchdistill/blob/main/demo/glue_finetuning_and_submission.ipynb) [![Open In Studio Lab](https://studiolab.sagemaker.aws/studiolab.svg)](https://studiolab.sagemaker.aws/import/github/yoshitomo-matsubara/torchdistill/blob/main/demo/glue_finetuning_and_submission.ipynb)
+- Knowledge distillation [![Open In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/yoshitomo-matsubara/torchdistill/blob/main/demo/glue_kd_and_submission.ipynb) [![Open In Studio Lab](https://studiolab.sagemaker.aws/studiolab.svg)](https://studiolab.sagemaker.aws/import/github/yoshitomo-matsubara/torchdistill/blob/main/demo/glue_kd_and_submission.ipynb)
 
 These examples write out test prediction files for you to see the test performance at [the GLUE leaderboard system](https://gluebenchmark.com/).
 
