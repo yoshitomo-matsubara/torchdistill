@@ -23,6 +23,10 @@ instead of this GitHub repository.
 **If you use** ***torchdistill*** **as part of your work, your citation is appreciated and motivates me to maintain and upgrade this framework!** 
 
 
+## Documentation
+You can find the API documentation and research projects that leverage ***torchdistill*** at https://yoshitomo-matsubara.net/torchdistill/
+
+
 ## Forward hook manager
 Using **ForwardHookManager**, you can extract intermediate representations in model without modifying the interface of its forward function.  
 [This example notebook](https://github.com/yoshitomo-matsubara/torchdistill/tree/main/demo/extract_intermediate_representations.ipynb) [![Open In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/yoshitomo-matsubara/torchdistill/blob/main/demo/extract_intermediate_representations.ipynb) [![Open In Studio Lab](https://studiolab.sagemaker.aws/studiolab.svg)](https://studiolab.sagemaker.aws/import/github/yoshitomo-matsubara/torchdistill/blob/main/demo/extract_intermediate_representations.ipynb) 
