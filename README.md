@@ -129,7 +129,7 @@ pipenv install "-e ."
 ## Issues / Questions / Requests
 Feel free to create an issue if you find a bug.  
 If you have either a question or feature request, start a new discussion [here](https://github.com/yoshitomo-matsubara/torchdistill/discussions).
-Please make sure the issue/question/request has not been addressed yet by searching through the issues and discussions.
+Please search through [Issues](https://github.com/yoshitomo-matsubara/torchdistill/issues) and [Discussions](https://github.com/yoshitomo-matsubara/torchdistill/discussions) and make sure your issue/question/request has not been addressed yet.
 
 
 ## Citation
