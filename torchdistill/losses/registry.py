@@ -180,7 +180,7 @@ def register_func2extract_model_output(arg=None, **kwargs):
 
 def get_loss(key, **kwargs):
     """
-    Gets a registered dataset module.
+    Gets a registered (low-level) loss module.
 
     :param key: unique key to identify the registered loss class/function.
     :type key: str
