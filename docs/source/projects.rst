@@ -31,7 +31,7 @@ torchdistill Meets Hugging Face Libraries for Reproducible, Coding-Free Deep Lea
 ----
 * Author(s): Yoshitomo Matsubara
 * Venue: EMNLP 2023 Workshop for Natural Language Processing Open Source Software (NLP-OSS)
-* PDF: `Preprint <https://arxiv.org/abs/2310.17644>`_
+* PDF: `Preprint <https://aclanthology.org/2023.nlposs-1.18/>`_
 * Code: `GitHub <https://github.com/yoshitomo-matsubara/torchdistill>`_
 
 **Abstract**: Reproducibility in scientific work has been becoming increasingly important in research communities

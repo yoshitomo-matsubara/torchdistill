@@ -65,7 +65,7 @@ To reproduce the test results for CIFAR datasets, the following repositories wer
 
 Those results are reported in the following paper:
 
-* Yoshitomo Matsubara: `"torchdistill Meets Hugging Face Libraries for Reproducible, Coding-Free Deep Learning Studies: A Case Study on NLP" <https://arxiv.org/abs/2310.17644>`_
+* Yoshitomo Matsubara: `"torchdistill Meets Hugging Face Libraries for Reproducible, Coding-Free Deep Learning Studies: A Case Study on NLP" <https://aclanthology.org/2023.nlposs-1.18/>`_
 
 .. automodule:: torchdistill.models.classification
    :members:
