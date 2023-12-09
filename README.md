@@ -150,12 +150,14 @@ If you use ***torchdistill*** in your research, please cite the following papers
 }
 ```
 
-[[OpenReview](https://openreview.net/forum?id=A5Axeeu1Bo)] [[Preprint](https://arxiv.org/abs/2310.17644)]  
+[[Paper](https://aclanthology.org/2023.nlposs-1.18/)] [[OpenReview](https://openreview.net/forum?id=A5Axeeu1Bo)] [[Preprint](https://arxiv.org/abs/2310.17644)]  
 ```bibtex
-@article{matsubara2023torchdistill,
+@inproceedings{matsubara2023torchdistill,
   title={{torchdistill Meets Hugging Face Libraries for Reproducible, Coding-Free Deep Learning Studies: A Case Study on NLP}},
   author={Matsubara, Yoshitomo},
-  journal={arXiv preprint arXiv:2310.17644},
+  booktitle={Proceedings of the 3rd Workshop for Natural Language Processing Open Source Software (NLP-OSS 2023)},
+  publisher={Empirical Methods in Natural Language Processing},
+  pages={153--164},
   year={2023}
 }
 ```
