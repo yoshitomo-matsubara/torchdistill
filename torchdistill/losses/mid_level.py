@@ -1557,3 +1557,59 @@ class ChSimLoss(nn.Module):
             loss = self.batch_loss(student_outputs, teacher_outputs)
             chsim_loss += weight * loss
         return chsim_loss
+
+
+@register_mid_level_loss
+class DISTLoss(nn.Module):
+    """
+    A loss module for the Knowledge Distillation from A Stronger Teacher (DIST).
+    Referred to https://github.com/hunto/image_classification_sota/blob/main/lib/models/losses/dist_kd.py
+
+    Tao Huang, Shan You, Fei Wang, Chen Qian, Chang Xu: `"https://proceedings.neurips.cc/paper_files/paper/2022/hash/da669dfd3c36c93905a17ddba01eef06-Abstract-Conference.html>`_ @ NeurIPS 2022 (2022)
+
+    :param student_module_path: student model's logit module path.
+    :type student_module_path: str
+    :param student_module_io: 'input' or 'output' of the module in the student model.
+    :type student_module_io: str
+    :param teacher_module_path: teacher model's logit module path.
+    :type teacher_module_path: str
+    :param teacher_module_io: 'input' or 'output' of the module in the teacher model.
+    :param beta: balancing factor for inter-loss.
+    :type beta: float
+    :param gamma: balancing factor for intra-loss.
+    :type gamma: float
+    :param tau: hyperparameter :math:`\\tau` to soften class-probability distributions.
+    :type tau: float
+    """
+
+    def __init__(self, student_module_path, student_module_io, teacher_module_path, teacher_module_io,
+                 beta=1.0, gamma=1.0, tau=1.0, eps=1e-8, **kwargs):
+        super().__init__()
+        self.student_module_path = student_module_path
+        self.student_module_io = student_module_io
+        self.teacher_module_path = teacher_module_path
+        self.teacher_module_io = teacher_module_io
+        self.beta = beta
+        self.gamma = gamma
+        self.tau = tau
+        self.eps = eps
+
+    @staticmethod
+    def pearson_correlation(y_s, y_t, eps):
+        return cosine_similarity(y_s - y_s.mean(1).unsqueeze(1), y_t - y_t.mean(1).unsqueeze(1), eps=eps)
+
+    def inter_class_relation(self, y_s, y_t):
+        return 1 - self.pearson_correlation(y_s, y_t, self.eps).mean()
+
+    def intra_class_relation(self, y_s, y_t):
+        return self.inter_class_relation(y_s.transpose(0, 1), y_t.transpose(0, 1))
+
+    def forward(self, student_io_dict, teacher_io_dict, *args, **kwargs):
+        student_logits = student_io_dict[self.student_module_path][self.student_module_io]
+        teacher_logits = teacher_io_dict[self.teacher_module_path][self.teacher_module_io]
+        y_s = (student_logits / self.tau).softmax(dim=1)
+        y_t = (teacher_logits / self.tau).softmax(dim=1)
+        inter_loss = self.tau ** 2 * self.inter_class_relation(y_s, y_t)
+        intra_loss = self.tau ** 2 * self.intra_class_relation(y_s, y_t)
+        loss = self.beta * inter_loss + self.gamma * intra_loss
+        return loss
