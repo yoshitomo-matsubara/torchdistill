@@ -799,6 +799,28 @@ class Student4KTAAD(AuxiliaryModelWrapper):
         self.affinity_adapter(feature_maps)
 
 
+class ChannelSimilarityEmbed(nn.Module):
+    """
+    An auxiliary module for Inter-Channel Correlation for Knowledge Distillation (ICKD). Refactored https://github.com/ADLab-AutoDrive/ICKD/blob/main/ImageNet/torchdistill/models/special.py
+
+    Li Liu, Qingle Huang, Sihao Lin, Hongwei Xie, Bing Wang, Xiaojun Chang, Xiaodan Liang: `"https://openaccess.thecvf.com/content/ICCV2021/html/Liu_Exploring_Inter-Channel_Correlation_for_Diversity-Preserved_Knowledge_Distillation_ICCV_2021_paper.html>`_ @ ICCV 2021 (2021)
+
+    :param in_channels: number of input channels for the convolution layer.
+    :type in_channels: int
+    :param out_channels: number of output channels for the convolution layer.
+    :type out_channels: int
+    """
+    def __init__(self, in_channels=512, out_channels=128, **kwargs):
+        super().__init__()
+        self.conv2d = nn.Conv2d(in_channels, out_channels, kernel_size=3, stride=1, padding=1, bias=False)
+        self.l2norm = nn.BatchNorm2d(out_channels)
+
+    def forward(self, x):
+        x = self.conv2d(x)
+        x = self.l2norm(x)
+        return x
+
+
 def build_auxiliary_model_wrapper(model_config, **kwargs):
     """
     Builds an auxiliary model wrapper for either teacher or student models.
