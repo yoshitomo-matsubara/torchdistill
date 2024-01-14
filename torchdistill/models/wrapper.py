@@ -799,6 +799,66 @@ class Student4KTAAD(AuxiliaryModelWrapper):
         self.affinity_adapter(feature_maps)
 
 
+class ChannelSimilarityEmbed(nn.Module):
+    """
+    An auxiliary module for Inter-Channel Correlation for Knowledge Distillation (ICKD). Refactored https://github.com/ADLab-AutoDrive/ICKD/blob/main/ImageNet/torchdistill/models/special.py
+
+    Li Liu, Qingle Huang, Sihao Lin, Hongwei Xie, Bing Wang, Xiaojun Chang, Xiaodan Liang: `"https://openaccess.thecvf.com/content/ICCV2021/html/Liu_Exploring_Inter-Channel_Correlation_for_Diversity-Preserved_Knowledge_Distillation_ICCV_2021_paper.html>`_ @ ICCV 2021 (2021)
+
+    :param in_channels: number of input channels for the convolution layer.
+    :type in_channels: int
+    :param out_channels: number of output channels for the convolution layer.
+    :type out_channels: int
+    """
+    def __init__(self, in_channels=512, out_channels=128, **kwargs):
+        super().__init__()
+        self.conv2d = nn.Conv2d(in_channels, out_channels, kernel_size=3, stride=1, padding=1, bias=False)
+        self.l2norm = nn.BatchNorm2d(out_channels)
+
+    def forward(self, x):
+        x = self.conv2d(x)
+        x = self.l2norm(x)
+        return x
+
+
+@register_auxiliary_model_wrapper
+class Student4ICKD(AuxiliaryModelWrapper):
+    """
+    An auxiliary student model wrapper for Inter-Channel Correlation for Knowledge Distillation (ICKD).
+    Referred to https://github.com/ADLab-AutoDrive/ICKD/blob/main/ImageNet/torchdistill/models/special.py
+
+    Li Liu, Qingle Huang, Sihao Lin, Hongwei Xie, Bing Wang, Xiaojun Chang, Xiaodan Liang: `"https://openaccess.thecvf.com/content/ICCV2021/html/Liu_Exploring_Inter-Channel_Correlation_for_Diversity-Preserved_Knowledge_Distillation_ICCV_2021_paper.html>`_ @ ICCV 2021 (2021)
+
+    :param student_model: student model.
+    :type student_model: nn.Module
+    :param embeddings: embeddings keys and configuration.
+    :type embeddings: dict
+    :param device: target device.
+    :type device: torch.device
+    :param device_ids: target device IDs.
+    :type device_ids: list[int]
+    :param distributed: whether to be in distributed training mode.
+    :type distributed: bool
+    """
+    def __init__(self, student_model, embeddings, device, device_ids, distributed, **kwargs):
+        super().__init__()
+        self.student_model = wrap_if_distributed(student_model, device, device_ids, distributed)
+        io_path_pairs = list()
+        self.embed_dict = nn.ModuleDict()
+        for embed_key, embed_params in embeddings.items():
+            embed = ChannelSimilarityEmbed(**embed_params)
+            self.embed_dict[embed_key] = wrap_if_distributed(embed, device, device_ids, distributed)
+            io_path_pairs.append((embed_key, embed_params['io'], embed_params['path']))
+        self.io_path_pairs = io_path_pairs
+
+    def forward(self, x):
+        return self.student_model(x)
+
+    def secondary_forward(self, io_dict):
+        for embed_key, io_type, module_path in self.io_path_pairs:
+            self.embed_dict[embed_key](io_dict[module_path][io_type])
+
+
 def build_auxiliary_model_wrapper(model_config, **kwargs):
     """
     Builds an auxiliary model wrapper for either teacher or student models.
