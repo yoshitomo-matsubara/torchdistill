@@ -44,19 +44,9 @@ If you want to use your own modules (models, loss functions, datasets, etc) with
 you can do so without editing code in the local package `torchdistill/`.  
 See [the official documentation](https://yoshitomo-matsubara.net/torchdistill/usage.html) and [Discussions](https://github.com/yoshitomo-matsubara/torchdistill/discussions) for more details. 
 
+## Benchmarks
 
-## Top-1 validation accuracy for ILSVRC 2012 (ImageNet)
-| T: ResNet-34\*  | Pretrained | KD    | AT    | FT         | CRD   | Tf-KD | SSKD  | L2    | PAD-L2 | KR    |  
-| :---            | ---:       | ---:  | ---:  | ---:       | ---:  | ---:  | ---:  | ---:  | ---:   | ---:  |  
-| S: ResNet-18    | 69.76\*    | 71.37 | 70.90 | 71.56      | 70.93 | 70.52 | 70.09 | 71.08 | 71.71  | 71.64 |  
-| Original work   | N/A        | N/A   | 70.70 | 71.43\*\*  | 71.17 | 70.42 | 71.62 | 70.90 | 71.71  | 71.61 |  
-
-  
-\* The pretrained ResNet-34 and ResNet-18 are provided by torchvision.  
-\*\* FT is assessed with ILSVRC 2015 in the original work.  
-For the 2nd row (S: ResNet-18), most of the results are reported in [this paper](https://github.com/yoshitomo-matsubara/torchdistill#citation), 
-and their checkpoints (trained weights), configuration and log files are [available](https://github.com/yoshitomo-matsubara/torchdistill/tree/main/configs/official/ilsvrc2012/yoshitomo-matsubara/), 
-and the configurations reuse the hyperparameters such as number of epochs used in the original work except for KD.
+[Top-1 validation accuracy for ILSVRC 2012 (ImageNet)](https://yoshitomo-matsubara.net/torchdistill/benchmarks.html#imagenet-ilsvrc-2012)
 
 
 ## Examples
