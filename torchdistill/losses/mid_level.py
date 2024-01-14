@@ -1498,3 +1498,62 @@ class AffinityLoss(nn.Module):
                  - torch.bmm(teacher_flat_outputs[:, i].unsqueeze(2), teacher_flat_outputs[:, i].unsqueeze(1))) / hw
             ).norm(p=2, dim=(1, 2))
         return total_squared_losses.mean() if self.reduction == 'mean' else total_squared_losses.sum()
+
+
+@register_mid_level_loss
+class ChSimLoss(nn.Module):
+    """
+    A loss module for the Inter-Channel Correlation for Knowledge Distillation (ICKD).
+    Refactored https://github.com/ADLab-AutoDrive/ICKD/blob/main/ImageNet/torchdistill/losses/single.py
+
+    Li Liu, Qingle Huang, Sihao Lin, Hongwei Xie, Bing Wang, Xiaojun Chang, Xiaodan Liang: `"https://openaccess.thecvf.com/content/ICCV2021/html/Liu_Exploring_Inter-Channel_Correlation_for_Diversity-Preserved_Knowledge_Distillation_ICCV_2021_paper.html>`_ @ ICCV 2021 (2021)
+
+    :param feature_pairs: configuration of teacher-student module pairs to compute the L2 distance between the inter-channel correlation matrices of the student and the teacher.
+    :type feature_pairs: dict
+
+    .. code-block:: yaml
+       :caption: An example YAML to instantiate :class:`ChSimLoss` for a teacher-student pair of ResNet-34 and ResNet-18 in torchvision, using an auxiliary module :class:`torchdistill.models.wrapper.Student4ICKD`.
+
+        criterion:
+          key: 'ChSimLoss'
+          kwargs:
+            feature_pairs:
+              pair1:
+                teacher:
+                  io: 'output'
+                  path: 'layer4'
+                student:
+                  io: 'output'
+                  path: 'embed_dict.embed1'
+                weight: 1
+    """
+
+    def __init__(self, feature_pairs, **kwargs):
+        super().__init__()
+        self.feature_pairs = feature_pairs
+        self.smooth_l1_loss = nn.SmoothL1Loss()
+
+    @staticmethod
+    def batch_loss(f_s, f_t):
+        bsz, ch = f_s.shape[0], f_s.shape[1]
+        f_s = f_s.view(bsz, ch, -1)
+        f_t = f_t.view(bsz, ch, -1)
+        emd_s = torch.bmm(f_s, f_s.permute(0, 2, 1))
+        emd_s = torch.nn.functional.normalize(emd_s, dim=2)
+
+        emd_t = torch.bmm(f_t, f_t.permute(0, 2, 1))
+        emd_t = torch.nn.functional.normalize(emd_t, dim=2)
+
+        g_diff = emd_s - emd_t
+        loss = (g_diff * g_diff).view(bsz, -1).sum() / (ch * bsz * bsz)
+        return loss
+
+    def forward(self, student_io_dict, teacher_io_dict, *args, **kwargs):
+        chsim_loss = 0
+        for pair_name, pair_config in self.feature_pairs.items():
+            teacher_outputs = _extract_feature_map(teacher_io_dict, pair_config['teacher'])
+            student_outputs = _extract_feature_map(student_io_dict, pair_config['student'])
+            weight = pair_config.get('weight', 1)
+            loss = self.batch_loss(student_outputs, teacher_outputs)
+            chsim_loss += weight * loss
+        return chsim_loss
