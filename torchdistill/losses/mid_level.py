@@ -1457,7 +1457,7 @@ class AffinityLoss(nn.Module):
     :type student_module_path: str
     :param student_module_io: 'input' or 'output' of the module in the student model.
     :type student_module_io: str
-    :param teacher_module_path: teacher model's module path in an auxiliary wrapper :class:`torchdistill.models.wrapper.Teacher4FactorTransfer`
+    :param teacher_module_path: teacher model's module path in an auxiliary wrapper :class:`torchdistill.models.wrapper.Teacher4FactorTransfer`.
     :type teacher_module_path: str
     :param teacher_module_io: 'input' or 'output' of the module in the teacher model.
     :type teacher_module_io: str
@@ -1503,10 +1503,10 @@ class AffinityLoss(nn.Module):
 @register_mid_level_loss
 class ChSimLoss(nn.Module):
     """
-    A loss module for the Inter-Channel Correlation for Knowledge Distillation (ICKD).
+    A loss module for Inter-Channel Correlation for Knowledge Distillation (ICKD).
     Refactored https://github.com/ADLab-AutoDrive/ICKD/blob/main/ImageNet/torchdistill/losses/single.py
 
-    Li Liu, Qingle Huang, Sihao Lin, Hongwei Xie, Bing Wang, Xiaojun Chang, Xiaodan Liang: `"https://openaccess.thecvf.com/content/ICCV2021/html/Liu_Exploring_Inter-Channel_Correlation_for_Diversity-Preserved_Knowledge_Distillation_ICCV_2021_paper.html>`_ @ ICCV 2021 (2021)
+    Li Liu, Qingle Huang, Sihao Lin, Hongwei Xie, Bing Wang, Xiaojun Chang, Xiaodan Liang: `"Inter-Channel Correlation for Knowledge Distillation" <https://openaccess.thecvf.com/content/ICCV2021/html/Liu_Exploring_Inter-Channel_Correlation_for_Diversity-Preserved_Knowledge_Distillation_ICCV_2021_paper.html>`_ @ ICCV 2021 (2021)
 
     :param feature_pairs: configuration of teacher-student module pairs to compute the L2 distance between the inter-channel correlation matrices of the student and the teacher.
     :type feature_pairs: dict
@@ -1562,10 +1562,10 @@ class ChSimLoss(nn.Module):
 @register_mid_level_loss
 class DISTLoss(nn.Module):
     """
-    A loss module for the Knowledge Distillation from A Stronger Teacher (DIST).
+    A loss module for Knowledge Distillation from A Stronger Teacher (DIST).
     Referred to https://github.com/hunto/image_classification_sota/blob/main/lib/models/losses/dist_kd.py
 
-    Tao Huang, Shan You, Fei Wang, Chen Qian, Chang Xu: `"https://proceedings.neurips.cc/paper_files/paper/2022/hash/da669dfd3c36c93905a17ddba01eef06-Abstract-Conference.html>`_ @ NeurIPS 2022 (2022)
+    Tao Huang, Shan You, Fei Wang, Chen Qian, Chang Xu: `"Knowledge Distillation from A Stronger Teacher" <https://proceedings.neurips.cc/paper_files/paper/2022/hash/da669dfd3c36c93905a17ddba01eef06-Abstract-Conference.html>`_ @ NeurIPS 2022 (2022)
 
     :param student_module_path: student model's logit module path.
     :type student_module_path: str
@@ -1612,4 +1612,68 @@ class DISTLoss(nn.Module):
         inter_loss = self.tau ** 2 * self.inter_class_relation(y_s, y_t)
         intra_loss = self.tau ** 2 * self.intra_class_relation(y_s, y_t)
         loss = self.beta * inter_loss + self.gamma * intra_loss
+        return loss
+
+
+@register_mid_level_loss
+class SRDLoss(nn.Module):
+    """
+    A loss module for Understanding the Role of the Projector in Knowledge Distillation.
+    Referred to https://github.com/roymiles/Simple-Recipe-Distillation/blob/main/imagenet/torchdistill/losses/single.py
+
+    Roy Miles, Krystian Mikolajczyk: `"Understanding the Role of the Projector in Knowledge Distillation" <https://arxiv.org/abs/2303.11098>`_ @ AAAI 2024 (2024)
+
+    :param student_feature_module_path: student model's feature module path in an auxiliary wrapper :class:`torchdistill.models.wrapper.SRDModelWrapper`.
+    :type student_feature_module_path: str
+    :param student_feature_module_io: 'input' or 'output' of the feature module in the student model.
+    :type student_feature_module_io: str
+    :param teacher_feature_module_path: teacher model's feature module path in an auxiliary wrapper :class:`torchdistill.models.wrapper.SRDModelWrapper`.
+    :type teacher_feature_module_path: str
+    :param teacher_feature_module_io: 'input' or 'output' of the feature module in the teacher model.
+    :type teacher_feature_module_io: str
+    :param student_linear_module_path: student model's linear module path.
+    :type student_linear_module_path: str
+    :param student_linear_module_io: 'input' or 'output' of the linear module in the student model.
+    :type student_linear_module_io: str
+    :param teacher_linear_module_path: teacher model's linear module path.
+    :type teacher_linear_module_path: str
+    :param teacher_linear_module_io: 'input' or 'output' of the linear module in the teacher model.
+    :type teacher_linear_module_io: str
+    :param exponent: exponent for feature distillation loss.
+    :type exponent: float
+    :param temperature: hyperparameter :math:`\\tau` to soften class-probability distributions.
+    :type temperature: float
+    :param reduction: loss reduction type.
+    :type reduction: str or None
+    """
+
+    def __init__(self, student_feature_module_path, student_feature_module_io,
+                 teacher_feature_module_path, teacher_feature_module_io,
+                 student_linear_module_path, student_linear_module_io,
+                 teacher_linear_module_path, teacher_linear_module_io,
+                 exponent=1.0, temperature=1.0, reduction='batchmean', **kwargs):
+        super().__init__()
+        self.student_feature_module_path = student_feature_module_path
+        self.student_feature_module_io = student_feature_module_io
+        self.teacher_feature_module_path = teacher_feature_module_path
+        self.teacher_feature_module_io = teacher_feature_module_io
+        self.student_linear_module_path = student_linear_module_path
+        self.student_linear_module_io = student_linear_module_io
+        self.teacher_linear_module_path = teacher_linear_module_path
+        self.teacher_linear_module_io = teacher_linear_module_io
+        self.exponent = exponent
+        self.temperature = temperature
+        self.criterion = nn.KLDivLoss(reduction=reduction)
+
+    def forward(self, student_io_dict, teacher_io_dict, *args, **kwargs):
+        student_features = student_io_dict[self.student_feature_module_path][self.student_feature_module_io]
+        teacher_features = teacher_io_dict[self.teacher_feature_module_path][self.teacher_feature_module_io]
+        diff_features = torch.abs(student_features - teacher_features)
+        feat_distill_loss = torch.log(diff_features.pow(self.exponent).sum())
+
+        student_logits = student_io_dict[self.student_linear_module_path][self.student_linear_module_io]
+        teacher_logits = teacher_io_dict[self.teacher_linear_module_path][self.teacher_linear_module_io]
+        kl_loss = self.criterion(torch.log_softmax(student_logits / self.temperature, dim=1),
+                                 torch.softmax(teacher_logits / self.temperature, dim=1))
+        loss = 2 * feat_distill_loss + kl_loss
         return loss
