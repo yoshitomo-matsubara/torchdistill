@@ -803,7 +803,7 @@ class ChannelSimilarityEmbed(nn.Module):
     """
     An auxiliary module for Inter-Channel Correlation for Knowledge Distillation (ICKD). Refactored https://github.com/ADLab-AutoDrive/ICKD/blob/main/ImageNet/torchdistill/models/special.py
 
-    Li Liu, Qingle Huang, Sihao Lin, Hongwei Xie, Bing Wang, Xiaojun Chang, Xiaodan Liang: `"https://openaccess.thecvf.com/content/ICCV2021/html/Liu_Exploring_Inter-Channel_Correlation_for_Diversity-Preserved_Knowledge_Distillation_ICCV_2021_paper.html>`_ @ ICCV 2021 (2021)
+    Li Liu, Qingle Huang, Sihao Lin, Hongwei Xie, Bing Wang, Xiaojun Chang, Xiaodan Liang: `"Inter-Channel Correlation for Knowledge Distillation" <https://openaccess.thecvf.com/content/ICCV2021/html/Liu_Exploring_Inter-Channel_Correlation_for_Diversity-Preserved_Knowledge_Distillation_ICCV_2021_paper.html>`_ @ ICCV 2021 (2021)
 
     :param in_channels: number of input channels for the convolution layer.
     :type in_channels: int
@@ -827,7 +827,7 @@ class Student4ICKD(AuxiliaryModelWrapper):
     An auxiliary student model wrapper for Inter-Channel Correlation for Knowledge Distillation (ICKD).
     Referred to https://github.com/ADLab-AutoDrive/ICKD/blob/main/ImageNet/torchdistill/models/special.py
 
-    Li Liu, Qingle Huang, Sihao Lin, Hongwei Xie, Bing Wang, Xiaojun Chang, Xiaodan Liang: `"https://openaccess.thecvf.com/content/ICCV2021/html/Liu_Exploring_Inter-Channel_Correlation_for_Diversity-Preserved_Knowledge_Distillation_ICCV_2021_paper.html>`_ @ ICCV 2021 (2021)
+    Li Liu, Qingle Huang, Sihao Lin, Hongwei Xie, Bing Wang, Xiaojun Chang, Xiaodan Liang: `"Inter-Channel Correlation for Knowledge Distillation" <https://openaccess.thecvf.com/content/ICCV2021/html/Liu_Exploring_Inter-Channel_Correlation_for_Diversity-Preserved_Knowledge_Distillation_ICCV_2021_paper.html>`_ @ ICCV 2021 (2021)
 
     :param student_model: student model.
     :type student_model: nn.Module
@@ -857,6 +857,49 @@ class Student4ICKD(AuxiliaryModelWrapper):
     def secondary_forward(self, io_dict):
         for embed_key, io_type, module_path in self.io_path_pairs:
             self.embed_dict[embed_key](io_dict[module_path][io_type])
+
+
+@register_auxiliary_model_wrapper
+class SRDModelWrapper(AuxiliaryModelWrapper):
+    """
+    An auxiliary model wrapper for Understanding the Role of the Projector in Knowledge Distillation.
+    Referred to https://github.com/roymiles/Simple-Recipe-Distillation/blob/main/imagenet/torchdistill/losses/single.py
+
+    Roy Miles, Krystian Mikolajczyk: `"Understanding the Role of the Projector in Knowledge Distillation" <https://arxiv.org/abs/2303.11098>`_ @ AAAI 2024 (2024)
+
+    :param student_model: student model.
+    :type student_model: nn.Module
+    :param input_module: input module configuration.
+    :type input_module: dict
+    :param linear_kwargs: nn.Linear keyword arguments.
+    :type linear_kwargs: dict or None
+    :param norm_kwargs: nn.BatchNorm1d keyword arguments.
+    :type norm_kwargs: dict
+    :param device: target device.
+    :type device: torch.device
+    :param device_ids: target device IDs.
+    :type device_ids: list[int]
+    :param distributed: whether to be in distributed training mode.
+    :type distributed: bool
+    """
+    def __init__(self, model, input_module, norm_kwargs, linear_kwargs, device, device_ids, distributed, **kwargs):
+        super().__init__()
+        self.model = wrap_if_distributed(model, device, device_ids, distributed)
+        self.input_module_path = input_module['path']
+        self.input_module_io = input_module['io']
+        self.linear = wrap_if_distributed(nn.Linear(**linear_kwargs), device, device_ids, distributed) \
+            if isinstance(linear_kwargs, dict) else None
+        self.norm_layer = wrap_if_distributed(nn.BatchNorm1d(**norm_kwargs), device, device_ids, distributed)
+
+    def forward(self, x):
+        return self.model(x)
+
+    def secondary_forward(self, io_dict):
+        z = io_dict[self.input_module_path][self.input_module_io]
+        z = z.mean(-1).mean(-1)
+        if self.linear is not None:
+            z = self.linear(z)
+        self.norm_layer(z)
 
 
 def build_auxiliary_model_wrapper(model_config, **kwargs):
