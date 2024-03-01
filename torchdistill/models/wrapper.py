@@ -867,8 +867,8 @@ class SRDModelWrapper(AuxiliaryModelWrapper):
 
     Roy Miles, Krystian Mikolajczyk: `"Understanding the Role of the Projector in Knowledge Distillation" <https://arxiv.org/abs/2303.11098>`_ @ AAAI 2024 (2024)
 
-    :param student_model: student model.
-    :type student_model: nn.Module
+    :param model: model.
+    :type model: nn.Module
     :param input_module: input module configuration.
     :type input_module: dict
     :param linear_kwargs: nn.Linear keyword arguments.
@@ -881,10 +881,21 @@ class SRDModelWrapper(AuxiliaryModelWrapper):
     :type device_ids: list[int]
     :param distributed: whether to be in distributed training mode.
     :type distributed: bool
+    :param teacher_model: teacher model.
+    :type teacher_model: nn.Module or None
+    :param student_model: student model.
+    :type student_model: nn.Module or None
+    :param find_unused_parameters: ``find_unused_parameters`` for DistributedDataParallel.
+    :type find_unused_parameters: bool or None
     """
-    def __init__(self, model, input_module, norm_kwargs, linear_kwargs, device, device_ids, distributed, **kwargs):
+    def __init__(self, input_module, norm_kwargs, device, device_ids, distributed, linear_kwargs=None,
+                 teacher_model=None, student_model=None, find_unused_parameters=None, **kwargs):
         super().__init__()
-        self.model = wrap_if_distributed(model, device, device_ids, distributed)
+        is_teacher = teacher_model is not None
+        if not is_teacher:
+            student_model = wrap_if_distributed(student_model, device, device_ids, distributed, find_unused_parameters)
+
+        self.model = teacher_model if is_teacher else student_model
         self.input_module_path = input_module['path']
         self.input_module_io = input_module['io']
         self.linear = wrap_if_distributed(nn.Linear(**linear_kwargs), device, device_ids, distributed) \
