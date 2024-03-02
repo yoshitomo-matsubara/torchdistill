@@ -73,7 +73,7 @@ models:
       num_classes: 1000
     _experiment: &student_experiment !join [*dataset_name, '-', *student_model_key, '_from_', *teacher_model_key]
     src_ckpt:
-    dst_ckpt: !join ['./resource/ckpt/ilsvrc2012/multi_stage/sskd/', *student_experiment, '.pt']
+    dst_ckpt: !join ['./resource/ckpt/ilsvrc2012/sskd/', *student_experiment, '.pt']
 
 train:
   log_freq: 1000
@@ -116,7 +116,7 @@ train:
             io: 'output'
           feat_dim: &teacher4sskd_feat_dim 512
           freezes_ss_module: False
-          ss_module_ckpt: &teacher4sskd_ckpt !join ['./resource/ckpt/ilsvrc2012/multi_stage/sskd/', *student_experiment, '_teacher_ss_module.pt']
+          ss_module_ckpt: &teacher4sskd_ckpt !join ['./resource/ckpt/ilsvrc2012/sskd/', *student_experiment, '_teacher_ss_module.pt']
       forward_hook:
         input: []
         output: ['model.avgpool', 'ss_module']
@@ -187,7 +187,7 @@ train:
             io: 'output'
           feat_dim: 512
           freezes_ss_module: False
-          ss_module_ckpt: !join ['./resource/ckpt/ilsvrc2012/multi_stage/sskd/', *student_experiment, '_student_ss_module.pt']
+          ss_module_ckpt: !join ['./resource/ckpt/ilsvrc2012/sskd/', *student_experiment, '_student_ss_module.pt']
       forward_hook:
         input: []
         output: ['model.avgpool', 'model.fc', 'ss_module']

@@ -73,7 +73,7 @@ models:
       num_classes: 1000
     _experiment: &student_experiment !join [*dataset_name, '-', *student_model_key, '_from_', *teacher_model_key]
     src_ckpt:
-    dst_ckpt: !join ['./resource/ckpt/ilsvrc2012/multi_stage/ft/', *student_experiment, '.pt']
+    dst_ckpt: !join ['./resource/ckpt/ilsvrc2012/ft/', *student_experiment, '.pt']
 
 train:
   log_freq: 1000
@@ -118,7 +118,7 @@ train:
             stride: 1
             padding: 1
             uses_bn: False
-          paraphraser_ckpt: &teacher4ft_paraphraser_ckpt !join ['./resource/ckpt/ilsvrc2012/multi_stage/ft/', *student_experiment, '_paraphraser.pt']
+          paraphraser_ckpt: &teacher4ft_paraphraser_ckpt !join ['./resource/ckpt/ilsvrc2012/ft/', *student_experiment, '_paraphraser.pt']
           uses_decoder: True
       forward_hook:
         input: []

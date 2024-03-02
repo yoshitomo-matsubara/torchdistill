@@ -73,7 +73,7 @@ models:
       num_classes: 1000
     _experiment: &student_experiment !join [*dataset_name, '-', *student_model_key, '_from_', *teacher_model_key]
     src_ckpt:
-    dst_ckpt: !join ['./resource/ckpt/ilsvrc2012/multi_stage/pad/', *student_experiment, '.pt']
+    dst_ckpt: !join ['./resource/ckpt/ilsvrc2012/pad/', *student_experiment, '.pt']
 
 train:
   log_freq: 1000
@@ -181,7 +181,7 @@ train:
             path: 'student_model.avgpool'
             io: 'output'
           feat_dim: 512
-          var_estimator_ckpt: !join ['./resource/ckpt/ilsvrc2012/multi_stage/pad/', *student_experiment, '_var_estimator.pt']
+          var_estimator_ckpt: !join ['./resource/ckpt/ilsvrc2012/pad/', *student_experiment, '_var_estimator.pt']
       frozen_modules: []
       forward_hook:
         input: []

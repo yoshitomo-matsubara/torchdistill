@@ -73,7 +73,7 @@ models:
       num_classes: 1000
     _experiment: &student_experiment !join [*dataset_name, '-', *student_model_key, '_from_', *teacher_model_key]
     src_ckpt:
-    dst_ckpt: !join ['./resource/ckpt/ilsvrc2012/multi_stage/dab/', *student_experiment, '.pt']
+    dst_ckpt: !join ['./resource/ckpt/ilsvrc2012/dab/', *student_experiment, '.pt']
 
 train:
   log_freq: 1000
@@ -108,13 +108,14 @@ train:
       forward_hook:
         input: []
         output: ['layer1', 'layer2', 'layer3', 'layer4']
-      wrapper: 'DistributedDataParallel'
+      wrapper: 'DataParallel'
       requires_grad: False
     student:
       forward_proc: 'forward_batch_only'
       adaptations:
       sequential: []
       auxiliary_model_wrapper:
+        sequential: ['conv1', 'bn1', 'relu', 'maxpool', 'layer1', 'layer2', 'layer3', 'layer4']
         key: 'Connector4DAB'
         kwargs:
           connectors:
@@ -227,7 +228,7 @@ train:
     teacher:
       forward_proc: 'forward_batch_only'
       sequential: []
-      wrapper: 'DistributedDataParallel'
+      wrapper: 'DataParallel'
       requires_grad: False
     student:
       forward_proc: 'forward_batch_only'
@@ -255,6 +256,10 @@ train:
             criterion:
               key: 'KDLoss'
               kwargs:
+                student_module_path: '.'
+                student_module_io: 'output'
+                teacher_module_path: '.'
+                teacher_module_io: 'output'
                 temperature: 1.0
                 alpha: 1.0
                 reduction: 'batchmean'
