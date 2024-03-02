@@ -185,7 +185,7 @@ torchrun  --nproc_per_node=${NUM_GPUS} examples/torchvision/image_classification
     --run_log log/ilsvrc2012/pad_l2-resnet18_from_resnet34.log \
     --world_size ${NUM_GPUS} 
 ```
-Multi-stage methods can be defined in one yaml file like [this](https://github.com/yoshitomo-matsubara/torchdistill/blob/master/configs/sample/image_classification/multi_stage/pad), 
+Multi-stage methods can be defined in one yaml file like [this](https://github.com/yoshitomo-matsubara/torchdistill/blob/master/configs/sample/ilsvrc2012/pad), 
 but you should modify the hyperparameters like number of epochs, lr scheduler, and so on.
 
 ---

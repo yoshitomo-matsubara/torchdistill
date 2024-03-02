@@ -45,7 +45,7 @@ models:
           trainable_backbone_layers: 3
     _experiment: &student_experiment !join [*dataset_name, '-', *student_model_key, '_from_', *teacher_model_key]
     src_ckpt:
-    dst_ckpt: !join ['./resource/ckpt/coco2017/multi_stage/ft/', *student_experiment, '.pt']
+    dst_ckpt: !join ['./resource/ckpt/coco2017/ft/', *student_experiment, '.pt']
 
 train:
   log_freq: 1000
