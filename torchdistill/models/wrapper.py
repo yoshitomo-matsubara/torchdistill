@@ -930,4 +930,8 @@ def build_auxiliary_model_wrapper(model_config, **kwargs):
     auxiliary_model_wrapper_kwargs = auxiliary_model_wrapper_config.get('kwargs', None)
     if auxiliary_model_wrapper_kwargs is None:
         auxiliary_model_wrapper_kwargs = dict()
+    elif 'teacher_model' in kwargs:
+        kwargs['teacher_model'] = redesign_model(kwargs['teacher_model'], auxiliary_model_wrapper_config, 'teacher', 'pre-auxiliary')
+    elif 'student_model' in kwargs:
+        kwargs['student_model'] = redesign_model(kwargs['student_model'], auxiliary_model_wrapper_config, 'student', 'pre-auxiliary')
     return get_auxiliary_model_wrapper(auxiliary_model_wrapper_key, **kwargs, **auxiliary_model_wrapper_kwargs)
