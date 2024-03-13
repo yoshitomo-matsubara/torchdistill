@@ -80,8 +80,8 @@ def import_call(key, package=None, init=None, **kwargs):
     :type key: str
     :param package: package path if ``key`` is just an attribute name.
     :type package: str or None
-    :param package: instantiate the imported module.
-    :type package: bool
+    :param init: dict of arguments and/or keyword arguments to instantiate the imported module.
+    :type init: dict
     :return: object imported and called.
     :rtype: Any
     """
@@ -98,6 +98,38 @@ def import_call(key, package=None, init=None, **kwargs):
     args = init.get('args', list())
     kwargs = init.get('kwargs', dict())
     return obj(*args, **kwargs)
+
+
+def import_call_method(package, class_name=None, method_name=None, init=None, **kwargs):
+    """
+    Imports module and call its method.
+
+    :param package: package path.
+    :type package: str
+    :param class_name: class name under ``package``.
+    :type class_name: str
+    :param method_name: method name of ``class_name`` class under ``package``.
+    :type method_name: str
+    :param init: dict of arguments and/or keyword arguments to instantiate the imported module.
+    :type init: dict
+    :return: object imported and called.
+    :rtype: Any
+    """
+    if class_name is None or method_name is None:
+        names = package.split('.')
+        class_name = names[-2]
+        method_name = names[-1]
+        package = '.'.join(names[:-2])
+
+    cls = import_get(class_name, package)
+    if init is None:
+        init = dict()
+
+    logger.info(f'Calling `{class_name}.{method_name}` from `{package}` with {init}')
+    args = init.get('args', list())
+    kwargs = init.get('kwargs', dict())
+    method = getattr(cls, method_name)
+    return method(*args, **kwargs)
 
 
 def setup_for_distributed(is_master):
