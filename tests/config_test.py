@@ -1,6 +1,6 @@
 from unittest import TestCase
 
-from torchdistill.common.main_util import import_dependencies, import_get, import_call
+from torchdistill.common.main_util import import_dependencies, import_get, import_call, import_call_method
 
 
 class ImportUnitTest(TestCase):
@@ -37,3 +37,16 @@ class ImportUnitTest(TestCase):
         from torch import nn
         assert str(softmax) == str(nn.Softmax(dim=1))
         assert str(dropout) == str(nn.Dropout())
+
+    def test_import_call_method(self):
+        kwargs1 = {'package': 'torchvision.models.alexnet', 'class_name': 'AlexNet_Weights', 'method_name': 'verify',
+                   'init': {'kwargs': {'obj': 'AlexNet_Weights.IMAGENET1K_V1'}}}
+        kwargs2 = {'package': 'torchvision.models.alexnet.AlexNet_Weights.verify',
+                   'init': {'kwargs': {'obj': 'AlexNet_Weights.IMAGENET1K_V1'}}}
+
+        weights1 = import_call_method(**kwargs1)
+        weights2 = import_call_method(**kwargs2)
+        from torchvision.models.alexnet import AlexNet_Weights
+        true_weights = AlexNet_Weights.IMAGENET1K_V1
+        assert weights1 == true_weights
+        assert weights2 == true_weights
