@@ -113,9 +113,6 @@ train:
           num_features: 512
           eps: 0.0001
           affine: False
-        linear_kwargs:
-          in_features: 512
-          out_features: 512
     sequential: []
     forward_hook:
       input: []
