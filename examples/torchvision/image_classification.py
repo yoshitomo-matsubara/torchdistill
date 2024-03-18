@@ -118,7 +118,7 @@ def evaluate(model, data_loader, device, device_ids, distributed, log_freq=1000,
     return metric_logger.acc1.global_avg
 
 
-def train(teacher_model, student_model, dataset_dict, dst_ckpt_file_path,
+def train(teacher_model, student_model, dataset_dict, src_ckpt_file_path, dst_ckpt_file_path,
           device, device_ids, distributed, world_size, config, args):
     logger.info('Start training')
     train_config = config['train']
@@ -129,8 +129,8 @@ def train(teacher_model, student_model, dataset_dict, dst_ckpt_file_path,
                                   device, device_ids, distributed, lr_factor)
     best_val_top1_accuracy = 0.0
     optimizer, lr_scheduler = training_box.optimizer, training_box.lr_scheduler
-    if file_util.check_if_exists(dst_ckpt_file_path):
-        best_val_top1_accuracy, _ = load_ckpt(dst_ckpt_file_path, optimizer=optimizer, lr_scheduler=lr_scheduler)
+    if file_util.check_if_exists(src_ckpt_file_path):
+        best_val_top1_accuracy, _ = load_ckpt(src_ckpt_file_path, optimizer=optimizer, lr_scheduler=lr_scheduler)
 
     log_freq = train_config['log_freq']
     student_model_without_ddp = student_model.module if module_util.check_if_wrapped(student_model) else student_model
@@ -178,13 +178,14 @@ def main(args):
         load_model(teacher_model_config, device, distributed) if teacher_model_config is not None else None
     student_model_config =\
         models_config['student_model'] if 'student_model' in models_config else models_config['model']
+    src_ckpt_file_path = student_model_config.get('src_ckpt', None)
     dst_ckpt_file_path = student_model_config['dst_ckpt']
     student_model = load_model(student_model_config, device, distributed)
     if args.log_config:
         logger.info(config)
 
     if not args.test_only:
-        train(teacher_model, student_model, dataset_dict, dst_ckpt_file_path,
+        train(teacher_model, student_model, dataset_dict, src_ckpt_file_path, dst_ckpt_file_path,
               device, device_ids, distributed, world_size, config, args)
 
     student_model_without_ddp =\
