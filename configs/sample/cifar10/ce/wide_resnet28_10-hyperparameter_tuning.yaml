@@ -53,10 +53,10 @@ datasets:
                       key: 'torchvision.transforms.Normalize'
                       init:
                         kwargs: *normalize_kwargs
-  &cifar10_train cifar10/sub_train: !simple_access
+  &cifar10_train cifar10/sub_train: !access_by_index_or_key
     data: *cifar10_sub_splits
     index_or_key: 0
-  &cifar10_val cifar10/sub_val: !simple_access
+  &cifar10_val cifar10/sub_val: !access_by_index_or_key
     data: *cifar10_sub_splits
     index_or_key: 1
   &cifar10_test cifar10/test: !import_call
