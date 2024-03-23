@@ -98,7 +98,23 @@ def yaml_getattr(loader, node):
     return getattr(*args)
 
 
-def yaml_simple_access(loader, node):
+def yaml_setattr(loader, node):
+    """
+    Sets an attribute to the first argument.
+
+    :param loader: yaml loader.
+    :type loader: yaml.loader.FullLoader
+    :param node: node.
+    :type node: yaml.nodes.Node
+    :return: module attribute.
+    :rtype: Any
+    """
+    args = loader.construct_sequence(node, deep=True)
+    setattr(*args)
+    return args[0]
+
+
+def yaml_access_by_index_or_key(loader, node):
     """
     Obtains a value from a specified data
 
@@ -133,6 +149,7 @@ def load_yaml_file(yaml_file_path, custom_mode=True):
         yaml.add_constructor('!import_call', yaml_import_call, Loader=yaml.FullLoader)
         yaml.add_constructor('!import_call_method', yaml_import_call_method, Loader=yaml.FullLoader)
         yaml.add_constructor('!getattr', yaml_getattr, Loader=yaml.FullLoader)
-        yaml.add_constructor('!simple_access', yaml_simple_access, Loader=yaml.FullLoader)
+        yaml.add_constructor('!setattr', yaml_getattr, Loader=yaml.FullLoader)
+        yaml.add_constructor('!access_by_index_or_key', yaml_access_by_index_or_key, Loader=yaml.FullLoader)
     with open(yaml_file_path, 'r') as fp:
         return yaml.load(fp, Loader=yaml.FullLoader)
