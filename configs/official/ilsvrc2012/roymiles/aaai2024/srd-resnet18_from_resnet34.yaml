@@ -1,6 +1,6 @@
 datasets:
   &imagenet_train ilsvrc2012/train: !import_call
-    _name: &dataset_name 'imagenet2012'
+    _name: &dataset_name 'ilsvrc2012'
     _root: &root_dir !join ['~/datasets/', *dataset_name]
     key: 'torchvision.datasets.ImageFolder'
     init:
