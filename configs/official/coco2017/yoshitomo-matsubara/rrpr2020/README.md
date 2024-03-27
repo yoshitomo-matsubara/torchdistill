@@ -30,7 +30,7 @@
 ### Command to test with checkpoints
 - Download [coco.zip](https://github.com/yoshitomo-matsubara/torchdistill/releases/download/v0.0.1/coco.zip)
 - Unzip `coco.zip` 
-- Update `dst_ckpt` of student models defined in the yaml files in this directory with unzipped checkpoint file paths
+- Update `src_ckpt` of student models defined in the yaml files in this directory with unzipped checkpoint file paths
 
 #### Generalized Head Network Distillation
 - Teacher: Faster R-CNN with ResNet-50 and FPN (Pretrained)

@@ -23,7 +23,7 @@
 ---
 ### Command to test with a checkpoint
 - Download [pascal_voc2012-deeplabv3_resnet50.pt](https://github.com/yoshitomo-matsubara/torchdistill/releases/download/v0.2.8/pascal_voc2012-deeplabv3_resnet50.pt) and [pascal_voc2012-deeplabv3_resnet101.pt](https://github.com/yoshitomo-matsubara/torchdistill/releases/download/v0.2.8/pascal_voc2012-deeplabv3_resnet101.pt)
-- Update `dst_ckpt` of student models defined in the yaml files in this directory with the checkpoint file path
+- Update `src_ckpt` of student models defined in the yaml files in this directory with the checkpoint file path
 
 DeepLabv3 with ResNet-50
 ```
@@ -45,14 +45,14 @@ Make sure checkpoint files do not exist at `dst_ckpt` in `student_model` entry t
 
 DeepLabv3 with ResNet-50
 ```
-torchrun examples/torchvision/semantic_segmentation.py \
+python3 examples/torchvision/semantic_segmentation.py \
     --config configs/official/pascal_voc2012/yoshitomo-matsubara/nlp-oss2023/deeplabv3_resnet50.yaml \
     --run_log log/deeplabv3_resnet50.log 
 ```
 
 DeepLabv3 with ResNet-101
 ```
-torchrun examples/torchvision/semantic_segmentation.py \
+python3 examples/torchvision/semantic_segmentation.py \
     --config configs/official/pascal_voc2012/yoshitomo-matsubara/nlp-oss2023/deeplabv3_resnet101.yaml \
     --run_log log/deeplabv3_resnet101.log 
 ```

@@ -22,7 +22,7 @@
 ---
 ### Command to test with a checkpoint
 - Download https://github.com/yoshitomo-matsubara/torchdistill/releases/download/v0.2.6/coco2017-lraspp_mobilenet_v3_large_from_deeplabv3_resnet50.pt
-- Update `dst_ckpt` of student models defined in the yaml files in this directory with the checkpoint file path
+- Update `src_ckpt` of student models defined in the yaml files in this directory with the checkpoint file path
 
 #### Knowledge Translation and Adaptation + Affinity Distillation
 - Teacher: DeepLabv3 with ResNet-50 (Pretrained)
