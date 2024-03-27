@@ -1,0 +1,270 @@
+<!DOCTYPE html>
+<html class="writer-html5" lang="en">
+<head>
+  <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>torchdistill.misc &mdash; torchdistill v1.1.1-dev documentation</title>
+      <link rel="stylesheet" type="text/css" href="../_static/pygments.css?v=80d5e7a1" />
+      <link rel="stylesheet" type="text/css" href="../_static/css/theme.css?v=19f00094" />
+
+  
+  <!--[if lt IE 9]>
+    <script src="../_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+        <script src="../_static/jquery.js?v=5d32c60e"></script>
+        <script src="../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+        <script data-url_root="../" id="documentation_options" src="../_static/documentation_options.js?v=0b675245"></script>
+        <script src="../_static/doctools.js?v=888ff710"></script>
+        <script src="../_static/sphinx_highlight.js?v=4825356b"></script>
+    <script src="../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" />
+    <link rel="next" title="Benchmarks" href="../benchmarks.html" />
+    <link rel="prev" title="torchdistill.common" href="common.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="../index.html">
+            
+              <img src="../_static/logo-white.png" class="logo" alt="Logo"/>
+          </a>
+              <div class="version">
+                v1.1.1-dev
+              </div>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">📚 Overview</span></p>
+<ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="../usage.html">Usage</a></li>
+<li class="toctree-l1 current"><a class="reference internal" href="../package.html">torchdistill API</a><ul class="current">
+<li class="toctree-l2"><a class="reference internal" href="core.html">torchdistill.core</a></li>
+<li class="toctree-l2"><a class="reference internal" href="datasets.html">torchdistill.datasets</a></li>
+<li class="toctree-l2"><a class="reference internal" href="models.html">torchdistill.models</a></li>
+<li class="toctree-l2"><a class="reference internal" href="losses.html">torchdistill.losses</a></li>
+<li class="toctree-l2"><a class="reference internal" href="optim.html">torchdistill.optim</a></li>
+<li class="toctree-l2"><a class="reference internal" href="common.html">torchdistill.common</a></li>
+<li class="toctree-l2 current"><a class="current reference internal" href="#">torchdistill.misc</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#torchdistill-misc-log">torchdistill.misc.log</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#torchdistill.misc.log.setup_log_file"><code class="docutils literal notranslate"><span class="pre">setup_log_file()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#torchdistill.misc.log.SmoothedValue"><code class="docutils literal notranslate"><span class="pre">SmoothedValue</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#torchdistill.misc.log.MetricLogger"><code class="docutils literal notranslate"><span class="pre">MetricLogger</span></code></a></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">🧑🏻‍💻 Research</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../benchmarks.html">Benchmarks</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../projects.html">Projects</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../index.html">torchdistill</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content style-external-links">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../index.html" class="icon icon-home" aria-label="Home"></a></li>
+          <li class="breadcrumb-item"><a href="../package.html">torchdistill API</a></li>
+      <li class="breadcrumb-item active">torchdistill.misc</li>
+      <li class="wy-breadcrumbs-aside">
+              <a href="https://github.com/yoshitomo-matsubara/torchdistill/blob/main/docs/source/subpkgs/misc.rst" class="fa fa-github"> Edit on GitHub</a>
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <section id="torchdistill-misc">
+<h1>torchdistill.misc<a class="headerlink" href="#torchdistill-misc" title="Permalink to this heading"></a></h1>
+<div class="toctree-wrapper compound">
+</div>
+<hr class="docutils" />
+<section id="torchdistill-misc-log">
+<h2>torchdistill.misc.log<a class="headerlink" href="#torchdistill-misc-log" title="Permalink to this heading"></a></h2>
+<span class="target" id="module-torchdistill.misc.log"></span><dl class="py function">
+<dt class="sig sig-object py" id="torchdistill.misc.log.setup_log_file">
+<span class="sig-prename descclassname"><span class="pre">torchdistill.misc.log.</span></span><span class="sig-name descname"><span class="pre">setup_log_file</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">log_file_path</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/torchdistill/misc/log.html#setup_log_file"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#torchdistill.misc.log.setup_log_file" title="Permalink to this definition"></a></dt>
+<dd><p>Sets a file handler with <code class="docutils literal notranslate"><span class="pre">log_file_path</span></code> to write a log file.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>log_file_path</strong> (<em>str</em>) – log file path.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="torchdistill.misc.log.SmoothedValue">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">torchdistill.misc.log.</span></span><span class="sig-name descname"><span class="pre">SmoothedValue</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">window_size</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">20</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">fmt</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/torchdistill/misc/log.html#SmoothedValue"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#torchdistill.misc.log.SmoothedValue" title="Permalink to this definition"></a></dt>
+<dd><p>A deque-based value object tracks a series of values and provides access to smoothed values
+over a window or the global series average. The original implementation is <a class="reference external" href="https://github.com/pytorch/vision/blob/main/references/classification/utils.py">https://github.com/pytorch/vision/blob/main/references/classification/utils.py</a></p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>window_size</strong> (<em>int</em>) – window size.</p></li>
+<li><p><strong>fmt</strong> (<em>str</em><em> or </em><em>None</em>) – text format.</p></li>
+</ul>
+</dd>
+</dl>
+<dl class="py method">
+<dt class="sig sig-object py" id="torchdistill.misc.log.SmoothedValue.update">
+<span class="sig-name descname"><span class="pre">update</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">value</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">n</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/torchdistill/misc/log.html#SmoothedValue.update"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#torchdistill.misc.log.SmoothedValue.update" title="Permalink to this definition"></a></dt>
+<dd><p>Appends <code class="docutils literal notranslate"><span class="pre">value</span></code>.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>value</strong> (<em>float</em><em> or </em><em>int</em>) – value to be added.</p></li>
+<li><p><strong>n</strong> (<em>int</em>) – sample count.</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="torchdistill.misc.log.SmoothedValue.synchronize_between_processes">
+<span class="sig-name descname"><span class="pre">synchronize_between_processes</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/torchdistill/misc/log.html#SmoothedValue.synchronize_between_processes"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#torchdistill.misc.log.SmoothedValue.synchronize_between_processes" title="Permalink to this definition"></a></dt>
+<dd><p>Synchronizes between processes.</p>
+<div class="admonition warning">
+<p class="admonition-title">Warning</p>
+<p>It does not synchronize the deque.</p>
+</div>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="torchdistill.misc.log.MetricLogger">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">torchdistill.misc.log.</span></span><span class="sig-name descname"><span class="pre">MetricLogger</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">delimiter</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'\t'</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/torchdistill/misc/log.html#MetricLogger"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#torchdistill.misc.log.MetricLogger" title="Permalink to this definition"></a></dt>
+<dd><p>A metric logger with <a class="reference internal" href="#torchdistill.misc.log.SmoothedValue" title="torchdistill.misc.log.SmoothedValue"><code class="xref py py-class docutils literal notranslate"><span class="pre">SmoothedValue</span></code></a>.
+The original implementation is <a class="reference external" href="https://github.com/pytorch/vision/blob/main/references/classification/utils.py">https://github.com/pytorch/vision/blob/main/references/classification/utils.py</a></p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>delimiter</strong> (<em>str</em>) – delimiter in a log message.</p>
+</dd>
+</dl>
+<dl class="py method">
+<dt class="sig sig-object py" id="torchdistill.misc.log.MetricLogger.update">
+<span class="sig-name descname"><span class="pre">update</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/torchdistill/misc/log.html#MetricLogger.update"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#torchdistill.misc.log.MetricLogger.update" title="Permalink to this definition"></a></dt>
+<dd><p>Updates a metric dict whose values are <a class="reference internal" href="#torchdistill.misc.log.SmoothedValue" title="torchdistill.misc.log.SmoothedValue"><code class="xref py py-class docutils literal notranslate"><span class="pre">SmoothedValue</span></code></a>.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>kwargs</strong> (<em>dict</em>) – keys and values.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="torchdistill.misc.log.MetricLogger.synchronize_between_processes">
+<span class="sig-name descname"><span class="pre">synchronize_between_processes</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/torchdistill/misc/log.html#MetricLogger.synchronize_between_processes"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#torchdistill.misc.log.MetricLogger.synchronize_between_processes" title="Permalink to this definition"></a></dt>
+<dd><p>Synchronizes between processes.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="torchdistill.misc.log.MetricLogger.add_meter">
+<span class="sig-name descname"><span class="pre">add_meter</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">name</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">meter</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/torchdistill/misc/log.html#MetricLogger.add_meter"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#torchdistill.misc.log.MetricLogger.add_meter" title="Permalink to this definition"></a></dt>
+<dd><p>Add a new metric name and value.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>name</strong> (<em>str</em>) – metric name.</p></li>
+<li><p><strong>meter</strong> (<a class="reference internal" href="#torchdistill.misc.log.SmoothedValue" title="torchdistill.misc.log.SmoothedValue"><em>SmoothedValue</em></a>) – smoothed value.</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="torchdistill.misc.log.MetricLogger.log_every">
+<span class="sig-name descname"><span class="pre">log_every</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">iterable</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">log_freq</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">header</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/torchdistill/misc/log.html#MetricLogger.log_every"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#torchdistill.misc.log.MetricLogger.log_every" title="Permalink to this definition"></a></dt>
+<dd><p>Add a new metric name and value.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>iterable</strong> (<em>Iterable</em>) – iterable object (e.g., data loader).</p></li>
+<li><p><strong>log_freq</strong> (<em>int</em>) – log frequency.</p></li>
+<li><p><strong>header</strong> (<em>str</em>) – log message header.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>item in <code class="docutils literal notranslate"><span class="pre">iterative</span></code>.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>Any</p>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+</section>
+</section>
+
+
+           </div>
+          </div>
+          <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
+        <a href="common.html" class="btn btn-neutral float-left" title="torchdistill.common" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="../benchmarks.html" class="btn btn-neutral float-right" title="Benchmarks" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2023, Yoshitomo Matsubara.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script>
+    <!-- Theme Analytics -->
+    <script async src="https://www.googletagmanager.com/gtag/js?id=G-LYK8SSJ7R5"></script>
+    <script>
+      window.dataLayer = window.dataLayer || [];
+      function gtag(){dataLayer.push(arguments);}
+      gtag('js', new Date());
+
+      gtag('config', 'G-LYK8SSJ7R5', {
+          'anonymize_ip': false,
+      });
+    </script> 
+
+</body>
+</html>

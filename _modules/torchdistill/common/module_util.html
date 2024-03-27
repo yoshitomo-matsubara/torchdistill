@@ -1,0 +1,340 @@
+<!DOCTYPE html>
+<html class="writer-html5" lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>torchdistill.common.module_util &mdash; torchdistill v1.1.1-dev documentation</title>
+      <link rel="stylesheet" type="text/css" href="../../../_static/pygments.css?v=80d5e7a1" />
+      <link rel="stylesheet" type="text/css" href="../../../_static/css/theme.css?v=19f00094" />
+
+  
+  <!--[if lt IE 9]>
+    <script src="../../../_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+        <script src="../../../_static/jquery.js?v=5d32c60e"></script>
+        <script src="../../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+        <script data-url_root="../../../" id="documentation_options" src="../../../_static/documentation_options.js?v=0b675245"></script>
+        <script src="../../../_static/doctools.js?v=888ff710"></script>
+        <script src="../../../_static/sphinx_highlight.js?v=4825356b"></script>
+    <script src="../../../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../search.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="../../../index.html">
+            
+              <img src="../../../_static/logo-white.png" class="logo" alt="Logo"/>
+          </a>
+              <div class="version">
+                v1.1.1-dev
+              </div>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">📚 Overview</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../usage.html">Usage</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../package.html">torchdistill API</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">🧑🏻‍💻 Research</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../benchmarks.html">Benchmarks</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../projects.html">Projects</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../../index.html">torchdistill</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content style-external-links">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../../../index.html" class="icon icon-home" aria-label="Home"></a></li>
+          <li class="breadcrumb-item"><a href="../../index.html">Module code</a></li>
+      <li class="breadcrumb-item active">torchdistill.common.module_util</li>
+      <li class="wy-breadcrumbs-aside">
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <h1>Source code for torchdistill.common.module_util</h1><div class="highlight"><pre>
+<span></span><span class="kn">from</span> <span class="nn">collections</span> <span class="kn">import</span> <span class="n">OrderedDict</span>
+
+<span class="kn">from</span> <span class="nn">torch.nn</span> <span class="kn">import</span> <span class="n">DataParallel</span><span class="p">,</span> <span class="n">Sequential</span><span class="p">,</span> <span class="n">ModuleList</span><span class="p">,</span> <span class="n">Module</span><span class="p">,</span> <span class="n">Parameter</span>
+<span class="kn">from</span> <span class="nn">torch.nn.parallel</span> <span class="kn">import</span> <span class="n">DistributedDataParallel</span>
+
+<span class="kn">from</span> <span class="nn">.constant</span> <span class="kn">import</span> <span class="n">def_logger</span>
+
+<span class="n">logger</span> <span class="o">=</span> <span class="n">def_logger</span><span class="o">.</span><span class="n">getChild</span><span class="p">(</span><span class="vm">__name__</span><span class="p">)</span>
+
+
+<div class="viewcode-block" id="check_if_wrapped"><a class="viewcode-back" href="../../../subpkgs/common.html#torchdistill.common.module_util.check_if_wrapped">[docs]</a><span class="k">def</span> <span class="nf">check_if_wrapped</span><span class="p">(</span><span class="n">model</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Checks if a given model is wrapped by DataParallel or DistributedDataParallel.</span>
+
+<span class="sd">    :param model: model.</span>
+<span class="sd">    :type model: nn.Module</span>
+<span class="sd">    :return: True if `model` is wrapped by either DataParallel or DistributedDataParallel.</span>
+<span class="sd">    :rtype: bool</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">return</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">model</span><span class="p">,</span> <span class="p">(</span><span class="n">DataParallel</span><span class="p">,</span> <span class="n">DistributedDataParallel</span><span class="p">))</span></div>
+
+
+<div class="viewcode-block" id="count_params"><a class="viewcode-back" href="../../../subpkgs/common.html#torchdistill.common.module_util.count_params">[docs]</a><span class="k">def</span> <span class="nf">count_params</span><span class="p">(</span><span class="n">module</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Returns the number of module parameters.</span>
+
+<span class="sd">    :param module: module.</span>
+<span class="sd">    :type module: nn.Module</span>
+<span class="sd">    :return: number of model parameters.</span>
+<span class="sd">    :rtype: int</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">return</span> <span class="nb">sum</span><span class="p">(</span><span class="n">param</span><span class="o">.</span><span class="n">numel</span><span class="p">()</span> <span class="k">for</span> <span class="n">param</span> <span class="ow">in</span> <span class="n">module</span><span class="o">.</span><span class="n">parameters</span><span class="p">())</span></div>
+
+
+<div class="viewcode-block" id="freeze_module_params"><a class="viewcode-back" href="../../../subpkgs/common.html#torchdistill.common.module_util.freeze_module_params">[docs]</a><span class="k">def</span> <span class="nf">freeze_module_params</span><span class="p">(</span><span class="n">module</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Freezes parameters by setting requires_grad=False for all the parameters.</span>
+
+<span class="sd">    :param module: module.</span>
+<span class="sd">    :type module: nn.Module</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">module</span><span class="p">,</span> <span class="n">Module</span><span class="p">):</span>
+        <span class="k">for</span> <span class="n">param</span> <span class="ow">in</span> <span class="n">module</span><span class="o">.</span><span class="n">parameters</span><span class="p">():</span>
+            <span class="n">param</span><span class="o">.</span><span class="n">requires_grad</span> <span class="o">=</span> <span class="kc">False</span>
+    <span class="k">elif</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">module</span><span class="p">,</span> <span class="n">Parameter</span><span class="p">):</span>
+        <span class="n">module</span><span class="o">.</span><span class="n">requires_grad</span> <span class="o">=</span> <span class="kc">False</span></div>
+
+
+<div class="viewcode-block" id="unfreeze_module_params"><a class="viewcode-back" href="../../../subpkgs/common.html#torchdistill.common.module_util.unfreeze_module_params">[docs]</a><span class="k">def</span> <span class="nf">unfreeze_module_params</span><span class="p">(</span><span class="n">module</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Unfreezes parameters by setting requires_grad=True for all the parameters.</span>
+
+<span class="sd">    :param module: module.</span>
+<span class="sd">    :type module: nn.Module</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">module</span><span class="p">,</span> <span class="n">Module</span><span class="p">):</span>
+        <span class="k">for</span> <span class="n">param</span> <span class="ow">in</span> <span class="n">module</span><span class="o">.</span><span class="n">parameters</span><span class="p">():</span>
+            <span class="n">param</span><span class="o">.</span><span class="n">requires_grad</span> <span class="o">=</span> <span class="kc">True</span>
+    <span class="k">elif</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">module</span><span class="p">,</span> <span class="n">Parameter</span><span class="p">):</span>
+        <span class="n">module</span><span class="o">.</span><span class="n">requires_grad</span> <span class="o">=</span> <span class="kc">True</span></div>
+
+
+<div class="viewcode-block" id="get_updatable_param_names"><a class="viewcode-back" href="../../../subpkgs/common.html#torchdistill.common.module_util.get_updatable_param_names">[docs]</a><span class="k">def</span> <span class="nf">get_updatable_param_names</span><span class="p">(</span><span class="n">module</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Gets collection of updatable parameter names.</span>
+
+<span class="sd">    :param module: module.</span>
+<span class="sd">    :type module: nn.Module</span>
+<span class="sd">    :return: names of updatable parameters.</span>
+<span class="sd">    :rtype: list[str]</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">return</span> <span class="p">[</span><span class="n">name</span> <span class="k">for</span> <span class="n">name</span><span class="p">,</span> <span class="n">param</span> <span class="ow">in</span> <span class="n">module</span><span class="o">.</span><span class="n">named_parameters</span><span class="p">()</span> <span class="k">if</span> <span class="n">param</span><span class="o">.</span><span class="n">requires_grad</span><span class="p">]</span></div>
+
+
+<div class="viewcode-block" id="get_frozen_param_names"><a class="viewcode-back" href="../../../subpkgs/common.html#torchdistill.common.module_util.get_frozen_param_names">[docs]</a><span class="k">def</span> <span class="nf">get_frozen_param_names</span><span class="p">(</span><span class="n">module</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Gets collection of frozen parameter names.</span>
+
+<span class="sd">    :param module: module.</span>
+<span class="sd">    :type module: nn.Module</span>
+<span class="sd">    :return: names of frozen parameters.</span>
+<span class="sd">    :rtype: list[str]</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">return</span> <span class="p">[</span><span class="n">name</span> <span class="k">for</span> <span class="n">name</span><span class="p">,</span> <span class="n">param</span> <span class="ow">in</span> <span class="n">module</span><span class="o">.</span><span class="n">named_parameters</span><span class="p">()</span> <span class="k">if</span> <span class="ow">not</span> <span class="n">param</span><span class="o">.</span><span class="n">requires_grad</span><span class="p">]</span></div>
+
+
+<div class="viewcode-block" id="get_module"><a class="viewcode-back" href="../../../subpkgs/common.html#torchdistill.common.module_util.get_module">[docs]</a><span class="k">def</span> <span class="nf">get_module</span><span class="p">(</span><span class="n">root_module</span><span class="p">,</span> <span class="n">module_path</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Gets a module specified by ``module_path``.</span>
+
+<span class="sd">    :param root_module: module.</span>
+<span class="sd">    :type root_module: nn.Module</span>
+<span class="sd">    :param module_path: module path for extracting the module from ``root_module``.</span>
+<span class="sd">    :type module_path: str</span>
+<span class="sd">    :return: module extracted from ``root_module`` if exists.</span>
+<span class="sd">    :rtype: nn.Module or None</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">module_names</span> <span class="o">=</span> <span class="n">module_path</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s1">&#39;.&#39;</span><span class="p">)</span>
+    <span class="n">module</span> <span class="o">=</span> <span class="n">root_module</span>
+    <span class="k">for</span> <span class="n">module_name</span> <span class="ow">in</span> <span class="n">module_names</span><span class="p">:</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="nb">hasattr</span><span class="p">(</span><span class="n">module</span><span class="p">,</span> <span class="n">module_name</span><span class="p">):</span>
+            <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">module</span><span class="p">,</span> <span class="p">(</span><span class="n">DataParallel</span><span class="p">,</span> <span class="n">DistributedDataParallel</span><span class="p">)):</span>
+                <span class="n">module</span> <span class="o">=</span> <span class="n">module</span><span class="o">.</span><span class="n">module</span>
+                <span class="k">if</span> <span class="ow">not</span> <span class="nb">hasattr</span><span class="p">(</span><span class="n">module</span><span class="p">,</span> <span class="n">module_name</span><span class="p">):</span>
+                    <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">module</span><span class="p">,</span> <span class="n">Sequential</span><span class="p">)</span> <span class="ow">and</span> <span class="n">module_name</span><span class="o">.</span><span class="n">lstrip</span><span class="p">(</span><span class="s1">&#39;-&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">isnumeric</span><span class="p">():</span>
+                        <span class="n">module</span> <span class="o">=</span> <span class="n">module</span><span class="p">[</span><span class="nb">int</span><span class="p">(</span><span class="n">module_name</span><span class="p">)]</span>
+                    <span class="k">else</span><span class="p">:</span>
+                        <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s1">&#39;`</span><span class="si">{}</span><span class="s1">` of `</span><span class="si">{}</span><span class="s1">` could not be reached in `</span><span class="si">{}</span><span class="s1">`&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">module_name</span><span class="p">,</span> <span class="n">module_path</span><span class="p">,</span>
+                                                                                       <span class="nb">type</span><span class="p">(</span><span class="n">root_module</span><span class="p">)</span><span class="o">.</span><span class="vm">__name__</span><span class="p">))</span>
+                <span class="k">else</span><span class="p">:</span>
+                    <span class="n">module</span> <span class="o">=</span> <span class="nb">getattr</span><span class="p">(</span><span class="n">module</span><span class="p">,</span> <span class="n">module_name</span><span class="p">)</span>
+            <span class="k">elif</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">module</span><span class="p">,</span> <span class="p">(</span><span class="n">Sequential</span><span class="p">,</span> <span class="n">ModuleList</span><span class="p">))</span> <span class="ow">and</span> <span class="n">module_name</span><span class="o">.</span><span class="n">lstrip</span><span class="p">(</span><span class="s1">&#39;-&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">isnumeric</span><span class="p">():</span>
+                <span class="n">module</span> <span class="o">=</span> <span class="n">module</span><span class="p">[</span><span class="nb">int</span><span class="p">(</span><span class="n">module_name</span><span class="p">)]</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s1">&#39;`</span><span class="si">{}</span><span class="s1">` of `</span><span class="si">{}</span><span class="s1">` could not be reached in `</span><span class="si">{}</span><span class="s1">`&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">module_name</span><span class="p">,</span> <span class="n">module_path</span><span class="p">,</span>
+                                                                               <span class="nb">type</span><span class="p">(</span><span class="n">root_module</span><span class="p">)</span><span class="o">.</span><span class="vm">__name__</span><span class="p">))</span>
+                <span class="k">return</span> <span class="kc">None</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">module</span> <span class="o">=</span> <span class="nb">getattr</span><span class="p">(</span><span class="n">module</span><span class="p">,</span> <span class="n">module_name</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">module</span></div>
+
+
+<div class="viewcode-block" id="get_hierarchized_dict"><a class="viewcode-back" href="../../../subpkgs/common.html#torchdistill.common.module_util.get_hierarchized_dict">[docs]</a><span class="k">def</span> <span class="nf">get_hierarchized_dict</span><span class="p">(</span><span class="n">module_paths</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Gets a hierarchical structure from module paths.</span>
+
+<span class="sd">    :param module_paths: module paths.</span>
+<span class="sd">    :type module_paths: list[str]</span>
+<span class="sd">    :return: module extracted from ``root_module`` if exists.</span>
+<span class="sd">    :rtype: dict</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">children_dict</span> <span class="o">=</span> <span class="n">OrderedDict</span><span class="p">()</span>
+    <span class="k">for</span> <span class="n">module_path</span> <span class="ow">in</span> <span class="n">module_paths</span><span class="p">:</span>
+        <span class="n">elements</span> <span class="o">=</span> <span class="n">module_path</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s1">&#39;.&#39;</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">elements</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">children_dict</span> <span class="ow">and</span> <span class="nb">len</span><span class="p">(</span><span class="n">elements</span><span class="p">)</span> <span class="o">==</span> <span class="mi">1</span><span class="p">:</span>
+            <span class="n">children_dict</span><span class="p">[</span><span class="n">elements</span><span class="p">[</span><span class="mi">0</span><span class="p">]]</span> <span class="o">=</span> <span class="n">module_path</span>
+            <span class="k">continue</span>
+        <span class="k">elif</span> <span class="n">elements</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">children_dict</span><span class="p">:</span>
+            <span class="n">children_dict</span><span class="p">[</span><span class="n">elements</span><span class="p">[</span><span class="mi">0</span><span class="p">]]</span> <span class="o">=</span> <span class="nb">list</span><span class="p">()</span>
+        <span class="n">children_dict</span><span class="p">[</span><span class="n">elements</span><span class="p">[</span><span class="mi">0</span><span class="p">]]</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="s1">&#39;.&#39;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">elements</span><span class="p">[</span><span class="mi">1</span><span class="p">:]))</span>
+
+    <span class="k">for</span> <span class="n">key</span> <span class="ow">in</span> <span class="n">children_dict</span><span class="o">.</span><span class="n">keys</span><span class="p">():</span>
+        <span class="n">value</span> <span class="o">=</span> <span class="n">children_dict</span><span class="p">[</span><span class="n">key</span><span class="p">]</span>
+        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">value</span><span class="p">,</span> <span class="nb">list</span><span class="p">)</span> <span class="ow">and</span> <span class="nb">len</span><span class="p">(</span><span class="n">value</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">1</span><span class="p">:</span>
+            <span class="n">children_dict</span><span class="p">[</span><span class="n">key</span><span class="p">]</span> <span class="o">=</span> <span class="n">get_hierarchized_dict</span><span class="p">(</span><span class="n">value</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">children_dict</span></div>
+
+
+<div class="viewcode-block" id="decompose"><a class="viewcode-back" href="../../../subpkgs/common.html#torchdistill.common.module_util.decompose">[docs]</a><span class="k">def</span> <span class="nf">decompose</span><span class="p">(</span><span class="n">ordered_dict</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Converts an ordered dict into a list of key-value pairs.</span>
+
+<span class="sd">    :param ordered_dict: ordered dict.</span>
+<span class="sd">    :type ordered_dict: collections.OrderedDict</span>
+<span class="sd">    :return: list of key-value pairs.</span>
+<span class="sd">    :rtype: list[(str, Any)]</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">component_list</span> <span class="o">=</span> <span class="nb">list</span><span class="p">()</span>
+    <span class="k">for</span> <span class="n">key</span><span class="p">,</span> <span class="n">value</span> <span class="ow">in</span> <span class="n">ordered_dict</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">value</span><span class="p">,</span> <span class="n">OrderedDict</span><span class="p">):</span>
+            <span class="n">component_list</span><span class="o">.</span><span class="n">append</span><span class="p">((</span><span class="n">key</span><span class="p">,</span> <span class="n">decompose</span><span class="p">(</span><span class="n">value</span><span class="p">)))</span>
+        <span class="k">elif</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">value</span><span class="p">,</span> <span class="nb">list</span><span class="p">):</span>
+            <span class="n">component_list</span><span class="o">.</span><span class="n">append</span><span class="p">((</span><span class="n">key</span><span class="p">,</span> <span class="n">value</span><span class="p">))</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">component_list</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">key</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">component_list</span></div>
+
+
+<div class="viewcode-block" id="get_components"><a class="viewcode-back" href="../../../subpkgs/common.html#torchdistill.common.module_util.get_components">[docs]</a><span class="k">def</span> <span class="nf">get_components</span><span class="p">(</span><span class="n">module_paths</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Converts module paths into a list of pairs of parent module and child module names.</span>
+
+<span class="sd">    :param module_paths: module paths.</span>
+<span class="sd">    :type module_paths: list[str]</span>
+<span class="sd">    :return: list of pairs of parent module and child module names.</span>
+<span class="sd">    :rtype: list[(str, str)]</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">ordered_dict</span> <span class="o">=</span> <span class="n">get_hierarchized_dict</span><span class="p">(</span><span class="n">module_paths</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">decompose</span><span class="p">(</span><span class="n">ordered_dict</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="extract_target_modules"><a class="viewcode-back" href="../../../subpkgs/common.html#torchdistill.common.module_util.extract_target_modules">[docs]</a><span class="k">def</span> <span class="nf">extract_target_modules</span><span class="p">(</span><span class="n">parent_module</span><span class="p">,</span> <span class="n">target_class</span><span class="p">,</span> <span class="n">module_list</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Extracts modules that are instance of ``target_class`` and update ``module_list`` with the extracted modules.</span>
+
+<span class="sd">    :param parent_module: parent module.</span>
+<span class="sd">    :type parent_module: nn.Module</span>
+<span class="sd">    :param target_class: target class.</span>
+<span class="sd">    :type target_class: class</span>
+<span class="sd">    :param module_list: (empty) list to be filled with modules that are instances of ``target_class``.</span>
+<span class="sd">    :type module_list: list[nn.Module]</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">parent_module</span><span class="p">,</span> <span class="n">target_class</span><span class="p">):</span>
+        <span class="n">module_list</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">parent_module</span><span class="p">)</span>
+
+    <span class="n">child_modules</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="n">parent_module</span><span class="o">.</span><span class="n">children</span><span class="p">())</span>
+    <span class="k">for</span> <span class="n">child_module</span> <span class="ow">in</span> <span class="n">child_modules</span><span class="p">:</span>
+        <span class="n">extract_target_modules</span><span class="p">(</span><span class="n">child_module</span><span class="p">,</span> <span class="n">target_class</span><span class="p">,</span> <span class="n">module_list</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="extract_all_child_modules"><a class="viewcode-back" href="../../../subpkgs/common.html#torchdistill.common.module_util.extract_all_child_modules">[docs]</a><span class="k">def</span> <span class="nf">extract_all_child_modules</span><span class="p">(</span><span class="n">parent_module</span><span class="p">,</span> <span class="n">module_list</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Extracts all the child modules and update ``module_list`` with the extracted modules.</span>
+
+<span class="sd">    :param parent_module: parent module.</span>
+<span class="sd">    :type parent_module: nn.Module</span>
+<span class="sd">    :param module_list: (empty) list to be filled with child modules.</span>
+<span class="sd">    :type module_list: list[nn.Module]</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">child_modules</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="n">parent_module</span><span class="o">.</span><span class="n">children</span><span class="p">())</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">child_modules</span><span class="p">:</span>
+        <span class="n">module_list</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">parent_module</span><span class="p">)</span>
+        <span class="k">return</span>
+
+    <span class="k">for</span> <span class="n">child_module</span> <span class="ow">in</span> <span class="n">child_modules</span><span class="p">:</span>
+        <span class="n">extract_all_child_modules</span><span class="p">(</span><span class="n">child_module</span><span class="p">,</span> <span class="n">module_list</span><span class="p">)</span></div>
+</pre></div>
+
+           </div>
+          </div>
+          <footer>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2023, Yoshitomo Matsubara.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script>
+    <!-- Theme Analytics -->
+    <script async src="https://www.googletagmanager.com/gtag/js?id=G-LYK8SSJ7R5"></script>
+    <script>
+      window.dataLayer = window.dataLayer || [];
+      function gtag(){dataLayer.push(arguments);}
+      gtag('js', new Date());
+
+      gtag('config', 'G-LYK8SSJ7R5', {
+          'anonymize_ip': false,
+      });
+    </script> 
+
+</body>
+</html>

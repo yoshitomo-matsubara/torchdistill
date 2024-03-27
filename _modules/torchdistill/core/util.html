@@ -1,0 +1,355 @@
+<!DOCTYPE html>
+<html class="writer-html5" lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>torchdistill.core.util &mdash; torchdistill v1.1.1-dev documentation</title>
+      <link rel="stylesheet" type="text/css" href="../../../_static/pygments.css?v=80d5e7a1" />
+      <link rel="stylesheet" type="text/css" href="../../../_static/css/theme.css?v=19f00094" />
+
+  
+  <!--[if lt IE 9]>
+    <script src="../../../_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+        <script src="../../../_static/jquery.js?v=5d32c60e"></script>
+        <script src="../../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+        <script data-url_root="../../../" id="documentation_options" src="../../../_static/documentation_options.js?v=0b675245"></script>
+        <script src="../../../_static/doctools.js?v=888ff710"></script>
+        <script src="../../../_static/sphinx_highlight.js?v=4825356b"></script>
+    <script src="../../../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../search.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="../../../index.html">
+            
+              <img src="../../../_static/logo-white.png" class="logo" alt="Logo"/>
+          </a>
+              <div class="version">
+                v1.1.1-dev
+              </div>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">📚 Overview</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../usage.html">Usage</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../package.html">torchdistill API</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">🧑🏻‍💻 Research</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../benchmarks.html">Benchmarks</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../projects.html">Projects</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../../index.html">torchdistill</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content style-external-links">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../../../index.html" class="icon icon-home" aria-label="Home"></a></li>
+          <li class="breadcrumb-item"><a href="../../index.html">Module code</a></li>
+      <li class="breadcrumb-item active">torchdistill.core.util</li>
+      <li class="wy-breadcrumbs-aside">
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <h1>Source code for torchdistill.core.util</h1><div class="highlight"><pre>
+<span></span><span class="kn">from</span> <span class="nn">collections</span> <span class="kn">import</span> <span class="n">abc</span>
+
+<span class="kn">import</span> <span class="nn">torch</span>
+<span class="kn">from</span> <span class="nn">torch.nn</span> <span class="kn">import</span> <span class="n">DataParallel</span>
+<span class="kn">from</span> <span class="nn">torch.nn.parallel</span> <span class="kn">import</span> <span class="n">DistributedDataParallel</span>
+<span class="kn">from</span> <span class="nn">torch.nn.parallel.scatter_gather</span> <span class="kn">import</span> <span class="n">gather</span>
+
+<span class="kn">from</span> <span class="nn">..common.constant</span> <span class="kn">import</span> <span class="n">def_logger</span>
+<span class="kn">from</span> <span class="nn">..common.module_util</span> <span class="kn">import</span> <span class="n">get_module</span><span class="p">,</span> <span class="n">check_if_wrapped</span>
+<span class="kn">from</span> <span class="nn">..common.constant</span> <span class="kn">import</span> <span class="n">SELF_MODULE_PATH</span>
+<span class="kn">from</span> <span class="nn">..core.forward_hook</span> <span class="kn">import</span> <span class="n">register_forward_hook_with_dict</span>
+
+<span class="n">logger</span> <span class="o">=</span> <span class="n">def_logger</span><span class="o">.</span><span class="n">getChild</span><span class="p">(</span><span class="vm">__name__</span><span class="p">)</span>
+
+
+<div class="viewcode-block" id="add_kwargs_to_io_dict"><a class="viewcode-back" href="../../../subpkgs/core.html#torchdistill.core.util.add_kwargs_to_io_dict">[docs]</a><span class="k">def</span> <span class="nf">add_kwargs_to_io_dict</span><span class="p">(</span><span class="n">io_dict</span><span class="p">,</span> <span class="n">module_path</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Adds kwargs to an I/O dict.</span>
+
+<span class="sd">    :param io_dict: I/O dict.</span>
+<span class="sd">    :type io_dict: dict</span>
+<span class="sd">    :param module_path: module path.</span>
+<span class="sd">    :type module_path: str</span>
+<span class="sd">    :param kwargs: kwargs to be stored in ``io_dict``.</span>
+<span class="sd">    :type kwargs: dict</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">io_dict</span><span class="p">[</span><span class="n">module_path</span><span class="p">]</span> <span class="o">=</span> <span class="n">kwargs</span></div>
+
+
+<span class="k">def</span> <span class="nf">_extract_module</span><span class="p">(</span><span class="n">org_model</span><span class="p">,</span> <span class="n">sub_model</span><span class="p">,</span> <span class="n">module_path</span><span class="p">):</span>
+    <span class="k">if</span> <span class="n">module_path</span><span class="o">.</span><span class="n">startswith</span><span class="p">(</span><span class="s1">&#39;+&#39;</span><span class="p">):</span>
+        <span class="k">return</span> <span class="n">get_module</span><span class="p">(</span><span class="n">sub_model</span><span class="p">,</span> <span class="n">module_path</span><span class="p">[</span><span class="mi">1</span><span class="p">:])</span>
+    <span class="k">return</span> <span class="n">get_module</span><span class="p">(</span><span class="n">org_model</span><span class="p">,</span> <span class="n">module_path</span><span class="p">)</span>
+
+
+<div class="viewcode-block" id="set_hooks"><a class="viewcode-back" href="../../../subpkgs/core.html#torchdistill.core.util.set_hooks">[docs]</a><span class="k">def</span> <span class="nf">set_hooks</span><span class="p">(</span><span class="n">model</span><span class="p">,</span> <span class="n">unwrapped_org_model</span><span class="p">,</span> <span class="n">model_config</span><span class="p">,</span> <span class="n">io_dict</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Sets forward hooks for target modules in model.</span>
+
+<span class="sd">    :param model: model.</span>
+<span class="sd">    :type model: nn.Module</span>
+<span class="sd">    :param unwrapped_org_model: unwrapped original model.</span>
+<span class="sd">    :type unwrapped_org_model: nn.Module</span>
+<span class="sd">    :param model_config: model configuration.</span>
+<span class="sd">    :type model_config: dict</span>
+<span class="sd">    :param io_dict: I/O dict.</span>
+<span class="sd">    :type io_dict: dict</span>
+<span class="sd">    :return: list of pairs of module path and removable forward hook handle.</span>
+<span class="sd">    :rtype: list[(str, torch.utils.hook.RemovableHandle)]</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">pair_list</span> <span class="o">=</span> <span class="nb">list</span><span class="p">()</span>
+    <span class="n">forward_hook_config</span> <span class="o">=</span> <span class="n">model_config</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;forward_hook&#39;</span><span class="p">,</span> <span class="nb">dict</span><span class="p">())</span>
+    <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">forward_hook_config</span><span class="p">)</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">pair_list</span>
+
+    <span class="n">input_module_path_set</span> <span class="o">=</span> <span class="nb">set</span><span class="p">(</span><span class="n">forward_hook_config</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;input&#39;</span><span class="p">,</span> <span class="nb">list</span><span class="p">()))</span>
+    <span class="n">output_module_path_set</span> <span class="o">=</span> <span class="nb">set</span><span class="p">(</span><span class="n">forward_hook_config</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;output&#39;</span><span class="p">,</span> <span class="nb">list</span><span class="p">()))</span>
+    <span class="k">for</span> <span class="n">target_module_path</span> <span class="ow">in</span> <span class="n">input_module_path_set</span><span class="o">.</span><span class="n">union</span><span class="p">(</span><span class="n">output_module_path_set</span><span class="p">):</span>
+        <span class="n">requires_input</span> <span class="o">=</span> <span class="n">target_module_path</span> <span class="ow">in</span> <span class="n">input_module_path_set</span>
+        <span class="n">requires_output</span> <span class="o">=</span> <span class="n">target_module_path</span> <span class="ow">in</span> <span class="n">output_module_path_set</span>
+        <span class="n">add_kwargs_to_io_dict</span><span class="p">(</span><span class="n">io_dict</span><span class="p">,</span> <span class="n">target_module_path</span><span class="p">)</span>
+        <span class="n">target_module</span> <span class="o">=</span> <span class="n">_extract_module</span><span class="p">(</span><span class="n">unwrapped_org_model</span><span class="p">,</span> <span class="n">model</span><span class="p">,</span> <span class="n">target_module_path</span><span class="p">)</span>
+        <span class="n">handle</span> <span class="o">=</span> <span class="n">register_forward_hook_with_dict</span><span class="p">(</span><span class="n">target_module</span><span class="p">,</span> <span class="n">target_module_path</span><span class="p">,</span>
+                                                 <span class="n">requires_input</span><span class="p">,</span> <span class="n">requires_output</span><span class="p">,</span> <span class="n">io_dict</span><span class="p">)</span>
+        <span class="n">pair_list</span><span class="o">.</span><span class="n">append</span><span class="p">((</span><span class="n">target_module_path</span><span class="p">,</span> <span class="n">handle</span><span class="p">))</span>
+    <span class="k">return</span> <span class="n">pair_list</span></div>
+
+
+<div class="viewcode-block" id="wrap_model"><a class="viewcode-back" href="../../../subpkgs/core.html#torchdistill.core.util.wrap_model">[docs]</a><span class="k">def</span> <span class="nf">wrap_model</span><span class="p">(</span><span class="n">model</span><span class="p">,</span> <span class="n">model_config</span><span class="p">,</span> <span class="n">device</span><span class="p">,</span> <span class="n">device_ids</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">distributed</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
+               <span class="n">find_unused_parameters</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">any_updatable</span><span class="o">=</span><span class="kc">True</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Wraps ``model`` with either DataParallel or DistributedDataParallel if specified.</span>
+
+<span class="sd">    :param model: model.</span>
+<span class="sd">    :type model: nn.Module</span>
+<span class="sd">    :param model_config: model configuration.</span>
+<span class="sd">    :type model_config: dict</span>
+<span class="sd">    :param device: target device.</span>
+<span class="sd">    :type device: torch.device</span>
+<span class="sd">    :param device_ids: target device IDs.</span>
+<span class="sd">    :type device_ids: list[int]</span>
+<span class="sd">    :param distributed: whether to be in distributed training mode.</span>
+<span class="sd">    :type distributed: bool</span>
+<span class="sd">    :param find_unused_parameters: ``find_unused_parameters`` for DistributedDataParallel.</span>
+<span class="sd">    :type find_unused_parameters: bool</span>
+<span class="sd">    :param any_updatable: True if ``model`` contains any updatable parameters.</span>
+<span class="sd">    :type any_updatable: bool</span>
+<span class="sd">    :return: wrapped model (or ``model`` if wrapper is not specified).</span>
+<span class="sd">    :rtype: nn.Module</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">wrapper</span> <span class="o">=</span> <span class="n">model_config</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;wrapper&#39;</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span> <span class="k">if</span> <span class="n">model_config</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="k">else</span> <span class="kc">None</span>
+    <span class="n">wrapper_kwargs</span> <span class="o">=</span> <span class="nb">dict</span><span class="p">()</span>
+    <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">wrapper</span><span class="p">,</span> <span class="nb">dict</span><span class="p">):</span>
+        <span class="n">wrapper_key</span> <span class="o">=</span> <span class="n">wrapper</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;key&#39;</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span>
+        <span class="n">wrapper_kwargs</span> <span class="o">=</span> <span class="n">wrapper</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;kwargs&#39;</span><span class="p">,</span> <span class="n">wrapper_kwargs</span><span class="p">)</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">wrapper_key</span> <span class="o">=</span> <span class="n">wrapper</span>
+
+    <span class="n">wrapper_kwargs</span><span class="p">[</span><span class="s1">&#39;device_ids&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">device_ids</span>
+    <span class="n">model</span><span class="o">.</span><span class="n">to</span><span class="p">(</span><span class="n">device</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">wrapper_key</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="ow">and</span> <span class="n">device</span><span class="o">.</span><span class="n">type</span><span class="o">.</span><span class="n">startswith</span><span class="p">(</span><span class="s1">&#39;cuda&#39;</span><span class="p">)</span> <span class="ow">and</span> <span class="ow">not</span> <span class="n">check_if_wrapped</span><span class="p">(</span><span class="n">model</span><span class="p">):</span>
+        <span class="k">if</span> <span class="n">wrapper_key</span> <span class="o">==</span> <span class="s1">&#39;DistributedDataParallel&#39;</span> <span class="ow">and</span> <span class="n">distributed</span> <span class="ow">and</span> <span class="n">any_updatable</span><span class="p">:</span>
+            <span class="k">if</span> <span class="s1">&#39;find_unused_parameters&#39;</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">wrapper_kwargs</span><span class="p">:</span>
+                <span class="n">wrapper_kwargs</span><span class="p">[</span><span class="s1">&#39;find_unused_parameters&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">find_unused_parameters</span>
+
+            <span class="n">model</span> <span class="o">=</span> <span class="n">DistributedDataParallel</span><span class="p">(</span><span class="n">model</span><span class="p">,</span> <span class="o">**</span><span class="n">wrapper_kwargs</span><span class="p">)</span>
+        <span class="k">elif</span> <span class="n">wrapper_key</span> <span class="ow">in</span> <span class="p">{</span><span class="s1">&#39;DataParallel&#39;</span><span class="p">,</span> <span class="s1">&#39;DistributedDataParallel&#39;</span><span class="p">}:</span>
+            <span class="n">model</span> <span class="o">=</span> <span class="n">DataParallel</span><span class="p">(</span><span class="n">model</span><span class="p">,</span> <span class="o">**</span><span class="n">wrapper_kwargs</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">model</span></div>
+
+
+<div class="viewcode-block" id="change_device"><a class="viewcode-back" href="../../../subpkgs/core.html#torchdistill.core.util.change_device">[docs]</a><span class="k">def</span> <span class="nf">change_device</span><span class="p">(</span><span class="n">data</span><span class="p">,</span> <span class="n">device</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Updates the device of tensor(s) stored in ``data``  with a new ``device``.</span>
+
+<span class="sd">    :param data: data that contain tensor(s).</span>
+<span class="sd">    :type data: Any</span>
+<span class="sd">    :param device: new device.</span>
+<span class="sd">    :type device: torch.device or str</span>
+<span class="sd">    :return: ``data`` on the new ``device``.</span>
+<span class="sd">    :rtype: Any</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">elem_type</span> <span class="o">=</span> <span class="nb">type</span><span class="p">(</span><span class="n">data</span><span class="p">)</span>
+    <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">data</span><span class="p">,</span> <span class="n">torch</span><span class="o">.</span><span class="n">Tensor</span><span class="p">):</span>
+        <span class="k">return</span> <span class="n">data</span><span class="o">.</span><span class="n">to</span><span class="p">(</span><span class="n">device</span><span class="p">)</span>
+    <span class="k">elif</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">data</span><span class="p">,</span> <span class="nb">tuple</span><span class="p">)</span> <span class="ow">and</span> <span class="nb">hasattr</span><span class="p">(</span><span class="n">data</span><span class="p">,</span> <span class="s1">&#39;_fields&#39;</span><span class="p">):</span>  <span class="c1"># namedtuple</span>
+        <span class="k">return</span> <span class="n">elem_type</span><span class="p">(</span><span class="o">*</span><span class="p">(</span><span class="n">change_device</span><span class="p">(</span><span class="n">samples</span><span class="p">,</span> <span class="n">device</span><span class="p">)</span> <span class="k">for</span> <span class="n">samples</span> <span class="ow">in</span> <span class="nb">zip</span><span class="p">(</span><span class="o">*</span><span class="n">data</span><span class="p">)))</span>
+    <span class="k">elif</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">data</span><span class="p">,</span> <span class="p">(</span><span class="nb">list</span><span class="p">,</span> <span class="nb">tuple</span><span class="p">)):</span>
+        <span class="k">return</span> <span class="n">elem_type</span><span class="p">(</span><span class="o">*</span><span class="p">(</span><span class="n">change_device</span><span class="p">(</span><span class="n">d</span><span class="p">,</span> <span class="n">device</span><span class="p">)</span> <span class="k">for</span> <span class="n">d</span> <span class="ow">in</span> <span class="n">data</span><span class="p">))</span>
+    <span class="k">elif</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">data</span><span class="p">,</span> <span class="n">abc</span><span class="o">.</span><span class="n">Mapping</span><span class="p">):</span>
+        <span class="k">return</span> <span class="p">{</span><span class="n">key</span><span class="p">:</span> <span class="n">change_device</span><span class="p">(</span><span class="n">data</span><span class="p">[</span><span class="n">key</span><span class="p">],</span> <span class="n">device</span><span class="p">)</span> <span class="k">for</span> <span class="n">key</span> <span class="ow">in</span> <span class="n">data</span><span class="p">}</span>
+    <span class="k">elif</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">data</span><span class="p">,</span> <span class="n">abc</span><span class="o">.</span><span class="n">Sequence</span><span class="p">):</span>
+        <span class="n">transposed</span> <span class="o">=</span> <span class="nb">zip</span><span class="p">(</span><span class="o">*</span><span class="n">data</span><span class="p">)</span>
+        <span class="k">return</span> <span class="p">[</span><span class="n">change_device</span><span class="p">(</span><span class="n">samples</span><span class="p">,</span> <span class="n">device</span><span class="p">)</span> <span class="k">for</span> <span class="n">samples</span> <span class="ow">in</span> <span class="n">transposed</span><span class="p">]</span>
+    <span class="k">return</span> <span class="n">data</span></div>
+
+
+<div class="viewcode-block" id="tensor2numpy2tensor"><a class="viewcode-back" href="../../../subpkgs/core.html#torchdistill.core.util.tensor2numpy2tensor">[docs]</a><span class="k">def</span> <span class="nf">tensor2numpy2tensor</span><span class="p">(</span><span class="n">data</span><span class="p">,</span> <span class="n">device</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Converts tensor to numpy data and re-converts the numpy data to tensor.</span>
+
+<span class="sd">    :param data: data that contain tensor(s).</span>
+<span class="sd">    :type data: Any</span>
+<span class="sd">    :param device: new device.</span>
+<span class="sd">    :type device: torch.device or str</span>
+<span class="sd">    :return: data that contain recreated tensor(s).</span>
+<span class="sd">    :rtype: Any</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">elem_type</span> <span class="o">=</span> <span class="nb">type</span><span class="p">(</span><span class="n">data</span><span class="p">)</span>
+    <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">data</span><span class="p">,</span> <span class="n">torch</span><span class="o">.</span><span class="n">Tensor</span><span class="p">):</span>
+        <span class="k">return</span> <span class="n">torch</span><span class="o">.</span><span class="n">Tensor</span><span class="p">(</span><span class="n">data</span><span class="o">.</span><span class="n">to</span><span class="p">(</span><span class="n">device</span><span class="p">)</span><span class="o">.</span><span class="n">data</span><span class="o">.</span><span class="n">numpy</span><span class="p">())</span>
+    <span class="k">elif</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">data</span><span class="p">,</span> <span class="nb">tuple</span><span class="p">)</span> <span class="ow">and</span> <span class="nb">hasattr</span><span class="p">(</span><span class="n">data</span><span class="p">,</span> <span class="s1">&#39;_fields&#39;</span><span class="p">):</span>  <span class="c1"># namedtuple</span>
+        <span class="k">return</span> <span class="n">elem_type</span><span class="p">(</span><span class="o">*</span><span class="p">(</span><span class="n">tensor2numpy2tensor</span><span class="p">(</span><span class="n">samples</span><span class="p">,</span> <span class="n">device</span><span class="p">)</span> <span class="k">for</span> <span class="n">samples</span> <span class="ow">in</span> <span class="nb">zip</span><span class="p">(</span><span class="o">*</span><span class="n">data</span><span class="p">)))</span>
+    <span class="k">elif</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">data</span><span class="p">,</span> <span class="p">(</span><span class="nb">list</span><span class="p">,</span> <span class="nb">tuple</span><span class="p">)):</span>
+        <span class="k">return</span> <span class="n">elem_type</span><span class="p">(</span><span class="o">*</span><span class="p">(</span><span class="n">tensor2numpy2tensor</span><span class="p">(</span><span class="n">d</span><span class="p">,</span> <span class="n">device</span><span class="p">)</span> <span class="k">for</span> <span class="n">d</span> <span class="ow">in</span> <span class="n">data</span><span class="p">))</span>
+    <span class="k">elif</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">data</span><span class="p">,</span> <span class="n">abc</span><span class="o">.</span><span class="n">Mapping</span><span class="p">):</span>
+        <span class="k">return</span> <span class="p">{</span><span class="n">key</span><span class="p">:</span> <span class="n">tensor2numpy2tensor</span><span class="p">(</span><span class="n">data</span><span class="p">[</span><span class="n">key</span><span class="p">],</span> <span class="n">device</span><span class="p">)</span> <span class="k">for</span> <span class="n">key</span> <span class="ow">in</span> <span class="n">data</span><span class="p">}</span>
+    <span class="k">elif</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">data</span><span class="p">,</span> <span class="n">abc</span><span class="o">.</span><span class="n">Sequence</span><span class="p">):</span>
+        <span class="n">transposed</span> <span class="o">=</span> <span class="nb">zip</span><span class="p">(</span><span class="o">*</span><span class="n">data</span><span class="p">)</span>
+        <span class="k">return</span> <span class="p">[</span><span class="n">tensor2numpy2tensor</span><span class="p">(</span><span class="n">samples</span><span class="p">,</span> <span class="n">device</span><span class="p">)</span> <span class="k">for</span> <span class="n">samples</span> <span class="ow">in</span> <span class="n">transposed</span><span class="p">]</span>
+    <span class="k">return</span> <span class="n">data</span></div>
+
+
+<div class="viewcode-block" id="clear_io_dict"><a class="viewcode-back" href="../../../subpkgs/core.html#torchdistill.core.util.clear_io_dict">[docs]</a><span class="k">def</span> <span class="nf">clear_io_dict</span><span class="p">(</span><span class="n">model_io_dict</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Clears a model I/O dict&#39;s sub dict(s).</span>
+
+<span class="sd">    :param model_io_dict: model I/O dict.</span>
+<span class="sd">    :type model_io_dict: dict</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">for</span> <span class="n">module_io_dict</span> <span class="ow">in</span> <span class="n">model_io_dict</span><span class="o">.</span><span class="n">values</span><span class="p">():</span>
+        <span class="k">for</span> <span class="n">sub_dict</span> <span class="ow">in</span> <span class="nb">list</span><span class="p">(</span><span class="n">module_io_dict</span><span class="o">.</span><span class="n">values</span><span class="p">()):</span>
+            <span class="n">sub_dict</span><span class="o">.</span><span class="n">clear</span><span class="p">()</span></div>
+
+
+<div class="viewcode-block" id="extract_io_dict"><a class="viewcode-back" href="../../../subpkgs/core.html#torchdistill.core.util.extract_io_dict">[docs]</a><span class="k">def</span> <span class="nf">extract_io_dict</span><span class="p">(</span><span class="n">model_io_dict</span><span class="p">,</span> <span class="n">target_device</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Extracts I/O dict, gathering tensors on ``target_device``.</span>
+
+<span class="sd">    :param model_io_dict: model I/O dict.</span>
+<span class="sd">    :type model_io_dict: dict</span>
+<span class="sd">    :param target_device: target device.</span>
+<span class="sd">    :type target_device: torch.device or str</span>
+<span class="sd">    :return: extracted I/O dict.</span>
+<span class="sd">    :rtype: dict</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">uses_cuda</span> <span class="o">=</span> <span class="n">target_device</span><span class="o">.</span><span class="n">type</span> <span class="o">==</span> <span class="s1">&#39;cuda&#39;</span>
+    <span class="n">gathered_io_dict</span> <span class="o">=</span> <span class="p">{</span><span class="n">SELF_MODULE_PATH</span><span class="p">:</span> <span class="nb">dict</span><span class="p">()}</span>
+    <span class="k">for</span> <span class="n">module_path</span><span class="p">,</span> <span class="n">module_io_dict</span> <span class="ow">in</span> <span class="n">model_io_dict</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+        <span class="n">gathered_io_dict</span><span class="p">[</span><span class="n">module_path</span><span class="p">]</span> <span class="o">=</span> <span class="nb">dict</span><span class="p">()</span>
+        <span class="k">for</span> <span class="n">io_type</span> <span class="ow">in</span> <span class="nb">list</span><span class="p">(</span><span class="n">module_io_dict</span><span class="o">.</span><span class="n">keys</span><span class="p">()):</span>
+            <span class="n">sub_dict</span> <span class="o">=</span> <span class="n">module_io_dict</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="n">io_type</span><span class="p">)</span>
+            <span class="n">values</span> <span class="o">=</span> <span class="p">[</span><span class="n">sub_dict</span><span class="p">[</span><span class="n">key</span><span class="p">]</span> <span class="k">for</span> <span class="n">key</span> <span class="ow">in</span> <span class="nb">sorted</span><span class="p">(</span><span class="n">sub_dict</span><span class="o">.</span><span class="n">keys</span><span class="p">())]</span>
+            <span class="n">gathered_obj</span> <span class="o">=</span> <span class="n">gather</span><span class="p">(</span><span class="n">values</span><span class="p">,</span> <span class="n">target_device</span><span class="p">)</span> <span class="k">if</span> <span class="n">uses_cuda</span> <span class="ow">and</span> <span class="nb">len</span><span class="p">(</span><span class="n">values</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">1</span> <span class="k">else</span> <span class="n">values</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span>
+            <span class="n">gathered_io_dict</span><span class="p">[</span><span class="n">module_path</span><span class="p">][</span><span class="n">io_type</span><span class="p">]</span> <span class="o">=</span> <span class="n">gathered_obj</span>
+    <span class="k">return</span> <span class="n">gathered_io_dict</span></div>
+
+
+<div class="viewcode-block" id="update_io_dict"><a class="viewcode-back" href="../../../subpkgs/core.html#torchdistill.core.util.update_io_dict">[docs]</a><span class="k">def</span> <span class="nf">update_io_dict</span><span class="p">(</span><span class="n">main_io_dict</span><span class="p">,</span> <span class="n">sub_io_dict</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Updates an I/O dict with a sub I/O dict.</span>
+
+<span class="sd">    :param main_io_dict: main I/O dict to be updated.</span>
+<span class="sd">    :type main_io_dict: dict</span>
+<span class="sd">    :param sub_io_dict: sub I/O dict.</span>
+<span class="sd">    :type sub_io_dict: dict</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">for</span> <span class="n">key</span><span class="p">,</span> <span class="n">module_io_dict</span> <span class="ow">in</span> <span class="n">sub_io_dict</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+        <span class="k">for</span> <span class="n">io_type</span><span class="p">,</span> <span class="n">value</span> <span class="ow">in</span> <span class="n">module_io_dict</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+            <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">value</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
+                <span class="n">main_io_dict</span><span class="p">[</span><span class="n">key</span><span class="p">][</span><span class="n">io_type</span><span class="p">]</span> <span class="o">=</span> <span class="n">value</span></div>
+
+
+<div class="viewcode-block" id="extract_sub_model_io_dict"><a class="viewcode-back" href="../../../subpkgs/core.html#torchdistill.core.util.extract_sub_model_io_dict">[docs]</a><span class="k">def</span> <span class="nf">extract_sub_model_io_dict</span><span class="p">(</span><span class="n">model_io_dict</span><span class="p">,</span> <span class="n">index</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Extracts sub I/O dict from ``model_io_dict``.</span>
+
+<span class="sd">    :param model_io_dict: model I/O dict.</span>
+<span class="sd">    :type model_io_dict: dict</span>
+<span class="sd">    :param index: sample index.</span>
+<span class="sd">    :type index: int</span>
+<span class="sd">    :return: extracted sub I/O dict.</span>
+<span class="sd">    :rtype: dict</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">sub_model_output_dict</span> <span class="o">=</span> <span class="nb">dict</span><span class="p">()</span>
+    <span class="k">for</span> <span class="n">module_path</span><span class="p">,</span> <span class="n">sub_model_io_dict</span> <span class="ow">in</span> <span class="n">model_io_dict</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+        <span class="n">tmp_dict</span> <span class="o">=</span> <span class="nb">dict</span><span class="p">()</span>
+        <span class="k">for</span> <span class="n">key</span><span class="p">,</span> <span class="n">value</span> <span class="ow">in</span> <span class="n">sub_model_io_dict</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+            <span class="n">tmp_dict</span><span class="p">[</span><span class="n">key</span><span class="p">]</span> <span class="o">=</span> <span class="n">value</span><span class="p">[</span><span class="n">index</span><span class="p">]</span>
+        <span class="n">sub_model_output_dict</span><span class="p">[</span><span class="n">module_path</span><span class="p">]</span> <span class="o">=</span> <span class="n">tmp_dict</span>
+    <span class="k">return</span> <span class="n">sub_model_output_dict</span></div>
+</pre></div>
+
+           </div>
+          </div>
+          <footer>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2023, Yoshitomo Matsubara.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script>
+    <!-- Theme Analytics -->
+    <script async src="https://www.googletagmanager.com/gtag/js?id=G-LYK8SSJ7R5"></script>
+    <script>
+      window.dataLayer = window.dataLayer || [];
+      function gtag(){dataLayer.push(arguments);}
+      gtag('js', new Date());
+
+      gtag('config', 'G-LYK8SSJ7R5', {
+          'anonymize_ip': false,
+      });
+    </script> 
+
+</body>
+</html>

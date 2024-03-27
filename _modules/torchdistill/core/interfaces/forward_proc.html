@@ -1,0 +1,222 @@
+<!DOCTYPE html>
+<html class="writer-html5" lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>torchdistill.core.interfaces.forward_proc &mdash; torchdistill v1.1.1-dev documentation</title>
+      <link rel="stylesheet" type="text/css" href="../../../../_static/pygments.css?v=80d5e7a1" />
+      <link rel="stylesheet" type="text/css" href="../../../../_static/css/theme.css?v=19f00094" />
+
+  
+  <!--[if lt IE 9]>
+    <script src="../../../../_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+        <script src="../../../../_static/jquery.js?v=5d32c60e"></script>
+        <script src="../../../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+        <script data-url_root="../../../../" id="documentation_options" src="../../../../_static/documentation_options.js?v=0b675245"></script>
+        <script src="../../../../_static/doctools.js?v=888ff710"></script>
+        <script src="../../../../_static/sphinx_highlight.js?v=4825356b"></script>
+    <script src="../../../../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../../search.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="../../../../index.html">
+            
+              <img src="../../../../_static/logo-white.png" class="logo" alt="Logo"/>
+          </a>
+              <div class="version">
+                v1.1.1-dev
+              </div>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">📚 Overview</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../../usage.html">Usage</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../package.html">torchdistill API</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">🧑🏻‍💻 Research</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../../benchmarks.html">Benchmarks</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../projects.html">Projects</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../../../index.html">torchdistill</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content style-external-links">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../../../../index.html" class="icon icon-home" aria-label="Home"></a></li>
+          <li class="breadcrumb-item"><a href="../../../index.html">Module code</a></li>
+      <li class="breadcrumb-item active">torchdistill.core.interfaces.forward_proc</li>
+      <li class="wy-breadcrumbs-aside">
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <h1>Source code for torchdistill.core.interfaces.forward_proc</h1><div class="highlight"><pre>
+<span></span><span class="kn">from</span> <span class="nn">.registry</span> <span class="kn">import</span> <span class="n">register_forward_proc_func</span>
+
+
+<div class="viewcode-block" id="forward_all"><a class="viewcode-back" href="../../../../subpkgs/core.html#torchdistill.core.interfaces.forward_proc.forward_all">[docs]</a><span class="nd">@register_forward_proc_func</span>
+<span class="k">def</span> <span class="nf">forward_all</span><span class="p">(</span><span class="n">model</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Performs forward computation using `*args` and `**kwargs`.</span>
+
+<span class="sd">    :param model: model.</span>
+<span class="sd">    :type model: nn.Module</span>
+<span class="sd">    :param args: variable-length arguments for forward.</span>
+<span class="sd">    :type args: tuple</span>
+<span class="sd">    :param kwargs: kwargs for forward.</span>
+<span class="sd">    :type kwargs: dict</span>
+<span class="sd">    :return: model&#39;s forward output.</span>
+<span class="sd">    :rtype: Any</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">return</span> <span class="n">model</span><span class="p">(</span><span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="forward_batch_only"><a class="viewcode-back" href="../../../../subpkgs/core.html#torchdistill.core.interfaces.forward_proc.forward_batch_only">[docs]</a><span class="nd">@register_forward_proc_func</span>
+<span class="k">def</span> <span class="nf">forward_batch_only</span><span class="p">(</span><span class="n">model</span><span class="p">,</span> <span class="n">sample_batch</span><span class="p">,</span> <span class="n">targets</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">supp_dict</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Performs forward computation using `sample_batch` only.</span>
+
+<span class="sd">    :param model: model.</span>
+<span class="sd">    :type model: nn.Module</span>
+<span class="sd">    :param sample_batch: sample batch.</span>
+<span class="sd">    :type sample_batch: Any</span>
+<span class="sd">    :param targets: training targets (won&#39;t be passed to forward).</span>
+<span class="sd">    :type targets: Any</span>
+<span class="sd">    :param supp_dict: supplementary dict (won&#39;t be passed to forward).</span>
+<span class="sd">    :type supp_dict: dict</span>
+<span class="sd">    :return: model&#39;s forward output.</span>
+<span class="sd">    :rtype: Any</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">return</span> <span class="n">model</span><span class="p">(</span><span class="n">sample_batch</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="forward_batch_target"><a class="viewcode-back" href="../../../../subpkgs/core.html#torchdistill.core.interfaces.forward_proc.forward_batch_target">[docs]</a><span class="nd">@register_forward_proc_func</span>
+<span class="k">def</span> <span class="nf">forward_batch_target</span><span class="p">(</span><span class="n">model</span><span class="p">,</span> <span class="n">sample_batch</span><span class="p">,</span> <span class="n">targets</span><span class="p">,</span> <span class="n">supp_dict</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Performs forward computation using `sample_batch` and `targets` only.</span>
+
+<span class="sd">    :param model: model.</span>
+<span class="sd">    :type model: nn.Module</span>
+<span class="sd">    :param sample_batch: sample batch.</span>
+<span class="sd">    :type sample_batch: Any</span>
+<span class="sd">    :param targets: training targets.</span>
+<span class="sd">    :type targets: Any</span>
+<span class="sd">    :param supp_dict: supplementary dict (won&#39;t be passed to forward).</span>
+<span class="sd">    :type supp_dict: dict</span>
+<span class="sd">    :return: model&#39;s forward output.</span>
+<span class="sd">    :rtype: Any</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">return</span> <span class="n">model</span><span class="p">(</span><span class="n">sample_batch</span><span class="p">,</span> <span class="n">targets</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="forward_batch_supp_dict"><a class="viewcode-back" href="../../../../subpkgs/core.html#torchdistill.core.interfaces.forward_proc.forward_batch_supp_dict">[docs]</a><span class="nd">@register_forward_proc_func</span>
+<span class="k">def</span> <span class="nf">forward_batch_supp_dict</span><span class="p">(</span><span class="n">model</span><span class="p">,</span> <span class="n">sample_batch</span><span class="p">,</span> <span class="n">targets</span><span class="p">,</span> <span class="n">supp_dict</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Performs forward computation using `sample_batch` and `supp_dict` only.</span>
+
+<span class="sd">    :param model: model.</span>
+<span class="sd">    :type model: nn.Module</span>
+<span class="sd">    :param sample_batch: sample batch.</span>
+<span class="sd">    :type sample_batch: Any</span>
+<span class="sd">    :param targets: training targets (won&#39;t be passed to forward).</span>
+<span class="sd">    :type targets: Any</span>
+<span class="sd">    :param supp_dict: supplementary dict.</span>
+<span class="sd">    :type supp_dict: dict</span>
+<span class="sd">    :return: model&#39;s forward output.</span>
+<span class="sd">    :rtype: Any</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">return</span> <span class="n">model</span><span class="p">(</span><span class="n">sample_batch</span><span class="p">,</span> <span class="n">supp_dict</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="forward_batch4sskd"><a class="viewcode-back" href="../../../../subpkgs/core.html#torchdistill.core.interfaces.forward_proc.forward_batch4sskd">[docs]</a><span class="nd">@register_forward_proc_func</span>
+<span class="k">def</span> <span class="nf">forward_batch4sskd</span><span class="p">(</span><span class="n">model</span><span class="p">,</span> <span class="n">sample_batch</span><span class="p">,</span> <span class="n">targets</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">supp_dict</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Performs forward computation using `sample_batch` only for the SSKD method.</span>
+
+<span class="sd">    Guodong Xu, Ziwei Liu, Xiaoxiao Li, Chen Change Loy: `&quot;Knowledge Distillation Meets Self-Supervision&quot; &lt;https://www.ecva.net/papers/eccv_2020/papers_ECCV/html/898_ECCV_2020_paper.php&gt;`_ @ ECCV 2020 (2020)</span>
+
+<span class="sd">    :param model: model.</span>
+<span class="sd">    :type model: nn.Module</span>
+<span class="sd">    :param sample_batch: sample batch.</span>
+<span class="sd">    :type sample_batch: Any</span>
+<span class="sd">    :param targets: training targets (won&#39;t be passed to forward).</span>
+<span class="sd">    :type targets: Any</span>
+<span class="sd">    :param supp_dict: supplementary dict (won&#39;t be passed to forward).</span>
+<span class="sd">    :type supp_dict: dict</span>
+<span class="sd">    :return: model&#39;s forward output.</span>
+<span class="sd">    :rtype: Any</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">c</span><span class="p">,</span> <span class="n">h</span><span class="p">,</span> <span class="n">w</span> <span class="o">=</span> <span class="n">sample_batch</span><span class="o">.</span><span class="n">size</span><span class="p">()[</span><span class="o">-</span><span class="mi">3</span><span class="p">:]</span>
+    <span class="n">sample_batch</span> <span class="o">=</span> <span class="n">sample_batch</span><span class="o">.</span><span class="n">view</span><span class="p">(</span><span class="o">-</span><span class="mi">1</span><span class="p">,</span> <span class="n">c</span><span class="p">,</span> <span class="n">h</span><span class="p">,</span> <span class="n">w</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">model</span><span class="p">(</span><span class="n">sample_batch</span><span class="p">)</span></div>
+</pre></div>
+
+           </div>
+          </div>
+          <footer>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2023, Yoshitomo Matsubara.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script>
+    <!-- Theme Analytics -->
+    <script async src="https://www.googletagmanager.com/gtag/js?id=G-LYK8SSJ7R5"></script>
+    <script>
+      window.dataLayer = window.dataLayer || [];
+      function gtag(){dataLayer.push(arguments);}
+      gtag('js', new Date());
+
+      gtag('config', 'G-LYK8SSJ7R5', {
+          'anonymize_ip': false,
+      });
+    </script> 
+
+</body>
+</html>

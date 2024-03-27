@@ -1,0 +1,690 @@
+<!DOCTYPE html>
+<html class="writer-html5" lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>torchdistill.core.distillation &mdash; torchdistill v1.1.1-dev documentation</title>
+      <link rel="stylesheet" type="text/css" href="../../../_static/pygments.css?v=80d5e7a1" />
+      <link rel="stylesheet" type="text/css" href="../../../_static/css/theme.css?v=19f00094" />
+
+  
+  <!--[if lt IE 9]>
+    <script src="../../../_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+        <script src="../../../_static/jquery.js?v=5d32c60e"></script>
+        <script src="../../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+        <script data-url_root="../../../" id="documentation_options" src="../../../_static/documentation_options.js?v=0b675245"></script>
+        <script src="../../../_static/doctools.js?v=888ff710"></script>
+        <script src="../../../_static/sphinx_highlight.js?v=4825356b"></script>
+    <script src="../../../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../search.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="../../../index.html">
+            
+              <img src="../../../_static/logo-white.png" class="logo" alt="Logo"/>
+          </a>
+              <div class="version">
+                v1.1.1-dev
+              </div>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">📚 Overview</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../usage.html">Usage</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../package.html">torchdistill API</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">🧑🏻‍💻 Research</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../benchmarks.html">Benchmarks</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../projects.html">Projects</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../../index.html">torchdistill</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content style-external-links">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../../../index.html" class="icon icon-home" aria-label="Home"></a></li>
+          <li class="breadcrumb-item"><a href="../../index.html">Module code</a></li>
+      <li class="breadcrumb-item active">torchdistill.core.distillation</li>
+      <li class="wy-breadcrumbs-aside">
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <h1>Source code for torchdistill.core.distillation</h1><div class="highlight"><pre>
+<span></span><span class="kn">import</span> <span class="nn">copy</span>
+
+<span class="kn">import</span> <span class="nn">torch</span>
+<span class="kn">from</span> <span class="nn">torch</span> <span class="kn">import</span> <span class="n">nn</span>
+
+<span class="kn">from</span> <span class="nn">.interfaces.post_epoch_proc</span> <span class="kn">import</span> <span class="n">default_post_epoch_process_with_teacher</span>
+<span class="kn">from</span> <span class="nn">.interfaces.post_forward_proc</span> <span class="kn">import</span> <span class="n">default_post_forward_process</span>
+<span class="kn">from</span> <span class="nn">.interfaces.pre_epoch_proc</span> <span class="kn">import</span> <span class="n">default_pre_epoch_process_with_teacher</span>
+<span class="kn">from</span> <span class="nn">.interfaces.pre_forward_proc</span> <span class="kn">import</span> <span class="n">default_pre_forward_process</span>
+<span class="kn">from</span> <span class="nn">.interfaces.registry</span> <span class="kn">import</span> <span class="n">get_pre_epoch_proc_func</span><span class="p">,</span> <span class="n">get_pre_forward_proc_func</span><span class="p">,</span> <span class="n">get_forward_proc_func</span><span class="p">,</span> \
+    <span class="n">get_post_forward_proc_func</span><span class="p">,</span> <span class="n">get_post_epoch_proc_func</span>
+<span class="kn">from</span> <span class="nn">.util</span> <span class="kn">import</span> <span class="n">set_hooks</span><span class="p">,</span> <span class="n">wrap_model</span><span class="p">,</span> <span class="n">change_device</span><span class="p">,</span> <span class="n">tensor2numpy2tensor</span><span class="p">,</span> <span class="n">extract_io_dict</span><span class="p">,</span> <span class="n">update_io_dict</span><span class="p">,</span> \
+    <span class="n">extract_sub_model_io_dict</span>
+<span class="kn">from</span> <span class="nn">..common.constant</span> <span class="kn">import</span> <span class="n">SELF_MODULE_PATH</span><span class="p">,</span> <span class="n">def_logger</span>
+<span class="kn">from</span> <span class="nn">..common.file_util</span> <span class="kn">import</span> <span class="n">make_parent_dirs</span>
+<span class="kn">from</span> <span class="nn">..common.main_util</span> <span class="kn">import</span> <span class="n">load_ckpt</span><span class="p">,</span> <span class="n">save_on_master</span>
+<span class="kn">from</span> <span class="nn">..common.module_util</span> <span class="kn">import</span> <span class="n">check_if_wrapped</span><span class="p">,</span> <span class="n">freeze_module_params</span><span class="p">,</span> <span class="n">get_module</span><span class="p">,</span> \
+    <span class="n">unfreeze_module_params</span><span class="p">,</span> <span class="n">get_updatable_param_names</span>
+<span class="kn">from</span> <span class="nn">..datasets.util</span> <span class="kn">import</span> <span class="n">build_data_loaders</span>
+<span class="kn">from</span> <span class="nn">..losses.registry</span> <span class="kn">import</span> <span class="n">get_high_level_loss</span><span class="p">,</span> <span class="n">get_func2extract_model_output</span>
+<span class="kn">from</span> <span class="nn">..models.util</span> <span class="kn">import</span> <span class="n">redesign_model</span>
+<span class="kn">from</span> <span class="nn">..models.wrapper</span> <span class="kn">import</span> <span class="n">AuxiliaryModelWrapper</span><span class="p">,</span> <span class="n">build_auxiliary_model_wrapper</span>
+<span class="kn">from</span> <span class="nn">..optim.registry</span> <span class="kn">import</span> <span class="n">get_optimizer</span><span class="p">,</span> <span class="n">get_scheduler</span>
+
+<span class="n">logger</span> <span class="o">=</span> <span class="n">def_logger</span><span class="o">.</span><span class="n">getChild</span><span class="p">(</span><span class="vm">__name__</span><span class="p">)</span>
+
+
+<div class="viewcode-block" id="DistillationBox"><a class="viewcode-back" href="../../../subpkgs/core.html#torchdistill.core.distillation.DistillationBox">[docs]</a><span class="k">class</span> <span class="nc">DistillationBox</span><span class="p">(</span><span class="nb">object</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    A single-stage knowledge distillation framework.</span>
+
+<span class="sd">    :param teacher_model: teacher model.</span>
+<span class="sd">    :type teacher_model: nn.Module</span>
+<span class="sd">    :param student_model: student model.</span>
+<span class="sd">    :type student_model: nn.Module</span>
+<span class="sd">    :param dataset_dict: dict that contains datasets with IDs of your choice.</span>
+<span class="sd">    :type dataset_dict: dict</span>
+<span class="sd">    :param train_config: training configuration.</span>
+<span class="sd">    :type train_config: dict</span>
+<span class="sd">    :param device: target device.</span>
+<span class="sd">    :type device: torch.device</span>
+<span class="sd">    :param device_ids: target device IDs.</span>
+<span class="sd">    :type device_ids: list[int]</span>
+<span class="sd">    :param distributed: whether to be in distributed training mode.</span>
+<span class="sd">    :type distributed: bool</span>
+<span class="sd">    :param lr_factor: multiplier for learning rate.</span>
+<span class="sd">    :type lr_factor: float or int</span>
+<span class="sd">    :param accelerator: Hugging Face accelerator.</span>
+<span class="sd">    :type accelerator: accelerate.Accelerator or None</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+<div class="viewcode-block" id="DistillationBox.setup_data_loaders"><a class="viewcode-back" href="../../../subpkgs/core.html#torchdistill.core.distillation.DistillationBox.setup_data_loaders">[docs]</a>    <span class="k">def</span> <span class="nf">setup_data_loaders</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">train_config</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Sets up training and validation data loaders for the current training stage.</span>
+<span class="sd">        This method will be internally called when instantiating this class and when calling</span>
+<span class="sd">        :meth:`MultiStagesDistillationBox.advance_to_next_stage`.</span>
+
+<span class="sd">        :param train_config: training configuration.</span>
+<span class="sd">        :type train_config: dict</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">train_data_loader_config</span> <span class="o">=</span> <span class="n">train_config</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;train_data_loader&#39;</span><span class="p">,</span> <span class="nb">dict</span><span class="p">())</span>
+        <span class="k">if</span> <span class="s1">&#39;requires_supp&#39;</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">train_data_loader_config</span><span class="p">:</span>
+            <span class="n">train_data_loader_config</span><span class="p">[</span><span class="s1">&#39;requires_supp&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="kc">True</span>
+
+        <span class="n">val_data_loader_config</span> <span class="o">=</span> <span class="n">train_config</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;val_data_loader&#39;</span><span class="p">,</span> <span class="nb">dict</span><span class="p">())</span>
+        <span class="n">train_data_loader</span><span class="p">,</span> <span class="n">val_data_loader</span> <span class="o">=</span>\
+            <span class="n">build_data_loaders</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">dataset_dict</span><span class="p">,</span> <span class="p">[</span><span class="n">train_data_loader_config</span><span class="p">,</span> <span class="n">val_data_loader_config</span><span class="p">],</span>
+                               <span class="bp">self</span><span class="o">.</span><span class="n">distributed</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">accelerator</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">train_data_loader</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">train_data_loader</span> <span class="o">=</span> <span class="n">train_data_loader</span>
+        <span class="k">if</span> <span class="n">val_data_loader</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">val_data_loader</span> <span class="o">=</span> <span class="n">val_data_loader</span></div>
+
+<div class="viewcode-block" id="DistillationBox.setup_teacher_student_models"><a class="viewcode-back" href="../../../subpkgs/core.html#torchdistill.core.distillation.DistillationBox.setup_teacher_student_models">[docs]</a>    <span class="k">def</span> <span class="nf">setup_teacher_student_models</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">teacher_config</span><span class="p">,</span> <span class="n">student_config</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Sets up teacher and student models for the current training stage.</span>
+<span class="sd">        This method will be internally called when instantiating this class and when calling</span>
+<span class="sd">        :meth:`MultiStagesDistillationBox.advance_to_next_stage`.</span>
+
+<span class="sd">        :param teacher_config: teacher configuration.</span>
+<span class="sd">        :type teacher_config: dict</span>
+<span class="sd">        :param student_config: student configuration.</span>
+<span class="sd">        :type student_config: dict</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">unwrapped_org_teacher_model</span> <span class="o">=</span>\
+            <span class="bp">self</span><span class="o">.</span><span class="n">org_teacher_model</span><span class="o">.</span><span class="n">module</span> <span class="k">if</span> <span class="n">check_if_wrapped</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">org_teacher_model</span><span class="p">)</span> <span class="k">else</span> <span class="bp">self</span><span class="o">.</span><span class="n">org_teacher_model</span>
+        <span class="n">unwrapped_org_student_model</span> <span class="o">=</span> \
+            <span class="bp">self</span><span class="o">.</span><span class="n">org_student_model</span><span class="o">.</span><span class="n">module</span> <span class="k">if</span> <span class="n">check_if_wrapped</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">org_student_model</span><span class="p">)</span> <span class="k">else</span> <span class="bp">self</span><span class="o">.</span><span class="n">org_student_model</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">target_teacher_pairs</span><span class="o">.</span><span class="n">clear</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">target_student_pairs</span><span class="o">.</span><span class="n">clear</span><span class="p">()</span>
+        <span class="n">teacher_ref_model</span> <span class="o">=</span> <span class="n">unwrapped_org_teacher_model</span>
+        <span class="n">student_ref_model</span> <span class="o">=</span> <span class="n">unwrapped_org_student_model</span>
+        <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">teacher_config</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">0</span> <span class="ow">or</span> <span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">teacher_config</span><span class="p">)</span> <span class="o">==</span> <span class="mi">0</span> <span class="ow">and</span> <span class="bp">self</span><span class="o">.</span><span class="n">teacher_model</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">):</span>
+            <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s1">&#39;[teacher model]&#39;</span><span class="p">)</span>
+            <span class="n">model_type</span> <span class="o">=</span> <span class="s1">&#39;original&#39;</span>
+            <span class="n">auxiliary_teacher_model_wrapper</span> <span class="o">=</span> \
+                <span class="n">build_auxiliary_model_wrapper</span><span class="p">(</span><span class="n">teacher_config</span><span class="p">,</span> <span class="n">teacher_model</span><span class="o">=</span><span class="n">unwrapped_org_teacher_model</span><span class="p">,</span>
+                                              <span class="n">device</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">device</span><span class="p">,</span> <span class="n">device_ids</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">device_ids</span><span class="p">,</span>
+                                              <span class="n">distributed</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">distributed</span><span class="p">)</span>
+            <span class="k">if</span> <span class="n">auxiliary_teacher_model_wrapper</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+                <span class="n">teacher_ref_model</span> <span class="o">=</span> <span class="n">auxiliary_teacher_model_wrapper</span>
+                <span class="n">model_type</span> <span class="o">=</span> <span class="nb">type</span><span class="p">(</span><span class="n">teacher_ref_model</span><span class="p">)</span><span class="o">.</span><span class="vm">__name__</span>
+
+            <span class="bp">self</span><span class="o">.</span><span class="n">teacher_model</span> <span class="o">=</span> <span class="n">redesign_model</span><span class="p">(</span><span class="n">teacher_ref_model</span><span class="p">,</span> <span class="n">teacher_config</span><span class="p">,</span> <span class="s1">&#39;teacher&#39;</span><span class="p">,</span> <span class="n">model_type</span><span class="p">)</span>
+            <span class="n">src_teacher_ckpt_file_path</span> <span class="o">=</span> <span class="n">teacher_config</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;src_ckpt&#39;</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span>
+            <span class="k">if</span> <span class="n">src_teacher_ckpt_file_path</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+                <span class="n">load_ckpt</span><span class="p">(</span><span class="n">src_teacher_ckpt_file_path</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">teacher_model</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">student_config</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">0</span> <span class="ow">or</span> <span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">student_config</span><span class="p">)</span> <span class="o">==</span> <span class="mi">0</span> <span class="ow">and</span> <span class="bp">self</span><span class="o">.</span><span class="n">student_model</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">):</span>
+            <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s1">&#39;[student model]&#39;</span><span class="p">)</span>
+            <span class="n">model_type</span> <span class="o">=</span> <span class="s1">&#39;original&#39;</span>
+            <span class="n">auxiliary_student_model_wrapper</span> <span class="o">=</span> \
+                <span class="n">build_auxiliary_model_wrapper</span><span class="p">(</span><span class="n">student_config</span><span class="p">,</span> <span class="n">student_model</span><span class="o">=</span><span class="n">unwrapped_org_student_model</span><span class="p">,</span>
+                                              <span class="n">device</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">device</span><span class="p">,</span> <span class="n">device_ids</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">device_ids</span><span class="p">,</span>
+                                              <span class="n">distributed</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">distributed</span><span class="p">)</span>
+            <span class="k">if</span> <span class="n">auxiliary_student_model_wrapper</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+                <span class="n">student_ref_model</span> <span class="o">=</span> <span class="n">auxiliary_student_model_wrapper</span>
+                <span class="n">model_type</span> <span class="o">=</span> <span class="nb">type</span><span class="p">(</span><span class="n">student_ref_model</span><span class="p">)</span><span class="o">.</span><span class="vm">__name__</span>
+
+            <span class="bp">self</span><span class="o">.</span><span class="n">student_model</span> <span class="o">=</span> <span class="n">redesign_model</span><span class="p">(</span><span class="n">student_ref_model</span><span class="p">,</span> <span class="n">student_config</span><span class="p">,</span> <span class="s1">&#39;student&#39;</span><span class="p">,</span> <span class="n">model_type</span><span class="p">)</span>
+            <span class="n">src_student_ckpt_file_path</span> <span class="o">=</span> <span class="n">student_config</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;src_ckpt&#39;</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span>
+            <span class="k">if</span> <span class="n">src_student_ckpt_file_path</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+                <span class="n">load_ckpt</span><span class="p">(</span><span class="n">src_student_ckpt_file_path</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">student_model</span><span class="p">)</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">teacher_any_frozen</span> <span class="o">=</span> \
+            <span class="nb">len</span><span class="p">(</span><span class="n">teacher_config</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;frozen_modules&#39;</span><span class="p">,</span> <span class="nb">list</span><span class="p">()))</span> <span class="o">&gt;</span> <span class="mi">0</span> <span class="ow">or</span> <span class="ow">not</span> <span class="n">teacher_config</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;requires_grad&#39;</span><span class="p">,</span> <span class="kc">True</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">student_any_frozen</span> <span class="o">=</span> \
+            <span class="nb">len</span><span class="p">(</span><span class="n">student_config</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;frozen_modules&#39;</span><span class="p">,</span> <span class="nb">list</span><span class="p">()))</span> <span class="o">&gt;</span> <span class="mi">0</span> <span class="ow">or</span> <span class="ow">not</span> <span class="n">student_config</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;requires_grad&#39;</span><span class="p">,</span> <span class="kc">True</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">target_teacher_pairs</span><span class="o">.</span><span class="n">extend</span><span class="p">(</span><span class="n">set_hooks</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">teacher_model</span><span class="p">,</span> <span class="n">teacher_ref_model</span><span class="p">,</span>
+                                                   <span class="n">teacher_config</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">teacher_io_dict</span><span class="p">))</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">target_student_pairs</span><span class="o">.</span><span class="n">extend</span><span class="p">(</span><span class="n">set_hooks</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">student_model</span><span class="p">,</span> <span class="n">student_ref_model</span><span class="p">,</span>
+                                                   <span class="n">student_config</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">student_io_dict</span><span class="p">))</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">teacher_forward_proc</span> <span class="o">=</span> <span class="n">get_forward_proc_func</span><span class="p">(</span><span class="n">teacher_config</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;forward_proc&#39;</span><span class="p">,</span> <span class="kc">None</span><span class="p">))</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">student_forward_proc</span> <span class="o">=</span> <span class="n">get_forward_proc_func</span><span class="p">(</span><span class="n">student_config</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;forward_proc&#39;</span><span class="p">,</span> <span class="kc">None</span><span class="p">))</span></div>
+
+<div class="viewcode-block" id="DistillationBox.setup_loss"><a class="viewcode-back" href="../../../subpkgs/core.html#torchdistill.core.distillation.DistillationBox.setup_loss">[docs]</a>    <span class="k">def</span> <span class="nf">setup_loss</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">train_config</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Sets up a training loss module for the current training stage.</span>
+<span class="sd">        This method will be internally called when instantiating this class and when calling</span>
+<span class="sd">        :meth:`MultiStagesDistillationBox.advance_to_next_stage`.</span>
+
+<span class="sd">        :param train_config: training configuration.</span>
+<span class="sd">        :type train_config: dict</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">criterion_config</span> <span class="o">=</span> <span class="n">train_config</span><span class="p">[</span><span class="s1">&#39;criterion&#39;</span><span class="p">]</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">criterion</span> <span class="o">=</span> <span class="n">get_high_level_loss</span><span class="p">(</span><span class="n">criterion_config</span><span class="p">)</span>
+        <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">criterion</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">extract_model_loss</span> <span class="o">=</span> <span class="n">get_func2extract_model_output</span><span class="p">(</span><span class="n">criterion_config</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;func2extract_model_loss&#39;</span><span class="p">,</span> <span class="kc">None</span><span class="p">))</span></div>
+
+<div class="viewcode-block" id="DistillationBox.setup_pre_post_processes"><a class="viewcode-back" href="../../../subpkgs/core.html#torchdistill.core.distillation.DistillationBox.setup_pre_post_processes">[docs]</a>    <span class="k">def</span> <span class="nf">setup_pre_post_processes</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">train_config</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Sets up pre/post-epoch/forward processes for the current training stage.</span>
+<span class="sd">        This method will be internally called when instantiating this class and when calling</span>
+<span class="sd">        :meth:`MultiStagesDistillationBox.advance_to_next_stage`.</span>
+
+<span class="sd">        :param train_config: training configuration.</span>
+<span class="sd">        :type train_config: dict</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">pre_epoch_process</span> <span class="o">=</span> <span class="n">default_pre_epoch_process_with_teacher</span>
+        <span class="k">if</span> <span class="s1">&#39;pre_epoch_process&#39;</span> <span class="ow">in</span> <span class="n">train_config</span><span class="p">:</span>
+            <span class="n">pre_epoch_process</span> <span class="o">=</span> <span class="n">get_pre_epoch_proc_func</span><span class="p">(</span><span class="n">train_config</span><span class="p">[</span><span class="s1">&#39;pre_epoch_process&#39;</span><span class="p">])</span>
+        <span class="nb">setattr</span><span class="p">(</span><span class="n">DistillationBox</span><span class="p">,</span> <span class="s1">&#39;pre_epoch_process&#39;</span><span class="p">,</span> <span class="n">pre_epoch_process</span><span class="p">)</span>
+        <span class="n">pre_forward_process</span> <span class="o">=</span> <span class="n">default_pre_forward_process</span>
+        <span class="k">if</span> <span class="s1">&#39;pre_forward_process&#39;</span> <span class="ow">in</span> <span class="n">train_config</span><span class="p">:</span>
+            <span class="n">pre_forward_process</span> <span class="o">=</span> <span class="n">get_pre_forward_proc_func</span><span class="p">(</span><span class="n">train_config</span><span class="p">[</span><span class="s1">&#39;pre_forward_process&#39;</span><span class="p">])</span>
+        <span class="nb">setattr</span><span class="p">(</span><span class="n">DistillationBox</span><span class="p">,</span> <span class="s1">&#39;pre_forward_process&#39;</span><span class="p">,</span> <span class="n">pre_forward_process</span><span class="p">)</span>
+        <span class="n">post_forward_process</span> <span class="o">=</span> <span class="n">default_post_forward_process</span>
+        <span class="k">if</span> <span class="s1">&#39;post_forward_process&#39;</span> <span class="ow">in</span> <span class="n">train_config</span><span class="p">:</span>
+            <span class="n">post_forward_process</span> <span class="o">=</span> <span class="n">get_post_forward_proc_func</span><span class="p">(</span><span class="n">train_config</span><span class="p">[</span><span class="s1">&#39;post_forward_process&#39;</span><span class="p">])</span>
+
+        <span class="nb">setattr</span><span class="p">(</span><span class="n">DistillationBox</span><span class="p">,</span> <span class="s1">&#39;post_forward_process&#39;</span><span class="p">,</span> <span class="n">post_forward_process</span><span class="p">)</span>
+        <span class="n">post_epoch_process</span> <span class="o">=</span> <span class="n">default_post_epoch_process_with_teacher</span>
+        <span class="k">if</span> <span class="s1">&#39;post_epoch_process&#39;</span> <span class="ow">in</span> <span class="n">train_config</span><span class="p">:</span>
+            <span class="n">post_epoch_process</span> <span class="o">=</span> <span class="n">get_post_epoch_proc_func</span><span class="p">(</span><span class="n">train_config</span><span class="p">[</span><span class="s1">&#39;post_epoch_process&#39;</span><span class="p">])</span>
+        <span class="nb">setattr</span><span class="p">(</span><span class="n">DistillationBox</span><span class="p">,</span> <span class="s1">&#39;post_epoch_process&#39;</span><span class="p">,</span> <span class="n">post_epoch_process</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="DistillationBox.setup"><a class="viewcode-back" href="../../../subpkgs/core.html#torchdistill.core.distillation.DistillationBox.setup">[docs]</a>    <span class="k">def</span> <span class="nf">setup</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">train_config</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Configures a :class:`DistillationBox`/:class:`MultiStagesDistillationBox` for the current training stage.</span>
+<span class="sd">        This method will be internally called when instantiating this class and when calling</span>
+<span class="sd">        :meth:`MultiStagesDistillationBox.advance_to_next_stage`.</span>
+
+<span class="sd">        :param train_config: training configuration.</span>
+<span class="sd">        :type train_config: dict</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="c1"># Set up train and val data loaders</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">setup_data_loaders</span><span class="p">(</span><span class="n">train_config</span><span class="p">)</span>
+
+        <span class="c1"># Define teacher and student models used in this stage</span>
+        <span class="n">teacher_config</span> <span class="o">=</span> <span class="n">train_config</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;teacher&#39;</span><span class="p">,</span> <span class="nb">dict</span><span class="p">())</span>
+        <span class="n">student_config</span> <span class="o">=</span> <span class="n">train_config</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;student&#39;</span><span class="p">,</span> <span class="nb">dict</span><span class="p">())</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">setup_teacher_student_models</span><span class="p">(</span><span class="n">teacher_config</span><span class="p">,</span> <span class="n">student_config</span><span class="p">)</span>
+
+        <span class="c1"># Define loss function used in this stage</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">setup_loss</span><span class="p">(</span><span class="n">train_config</span><span class="p">)</span>
+
+        <span class="c1"># Freeze parameters if specified</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">teacher_updatable</span> <span class="o">=</span> <span class="kc">True</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">teacher_config</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;requires_grad&#39;</span><span class="p">,</span> <span class="kc">True</span><span class="p">):</span>
+            <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s1">&#39;Freezing the whole teacher model&#39;</span><span class="p">)</span>
+            <span class="n">freeze_module_params</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">teacher_model</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">teacher_updatable</span> <span class="o">=</span> <span class="kc">False</span>
+
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">student_config</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;requires_grad&#39;</span><span class="p">,</span> <span class="kc">True</span><span class="p">):</span>
+            <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s1">&#39;Freezing the whole student model&#39;</span><span class="p">)</span>
+            <span class="n">freeze_module_params</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">student_model</span><span class="p">)</span>
+
+        <span class="c1"># Wrap models if necessary</span>
+        <span class="n">teacher_any_updatable</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">get_updatable_param_names</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">teacher_model</span><span class="p">))</span> <span class="o">&gt;</span> <span class="mi">0</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">teacher_model</span> <span class="o">=</span>\
+            <span class="n">wrap_model</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">teacher_model</span><span class="p">,</span> <span class="n">teacher_config</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">device</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">device_ids</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">distributed</span><span class="p">,</span>
+                       <span class="bp">self</span><span class="o">.</span><span class="n">teacher_any_frozen</span><span class="p">,</span> <span class="n">teacher_any_updatable</span><span class="p">)</span>
+        <span class="n">student_any_updatable</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">get_updatable_param_names</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">student_model</span><span class="p">))</span> <span class="o">&gt;</span> <span class="mi">0</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">student_model</span> <span class="o">=</span>\
+            <span class="n">wrap_model</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">student_model</span><span class="p">,</span> <span class="n">student_config</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">device</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">device_ids</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">distributed</span><span class="p">,</span>
+                       <span class="bp">self</span><span class="o">.</span><span class="n">student_any_frozen</span><span class="p">,</span> <span class="n">student_any_updatable</span><span class="p">)</span>
+
+        <span class="c1"># Set up optimizer and scheduler</span>
+        <span class="n">optim_config</span> <span class="o">=</span> <span class="n">train_config</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;optimizer&#39;</span><span class="p">,</span> <span class="nb">dict</span><span class="p">())</span>
+        <span class="n">optimizer_reset</span> <span class="o">=</span> <span class="kc">False</span>
+        <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">optim_config</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="n">optim_kwargs</span> <span class="o">=</span> <span class="n">optim_config</span><span class="p">[</span><span class="s1">&#39;kwargs&#39;</span><span class="p">]</span>
+            <span class="k">if</span> <span class="s1">&#39;lr&#39;</span> <span class="ow">in</span> <span class="n">optim_kwargs</span><span class="p">:</span>
+                <span class="n">optim_kwargs</span><span class="p">[</span><span class="s1">&#39;lr&#39;</span><span class="p">]</span> <span class="o">*=</span> <span class="bp">self</span><span class="o">.</span><span class="n">lr_factor</span>
+
+            <span class="n">module_wise_configs</span> <span class="o">=</span> <span class="n">optim_config</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;module_wise_configs&#39;</span><span class="p">,</span> <span class="nb">list</span><span class="p">())</span>
+            <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">module_wise_configs</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
+                <span class="n">trainable_module_list</span> <span class="o">=</span> <span class="nb">list</span><span class="p">()</span>
+                <span class="k">for</span> <span class="n">module_wise_config</span> <span class="ow">in</span> <span class="n">module_wise_configs</span><span class="p">:</span>
+                    <span class="n">module_wise_kwargs</span> <span class="o">=</span> <span class="nb">dict</span><span class="p">()</span>
+                    <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">module_wise_config</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;kwargs&#39;</span><span class="p">,</span> <span class="kc">None</span><span class="p">),</span> <span class="nb">dict</span><span class="p">):</span>
+                        <span class="n">module_wise_kwargs</span><span class="o">.</span><span class="n">update</span><span class="p">(</span><span class="n">module_wise_config</span><span class="p">[</span><span class="s1">&#39;kwargs&#39;</span><span class="p">])</span>
+
+                    <span class="k">if</span> <span class="s1">&#39;lr&#39;</span> <span class="ow">in</span> <span class="n">module_wise_kwargs</span><span class="p">:</span>
+                        <span class="n">module_wise_kwargs</span><span class="p">[</span><span class="s1">&#39;lr&#39;</span><span class="p">]</span> <span class="o">*=</span> <span class="bp">self</span><span class="o">.</span><span class="n">lr_factor</span>
+
+                    <span class="n">target_model</span> <span class="o">=</span> \
+                        <span class="bp">self</span><span class="o">.</span><span class="n">teacher_model</span> <span class="k">if</span> <span class="n">module_wise_config</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;is_teacher&#39;</span><span class="p">,</span> <span class="kc">False</span><span class="p">)</span> <span class="k">else</span> <span class="bp">self</span><span class="o">.</span><span class="n">student_model</span>
+                    <span class="n">module</span> <span class="o">=</span> <span class="n">get_module</span><span class="p">(</span><span class="n">target_model</span><span class="p">,</span> <span class="n">module_wise_config</span><span class="p">[</span><span class="s1">&#39;module&#39;</span><span class="p">])</span>
+                    <span class="n">module_wise_kwargs</span><span class="p">[</span><span class="s1">&#39;params&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">module</span><span class="o">.</span><span class="n">parameters</span><span class="p">()</span> <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">module</span><span class="p">,</span> <span class="n">nn</span><span class="o">.</span><span class="n">Module</span><span class="p">)</span> <span class="k">else</span> <span class="p">[</span><span class="n">module</span><span class="p">]</span>
+                    <span class="n">trainable_module_list</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">module_wise_kwargs</span><span class="p">)</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">trainable_module_list</span> <span class="o">=</span> <span class="n">nn</span><span class="o">.</span><span class="n">ModuleList</span><span class="p">([</span><span class="bp">self</span><span class="o">.</span><span class="n">student_model</span><span class="p">])</span>
+                <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">teacher_updatable</span><span class="p">:</span>
+                    <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s1">&#39;Note that you are training some/all of the modules in the teacher model&#39;</span><span class="p">)</span>
+                    <span class="n">trainable_module_list</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">teacher_model</span><span class="p">)</span>
+
+            <span class="n">filters_params</span> <span class="o">=</span> <span class="n">optim_config</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;filters_params&#39;</span><span class="p">,</span> <span class="kc">True</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">optimizer</span> <span class="o">=</span> \
+                <span class="n">get_optimizer</span><span class="p">(</span><span class="n">trainable_module_list</span><span class="p">,</span> <span class="n">optim_config</span><span class="p">[</span><span class="s1">&#39;key&#39;</span><span class="p">],</span>
+                              <span class="o">**</span><span class="n">optim_kwargs</span><span class="p">,</span> <span class="n">filters_params</span><span class="o">=</span><span class="n">filters_params</span><span class="p">)</span>
+
+            <span class="bp">self</span><span class="o">.</span><span class="n">optimizer</span><span class="o">.</span><span class="n">zero_grad</span><span class="p">()</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">max_grad_norm</span> <span class="o">=</span> <span class="n">optim_config</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;max_grad_norm&#39;</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">grad_accum_step</span> <span class="o">=</span> <span class="n">optim_config</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;grad_accum_step&#39;</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span>
+            <span class="n">optimizer_reset</span> <span class="o">=</span> <span class="kc">True</span>
+
+        <span class="n">scheduler_config</span> <span class="o">=</span> <span class="n">train_config</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;scheduler&#39;</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">scheduler_config</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="ow">and</span> <span class="nb">len</span><span class="p">(</span><span class="n">scheduler_config</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">lr_scheduler</span> <span class="o">=</span> <span class="n">get_scheduler</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">optimizer</span><span class="p">,</span> <span class="n">scheduler_config</span><span class="p">[</span><span class="s1">&#39;key&#39;</span><span class="p">],</span> <span class="o">**</span><span class="n">scheduler_config</span><span class="p">[</span><span class="s1">&#39;kwargs&#39;</span><span class="p">])</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">scheduling_step</span> <span class="o">=</span> <span class="n">scheduler_config</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;scheduling_step&#39;</span><span class="p">,</span> <span class="mi">0</span><span class="p">)</span>
+        <span class="k">elif</span> <span class="n">optimizer_reset</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">lr_scheduler</span> <span class="o">=</span> <span class="kc">None</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">scheduling_step</span> <span class="o">=</span> <span class="kc">None</span>
+
+        <span class="c1"># Set up accelerator if necessary</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">accelerator</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">teacher_updatable</span><span class="p">:</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">teacher_model</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">student_model</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">optimizer</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">train_data_loader</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">val_data_loader</span> <span class="o">=</span> \
+                    <span class="bp">self</span><span class="o">.</span><span class="n">accelerator</span><span class="o">.</span><span class="n">prepare</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">teacher_model</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">student_model</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">optimizer</span><span class="p">,</span>
+                                             <span class="bp">self</span><span class="o">.</span><span class="n">train_data_loader</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">val_data_loader</span><span class="p">)</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">teacher_model</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">teacher_model</span><span class="o">.</span><span class="n">to</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">accelerator</span><span class="o">.</span><span class="n">device</span><span class="p">)</span>
+                <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">accelerator</span><span class="o">.</span><span class="n">state</span><span class="o">.</span><span class="n">use_fp16</span><span class="p">:</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">teacher_model</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">teacher_model</span><span class="o">.</span><span class="n">half</span><span class="p">()</span>
+
+                <span class="bp">self</span><span class="o">.</span><span class="n">student_model</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">optimizer</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">train_data_loader</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">val_data_loader</span> <span class="o">=</span> \
+                    <span class="bp">self</span><span class="o">.</span><span class="n">accelerator</span><span class="o">.</span><span class="n">prepare</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">student_model</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">optimizer</span><span class="p">,</span>
+                                             <span class="bp">self</span><span class="o">.</span><span class="n">train_data_loader</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">val_data_loader</span><span class="p">)</span>
+
+        <span class="c1"># Set up {pre,post}-{epoch,forward} processes</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">setup_pre_post_processes</span><span class="p">(</span><span class="n">train_config</span><span class="p">)</span></div>
+
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">teacher_model</span><span class="p">,</span> <span class="n">student_model</span><span class="p">,</span> <span class="n">dataset_dict</span><span class="p">,</span>
+                 <span class="n">train_config</span><span class="p">,</span> <span class="n">device</span><span class="p">,</span> <span class="n">device_ids</span><span class="p">,</span> <span class="n">distributed</span><span class="p">,</span> <span class="n">lr_factor</span><span class="p">,</span> <span class="n">accelerator</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+        <span class="c1"># Key attributes (should not be modified)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">org_teacher_model</span> <span class="o">=</span> <span class="n">teacher_model</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">org_student_model</span> <span class="o">=</span> <span class="n">student_model</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">dataset_dict</span> <span class="o">=</span> <span class="n">dataset_dict</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">device</span> <span class="o">=</span> <span class="n">device</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">device_ids</span> <span class="o">=</span> <span class="n">device_ids</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">distributed</span> <span class="o">=</span> <span class="n">distributed</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">lr_factor</span> <span class="o">=</span> <span class="n">lr_factor</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">accelerator</span> <span class="o">=</span> <span class="n">accelerator</span>
+        <span class="c1"># Local attributes (can be updated at each stage)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">teacher_model</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">student_model</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">teacher_forward_proc</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">student_forward_proc</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="kc">None</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">target_teacher_pairs</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">target_student_pairs</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(),</span> <span class="nb">list</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">teacher_io_dict</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">student_io_dict</span> <span class="o">=</span> <span class="nb">dict</span><span class="p">(),</span> <span class="nb">dict</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">train_data_loader</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">val_data_loader</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">optimizer</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">lr_scheduler</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="kc">None</span><span class="p">,</span> <span class="kc">None</span><span class="p">,</span> <span class="kc">None</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">criterion</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">extract_model_loss</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="kc">None</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">teacher_updatable</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">teacher_any_frozen</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">student_any_frozen</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="kc">None</span><span class="p">,</span> <span class="kc">None</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">grad_accum_step</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">max_grad_norm</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">scheduling_step</span> <span class="o">=</span> <span class="mi">0</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">stage_grad_count</span> <span class="o">=</span> <span class="mi">0</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">setup</span><span class="p">(</span><span class="n">train_config</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">num_epochs</span> <span class="o">=</span> <span class="n">train_config</span><span class="p">[</span><span class="s1">&#39;num_epochs&#39;</span><span class="p">]</span>
+
+<div class="viewcode-block" id="DistillationBox.pre_epoch_process"><a class="viewcode-back" href="../../../subpkgs/core.html#torchdistill.core.distillation.DistillationBox.pre_epoch_process">[docs]</a>    <span class="k">def</span> <span class="nf">pre_epoch_process</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Performs a pre-epoch process Shows the summary of results.</span>
+
+<span class="sd">        This should be overridden by all subclasses or defined through :meth:`setup_pre_post_processes`.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">raise</span> <span class="ne">NotImplementedError</span><span class="p">()</span></div>
+
+<div class="viewcode-block" id="DistillationBox.pre_forward_process"><a class="viewcode-back" href="../../../subpkgs/core.html#torchdistill.core.distillation.DistillationBox.pre_forward_process">[docs]</a>    <span class="k">def</span> <span class="nf">pre_forward_process</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Performs a pre-forward process Shows the summary of results.</span>
+
+<span class="sd">        This should be overridden by all subclasses or defined through :meth:`setup_pre_post_processes`.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">raise</span> <span class="ne">NotImplementedError</span><span class="p">()</span></div>
+
+<div class="viewcode-block" id="DistillationBox.get_teacher_output"><a class="viewcode-back" href="../../../subpkgs/core.html#torchdistill.core.distillation.DistillationBox.get_teacher_output">[docs]</a>    <span class="k">def</span> <span class="nf">get_teacher_output</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">sample_batch</span><span class="p">,</span> <span class="n">targets</span><span class="p">,</span> <span class="n">supp_dict</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Gets teacher model&#39;s output.</span>
+
+<span class="sd">        :param sample_batch: sample batch.</span>
+<span class="sd">        :type sample_batch: Any</span>
+<span class="sd">        :param targets: training targets.</span>
+<span class="sd">        :type targets: Any</span>
+<span class="sd">        :param supp_dict: supplementary dict.</span>
+<span class="sd">        :type supp_dict: dict</span>
+<span class="sd">        :return: teacher&#39;s outputs and teacher&#39;s I/O dict.</span>
+<span class="sd">        :rtype: (Any, dict)</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="n">supp_dict</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">supp_dict</span> <span class="o">=</span> <span class="nb">dict</span><span class="p">()</span>
+
+        <span class="n">cached_data</span> <span class="o">=</span> <span class="n">supp_dict</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;cached_data&#39;</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span>
+        <span class="n">cache_file_paths</span> <span class="o">=</span> <span class="n">supp_dict</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;cache_file_path&#39;</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span>
+        <span class="n">teacher_outputs</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="n">cached_extracted_teacher_output_dict</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="c1"># Use cached data if available</span>
+        <span class="k">if</span> <span class="n">cached_data</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="ow">and</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">cached_data</span><span class="p">,</span> <span class="nb">dict</span><span class="p">):</span>
+            <span class="n">teacher_outputs</span> <span class="o">=</span> <span class="n">cached_data</span><span class="p">[</span><span class="s1">&#39;teacher_outputs&#39;</span><span class="p">]</span>
+            <span class="n">cached_extracted_teacher_output_dict</span> <span class="o">=</span> <span class="n">cached_data</span><span class="p">[</span><span class="s1">&#39;extracted_outputs&#39;</span><span class="p">]</span>
+            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">device</span><span class="o">.</span><span class="n">type</span> <span class="o">!=</span> <span class="s1">&#39;cpu&#39;</span><span class="p">:</span>
+                <span class="n">teacher_outputs</span> <span class="o">=</span> <span class="n">change_device</span><span class="p">(</span><span class="n">teacher_outputs</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">device</span><span class="p">)</span>
+                <span class="n">cached_extracted_teacher_output_dict</span> <span class="o">=</span> <span class="n">change_device</span><span class="p">(</span><span class="n">cached_extracted_teacher_output_dict</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">device</span><span class="p">)</span>
+            <span class="k">if</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">teacher_updatable</span><span class="p">:</span>
+                <span class="k">return</span> <span class="n">teacher_outputs</span><span class="p">,</span> <span class="n">cached_extracted_teacher_output_dict</span>
+
+        <span class="c1"># If no cached data</span>
+        <span class="k">if</span> <span class="n">teacher_outputs</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">teacher_updatable</span><span class="p">:</span>
+                <span class="n">teacher_outputs</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">teacher_forward_proc</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">teacher_model</span><span class="p">,</span> <span class="n">sample_batch</span><span class="p">,</span>
+                                                            <span class="n">targets</span><span class="p">,</span> <span class="n">supp_dict</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="k">with</span> <span class="n">torch</span><span class="o">.</span><span class="n">no_grad</span><span class="p">():</span>
+                    <span class="n">teacher_outputs</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">teacher_forward_proc</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">teacher_model</span><span class="p">,</span> <span class="n">sample_batch</span><span class="p">,</span>
+                                                                <span class="n">targets</span><span class="p">,</span> <span class="n">supp_dict</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="n">cached_extracted_teacher_output_dict</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">teacher_model</span><span class="p">,</span> <span class="n">AuxiliaryModelWrapper</span><span class="p">)</span> <span class="ow">or</span> \
+                    <span class="p">(</span><span class="n">check_if_wrapped</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">teacher_model</span><span class="p">)</span> <span class="ow">and</span>
+                     <span class="nb">isinstance</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">teacher_model</span><span class="o">.</span><span class="n">module</span><span class="p">,</span> <span class="n">AuxiliaryModelWrapper</span><span class="p">)):</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">teacher_io_dict</span><span class="o">.</span><span class="n">update</span><span class="p">(</span><span class="n">cached_extracted_teacher_output_dict</span><span class="p">)</span>
+                <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">teacher_model</span><span class="p">,</span> <span class="n">AuxiliaryModelWrapper</span><span class="p">):</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">teacher_model</span><span class="o">.</span><span class="n">secondary_forward</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">teacher_io_dict</span><span class="p">)</span>
+
+            <span class="n">extracted_teacher_io_dict</span> <span class="o">=</span> <span class="n">extract_io_dict</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">teacher_io_dict</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">device</span><span class="p">)</span>
+            <span class="k">return</span> <span class="n">teacher_outputs</span><span class="p">,</span> <span class="n">extracted_teacher_io_dict</span>
+
+        <span class="c1"># Deep copy of teacher info dict if auxiliary teacher model wrapper contains trainable module(s)</span>
+        <span class="n">teacher_io_dict4cache</span> <span class="o">=</span> <span class="n">copy</span><span class="o">.</span><span class="n">deepcopy</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">teacher_io_dict</span><span class="p">)</span> \
+            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">teacher_updatable</span> <span class="ow">and</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">cache_file_paths</span><span class="p">,</span> <span class="p">(</span><span class="nb">list</span><span class="p">,</span> <span class="nb">tuple</span><span class="p">))</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="k">else</span> <span class="kc">None</span>
+        <span class="n">extracted_teacher_io_dict</span> <span class="o">=</span> <span class="n">extract_io_dict</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">teacher_io_dict</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">device</span><span class="p">)</span>
+        <span class="n">extracted_teacher_io_dict</span><span class="p">[</span><span class="n">SELF_MODULE_PATH</span><span class="p">][</span><span class="s1">&#39;output&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">teacher_outputs</span>
+        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">teacher_model</span><span class="p">,</span> <span class="n">AuxiliaryModelWrapper</span><span class="p">):</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">teacher_model</span><span class="o">.</span><span class="n">secondary_forward</span><span class="p">(</span><span class="n">extracted_teacher_io_dict</span><span class="p">)</span>
+
+        <span class="n">update_io_dict</span><span class="p">(</span><span class="n">extracted_teacher_io_dict</span><span class="p">,</span> <span class="n">extract_io_dict</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">teacher_io_dict</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">device</span><span class="p">))</span>
+        <span class="c1"># Write cache files if output file paths (cache_file_paths) are given</span>
+        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">cache_file_paths</span><span class="p">,</span> <span class="p">(</span><span class="nb">list</span><span class="p">,</span> <span class="nb">tuple</span><span class="p">)):</span>
+            <span class="k">if</span> <span class="n">teacher_io_dict4cache</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+                <span class="n">teacher_io_dict4cache</span> <span class="o">=</span> <span class="n">extracted_teacher_io_dict</span>
+
+            <span class="n">cpu_device</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">device</span><span class="p">(</span><span class="s1">&#39;cpu&#39;</span><span class="p">)</span>
+            <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="p">(</span><span class="n">teacher_output</span><span class="p">,</span> <span class="n">cache_file_path</span><span class="p">)</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="nb">zip</span><span class="p">(</span><span class="n">teacher_outputs</span><span class="o">.</span><span class="n">cpu</span><span class="p">()</span><span class="o">.</span><span class="n">numpy</span><span class="p">(),</span> <span class="n">cache_file_paths</span><span class="p">)):</span>
+                <span class="n">sub_dict</span> <span class="o">=</span> <span class="n">extract_sub_model_io_dict</span><span class="p">(</span><span class="n">teacher_io_dict4cache</span><span class="p">,</span> <span class="n">i</span><span class="p">)</span>
+                <span class="n">sub_dict</span> <span class="o">=</span> <span class="n">tensor2numpy2tensor</span><span class="p">(</span><span class="n">sub_dict</span><span class="p">,</span> <span class="n">cpu_device</span><span class="p">)</span>
+                <span class="n">cache_dict</span> <span class="o">=</span> <span class="p">{</span><span class="s1">&#39;teacher_outputs&#39;</span><span class="p">:</span> <span class="n">torch</span><span class="o">.</span><span class="n">Tensor</span><span class="p">(</span><span class="n">teacher_output</span><span class="p">),</span> <span class="s1">&#39;extracted_outputs&#39;</span><span class="p">:</span> <span class="n">sub_dict</span><span class="p">}</span>
+                <span class="n">make_parent_dirs</span><span class="p">(</span><span class="n">cache_file_path</span><span class="p">)</span>
+                <span class="n">torch</span><span class="o">.</span><span class="n">save</span><span class="p">(</span><span class="n">cache_dict</span><span class="p">,</span> <span class="n">cache_file_path</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">teacher_outputs</span><span class="p">,</span> <span class="n">extracted_teacher_io_dict</span></div>
+
+<div class="viewcode-block" id="DistillationBox.forward_process"><a class="viewcode-back" href="../../../subpkgs/core.html#torchdistill.core.distillation.DistillationBox.forward_process">[docs]</a>    <span class="k">def</span> <span class="nf">forward_process</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">sample_batch</span><span class="p">,</span> <span class="n">targets</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">supp_dict</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Performs forward computations for teacher and student models.</span>
+
+<span class="sd">        :param sample_batch: sample batch.</span>
+<span class="sd">        :type sample_batch: Any</span>
+<span class="sd">        :param targets: training targets.</span>
+<span class="sd">        :type targets: Any</span>
+<span class="sd">        :param supp_dict: supplementary dict.</span>
+<span class="sd">        :type supp_dict: dict</span>
+<span class="sd">        :return: loss tensor.</span>
+<span class="sd">        :rtype: torch.Tensor</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">teacher_outputs</span><span class="p">,</span> <span class="n">extracted_teacher_io_dict</span> <span class="o">=</span>\
+            <span class="bp">self</span><span class="o">.</span><span class="n">get_teacher_output</span><span class="p">(</span><span class="n">sample_batch</span><span class="o">=</span><span class="n">sample_batch</span><span class="p">,</span> <span class="n">targets</span><span class="o">=</span><span class="n">targets</span><span class="p">,</span> <span class="n">supp_dict</span><span class="o">=</span><span class="n">supp_dict</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+        <span class="n">student_outputs</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">student_forward_proc</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">student_model</span><span class="p">,</span> <span class="n">sample_batch</span><span class="p">,</span> <span class="n">targets</span><span class="p">,</span> <span class="n">supp_dict</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+        <span class="n">extracted_student_io_dict</span> <span class="o">=</span> <span class="n">extract_io_dict</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">student_io_dict</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">device</span><span class="p">)</span>
+        <span class="n">extracted_student_io_dict</span><span class="p">[</span><span class="n">SELF_MODULE_PATH</span><span class="p">][</span><span class="s1">&#39;output&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">student_outputs</span>
+        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">student_model</span><span class="p">,</span> <span class="n">AuxiliaryModelWrapper</span><span class="p">):</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">student_model</span><span class="o">.</span><span class="n">secondary_forward</span><span class="p">(</span><span class="n">extracted_student_io_dict</span><span class="p">)</span>
+
+        <span class="n">model_loss_dict</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">extract_model_loss</span><span class="p">(</span><span class="n">student_outputs</span><span class="p">,</span> <span class="n">targets</span><span class="p">,</span> <span class="n">supp_dict</span><span class="o">=</span><span class="n">supp_dict</span><span class="p">)</span>
+        <span class="n">update_io_dict</span><span class="p">(</span><span class="n">extracted_student_io_dict</span><span class="p">,</span> <span class="n">extract_io_dict</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">student_io_dict</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">device</span><span class="p">))</span>
+        <span class="n">io_dict</span> <span class="o">=</span> <span class="p">{</span><span class="s1">&#39;teacher&#39;</span><span class="p">:</span> <span class="n">extracted_teacher_io_dict</span><span class="p">,</span> <span class="s1">&#39;student&#39;</span><span class="p">:</span> <span class="n">extracted_student_io_dict</span><span class="p">}</span>
+        <span class="n">total_loss</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">criterion</span><span class="p">(</span><span class="n">io_dict</span><span class="p">,</span> <span class="n">model_loss_dict</span><span class="p">,</span> <span class="n">targets</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">total_loss</span></div>
+
+<div class="viewcode-block" id="DistillationBox.post_forward_process"><a class="viewcode-back" href="../../../subpkgs/core.html#torchdistill.core.distillation.DistillationBox.post_forward_process">[docs]</a>    <span class="k">def</span> <span class="nf">post_forward_process</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Performs a post-forward process.</span>
+
+<span class="sd">        This should be overridden by all subclasses or defined through :meth:`setup_pre_post_processes`.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">raise</span> <span class="ne">NotImplementedError</span><span class="p">()</span></div>
+
+<div class="viewcode-block" id="DistillationBox.post_epoch_process"><a class="viewcode-back" href="../../../subpkgs/core.html#torchdistill.core.distillation.DistillationBox.post_epoch_process">[docs]</a>    <span class="k">def</span> <span class="nf">post_epoch_process</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Performs a post-epoch process.</span>
+
+<span class="sd">        This should be overridden by all subclasses or defined through :meth:`setup_pre_post_processes`.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">raise</span> <span class="ne">NotImplementedError</span><span class="p">()</span></div>
+
+<div class="viewcode-block" id="DistillationBox.clean_modules"><a class="viewcode-back" href="../../../subpkgs/core.html#torchdistill.core.distillation.DistillationBox.clean_modules">[docs]</a>    <span class="k">def</span> <span class="nf">clean_modules</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Unfreezes all the teacher and student modules, clears I/O dicts, unregisters forward hook handles,</span>
+<span class="sd">        and clears the handle lists.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">unfreeze_module_params</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">org_teacher_model</span><span class="p">)</span>
+        <span class="n">unfreeze_module_params</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">org_student_model</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">teacher_io_dict</span><span class="o">.</span><span class="n">clear</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">student_io_dict</span><span class="o">.</span><span class="n">clear</span><span class="p">()</span>
+        <span class="k">for</span> <span class="n">_</span><span class="p">,</span> <span class="n">module_handle</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">target_teacher_pairs</span> <span class="o">+</span> <span class="bp">self</span><span class="o">.</span><span class="n">target_student_pairs</span><span class="p">:</span>
+            <span class="n">module_handle</span><span class="o">.</span><span class="n">remove</span><span class="p">()</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">target_teacher_pairs</span><span class="o">.</span><span class="n">clear</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">target_student_pairs</span><span class="o">.</span><span class="n">clear</span><span class="p">()</span></div></div>
+
+
+<div class="viewcode-block" id="MultiStagesDistillationBox"><a class="viewcode-back" href="../../../subpkgs/core.html#torchdistill.core.distillation.MultiStagesDistillationBox">[docs]</a><span class="k">class</span> <span class="nc">MultiStagesDistillationBox</span><span class="p">(</span><span class="n">DistillationBox</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    A multi-stage knowledge distillation framework. This is a subclass of :class:`DistillationBox`.</span>
+
+<span class="sd">    :param teacher_model: teacher model.</span>
+<span class="sd">    :type teacher_model: nn.Module</span>
+<span class="sd">    :param student_model: student model.</span>
+<span class="sd">    :type student_model: nn.Module</span>
+<span class="sd">    :param dataset_dict: dict that contains datasets with IDs of your choice.</span>
+<span class="sd">    :type dataset_dict: dict</span>
+<span class="sd">    :param train_config: training configuration.</span>
+<span class="sd">    :type train_config: dict</span>
+<span class="sd">    :param device: target device.</span>
+<span class="sd">    :type device: torch.device</span>
+<span class="sd">    :param device_ids: target device IDs.</span>
+<span class="sd">    :type device_ids: list[int]</span>
+<span class="sd">    :param distributed: whether to be in distributed training mode.</span>
+<span class="sd">    :type distributed: bool</span>
+<span class="sd">    :param lr_factor: multiplier for learning rate.</span>
+<span class="sd">    :type lr_factor: float or int</span>
+<span class="sd">    :param accelerator: Hugging Face accelerator.</span>
+<span class="sd">    :type accelerator: accelerate.Accelerator or None</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">teacher_model</span><span class="p">,</span> <span class="n">student_model</span><span class="p">,</span> <span class="n">dataset_dict</span><span class="p">,</span>
+                 <span class="n">train_config</span><span class="p">,</span> <span class="n">device</span><span class="p">,</span> <span class="n">device_ids</span><span class="p">,</span> <span class="n">distributed</span><span class="p">,</span> <span class="n">lr_factor</span><span class="p">,</span> <span class="n">accelerator</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+        <span class="n">stage1_config</span> <span class="o">=</span> <span class="n">train_config</span><span class="p">[</span><span class="s1">&#39;stage1&#39;</span><span class="p">]</span>
+        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="n">teacher_model</span><span class="p">,</span> <span class="n">student_model</span><span class="p">,</span> <span class="n">dataset_dict</span><span class="p">,</span>
+                         <span class="n">stage1_config</span><span class="p">,</span> <span class="n">device</span><span class="p">,</span> <span class="n">device_ids</span><span class="p">,</span> <span class="n">distributed</span><span class="p">,</span> <span class="n">lr_factor</span><span class="p">,</span> <span class="n">accelerator</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">train_config</span> <span class="o">=</span> <span class="n">train_config</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">stage_number</span> <span class="o">=</span> <span class="mi">1</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">stage_end_epoch</span> <span class="o">=</span> <span class="n">stage1_config</span><span class="p">[</span><span class="s1">&#39;num_epochs&#39;</span><span class="p">]</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">num_epochs</span> <span class="o">=</span> <span class="nb">sum</span><span class="p">(</span><span class="n">train_config</span><span class="p">[</span><span class="n">key</span><span class="p">][</span><span class="s1">&#39;num_epochs&#39;</span><span class="p">]</span> <span class="k">for</span> <span class="n">key</span> <span class="ow">in</span> <span class="n">train_config</span><span class="o">.</span><span class="n">keys</span><span class="p">()</span> <span class="k">if</span> <span class="n">key</span><span class="o">.</span><span class="n">startswith</span><span class="p">(</span><span class="s1">&#39;stage&#39;</span><span class="p">))</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">current_epoch</span> <span class="o">=</span> <span class="mi">0</span>
+        <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s1">&#39;Started stage </span><span class="si">{}</span><span class="s1">&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">stage_number</span><span class="p">))</span>
+
+<div class="viewcode-block" id="MultiStagesDistillationBox.save_stage_ckpt"><a class="viewcode-back" href="../../../subpkgs/core.html#torchdistill.core.distillation.MultiStagesDistillationBox.save_stage_ckpt">[docs]</a>    <span class="k">def</span> <span class="nf">save_stage_ckpt</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">model</span><span class="p">,</span> <span class="n">local_model_config</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Saves the checkpoint of ``model`` for the current training stage.</span>
+
+<span class="sd">        :param model: model to be saved.</span>
+<span class="sd">        :type model: nn.Module</span>
+<span class="sd">        :param local_model_config: model configuration at the current training stage.</span>
+<span class="sd">        :type local_model_config: dict</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">dst_ckpt_file_path</span> <span class="o">=</span> <span class="n">local_model_config</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;dst_ckpt&#39;</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">dst_ckpt_file_path</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">model_state_dict</span> <span class="o">=</span> <span class="n">model</span><span class="o">.</span><span class="n">module</span><span class="o">.</span><span class="n">state_dict</span><span class="p">()</span> <span class="k">if</span> <span class="n">check_if_wrapped</span><span class="p">(</span><span class="n">model</span><span class="p">)</span> <span class="k">else</span> <span class="n">model</span><span class="o">.</span><span class="n">state_dict</span><span class="p">()</span>
+            <span class="n">make_parent_dirs</span><span class="p">(</span><span class="n">dst_ckpt_file_path</span><span class="p">)</span>
+            <span class="n">save_on_master</span><span class="p">(</span><span class="n">model_state_dict</span><span class="p">,</span> <span class="n">dst_ckpt_file_path</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="MultiStagesDistillationBox.advance_to_next_stage"><a class="viewcode-back" href="../../../subpkgs/core.html#torchdistill.core.distillation.MultiStagesDistillationBox.advance_to_next_stage">[docs]</a>    <span class="k">def</span> <span class="nf">advance_to_next_stage</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Reads the next training stage&#39;s configuration in ``train_config`` and advances to the next training stage.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">save_stage_ckpt</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">teacher_model</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">train_config</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;teacher&#39;</span><span class="p">,</span> <span class="nb">dict</span><span class="p">()))</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">save_stage_ckpt</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">student_model</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">train_config</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;student&#39;</span><span class="p">,</span> <span class="nb">dict</span><span class="p">()))</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">clean_modules</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">stage_grad_count</span> <span class="o">=</span> <span class="mi">0</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">stage_number</span> <span class="o">+=</span> <span class="mi">1</span>
+        <span class="n">next_stage_config</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">train_config</span><span class="p">[</span><span class="s1">&#39;stage</span><span class="si">{}</span><span class="s1">&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">stage_number</span><span class="p">)]</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">setup</span><span class="p">(</span><span class="n">next_stage_config</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">stage_end_epoch</span> <span class="o">+=</span> <span class="n">next_stage_config</span><span class="p">[</span><span class="s1">&#39;num_epochs&#39;</span><span class="p">]</span>
+        <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s1">&#39;Advanced to stage </span><span class="si">{}</span><span class="s1">&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">stage_number</span><span class="p">))</span></div>
+
+<div class="viewcode-block" id="MultiStagesDistillationBox.post_epoch_process"><a class="viewcode-back" href="../../../subpkgs/core.html#torchdistill.core.distillation.MultiStagesDistillationBox.post_epoch_process">[docs]</a>    <span class="k">def</span> <span class="nf">post_epoch_process</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Performs a post-epoch process.</span>
+
+<span class="sd">        The superclass&#39;s post_epoch_process should be overridden by all subclasses or</span>
+<span class="sd">        defined through :meth:`DistillationBox.setup_pre_post_processes`.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="n">post_epoch_process</span><span class="p">(</span><span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">current_epoch</span> <span class="o">+=</span> <span class="mi">1</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">current_epoch</span> <span class="o">==</span> <span class="bp">self</span><span class="o">.</span><span class="n">stage_end_epoch</span> <span class="ow">and</span> <span class="bp">self</span><span class="o">.</span><span class="n">current_epoch</span> <span class="o">&lt;</span> <span class="bp">self</span><span class="o">.</span><span class="n">num_epochs</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">advance_to_next_stage</span><span class="p">()</span></div></div>
+
+
+<div class="viewcode-block" id="get_distillation_box"><a class="viewcode-back" href="../../../subpkgs/core.html#torchdistill.core.distillation.get_distillation_box">[docs]</a><span class="k">def</span> <span class="nf">get_distillation_box</span><span class="p">(</span><span class="n">teacher_model</span><span class="p">,</span> <span class="n">student_model</span><span class="p">,</span> <span class="n">dataset_dict</span><span class="p">,</span>
+                         <span class="n">train_config</span><span class="p">,</span> <span class="n">device</span><span class="p">,</span> <span class="n">device_ids</span><span class="p">,</span> <span class="n">distributed</span><span class="p">,</span> <span class="n">lr_factor</span><span class="p">,</span> <span class="n">accelerator</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Gets a distillation box.</span>
+
+<span class="sd">    :param teacher_model: teacher model.</span>
+<span class="sd">    :type teacher_model: nn.Module</span>
+<span class="sd">    :param student_model: student model.</span>
+<span class="sd">    :type student_model: nn.Module</span>
+<span class="sd">    :param dataset_dict: dict that contains datasets with IDs of your choice.</span>
+<span class="sd">    :type dataset_dict: dict</span>
+<span class="sd">    :param train_config: training configuration.</span>
+<span class="sd">    :type train_config: dict</span>
+<span class="sd">    :param device: target device.</span>
+<span class="sd">    :type device: torch.device</span>
+<span class="sd">    :param device_ids: target device IDs.</span>
+<span class="sd">    :type device_ids: list[int]</span>
+<span class="sd">    :param distributed: whether to be in distributed training mode.</span>
+<span class="sd">    :type distributed: bool</span>
+<span class="sd">    :param lr_factor: multiplier for learning rate.</span>
+<span class="sd">    :type lr_factor: float or int</span>
+<span class="sd">    :param accelerator: Hugging Face accelerator.</span>
+<span class="sd">    :type accelerator: accelerate.Accelerator or None</span>
+<span class="sd">    :return: distillation box.</span>
+<span class="sd">    :rtype: DistillationBox or MultiStagesDistillationBox</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="s1">&#39;stage1&#39;</span> <span class="ow">in</span> <span class="n">train_config</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">MultiStagesDistillationBox</span><span class="p">(</span><span class="n">teacher_model</span><span class="p">,</span> <span class="n">student_model</span><span class="p">,</span> <span class="n">dataset_dict</span><span class="p">,</span>
+                                          <span class="n">train_config</span><span class="p">,</span> <span class="n">device</span><span class="p">,</span> <span class="n">device_ids</span><span class="p">,</span> <span class="n">distributed</span><span class="p">,</span> <span class="n">lr_factor</span><span class="p">,</span> <span class="n">accelerator</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">DistillationBox</span><span class="p">(</span><span class="n">teacher_model</span><span class="p">,</span> <span class="n">student_model</span><span class="p">,</span> <span class="n">dataset_dict</span><span class="p">,</span> <span class="n">train_config</span><span class="p">,</span>
+                           <span class="n">device</span><span class="p">,</span> <span class="n">device_ids</span><span class="p">,</span> <span class="n">distributed</span><span class="p">,</span> <span class="n">lr_factor</span><span class="p">,</span> <span class="n">accelerator</span><span class="p">)</span></div>
+</pre></div>
+
+           </div>
+          </div>
+          <footer>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2023, Yoshitomo Matsubara.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script>
+    <!-- Theme Analytics -->
+    <script async src="https://www.googletagmanager.com/gtag/js?id=G-LYK8SSJ7R5"></script>
+    <script>
+      window.dataLayer = window.dataLayer || [];
+      function gtag(){dataLayer.push(arguments);}
+      gtag('js', new Date());
+
+      gtag('config', 'G-LYK8SSJ7R5', {
+          'anonymize_ip': false,
+      });
+    </script> 
+
+</body>
+</html>

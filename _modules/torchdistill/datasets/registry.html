@@ -1,0 +1,483 @@
+<!DOCTYPE html>
+<html class="writer-html5" lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>torchdistill.datasets.registry &mdash; torchdistill v1.1.1-dev documentation</title>
+      <link rel="stylesheet" type="text/css" href="../../../_static/pygments.css?v=80d5e7a1" />
+      <link rel="stylesheet" type="text/css" href="../../../_static/css/theme.css?v=19f00094" />
+
+  
+  <!--[if lt IE 9]>
+    <script src="../../../_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+        <script src="../../../_static/jquery.js?v=5d32c60e"></script>
+        <script src="../../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+        <script data-url_root="../../../" id="documentation_options" src="../../../_static/documentation_options.js?v=0b675245"></script>
+        <script src="../../../_static/doctools.js?v=888ff710"></script>
+        <script src="../../../_static/sphinx_highlight.js?v=4825356b"></script>
+    <script src="../../../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../search.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="../../../index.html">
+            
+              <img src="../../../_static/logo-white.png" class="logo" alt="Logo"/>
+          </a>
+              <div class="version">
+                v1.1.1-dev
+              </div>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">📚 Overview</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../usage.html">Usage</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../package.html">torchdistill API</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">🧑🏻‍💻 Research</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../benchmarks.html">Benchmarks</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../projects.html">Projects</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../../index.html">torchdistill</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content style-external-links">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../../../index.html" class="icon icon-home" aria-label="Home"></a></li>
+          <li class="breadcrumb-item"><a href="../../index.html">Module code</a></li>
+      <li class="breadcrumb-item active">torchdistill.datasets.registry</li>
+      <li class="wy-breadcrumbs-aside">
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <h1>Source code for torchdistill.datasets.registry</h1><div class="highlight"><pre>
+<span></span><span class="kn">from</span> <span class="nn">types</span> <span class="kn">import</span> <span class="n">BuiltinFunctionType</span><span class="p">,</span> <span class="n">BuiltinMethodType</span><span class="p">,</span> <span class="n">FunctionType</span>
+
+<span class="kn">from</span> <span class="nn">..common</span> <span class="kn">import</span> <span class="n">misc_util</span>
+
+<span class="n">DATASET_DICT</span> <span class="o">=</span> <span class="nb">dict</span><span class="p">()</span>
+<span class="n">COLLATE_FUNC_DICT</span> <span class="o">=</span> <span class="nb">dict</span><span class="p">()</span>
+<span class="n">SAMPLE_LOADER_DICT</span> <span class="o">=</span> <span class="nb">dict</span><span class="p">()</span>
+<span class="n">BATCH_SAMPLER_DICT</span> <span class="o">=</span> <span class="nb">dict</span><span class="p">()</span>
+<span class="n">TRANSFORM_DICT</span> <span class="o">=</span> <span class="nb">dict</span><span class="p">()</span>
+<span class="n">DATASET_WRAPPER_DICT</span> <span class="o">=</span> <span class="nb">dict</span><span class="p">()</span>
+
+<span class="n">DATASET_DICT</span><span class="o">.</span><span class="n">update</span><span class="p">(</span><span class="n">misc_util</span><span class="o">.</span><span class="n">get_classes_as_dict</span><span class="p">(</span><span class="s1">&#39;torchvision.datasets&#39;</span><span class="p">))</span>
+<span class="n">BATCH_SAMPLER_DICT</span><span class="o">.</span><span class="n">update</span><span class="p">(</span><span class="n">misc_util</span><span class="o">.</span><span class="n">get_classes_as_dict</span><span class="p">(</span><span class="s1">&#39;torch.utils.data.sampler&#39;</span><span class="p">))</span>
+
+
+<div class="viewcode-block" id="register_dataset"><a class="viewcode-back" href="../../../subpkgs/datasets.html#torchdistill.datasets.registry.register_dataset">[docs]</a><span class="k">def</span> <span class="nf">register_dataset</span><span class="p">(</span><span class="n">arg</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Registers a dataset class or function to instantiate it.</span>
+
+<span class="sd">    :param arg: class or function to be registered as a dataset.</span>
+<span class="sd">    :type arg: class or typing.Callable or None</span>
+<span class="sd">    :return: registered dataset class or function to instantiate it.</span>
+<span class="sd">    :rtype: class or typing.Callable</span>
+
+<span class="sd">    .. note::</span>
+<span class="sd">        The dataset will be registered as an option.</span>
+<span class="sd">        You can choose the registered class/function by specifying the name of the class/function or ``key``</span>
+<span class="sd">        you used for the registration, in a training configuration used for</span>
+<span class="sd">        :class:`torchdistill.core.distillation.DistillationBox` or :class:`torchdistill.core.training.TrainingBox`.</span>
+
+<span class="sd">        If you want to register the class/function with a key of your choice, add ``key`` to the decorator as below:</span>
+
+<span class="sd">        &gt;&gt;&gt; from torch.utils.data import Dataset</span>
+<span class="sd">        &gt;&gt;&gt; from torchdistill.datasets.registry import register_dataset</span>
+<span class="sd">        &gt;&gt;&gt; @register_dataset(key=&#39;my_custom_dataset&#39;)</span>
+<span class="sd">        &gt;&gt;&gt; class CustomDataset(Dataset):</span>
+<span class="sd">        &gt;&gt;&gt;     def __init__(self, **kwargs):</span>
+<span class="sd">        &gt;&gt;&gt;         print(&#39;This is my custom dataset class&#39;)</span>
+
+<span class="sd">        In the example, ``CustomDataset`` class is registered with a key &quot;my_custom_dataset&quot;.</span>
+<span class="sd">        When you configure :class:`torchdistill.core.distillation.DistillationBox` or</span>
+<span class="sd">        :class:`torchdistill.core.training.TrainingBox`, you can choose the ``CustomDataset`` class by</span>
+<span class="sd">        &quot;my_custom_dataset&quot;.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">def</span> <span class="nf">_register_dataset</span><span class="p">(</span><span class="n">cls_or_func</span><span class="p">):</span>
+        <span class="n">key</span> <span class="o">=</span> <span class="n">kwargs</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;key&#39;</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">key</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">key</span> <span class="o">=</span> <span class="n">cls_or_func</span><span class="o">.</span><span class="vm">__name__</span>
+
+        <span class="n">DATASET_DICT</span><span class="p">[</span><span class="n">key</span><span class="p">]</span> <span class="o">=</span> <span class="n">cls_or_func</span>
+        <span class="k">return</span> <span class="n">cls_or_func</span>
+
+    <span class="k">if</span> <span class="nb">callable</span><span class="p">(</span><span class="n">arg</span><span class="p">):</span>
+        <span class="k">return</span> <span class="n">_register_dataset</span><span class="p">(</span><span class="n">arg</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">_register_dataset</span></div>
+
+
+<div class="viewcode-block" id="register_collate_func"><a class="viewcode-back" href="../../../subpkgs/datasets.html#torchdistill.datasets.registry.register_collate_func">[docs]</a><span class="k">def</span> <span class="nf">register_collate_func</span><span class="p">(</span><span class="n">arg</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Registers a collate function.</span>
+
+<span class="sd">    :param arg: function to be registered as a collate function.</span>
+<span class="sd">    :type arg: typing.Callable or None</span>
+<span class="sd">    :return: registered function.</span>
+<span class="sd">    :rtype: typing.Callable</span>
+
+<span class="sd">    .. note::</span>
+<span class="sd">        The collate function will be registered as an option.</span>
+<span class="sd">        You can choose the registered function by specifying the name of the function or ``key``</span>
+<span class="sd">        you used for the registration, in a training configuration used for</span>
+<span class="sd">        :class:`torchdistill.core.distillation.DistillationBox` or :class:`torchdistill.core.training.TrainingBox`.</span>
+
+<span class="sd">        If you want to register the function with a key of your choice, add ``key`` to the decorator as below:</span>
+
+<span class="sd">        &gt;&gt;&gt; from torchdistill.datasets.registry import register_collate_func</span>
+<span class="sd">        &gt;&gt;&gt;</span>
+<span class="sd">        &gt;&gt;&gt; @register_collate_func(key=&#39;my_custom_collate&#39;)</span>
+<span class="sd">        &gt;&gt;&gt; def custom_collate(batch, label):</span>
+<span class="sd">        &gt;&gt;&gt;     print(&#39;This is my custom collate function&#39;)</span>
+<span class="sd">        &gt;&gt;&gt;     return batch, label</span>
+
+<span class="sd">        In the example, ``custom_collate`` function is registered with a key &quot;my_custom_collate&quot;.</span>
+<span class="sd">        When you configure :class:`torchdistill.core.distillation.DistillationBox` or</span>
+<span class="sd">        :class:`torchdistill.core.training.TrainingBox`, you can choose the ``custom_collate`` function by</span>
+<span class="sd">        &quot;my_custom_collate&quot;.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">def</span> <span class="nf">_register_collate_func</span><span class="p">(</span><span class="n">func</span><span class="p">):</span>
+        <span class="n">key</span> <span class="o">=</span> <span class="n">kwargs</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;key&#39;</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">key</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">key</span> <span class="o">=</span> <span class="n">func</span><span class="o">.</span><span class="vm">__name__</span> <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">func</span><span class="p">,</span> <span class="p">(</span><span class="n">BuiltinMethodType</span><span class="p">,</span> <span class="n">BuiltinFunctionType</span><span class="p">,</span> <span class="n">FunctionType</span><span class="p">))</span> \
+                <span class="k">else</span> <span class="nb">type</span><span class="p">(</span><span class="n">func</span><span class="p">)</span><span class="o">.</span><span class="vm">__name__</span>
+
+        <span class="n">COLLATE_FUNC_DICT</span><span class="p">[</span><span class="n">key</span><span class="p">]</span> <span class="o">=</span> <span class="n">func</span>
+        <span class="k">return</span> <span class="n">func</span>
+
+    <span class="k">if</span> <span class="nb">callable</span><span class="p">(</span><span class="n">arg</span><span class="p">):</span>
+        <span class="k">return</span> <span class="n">_register_collate_func</span><span class="p">(</span><span class="n">arg</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">_register_collate_func</span></div>
+
+
+<div class="viewcode-block" id="register_sample_loader"><a class="viewcode-back" href="../../../subpkgs/datasets.html#torchdistill.datasets.registry.register_sample_loader">[docs]</a><span class="k">def</span> <span class="nf">register_sample_loader</span><span class="p">(</span><span class="n">arg</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Registers a sample loader class or function to instantiate it.</span>
+
+<span class="sd">    :param arg: class or function to be registered as a sample loader.</span>
+<span class="sd">    :type arg: class or typing.Callable or None</span>
+<span class="sd">    :return: registered sample loader class or function to instantiate it.</span>
+<span class="sd">    :rtype: class</span>
+
+<span class="sd">    .. note::</span>
+<span class="sd">        The sample loader will be registered as an option.</span>
+<span class="sd">        You can choose the registered class/function by specifying the name of the class/function or ``key``</span>
+<span class="sd">        you used for the registration, in a training configuration used for</span>
+<span class="sd">        :class:`torchdistill.core.distillation.DistillationBox` or :class:`torchdistill.core.training.TrainingBox`.</span>
+
+<span class="sd">        If you want to register the class with a key of your choice, add ``key`` to the decorator as below:</span>
+
+<span class="sd">        &gt;&gt;&gt; from torch.utils.data import Sampler</span>
+<span class="sd">        &gt;&gt;&gt; from torchdistill.datasets.registry import register_sample_loader</span>
+<span class="sd">        &gt;&gt;&gt; @register_sample_loader(key=&#39;my_custom_sample_loader&#39;)</span>
+<span class="sd">        &gt;&gt;&gt; class CustomSampleLoader(Sampler):</span>
+<span class="sd">        &gt;&gt;&gt;     def __init__(self, **kwargs):</span>
+<span class="sd">        &gt;&gt;&gt;         print(&#39;This is my custom dataset class&#39;)</span>
+
+<span class="sd">        In the example, ``CustomSampleLoader`` class is registered with a key &quot;my_custom_sample_loader&quot;.</span>
+<span class="sd">        When you configure :class:`torchdistill.core.distillation.DistillationBox` or</span>
+<span class="sd">        :class:`torchdistill.core.training.TrainingBox`, you can choose the ``CustomSampleLoader`` class by</span>
+<span class="sd">        &quot;my_custom_sample_loader&quot;.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">def</span> <span class="nf">_register_sample_loader_class</span><span class="p">(</span><span class="bp">cls</span><span class="p">):</span>
+        <span class="n">key</span> <span class="o">=</span> <span class="n">kwargs</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;key&#39;</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">key</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">key</span> <span class="o">=</span> <span class="bp">cls</span><span class="o">.</span><span class="vm">__name__</span>
+
+        <span class="n">SAMPLE_LOADER_DICT</span><span class="p">[</span><span class="n">key</span><span class="p">]</span> <span class="o">=</span> <span class="bp">cls</span>
+        <span class="k">return</span> <span class="bp">cls</span>
+
+    <span class="k">if</span> <span class="nb">callable</span><span class="p">(</span><span class="n">arg</span><span class="p">):</span>
+        <span class="k">return</span> <span class="n">_register_sample_loader_class</span><span class="p">(</span><span class="n">arg</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">_register_sample_loader_class</span></div>
+
+
+<div class="viewcode-block" id="register_batch_sampler"><a class="viewcode-back" href="../../../subpkgs/datasets.html#torchdistill.datasets.registry.register_batch_sampler">[docs]</a><span class="k">def</span> <span class="nf">register_batch_sampler</span><span class="p">(</span><span class="n">arg</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Registers a batch sampler or function to instantiate it.</span>
+
+<span class="sd">    :param arg: function to be registered as a batch sample loader.</span>
+<span class="sd">    :type arg: typing.Callable or None</span>
+<span class="sd">    :return: registered batch sample loader function.</span>
+<span class="sd">    :rtype: typing.Callable</span>
+
+<span class="sd">    .. note::</span>
+<span class="sd">        The batch sampler will be registered as an option.</span>
+<span class="sd">        You can choose the registered class/function by specifying the name of the class/function or ``key``</span>
+<span class="sd">        you used for the registration, in a training configuration used for</span>
+<span class="sd">        :class:`torchdistill.core.distillation.DistillationBox` or :class:`torchdistill.core.training.TrainingBox`.</span>
+
+<span class="sd">        If you want to register the class with a key of your choice, add ``key`` to the decorator as below:</span>
+
+<span class="sd">        &gt;&gt;&gt; from torch.utils.data import Sampler</span>
+<span class="sd">        &gt;&gt;&gt; from torchdistill.datasets.registry import register_batch_sampler</span>
+<span class="sd">        &gt;&gt;&gt; @register_batch_sampler(key=&#39;my_custom_batch_sampler&#39;)</span>
+<span class="sd">        &gt;&gt;&gt; class CustomSampleLoader(Sampler):</span>
+<span class="sd">        &gt;&gt;&gt;     def __init__(self, **kwargs):</span>
+<span class="sd">        &gt;&gt;&gt;         print(&#39;This is my custom dataset class&#39;)</span>
+
+<span class="sd">        In the example, ``CustomSampleLoader`` class is registered with a key &quot;my_custom_batch_sampler&quot;.</span>
+<span class="sd">        When you configure :class:`torchdistill.core.distillation.DistillationBox` or</span>
+<span class="sd">        :class:`torchdistill.core.training.TrainingBox`, you can choose the ``CustomSampleLoader`` class by</span>
+<span class="sd">        &quot;my_custom_batch_sampler&quot;.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">def</span> <span class="nf">_register_batch_sampler</span><span class="p">(</span><span class="n">cls_or_func</span><span class="p">):</span>
+        <span class="n">key</span> <span class="o">=</span> <span class="n">kwargs</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;key&#39;</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">key</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">key</span> <span class="o">=</span> <span class="n">cls_or_func</span><span class="o">.</span><span class="vm">__name__</span>
+
+        <span class="n">BATCH_SAMPLER_DICT</span><span class="p">[</span><span class="n">key</span><span class="p">]</span> <span class="o">=</span> <span class="n">cls_or_func</span>
+        <span class="k">return</span> <span class="n">cls_or_func</span>
+
+    <span class="k">if</span> <span class="nb">callable</span><span class="p">(</span><span class="n">arg</span><span class="p">):</span>
+        <span class="k">return</span> <span class="n">_register_batch_sampler</span><span class="p">(</span><span class="n">arg</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">_register_batch_sampler</span></div>
+
+
+<div class="viewcode-block" id="register_transform"><a class="viewcode-back" href="../../../subpkgs/datasets.html#torchdistill.datasets.registry.register_transform">[docs]</a><span class="k">def</span> <span class="nf">register_transform</span><span class="p">(</span><span class="n">arg</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Registers a transform class or function to instantiate it.</span>
+
+<span class="sd">    :param arg: class/function to be registered as a transform.</span>
+<span class="sd">    :type arg: class or typing.Callable or None</span>
+<span class="sd">    :return: registered transform class/function.</span>
+<span class="sd">    :rtype: typing.Callable</span>
+
+<span class="sd">    .. note::</span>
+<span class="sd">        The transform will be registered as an option.</span>
+<span class="sd">        You can choose the registered class/function by specifying the name of the class/function or ``key``</span>
+<span class="sd">        you used for the registration, in a training configuration used for</span>
+<span class="sd">        :class:`torchdistill.core.distillation.DistillationBox` or :class:`torchdistill.core.training.TrainingBox`.</span>
+
+<span class="sd">        If you want to register the class with a key of your choice, add ``key`` to the decorator as below:</span>
+
+<span class="sd">        &gt;&gt;&gt; from torch import nn</span>
+<span class="sd">        &gt;&gt;&gt; from torchdistill.datasets.registry import register_transform</span>
+<span class="sd">        &gt;&gt;&gt; @register_transform(key=&#39;my_custom_transform&#39;)</span>
+<span class="sd">        &gt;&gt;&gt; class CustomTransform(nn.Module):</span>
+<span class="sd">        &gt;&gt;&gt;     def __init__(self, **kwargs):</span>
+<span class="sd">        &gt;&gt;&gt;         print(&#39;This is my custom transform class&#39;)</span>
+
+<span class="sd">        In the example, ``CustomTransform`` class is registered with a key &quot;my_custom_transform&quot;.</span>
+<span class="sd">        When you configure :class:`torchdistill.core.distillation.DistillationBox` or</span>
+<span class="sd">        :class:`torchdistill.core.training.TrainingBox`, you can choose the ``CustomTransform`` class by</span>
+<span class="sd">        &quot;my_custom_transform&quot;.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">def</span> <span class="nf">_register_transform</span><span class="p">(</span><span class="n">cls_or_func</span><span class="p">):</span>
+        <span class="n">key</span> <span class="o">=</span> <span class="n">kwargs</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;key&#39;</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">key</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">key</span> <span class="o">=</span> <span class="n">cls_or_func</span><span class="o">.</span><span class="vm">__name__</span>
+
+        <span class="n">TRANSFORM_DICT</span><span class="p">[</span><span class="n">key</span><span class="p">]</span> <span class="o">=</span> <span class="n">cls_or_func</span>
+        <span class="k">return</span> <span class="n">cls_or_func</span>
+
+    <span class="k">if</span> <span class="nb">callable</span><span class="p">(</span><span class="n">arg</span><span class="p">):</span>
+        <span class="k">return</span> <span class="n">_register_transform</span><span class="p">(</span><span class="n">arg</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">_register_transform</span></div>
+
+
+<div class="viewcode-block" id="register_dataset_wrapper"><a class="viewcode-back" href="../../../subpkgs/datasets.html#torchdistill.datasets.registry.register_dataset_wrapper">[docs]</a><span class="k">def</span> <span class="nf">register_dataset_wrapper</span><span class="p">(</span><span class="n">arg</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Registers a dataset wrapper class or function to instantiate it.</span>
+
+<span class="sd">    :param arg: class/function to be registered as a dataset wrapper.</span>
+<span class="sd">    :type arg: class or typing.Callable or None</span>
+<span class="sd">    :return: registered dataset wrapper class/function.</span>
+<span class="sd">    :rtype: typing.Callable</span>
+
+<span class="sd">    .. note::</span>
+<span class="sd">        The dataset wrapper will be registered as an option.</span>
+<span class="sd">        You can choose the registered class/function by specifying the name of the class/function or ``key``</span>
+<span class="sd">        you used for the registration, in a training configuration used for</span>
+<span class="sd">        :class:`torchdistill.core.distillation.DistillationBox` or :class:`torchdistill.core.training.TrainingBox`.</span>
+
+<span class="sd">        If you want to register the class with a key of your choice, add ``key`` to the decorator as below:</span>
+
+<span class="sd">        &gt;&gt;&gt; from torch.utils.data import Dataset</span>
+<span class="sd">        &gt;&gt;&gt; from torchdistill.datasets.registry import register_dataset_wrapper</span>
+<span class="sd">        &gt;&gt;&gt; @register_transform(key=&#39;my_custom_dataset_wrapper&#39;)</span>
+<span class="sd">        &gt;&gt;&gt; class CustomDatasetWrapper(Dataset):</span>
+<span class="sd">        &gt;&gt;&gt;     def __init__(self, **kwargs):</span>
+<span class="sd">        &gt;&gt;&gt;         print(&#39;This is my custom dataset wrapper class&#39;)</span>
+
+<span class="sd">        In the example, ``CustomDatasetWrapper`` class is registered with a key &quot;my_custom_dataset_wrapper&quot;.</span>
+<span class="sd">        When you configure :class:`torchdistill.core.distillation.DistillationBox` or</span>
+<span class="sd">        :class:`torchdistill.core.training.TrainingBox`, you can choose the ``CustomDatasetWrapper`` class by</span>
+<span class="sd">        &quot;my_custom_dataset_wrapper&quot;.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">def</span> <span class="nf">_register_dataset_wrapper</span><span class="p">(</span><span class="n">cls_or_func</span><span class="p">):</span>
+        <span class="n">key</span> <span class="o">=</span> <span class="n">kwargs</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;key&#39;</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">key</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">key</span> <span class="o">=</span> <span class="n">cls_or_func</span><span class="o">.</span><span class="vm">__name__</span>
+
+        <span class="n">DATASET_WRAPPER_DICT</span><span class="p">[</span><span class="n">key</span><span class="p">]</span> <span class="o">=</span> <span class="n">cls_or_func</span>
+        <span class="k">return</span> <span class="n">cls_or_func</span>
+
+    <span class="k">if</span> <span class="nb">callable</span><span class="p">(</span><span class="n">arg</span><span class="p">):</span>
+        <span class="k">return</span> <span class="n">_register_dataset_wrapper</span><span class="p">(</span><span class="n">arg</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">_register_dataset_wrapper</span></div>
+
+
+<div class="viewcode-block" id="get_dataset"><a class="viewcode-back" href="../../../subpkgs/datasets.html#torchdistill.datasets.registry.get_dataset">[docs]</a><span class="k">def</span> <span class="nf">get_dataset</span><span class="p">(</span><span class="n">key</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Gets a registered dataset class or function to instantiate it.</span>
+
+<span class="sd">    :param key: unique key to identify the registered dataset class/function.</span>
+<span class="sd">    :type key: str</span>
+<span class="sd">    :return: registered dataset class or function to instantiate it.</span>
+<span class="sd">    :rtype: class or typing.Callable</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="n">key</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="k">return</span> <span class="kc">None</span>
+    <span class="k">elif</span> <span class="n">key</span> <span class="ow">in</span> <span class="n">DATASET_DICT</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">DATASET_DICT</span><span class="p">[</span><span class="n">key</span><span class="p">]</span>
+    <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s1">&#39;No dataset `</span><span class="si">{}</span><span class="s1">` registered&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">key</span><span class="p">))</span></div>
+
+
+<div class="viewcode-block" id="get_collate_func"><a class="viewcode-back" href="../../../subpkgs/datasets.html#torchdistill.datasets.registry.get_collate_func">[docs]</a><span class="k">def</span> <span class="nf">get_collate_func</span><span class="p">(</span><span class="n">key</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Gets a registered collate function.</span>
+
+<span class="sd">    :param key: unique key to identify the registered collate function.</span>
+<span class="sd">    :type key: str</span>
+<span class="sd">    :return: registered collate function.</span>
+<span class="sd">    :rtype: typing.Callable</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="n">key</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="k">return</span> <span class="kc">None</span>
+    <span class="k">elif</span> <span class="n">key</span> <span class="ow">in</span> <span class="n">COLLATE_FUNC_DICT</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">COLLATE_FUNC_DICT</span><span class="p">[</span><span class="n">key</span><span class="p">]</span>
+    <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s1">&#39;No collate function `</span><span class="si">{}</span><span class="s1">` registered&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">key</span><span class="p">))</span></div>
+
+
+<div class="viewcode-block" id="get_sample_loader"><a class="viewcode-back" href="../../../subpkgs/datasets.html#torchdistill.datasets.registry.get_sample_loader">[docs]</a><span class="k">def</span> <span class="nf">get_sample_loader</span><span class="p">(</span><span class="n">key</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Gets a registered sample loader class or function to instantiate it.</span>
+
+<span class="sd">    :param key: unique key to identify the registered sample loader class or function to instantiate it.</span>
+<span class="sd">    :type key: str</span>
+<span class="sd">    :return: registered sample loader class or function to instantiate it.</span>
+<span class="sd">    :rtype: class or typing.Callable</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="n">key</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="k">return</span> <span class="kc">None</span>
+    <span class="k">elif</span> <span class="n">key</span> <span class="ow">in</span> <span class="n">SAMPLE_LOADER_DICT</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">SAMPLE_LOADER_DICT</span><span class="p">[</span><span class="n">key</span><span class="p">]</span>
+    <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s1">&#39;No sample loader `</span><span class="si">{}</span><span class="s1">` registered.&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">key</span><span class="p">))</span></div>
+
+
+<div class="viewcode-block" id="get_batch_sampler"><a class="viewcode-back" href="../../../subpkgs/datasets.html#torchdistill.datasets.registry.get_batch_sampler">[docs]</a><span class="k">def</span> <span class="nf">get_batch_sampler</span><span class="p">(</span><span class="n">key</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Gets a registered batch sampler class or function to instantiate it.</span>
+
+<span class="sd">    :param key: unique key to identify the registered batch sampler class or function to instantiate it.</span>
+<span class="sd">    :type key: str</span>
+<span class="sd">    :return: registered batch sampler class or function to instantiate it.</span>
+<span class="sd">    :rtype: class or typing.Callable</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="n">key</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="k">return</span> <span class="kc">None</span>
+
+    <span class="k">if</span> <span class="n">key</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">BATCH_SAMPLER_DICT</span> <span class="ow">and</span> <span class="n">key</span> <span class="o">!=</span> <span class="s1">&#39;BatchSampler&#39;</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s1">&#39;No batch sampler `</span><span class="si">{}</span><span class="s1">` registered.&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">key</span><span class="p">))</span>
+    <span class="k">return</span> <span class="n">BATCH_SAMPLER_DICT</span><span class="p">[</span><span class="n">key</span><span class="p">]</span></div>
+
+
+<div class="viewcode-block" id="get_transform"><a class="viewcode-back" href="../../../subpkgs/datasets.html#torchdistill.datasets.registry.get_transform">[docs]</a><span class="k">def</span> <span class="nf">get_transform</span><span class="p">(</span><span class="n">key</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Gets a registered transform class or function to instantiate it.</span>
+
+<span class="sd">    :param key: unique key to identify the registered transform class or function to instantiate it.</span>
+<span class="sd">    :type key: str</span>
+<span class="sd">    :return: registered transform class or function to instantiate it.</span>
+<span class="sd">    :rtype: class or typing.Callable</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="n">key</span> <span class="ow">in</span> <span class="n">TRANSFORM_DICT</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">TRANSFORM_DICT</span><span class="p">[</span><span class="n">key</span><span class="p">]</span>
+    <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s1">&#39;No transform `</span><span class="si">{}</span><span class="s1">` registered.&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">key</span><span class="p">))</span></div>
+
+
+<div class="viewcode-block" id="get_dataset_wrapper"><a class="viewcode-back" href="../../../subpkgs/datasets.html#torchdistill.datasets.registry.get_dataset_wrapper">[docs]</a><span class="k">def</span> <span class="nf">get_dataset_wrapper</span><span class="p">(</span><span class="n">key</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Gets a registered dataset wrapper class or function to instantiate it.</span>
+
+<span class="sd">    :param key: unique key to identify the registered dataset wrapper class or function to instantiate it.</span>
+<span class="sd">    :type key: str</span>
+<span class="sd">    :return: registered dataset wrapper class or function to instantiate it.</span>
+<span class="sd">    :rtype: class or typing.Callable</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="n">key</span> <span class="ow">in</span> <span class="n">DATASET_WRAPPER_DICT</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">DATASET_WRAPPER_DICT</span><span class="p">[</span><span class="n">key</span><span class="p">]</span>
+    <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s1">&#39;No dataset wrapper `</span><span class="si">{}</span><span class="s1">` registered.&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">key</span><span class="p">))</span></div>
+</pre></div>
+
+           </div>
+          </div>
+          <footer>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2023, Yoshitomo Matsubara.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script>
+    <!-- Theme Analytics -->
+    <script async src="https://www.googletagmanager.com/gtag/js?id=G-LYK8SSJ7R5"></script>
+    <script>
+      window.dataLayer = window.dataLayer || [];
+      function gtag(){dataLayer.push(arguments);}
+      gtag('js', new Date());
+
+      gtag('config', 'G-LYK8SSJ7R5', {
+          'anonymize_ip': false,
+      });
+    </script> 
+
+</body>
+</html>

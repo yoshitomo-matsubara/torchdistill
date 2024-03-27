@@ -1,0 +1,329 @@
+<!DOCTYPE html>
+<html class="writer-html5" lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>torchdistill.core.forward_hook &mdash; torchdistill v1.1.1-dev documentation</title>
+      <link rel="stylesheet" type="text/css" href="../../../_static/pygments.css?v=80d5e7a1" />
+      <link rel="stylesheet" type="text/css" href="../../../_static/css/theme.css?v=19f00094" />
+
+  
+  <!--[if lt IE 9]>
+    <script src="../../../_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+        <script src="../../../_static/jquery.js?v=5d32c60e"></script>
+        <script src="../../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+        <script data-url_root="../../../" id="documentation_options" src="../../../_static/documentation_options.js?v=0b675245"></script>
+        <script src="../../../_static/doctools.js?v=888ff710"></script>
+        <script src="../../../_static/sphinx_highlight.js?v=4825356b"></script>
+    <script src="../../../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../search.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="../../../index.html">
+            
+              <img src="../../../_static/logo-white.png" class="logo" alt="Logo"/>
+          </a>
+              <div class="version">
+                v1.1.1-dev
+              </div>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">📚 Overview</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../usage.html">Usage</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../package.html">torchdistill API</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">🧑🏻‍💻 Research</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../benchmarks.html">Benchmarks</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../projects.html">Projects</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../../index.html">torchdistill</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content style-external-links">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../../../index.html" class="icon icon-home" aria-label="Home"></a></li>
+          <li class="breadcrumb-item"><a href="../../index.html">Module code</a></li>
+      <li class="breadcrumb-item active">torchdistill.core.forward_hook</li>
+      <li class="wy-breadcrumbs-aside">
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <h1>Source code for torchdistill.core.forward_hook</h1><div class="highlight"><pre>
+<span></span><span class="kn">from</span> <span class="nn">collections</span> <span class="kn">import</span> <span class="n">abc</span>
+
+<span class="kn">import</span> <span class="nn">torch</span>
+<span class="kn">from</span> <span class="nn">torch.nn.parallel.scatter_gather</span> <span class="kn">import</span> <span class="n">gather</span>
+
+<span class="kn">from</span> <span class="nn">..common.module_util</span> <span class="kn">import</span> <span class="n">check_if_wrapped</span><span class="p">,</span> <span class="n">get_module</span>
+
+
+<div class="viewcode-block" id="get_device_index"><a class="viewcode-back" href="../../../subpkgs/core.html#torchdistill.core.forward_hook.get_device_index">[docs]</a><span class="k">def</span> <span class="nf">get_device_index</span><span class="p">(</span><span class="n">data</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Gets device index of tensor in given data.</span>
+
+<span class="sd">    :param data: tensor or data structure containing tensor.</span>
+<span class="sd">    :type data: torch.Tensor or abc.Mapping or tuple or list</span>
+<span class="sd">    :return: device index.</span>
+<span class="sd">    :rtype: int or str or None</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">data</span><span class="p">,</span> <span class="n">torch</span><span class="o">.</span><span class="n">Tensor</span><span class="p">):</span>
+        <span class="n">device</span> <span class="o">=</span> <span class="n">data</span><span class="o">.</span><span class="n">device</span>
+        <span class="k">return</span> <span class="s1">&#39;cpu&#39;</span> <span class="k">if</span> <span class="n">device</span><span class="o">.</span><span class="n">type</span> <span class="o">==</span> <span class="s1">&#39;cpu&#39;</span> <span class="k">else</span> <span class="n">device</span><span class="o">.</span><span class="n">index</span>
+    <span class="k">elif</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">data</span><span class="p">,</span> <span class="n">abc</span><span class="o">.</span><span class="n">Mapping</span><span class="p">):</span>
+        <span class="k">for</span> <span class="n">key</span><span class="p">,</span> <span class="n">data</span> <span class="ow">in</span> <span class="n">data</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+            <span class="n">result</span> <span class="o">=</span> <span class="n">get_device_index</span><span class="p">(</span><span class="n">data</span><span class="p">)</span>
+            <span class="k">if</span> <span class="n">result</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+                <span class="k">return</span> <span class="n">result</span>
+    <span class="k">elif</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">data</span><span class="p">,</span> <span class="nb">tuple</span><span class="p">):</span>
+        <span class="k">for</span> <span class="n">d</span> <span class="ow">in</span> <span class="n">data</span><span class="p">:</span>
+            <span class="n">result</span> <span class="o">=</span> <span class="n">get_device_index</span><span class="p">(</span><span class="n">d</span><span class="p">)</span>
+            <span class="k">if</span> <span class="n">result</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+                <span class="k">return</span> <span class="n">result</span>
+    <span class="k">elif</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">data</span><span class="p">,</span> <span class="n">abc</span><span class="o">.</span><span class="n">Sequence</span><span class="p">)</span> <span class="ow">and</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">data</span><span class="p">,</span> <span class="p">(</span><span class="nb">list</span><span class="p">,</span> <span class="nb">tuple</span><span class="p">)):</span>
+        <span class="k">for</span> <span class="n">d</span> <span class="ow">in</span> <span class="n">data</span><span class="p">:</span>
+            <span class="n">result</span> <span class="o">=</span> <span class="n">get_device_index</span><span class="p">(</span><span class="n">d</span><span class="p">)</span>
+            <span class="k">if</span> <span class="n">result</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+                <span class="k">return</span> <span class="n">result</span>
+    <span class="k">return</span> <span class="kc">None</span></div>
+
+
+<div class="viewcode-block" id="register_forward_hook_with_dict"><a class="viewcode-back" href="../../../subpkgs/core.html#torchdistill.core.forward_hook.register_forward_hook_with_dict">[docs]</a><span class="k">def</span> <span class="nf">register_forward_hook_with_dict</span><span class="p">(</span><span class="n">root_module</span><span class="p">,</span> <span class="n">module_path</span><span class="p">,</span> <span class="n">requires_input</span><span class="p">,</span> <span class="n">requires_output</span><span class="p">,</span> <span class="n">io_dict</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Registers a forward hook for a child module to store its input and/or output in `io_dict`.</span>
+
+<span class="sd">    :param root_module: root module (e.g., model).</span>
+<span class="sd">    :type root_module: nn.Module</span>
+<span class="sd">    :param module_path: path to target child module.</span>
+<span class="sd">    :type module_path: str</span>
+<span class="sd">    :param requires_input: if True, stores input to the target child module.</span>
+<span class="sd">    :type requires_input: bool</span>
+<span class="sd">    :param requires_output: if True, stores output from the target child module.</span>
+<span class="sd">    :type requires_output: bool</span>
+<span class="sd">    :param io_dict: dict to store the target child module&#39;s input and/or output.</span>
+<span class="sd">    :type io_dict: dict</span>
+<span class="sd">    :return: removable forward hook handle.</span>
+<span class="sd">    :rtype: torch.utils.hook.RemovableHandle</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">io_dict</span><span class="p">[</span><span class="n">module_path</span><span class="p">]</span> <span class="o">=</span> <span class="nb">dict</span><span class="p">()</span>
+
+    <span class="k">def</span> <span class="nf">forward_hook4input</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">func_input</span><span class="p">,</span> <span class="n">func_output</span><span class="p">):</span>
+        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">func_input</span><span class="p">,</span> <span class="nb">tuple</span><span class="p">)</span> <span class="ow">and</span> <span class="nb">len</span><span class="p">(</span><span class="n">func_input</span><span class="p">)</span> <span class="o">==</span> <span class="mi">1</span><span class="p">:</span>
+            <span class="n">func_input</span> <span class="o">=</span> <span class="n">func_input</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+
+        <span class="n">device_index</span> <span class="o">=</span> <span class="n">get_device_index</span><span class="p">(</span><span class="n">func_output</span><span class="p">)</span>
+        <span class="n">sub_io_dict</span> <span class="o">=</span> <span class="n">io_dict</span><span class="p">[</span><span class="n">module_path</span><span class="p">]</span>
+        <span class="k">if</span> <span class="s1">&#39;input&#39;</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">sub_io_dict</span><span class="p">:</span>
+            <span class="n">sub_io_dict</span><span class="p">[</span><span class="s1">&#39;input&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="nb">dict</span><span class="p">()</span>
+        <span class="n">sub_io_dict</span><span class="p">[</span><span class="s1">&#39;input&#39;</span><span class="p">][</span><span class="n">device_index</span><span class="p">]</span> <span class="o">=</span> <span class="n">func_input</span>
+
+    <span class="k">def</span> <span class="nf">forward_hook4output</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">func_input</span><span class="p">,</span> <span class="n">func_output</span><span class="p">):</span>
+        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">func_output</span><span class="p">,</span> <span class="nb">tuple</span><span class="p">)</span> <span class="ow">and</span> <span class="nb">len</span><span class="p">(</span><span class="n">func_output</span><span class="p">)</span> <span class="o">==</span> <span class="mi">1</span><span class="p">:</span>
+            <span class="n">func_output</span> <span class="o">=</span> <span class="n">func_output</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+
+        <span class="n">device_index</span> <span class="o">=</span> <span class="n">get_device_index</span><span class="p">(</span><span class="n">func_output</span><span class="p">)</span>
+        <span class="n">sub_io_dict</span> <span class="o">=</span> <span class="n">io_dict</span><span class="p">[</span><span class="n">module_path</span><span class="p">]</span>
+        <span class="k">if</span> <span class="s1">&#39;output&#39;</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">sub_io_dict</span><span class="p">:</span>
+            <span class="n">sub_io_dict</span><span class="p">[</span><span class="s1">&#39;output&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="nb">dict</span><span class="p">()</span>
+        <span class="n">sub_io_dict</span><span class="p">[</span><span class="s1">&#39;output&#39;</span><span class="p">][</span><span class="n">device_index</span><span class="p">]</span> <span class="o">=</span> <span class="n">func_output</span>
+
+    <span class="k">def</span> <span class="nf">forward_hook4io</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">func_input</span><span class="p">,</span> <span class="n">func_output</span><span class="p">):</span>
+        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">func_input</span><span class="p">,</span> <span class="nb">tuple</span><span class="p">)</span> <span class="ow">and</span> <span class="nb">len</span><span class="p">(</span><span class="n">func_input</span><span class="p">)</span> <span class="o">==</span> <span class="mi">1</span><span class="p">:</span>
+            <span class="n">func_input</span> <span class="o">=</span> <span class="n">func_input</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">func_output</span><span class="p">,</span> <span class="nb">tuple</span><span class="p">)</span> <span class="ow">and</span> <span class="nb">len</span><span class="p">(</span><span class="n">func_output</span><span class="p">)</span> <span class="o">==</span> <span class="mi">1</span><span class="p">:</span>
+            <span class="n">func_output</span> <span class="o">=</span> <span class="n">func_output</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+
+        <span class="n">device_index</span> <span class="o">=</span> <span class="n">get_device_index</span><span class="p">(</span><span class="n">func_output</span><span class="p">)</span>
+        <span class="n">sub_io_dict</span> <span class="o">=</span> <span class="n">io_dict</span><span class="p">[</span><span class="n">module_path</span><span class="p">]</span>
+        <span class="k">if</span> <span class="s1">&#39;input&#39;</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">sub_io_dict</span><span class="p">:</span>
+            <span class="n">sub_io_dict</span><span class="p">[</span><span class="s1">&#39;input&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="nb">dict</span><span class="p">()</span>
+
+        <span class="k">if</span> <span class="s1">&#39;output&#39;</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">sub_io_dict</span><span class="p">:</span>
+            <span class="n">sub_io_dict</span><span class="p">[</span><span class="s1">&#39;output&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="nb">dict</span><span class="p">()</span>
+
+        <span class="n">sub_io_dict</span><span class="p">[</span><span class="s1">&#39;input&#39;</span><span class="p">][</span><span class="n">device_index</span><span class="p">]</span> <span class="o">=</span> <span class="n">func_input</span>
+        <span class="n">sub_io_dict</span><span class="p">[</span><span class="s1">&#39;output&#39;</span><span class="p">][</span><span class="n">device_index</span><span class="p">]</span> <span class="o">=</span> <span class="n">func_output</span>
+
+    <span class="k">if</span> <span class="n">requires_input</span> <span class="ow">and</span> <span class="ow">not</span> <span class="n">requires_output</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">root_module</span><span class="o">.</span><span class="n">register_forward_hook</span><span class="p">(</span><span class="n">forward_hook4input</span><span class="p">)</span>
+    <span class="k">elif</span> <span class="ow">not</span> <span class="n">requires_input</span> <span class="ow">and</span> <span class="n">requires_output</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">root_module</span><span class="o">.</span><span class="n">register_forward_hook</span><span class="p">(</span><span class="n">forward_hook4output</span><span class="p">)</span>
+    <span class="k">elif</span> <span class="n">requires_input</span> <span class="ow">and</span> <span class="n">requires_output</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">root_module</span><span class="o">.</span><span class="n">register_forward_hook</span><span class="p">(</span><span class="n">forward_hook4io</span><span class="p">)</span>
+    <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s1">&#39;Either requires_input or requires_output should be True&#39;</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="ForwardHookManager"><a class="viewcode-back" href="../../../subpkgs/core.html#torchdistill.core.forward_hook.ForwardHookManager">[docs]</a><span class="k">class</span> <span class="nc">ForwardHookManager</span><span class="p">(</span><span class="nb">object</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    A forward hook manager for PyTorch modules.</span>
+
+<span class="sd">    :param target_device: target device.</span>
+<span class="sd">    :type target_device: torch.device or str</span>
+
+<span class="sd">    Example:</span>
+<span class="sd">        &gt;&gt;&gt; import torch</span>
+<span class="sd">        &gt;&gt;&gt; from torchvision import models</span>
+<span class="sd">        &gt;&gt;&gt; from torchdistill.core.forward_hook import ForwardHookManager</span>
+<span class="sd">        &gt;&gt;&gt; device = torch.device(&#39;cpu&#39;)</span>
+<span class="sd">        &gt;&gt;&gt; forward_hook_manager = ForwardHookManager(device)</span>
+<span class="sd">        &gt;&gt;&gt; model = models.resnet18()</span>
+<span class="sd">        &gt;&gt;&gt; forward_hook_manager.add_hook(model, &#39;layer2&#39;)</span>
+<span class="sd">        &gt;&gt;&gt; x = torch.rand(16, 3, 224, 224)</span>
+<span class="sd">        &gt;&gt;&gt; y = model(x)</span>
+<span class="sd">        &gt;&gt;&gt; io_dict = forward_hook_manager.pop_io_dict()</span>
+<span class="sd">        &gt;&gt;&gt; layer2_input_tensor = io_dict[&#39;layer2&#39;][&#39;input&#39;]</span>
+<span class="sd">        &gt;&gt;&gt; layer2_output_tensor = io_dict[&#39;layer2&#39;][&#39;output&#39;]</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">target_device</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">target_device</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">device</span><span class="p">(</span><span class="n">target_device</span><span class="p">)</span> <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">target_device</span><span class="p">,</span> <span class="nb">str</span><span class="p">)</span> <span class="k">else</span> <span class="n">target_device</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">uses_cuda</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">target_device</span><span class="o">.</span><span class="n">type</span> <span class="o">==</span> <span class="s1">&#39;cuda&#39;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">io_dict</span> <span class="o">=</span> <span class="nb">dict</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">hook_list</span> <span class="o">=</span> <span class="nb">list</span><span class="p">()</span>
+
+<div class="viewcode-block" id="ForwardHookManager.add_hook"><a class="viewcode-back" href="../../../subpkgs/core.html#torchdistill.core.forward_hook.ForwardHookManager.add_hook">[docs]</a>    <span class="k">def</span> <span class="nf">add_hook</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">root_module</span><span class="p">,</span> <span class="n">module_path</span><span class="p">,</span> <span class="n">requires_input</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">requires_output</span><span class="o">=</span><span class="kc">True</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Registers a forward hook for a child module to store its input and/or output.</span>
+
+<span class="sd">        :param root_module: root module (e.g., model).</span>
+<span class="sd">        :type root_module: nn.Module</span>
+<span class="sd">        :param module_path: path to target child module.</span>
+<span class="sd">        :type module_path: str</span>
+<span class="sd">        :param requires_input: if True, stores input to the target child module.</span>
+<span class="sd">        :type requires_input: bool</span>
+<span class="sd">        :param requires_output: if True, stores output from the target child module.</span>
+<span class="sd">        :type requires_output: bool</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">unwrapped_module</span> <span class="o">=</span> <span class="n">root_module</span><span class="o">.</span><span class="n">module</span> <span class="k">if</span> <span class="n">check_if_wrapped</span><span class="p">(</span><span class="n">root_module</span><span class="p">)</span> <span class="k">else</span> <span class="n">root_module</span>
+        <span class="n">sub_module</span> <span class="o">=</span> <span class="n">get_module</span><span class="p">(</span><span class="n">unwrapped_module</span><span class="p">,</span> <span class="n">module_path</span><span class="p">)</span>
+        <span class="n">handle</span> <span class="o">=</span> \
+            <span class="n">register_forward_hook_with_dict</span><span class="p">(</span><span class="n">sub_module</span><span class="p">,</span> <span class="n">module_path</span><span class="p">,</span> <span class="n">requires_input</span><span class="p">,</span> <span class="n">requires_output</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">io_dict</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">hook_list</span><span class="o">.</span><span class="n">append</span><span class="p">((</span><span class="n">module_path</span><span class="p">,</span> <span class="n">handle</span><span class="p">))</span></div>
+
+<div class="viewcode-block" id="ForwardHookManager.pop_io_dict"><a class="viewcode-back" href="../../../subpkgs/core.html#torchdistill.core.forward_hook.ForwardHookManager.pop_io_dict">[docs]</a>    <span class="k">def</span> <span class="nf">pop_io_dict</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Pops I/O dict after gathering tensors on ``self.target_device``.</span>
+
+<span class="sd">        :return: I/O dict that contains input and/or output tensors with a module path as a key.</span>
+<span class="sd">        :rtype: dict</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">gathered_io_dict</span> <span class="o">=</span> <span class="nb">dict</span><span class="p">()</span>
+        <span class="k">for</span> <span class="n">module_path</span><span class="p">,</span> <span class="n">module_io_dict</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">io_dict</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+            <span class="n">gathered_io_dict</span><span class="p">[</span><span class="n">module_path</span><span class="p">]</span> <span class="o">=</span> <span class="nb">dict</span><span class="p">()</span>
+            <span class="k">for</span> <span class="n">io_type</span> <span class="ow">in</span> <span class="nb">list</span><span class="p">(</span><span class="n">module_io_dict</span><span class="o">.</span><span class="n">keys</span><span class="p">()):</span>
+                <span class="n">sub_dict</span> <span class="o">=</span> <span class="n">module_io_dict</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="n">io_type</span><span class="p">)</span>
+                <span class="n">values</span> <span class="o">=</span> <span class="p">[</span><span class="n">sub_dict</span><span class="p">[</span><span class="n">key</span><span class="p">]</span> <span class="k">for</span> <span class="n">key</span> <span class="ow">in</span> <span class="nb">sorted</span><span class="p">(</span><span class="n">sub_dict</span><span class="o">.</span><span class="n">keys</span><span class="p">())]</span>
+                <span class="n">gathered_obj</span> <span class="o">=</span> <span class="n">gather</span><span class="p">(</span><span class="n">values</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">target_device</span><span class="p">)</span> <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">uses_cuda</span> <span class="ow">and</span> <span class="nb">len</span><span class="p">(</span><span class="n">values</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">1</span> <span class="k">else</span> <span class="n">values</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span>
+                <span class="n">gathered_io_dict</span><span class="p">[</span><span class="n">module_path</span><span class="p">][</span><span class="n">io_type</span><span class="p">]</span> <span class="o">=</span> <span class="n">gathered_obj</span>
+        <span class="k">return</span> <span class="n">gathered_io_dict</span></div>
+
+<div class="viewcode-block" id="ForwardHookManager.pop_io_dict_from_device"><a class="viewcode-back" href="../../../subpkgs/core.html#torchdistill.core.forward_hook.ForwardHookManager.pop_io_dict_from_device">[docs]</a>    <span class="k">def</span> <span class="nf">pop_io_dict_from_device</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">device</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Pops I/O dict for a specified ``device``.</span>
+
+<span class="sd">        :param device: device to pop I/O dict.</span>
+<span class="sd">        :type device: torch.device</span>
+<span class="sd">        :return: I/O dict that contains input and/or output tensors with a module path as a key.</span>
+<span class="sd">        :rtype: dict</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">device_io_dict</span> <span class="o">=</span> <span class="nb">dict</span><span class="p">()</span>
+        <span class="n">device_key</span> <span class="o">=</span> <span class="n">device</span><span class="o">.</span><span class="n">index</span> <span class="k">if</span> <span class="n">device</span><span class="o">.</span><span class="n">type</span> <span class="o">==</span> <span class="s1">&#39;cuda&#39;</span> <span class="k">else</span> <span class="n">device</span><span class="o">.</span><span class="n">type</span>
+        <span class="k">for</span> <span class="n">module_path</span><span class="p">,</span> <span class="n">module_io_dict</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">io_dict</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+            <span class="n">device_io_dict</span><span class="p">[</span><span class="n">module_path</span><span class="p">]</span> <span class="o">=</span> <span class="nb">dict</span><span class="p">()</span>
+            <span class="k">for</span> <span class="n">io_type</span> <span class="ow">in</span> <span class="nb">list</span><span class="p">(</span><span class="n">module_io_dict</span><span class="o">.</span><span class="n">keys</span><span class="p">()):</span>
+                <span class="n">sub_dict</span> <span class="o">=</span> <span class="n">module_io_dict</span><span class="p">[</span><span class="n">io_type</span><span class="p">]</span>
+                <span class="n">device_io_dict</span><span class="p">[</span><span class="n">module_path</span><span class="p">][</span><span class="n">io_type</span><span class="p">]</span> <span class="o">=</span> <span class="n">sub_dict</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="n">device_key</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">device_io_dict</span></div>
+
+<div class="viewcode-block" id="ForwardHookManager.change_target_device"><a class="viewcode-back" href="../../../subpkgs/core.html#torchdistill.core.forward_hook.ForwardHookManager.change_target_device">[docs]</a>    <span class="k">def</span> <span class="nf">change_target_device</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">target_device</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Updates the target device with a new ``target_device``.</span>
+
+<span class="sd">        :param target_device: new target device.</span>
+<span class="sd">        :type target_device: torch.device or str</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">target_device</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">device</span><span class="p">(</span><span class="n">target_device</span><span class="p">)</span> <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">target_device</span><span class="p">,</span> <span class="nb">str</span><span class="p">)</span> <span class="k">else</span> <span class="n">target_device</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">target_device</span><span class="o">.</span><span class="n">type</span> <span class="o">!=</span> <span class="n">target_device</span><span class="o">.</span><span class="n">type</span><span class="p">:</span>
+            <span class="k">for</span> <span class="n">sub_dict</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">io_dict</span><span class="o">.</span><span class="n">values</span><span class="p">():</span>
+                <span class="n">sub_dict</span><span class="o">.</span><span class="n">clear</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">target_device</span> <span class="o">=</span> <span class="n">target_device</span></div>
+
+<div class="viewcode-block" id="ForwardHookManager.clear"><a class="viewcode-back" href="../../../subpkgs/core.html#torchdistill.core.forward_hook.ForwardHookManager.clear">[docs]</a>    <span class="k">def</span> <span class="nf">clear</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Clears I/O dict and forward hooks registered in the instance.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">io_dict</span><span class="o">.</span><span class="n">clear</span><span class="p">()</span>
+        <span class="k">for</span> <span class="n">_</span><span class="p">,</span> <span class="n">handle</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">hook_list</span><span class="p">:</span>
+            <span class="n">handle</span><span class="o">.</span><span class="n">remove</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">hook_list</span><span class="o">.</span><span class="n">clear</span><span class="p">()</span></div></div>
+</pre></div>
+
+           </div>
+          </div>
+          <footer>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2023, Yoshitomo Matsubara.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script>
+    <!-- Theme Analytics -->
+    <script async src="https://www.googletagmanager.com/gtag/js?id=G-LYK8SSJ7R5"></script>
+    <script>
+      window.dataLayer = window.dataLayer || [];
+      function gtag(){dataLayer.push(arguments);}
+      gtag('js', new Date());
+
+      gtag('config', 'G-LYK8SSJ7R5', {
+          'anonymize_ip': false,
+      });
+    </script> 
+
+</body>
+</html>

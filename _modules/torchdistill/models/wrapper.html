@@ -1,0 +1,1061 @@
+<!DOCTYPE html>
+<html class="writer-html5" lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>torchdistill.models.wrapper &mdash; torchdistill v1.1.1-dev documentation</title>
+      <link rel="stylesheet" type="text/css" href="../../../_static/pygments.css?v=80d5e7a1" />
+      <link rel="stylesheet" type="text/css" href="../../../_static/css/theme.css?v=19f00094" />
+
+  
+  <!--[if lt IE 9]>
+    <script src="../../../_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+        <script src="../../../_static/jquery.js?v=5d32c60e"></script>
+        <script src="../../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+        <script data-url_root="../../../" id="documentation_options" src="../../../_static/documentation_options.js?v=0b675245"></script>
+        <script src="../../../_static/doctools.js?v=888ff710"></script>
+        <script src="../../../_static/sphinx_highlight.js?v=4825356b"></script>
+    <script src="../../../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../search.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="../../../index.html">
+            
+              <img src="../../../_static/logo-white.png" class="logo" alt="Logo"/>
+          </a>
+              <div class="version">
+                v1.1.1-dev
+              </div>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">📚 Overview</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../usage.html">Usage</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../package.html">torchdistill API</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">🧑🏻‍💻 Research</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../benchmarks.html">Benchmarks</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../projects.html">Projects</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../../index.html">torchdistill</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content style-external-links">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../../../index.html" class="icon icon-home" aria-label="Home"></a></li>
+          <li class="breadcrumb-item"><a href="../../index.html">Module code</a></li>
+      <li class="breadcrumb-item active">torchdistill.models.wrapper</li>
+      <li class="wy-breadcrumbs-aside">
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <h1>Source code for torchdistill.models.wrapper</h1><div class="highlight"><pre>
+<span></span><span class="kn">import</span> <span class="nn">os</span>
+
+<span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
+<span class="kn">import</span> <span class="nn">torch</span>
+<span class="kn">from</span> <span class="nn">torch</span> <span class="kn">import</span> <span class="n">nn</span>
+<span class="kn">from</span> <span class="nn">torch.jit.annotations</span> <span class="kn">import</span> <span class="n">Tuple</span><span class="p">,</span> <span class="n">List</span>
+<span class="kn">from</span> <span class="nn">torch.nn</span> <span class="kn">import</span> <span class="n">functional</span>
+
+<span class="kn">from</span> <span class="nn">.registry</span> <span class="kn">import</span> <span class="n">register_auxiliary_model_wrapper</span><span class="p">,</span> <span class="n">get_auxiliary_model_wrapper</span>
+<span class="kn">from</span> <span class="nn">.util</span> <span class="kn">import</span> <span class="n">wrap_if_distributed</span><span class="p">,</span> <span class="n">load_module_ckpt</span><span class="p">,</span> <span class="n">save_module_ckpt</span><span class="p">,</span> <span class="n">redesign_model</span>
+<span class="kn">from</span> <span class="nn">..common.constant</span> <span class="kn">import</span> <span class="n">def_logger</span>
+
+<span class="n">logger</span> <span class="o">=</span> <span class="n">def_logger</span><span class="o">.</span><span class="n">getChild</span><span class="p">(</span><span class="vm">__name__</span><span class="p">)</span>
+
+
+<div class="viewcode-block" id="AuxiliaryModelWrapper"><a class="viewcode-back" href="../../../subpkgs/models.html#torchdistill.models.wrapper.AuxiliaryModelWrapper">[docs]</a><span class="k">class</span> <span class="nc">AuxiliaryModelWrapper</span><span class="p">(</span><span class="n">nn</span><span class="o">.</span><span class="n">Module</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    An abstract auxiliary model wrapper.</span>
+
+<span class="sd">    :meth:`forward`, :meth:`secondary_forward`, and :meth:`post_epoch_process` should be overridden by all subclasses.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">()</span>
+
+    <span class="k">def</span> <span class="nf">secondary_forward</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+        <span class="k">pass</span>
+
+    <span class="k">def</span> <span class="nf">post_epoch_process</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+        <span class="k">pass</span></div>
+
+
+<div class="viewcode-block" id="EmptyModule"><a class="viewcode-back" href="../../../subpkgs/models.html#torchdistill.models.wrapper.EmptyModule">[docs]</a><span class="nd">@register_auxiliary_model_wrapper</span>
+<span class="k">class</span> <span class="nc">EmptyModule</span><span class="p">(</span><span class="n">AuxiliaryModelWrapper</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    An empty auxiliary model wrapper. This module returns input as output and is useful when you want to replace</span>
+<span class="sd">    your teacher/student model with an empty model for saving inference time.</span>
+<span class="sd">    e.g., Multi-stage knowledge distillation may have some stages that do not require either teacher or student models.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">()</span>
+
+    <span class="k">def</span> <span class="nf">forward</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+        <span class="k">return</span> <span class="n">args</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">args</span><span class="p">,</span> <span class="nb">tuple</span><span class="p">)</span> <span class="ow">and</span> <span class="nb">len</span><span class="p">(</span><span class="n">args</span><span class="p">)</span> <span class="o">==</span> <span class="mi">1</span> <span class="k">else</span> <span class="n">args</span></div>
+
+
+<div class="viewcode-block" id="Paraphraser4FactorTransfer"><a class="viewcode-back" href="../../../subpkgs/models.html#torchdistill.models.wrapper.Paraphraser4FactorTransfer">[docs]</a><span class="k">class</span> <span class="nc">Paraphraser4FactorTransfer</span><span class="p">(</span><span class="n">nn</span><span class="o">.</span><span class="n">Module</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Paraphraser for factor transfer (FT). This module is used at the 1st and 2nd stages of FT method.</span>
+
+<span class="sd">    Jangho Kim, Seonguk Park, Nojun Kwak: `&quot;Paraphrasing Complex Network: Network Compression via Factor Transfer&quot; &lt;https://papers.neurips.cc/paper_files/paper/2018/hash/6d9cb7de5e8ac30bd5e8734bc96a35c1-Abstract.html&gt;`_ @ NeurIPS 2018 (2018)</span>
+
+<span class="sd">    :param k: paraphrase rate.</span>
+<span class="sd">    :type k: float</span>
+<span class="sd">    :param num_input_channels: number of input channels.</span>
+<span class="sd">    :type num_input_channels: int</span>
+<span class="sd">    :param kernel_size: ``kernel_size`` for Conv2d.</span>
+<span class="sd">    :type kernel_size: int</span>
+<span class="sd">    :param stride: ``stride`` for Conv2d.</span>
+<span class="sd">    :type stride: int</span>
+<span class="sd">    :param padding: ``padding`` for Conv2d.</span>
+<span class="sd">    :type padding: int</span>
+<span class="sd">    :param uses_bn: if True, uses BatchNorm2d.</span>
+<span class="sd">    :type uses_bn: bool</span>
+<span class="sd">    :param uses_decoder: if True, uses decoder in :meth:`forward`.</span>
+<span class="sd">    :type uses_decoder: bool</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="nd">@staticmethod</span>
+    <span class="k">def</span> <span class="nf">make_tail_modules</span><span class="p">(</span><span class="n">num_output_channels</span><span class="p">,</span> <span class="n">uses_bn</span><span class="p">):</span>
+        <span class="n">leaky_relu</span> <span class="o">=</span> <span class="n">nn</span><span class="o">.</span><span class="n">LeakyReLU</span><span class="p">(</span><span class="mf">0.1</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">uses_bn</span><span class="p">:</span>
+            <span class="k">return</span> <span class="p">[</span><span class="n">nn</span><span class="o">.</span><span class="n">BatchNorm2d</span><span class="p">(</span><span class="n">num_output_channels</span><span class="p">),</span> <span class="n">leaky_relu</span><span class="p">]</span>
+        <span class="k">return</span> <span class="p">[</span><span class="n">leaky_relu</span><span class="p">]</span>
+
+    <span class="nd">@classmethod</span>
+    <span class="k">def</span> <span class="nf">make_enc_modules</span><span class="p">(</span><span class="bp">cls</span><span class="p">,</span> <span class="n">num_input_channels</span><span class="p">,</span> <span class="n">num_output_channels</span><span class="p">,</span> <span class="n">kernel_size</span><span class="p">,</span> <span class="n">stride</span><span class="p">,</span> <span class="n">padding</span><span class="p">,</span> <span class="n">uses_bn</span><span class="p">):</span>
+        <span class="k">return</span> <span class="p">[</span>
+            <span class="n">nn</span><span class="o">.</span><span class="n">Conv2d</span><span class="p">(</span><span class="n">num_input_channels</span><span class="p">,</span> <span class="n">num_output_channels</span><span class="p">,</span> <span class="n">kernel_size</span><span class="p">,</span> <span class="n">stride</span><span class="o">=</span><span class="n">stride</span><span class="p">,</span> <span class="n">padding</span><span class="o">=</span><span class="n">padding</span><span class="p">),</span>
+            <span class="o">*</span><span class="bp">cls</span><span class="o">.</span><span class="n">make_tail_modules</span><span class="p">(</span><span class="n">num_output_channels</span><span class="p">,</span> <span class="n">uses_bn</span><span class="p">)</span>
+        <span class="p">]</span>
+
+    <span class="nd">@classmethod</span>
+    <span class="k">def</span> <span class="nf">make_dec_modules</span><span class="p">(</span><span class="bp">cls</span><span class="p">,</span> <span class="n">num_input_channels</span><span class="p">,</span> <span class="n">num_output_channels</span><span class="p">,</span> <span class="n">kernel_size</span><span class="p">,</span> <span class="n">stride</span><span class="p">,</span> <span class="n">padding</span><span class="p">,</span> <span class="n">uses_bn</span><span class="p">):</span>
+        <span class="k">return</span> <span class="p">[</span>
+            <span class="n">nn</span><span class="o">.</span><span class="n">ConvTranspose2d</span><span class="p">(</span><span class="n">num_input_channels</span><span class="p">,</span> <span class="n">num_output_channels</span><span class="p">,</span> <span class="n">kernel_size</span><span class="p">,</span> <span class="n">stride</span><span class="o">=</span><span class="n">stride</span><span class="p">,</span> <span class="n">padding</span><span class="o">=</span><span class="n">padding</span><span class="p">),</span>
+            <span class="o">*</span><span class="bp">cls</span><span class="o">.</span><span class="n">make_tail_modules</span><span class="p">(</span><span class="n">num_output_channels</span><span class="p">,</span> <span class="n">uses_bn</span><span class="p">)</span>
+        <span class="p">]</span>
+
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">k</span><span class="p">,</span> <span class="n">num_input_channels</span><span class="p">,</span> <span class="n">kernel_size</span><span class="o">=</span><span class="mi">3</span><span class="p">,</span> <span class="n">stride</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span> <span class="n">padding</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span> <span class="n">uses_bn</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">uses_decoder</span><span class="o">=</span><span class="kc">True</span><span class="p">):</span>
+        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">paraphrase_rate</span> <span class="o">=</span> <span class="n">k</span>
+        <span class="n">num_enc_output_channels</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">num_input_channels</span> <span class="o">*</span> <span class="n">k</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">encoder</span> <span class="o">=</span> <span class="n">nn</span><span class="o">.</span><span class="n">Sequential</span><span class="p">(</span>
+            <span class="o">*</span><span class="bp">self</span><span class="o">.</span><span class="n">make_enc_modules</span><span class="p">(</span><span class="n">num_input_channels</span><span class="p">,</span> <span class="n">num_input_channels</span><span class="p">,</span>
+                                   <span class="n">kernel_size</span><span class="p">,</span> <span class="n">stride</span><span class="p">,</span> <span class="n">padding</span><span class="p">,</span> <span class="n">uses_bn</span><span class="p">),</span>
+            <span class="o">*</span><span class="bp">self</span><span class="o">.</span><span class="n">make_enc_modules</span><span class="p">(</span><span class="n">num_input_channels</span><span class="p">,</span> <span class="n">num_enc_output_channels</span><span class="p">,</span>
+                                   <span class="n">kernel_size</span><span class="p">,</span> <span class="n">stride</span><span class="p">,</span> <span class="n">padding</span><span class="p">,</span> <span class="n">uses_bn</span><span class="p">),</span>
+            <span class="o">*</span><span class="bp">self</span><span class="o">.</span><span class="n">make_enc_modules</span><span class="p">(</span><span class="n">num_enc_output_channels</span><span class="p">,</span> <span class="n">num_enc_output_channels</span><span class="p">,</span>
+                                   <span class="n">kernel_size</span><span class="p">,</span> <span class="n">stride</span><span class="p">,</span> <span class="n">padding</span><span class="p">,</span> <span class="n">uses_bn</span><span class="p">)</span>
+        <span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">decoder</span> <span class="o">=</span> <span class="n">nn</span><span class="o">.</span><span class="n">Sequential</span><span class="p">(</span>
+            <span class="o">*</span><span class="bp">self</span><span class="o">.</span><span class="n">make_dec_modules</span><span class="p">(</span><span class="n">num_enc_output_channels</span><span class="p">,</span> <span class="n">num_enc_output_channels</span><span class="p">,</span>
+                                   <span class="n">kernel_size</span><span class="p">,</span> <span class="n">stride</span><span class="p">,</span> <span class="n">padding</span><span class="p">,</span> <span class="n">uses_bn</span><span class="p">),</span>
+            <span class="o">*</span><span class="bp">self</span><span class="o">.</span><span class="n">make_dec_modules</span><span class="p">(</span><span class="n">num_enc_output_channels</span><span class="p">,</span> <span class="n">num_input_channels</span><span class="p">,</span>
+                                   <span class="n">kernel_size</span><span class="p">,</span> <span class="n">stride</span><span class="p">,</span> <span class="n">padding</span><span class="p">,</span> <span class="n">uses_bn</span><span class="p">),</span>
+            <span class="o">*</span><span class="bp">self</span><span class="o">.</span><span class="n">make_dec_modules</span><span class="p">(</span><span class="n">num_input_channels</span><span class="p">,</span> <span class="n">num_input_channels</span><span class="p">,</span>
+                                   <span class="n">kernel_size</span><span class="p">,</span> <span class="n">stride</span><span class="p">,</span> <span class="n">padding</span><span class="p">,</span> <span class="n">uses_bn</span><span class="p">)</span>
+        <span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">uses_decoder</span> <span class="o">=</span> <span class="n">uses_decoder</span>
+
+    <span class="k">def</span> <span class="nf">forward</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">z</span><span class="p">):</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">uses_decoder</span><span class="p">:</span>
+            <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">decoder</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">encoder</span><span class="p">(</span><span class="n">z</span><span class="p">))</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">encoder</span><span class="p">(</span><span class="n">z</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="Translator4FactorTransfer"><a class="viewcode-back" href="../../../subpkgs/models.html#torchdistill.models.wrapper.Translator4FactorTransfer">[docs]</a><span class="k">class</span> <span class="nc">Translator4FactorTransfer</span><span class="p">(</span><span class="n">nn</span><span class="o">.</span><span class="n">Sequential</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Translator for factor transfer (FT). This module is used at the 2nd stage of FT method.</span>
+<span class="sd">    Note that &quot;the student translator has the same three convolution layers as the paraphraser&quot;.</span>
+
+<span class="sd">    Jangho Kim, Seonguk Park, Nojun Kwak: `&quot;Paraphrasing Complex Network: Network Compression via Factor Transfer&quot; &lt;https://papers.neurips.cc/paper_files/paper/2018/hash/6d9cb7de5e8ac30bd5e8734bc96a35c1-Abstract.html&gt;`_ @ NeurIPS 2018 (2018)</span>
+
+<span class="sd">    :param num_input_channels: number of input channels.</span>
+<span class="sd">    :type num_input_channels: int</span>
+<span class="sd">    :param kernel_size: ``kernel_size`` for Conv2d.</span>
+<span class="sd">    :type kernel_size: int</span>
+<span class="sd">    :param stride: ``stride`` for Conv2d.</span>
+<span class="sd">    :type stride: int</span>
+<span class="sd">    :param padding: ``padding`` for Conv2d.</span>
+<span class="sd">    :type padding: int</span>
+<span class="sd">    :param uses_bn: if True, uses BatchNorm2d.</span>
+<span class="sd">    :type uses_bn: bool</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">num_input_channels</span><span class="p">,</span> <span class="n">num_output_channels</span><span class="p">,</span> <span class="n">kernel_size</span><span class="o">=</span><span class="mi">3</span><span class="p">,</span> <span class="n">stride</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span> <span class="n">padding</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span> <span class="n">uses_bn</span><span class="o">=</span><span class="kc">True</span><span class="p">):</span>
+        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span>
+            <span class="o">*</span><span class="n">Paraphraser4FactorTransfer</span><span class="o">.</span><span class="n">make_enc_modules</span><span class="p">(</span><span class="n">num_input_channels</span><span class="p">,</span> <span class="n">num_input_channels</span><span class="p">,</span>
+                                                         <span class="n">kernel_size</span><span class="p">,</span> <span class="n">stride</span><span class="p">,</span> <span class="n">padding</span><span class="p">,</span> <span class="n">uses_bn</span><span class="p">),</span>
+            <span class="o">*</span><span class="n">Paraphraser4FactorTransfer</span><span class="o">.</span><span class="n">make_enc_modules</span><span class="p">(</span><span class="n">num_input_channels</span><span class="p">,</span> <span class="n">num_output_channels</span><span class="p">,</span>
+                                                         <span class="n">kernel_size</span><span class="p">,</span> <span class="n">stride</span><span class="p">,</span> <span class="n">padding</span><span class="p">,</span> <span class="n">uses_bn</span><span class="p">),</span>
+            <span class="o">*</span><span class="n">Paraphraser4FactorTransfer</span><span class="o">.</span><span class="n">make_enc_modules</span><span class="p">(</span><span class="n">num_output_channels</span><span class="p">,</span> <span class="n">num_output_channels</span><span class="p">,</span>
+                                                         <span class="n">kernel_size</span><span class="p">,</span> <span class="n">stride</span><span class="p">,</span> <span class="n">padding</span><span class="p">,</span> <span class="n">uses_bn</span><span class="p">)</span>
+        <span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="Teacher4FactorTransfer"><a class="viewcode-back" href="../../../subpkgs/models.html#torchdistill.models.wrapper.Teacher4FactorTransfer">[docs]</a><span class="nd">@register_auxiliary_model_wrapper</span>
+<span class="k">class</span> <span class="nc">Teacher4FactorTransfer</span><span class="p">(</span><span class="n">AuxiliaryModelWrapper</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    An auxiliary teacher model wrapper for factor transfer (FT), including paraphraser :class:`Paraphraser4FactorTransfer`.</span>
+
+<span class="sd">    Jangho Kim, Seonguk Park, Nojun Kwak: `&quot;Paraphrasing Complex Network: Network Compression via Factor Transfer&quot; &lt;https://papers.neurips.cc/paper_files/paper/2018/hash/6d9cb7de5e8ac30bd5e8734bc96a35c1-Abstract.html&gt;`_ @ NeurIPS 2018 (2018)</span>
+
+<span class="sd">    :param teacher_model: teacher model.</span>
+<span class="sd">    :type teacher_model: nn.Module</span>
+<span class="sd">    :param minimal: ``model_config`` for :meth:`build_auxiliary_model_wrapper` if you want to.</span>
+<span class="sd">    :type minimal: dict or None</span>
+<span class="sd">    :param input_module_path: path of module whose output is used as input to paraphraser.</span>
+<span class="sd">    :type input_module_path: str</span>
+<span class="sd">    :param paraphraser_kwargs: kwargs to instantiate :class:`Paraphraser4FactorTransfer`.</span>
+<span class="sd">    :type paraphraser_kwargs: dict</span>
+<span class="sd">    :param uses_decoder: ``uses_decoder`` for :class:`Paraphraser4FactorTransfer`.</span>
+<span class="sd">    :type uses_decoder: bool</span>
+<span class="sd">    :param device: target device.</span>
+<span class="sd">    :type device: torch.device</span>
+<span class="sd">    :param device_ids: target device IDs.</span>
+<span class="sd">    :type device_ids: list[int]</span>
+<span class="sd">    :param distributed: whether to be in distributed training mode.</span>
+<span class="sd">    :type distributed: bool</span>
+<span class="sd">    :param find_unused_parameters: ``find_unused_parameters`` for DistributedDataParallel.</span>
+<span class="sd">    :type find_unused_parameters: bool or None</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">teacher_model</span><span class="p">,</span> <span class="n">minimal</span><span class="p">,</span> <span class="n">input_module_path</span><span class="p">,</span>
+                 <span class="n">paraphraser_kwargs</span><span class="p">,</span> <span class="n">paraphraser_ckpt</span><span class="p">,</span> <span class="n">uses_decoder</span><span class="p">,</span> <span class="n">device</span><span class="p">,</span> <span class="n">device_ids</span><span class="p">,</span> <span class="n">distributed</span><span class="p">,</span>
+                 <span class="n">find_unused_parameters</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">()</span>
+        <span class="k">if</span> <span class="n">minimal</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">minimal</span> <span class="o">=</span> <span class="nb">dict</span><span class="p">()</span>
+        
+        <span class="n">auxiliary_teacher_model_wrapper</span> <span class="o">=</span> <span class="n">build_auxiliary_model_wrapper</span><span class="p">(</span><span class="n">minimal</span><span class="p">,</span> <span class="n">teacher_model</span><span class="o">=</span><span class="n">teacher_model</span><span class="p">)</span>
+        <span class="n">model_type</span> <span class="o">=</span> <span class="s1">&#39;original&#39;</span>
+        <span class="n">teacher_ref_model</span> <span class="o">=</span> <span class="n">teacher_model</span>
+        <span class="k">if</span> <span class="n">auxiliary_teacher_model_wrapper</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">teacher_ref_model</span> <span class="o">=</span> <span class="n">auxiliary_teacher_model_wrapper</span>
+            <span class="n">model_type</span> <span class="o">=</span> <span class="nb">type</span><span class="p">(</span><span class="n">teacher_ref_model</span><span class="p">)</span><span class="o">.</span><span class="vm">__name__</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">teacher_model</span> <span class="o">=</span> <span class="n">redesign_model</span><span class="p">(</span><span class="n">teacher_ref_model</span><span class="p">,</span> <span class="n">minimal</span><span class="p">,</span> <span class="s1">&#39;teacher&#39;</span><span class="p">,</span> <span class="n">model_type</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">input_module_path</span> <span class="o">=</span> <span class="n">input_module_path</span>
+        <span class="n">paraphraser</span> <span class="o">=</span> <span class="n">Paraphraser4FactorTransfer</span><span class="p">(</span><span class="n">uses_decoder</span><span class="o">=</span><span class="n">uses_decoder</span><span class="p">,</span> <span class="o">**</span><span class="n">paraphraser_kwargs</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">paraphraser</span> <span class="o">=</span> <span class="n">wrap_if_distributed</span><span class="p">(</span><span class="n">paraphraser</span><span class="p">,</span> <span class="n">device</span><span class="p">,</span> <span class="n">device_ids</span><span class="p">,</span> <span class="n">distributed</span><span class="p">,</span>
+                                               <span class="n">find_unused_parameters</span><span class="o">=</span><span class="n">find_unused_parameters</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">ckpt_file_path</span> <span class="o">=</span> <span class="n">paraphraser_ckpt</span>
+        <span class="k">if</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">isfile</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">ckpt_file_path</span><span class="p">):</span>
+            <span class="n">map_location</span> <span class="o">=</span> <span class="p">{</span><span class="s1">&#39;cuda:0&#39;</span><span class="p">:</span> <span class="s1">&#39;cuda:</span><span class="si">{}</span><span class="s1">&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">device_ids</span><span class="p">[</span><span class="mi">0</span><span class="p">])}</span> <span class="k">if</span> <span class="n">distributed</span> <span class="k">else</span> <span class="n">device</span>
+            <span class="n">load_module_ckpt</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">paraphraser</span><span class="p">,</span> <span class="n">map_location</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">ckpt_file_path</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">uses_decoder</span> <span class="o">=</span> <span class="n">uses_decoder</span>
+
+    <span class="k">def</span> <span class="nf">forward</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">):</span>
+        <span class="k">with</span> <span class="n">torch</span><span class="o">.</span><span class="n">no_grad</span><span class="p">():</span>
+            <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">teacher_model</span><span class="p">(</span><span class="o">*</span><span class="n">args</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">secondary_forward</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">io_dict</span><span class="p">):</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">uses_decoder</span> <span class="ow">and</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">paraphraser</span><span class="o">.</span><span class="n">training</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">paraphraser</span><span class="o">.</span><span class="n">train</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">paraphraser</span><span class="p">(</span><span class="n">io_dict</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">input_module_path</span><span class="p">][</span><span class="s1">&#39;output&#39;</span><span class="p">])</span>
+
+    <span class="k">def</span> <span class="nf">post_epoch_process</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+        <span class="n">save_module_ckpt</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">paraphraser</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">ckpt_file_path</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="Student4FactorTransfer"><a class="viewcode-back" href="../../../subpkgs/models.html#torchdistill.models.wrapper.Student4FactorTransfer">[docs]</a><span class="nd">@register_auxiliary_model_wrapper</span>
+<span class="k">class</span> <span class="nc">Student4FactorTransfer</span><span class="p">(</span><span class="n">AuxiliaryModelWrapper</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    An auxiliary student model wrapper for factor transfer (FT), including translator :class:`Translator4FactorTransfer`.</span>
+
+<span class="sd">    Jangho Kim, Seonguk Park, Nojun Kwak: `&quot;Paraphrasing Complex Network: Network Compression via Factor Transfer&quot; &lt;https://papers.neurips.cc/paper_files/paper/2018/hash/6d9cb7de5e8ac30bd5e8734bc96a35c1-Abstract.html&gt;`_ @ NeurIPS 2018 (2018)</span>
+
+<span class="sd">    :param student_model: student model.</span>
+<span class="sd">    :type student_model: nn.Module</span>
+<span class="sd">    :param input_module_path: path of module whose output is used as input to paraphraser.</span>
+<span class="sd">    :type input_module_path: str</span>
+<span class="sd">    :param translator_kwargs: kwargs to instantiate :class:`Translator4FactorTransfer`.</span>
+<span class="sd">    :type translator_kwargs: dict</span>
+<span class="sd">    :param device: target device.</span>
+<span class="sd">    :type device: torch.device</span>
+<span class="sd">    :param device_ids: target device IDs.</span>
+<span class="sd">    :type device_ids: list[int]</span>
+<span class="sd">    :param distributed: whether to be in distributed training mode.</span>
+<span class="sd">    :type distributed: bool</span>
+<span class="sd">    :param find_unused_parameters: ``find_unused_parameters`` for DistributedDataParallel.</span>
+<span class="sd">    :type find_unused_parameters: bool or None</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">student_model</span><span class="p">,</span> <span class="n">input_module_path</span><span class="p">,</span> <span class="n">translator_kwargs</span><span class="p">,</span> <span class="n">device</span><span class="p">,</span> <span class="n">device_ids</span><span class="p">,</span> <span class="n">distributed</span><span class="p">,</span>
+                 <span class="n">find_unused_parameters</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">student_model</span> <span class="o">=</span> <span class="n">wrap_if_distributed</span><span class="p">(</span><span class="n">student_model</span><span class="p">,</span> <span class="n">device</span><span class="p">,</span> <span class="n">device_ids</span><span class="p">,</span> <span class="n">distributed</span><span class="p">,</span>
+                                                 <span class="n">find_unused_parameters</span><span class="o">=</span><span class="n">find_unused_parameters</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">input_module_path</span> <span class="o">=</span> <span class="n">input_module_path</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">translator</span> <span class="o">=</span> \
+            <span class="n">wrap_if_distributed</span><span class="p">(</span><span class="n">Translator4FactorTransfer</span><span class="p">(</span><span class="o">**</span><span class="n">translator_kwargs</span><span class="p">),</span> <span class="n">device</span><span class="p">,</span> <span class="n">device_ids</span><span class="p">,</span> <span class="n">distributed</span><span class="p">,</span>
+                                <span class="n">find_unused_parameters</span><span class="o">=</span><span class="n">find_unused_parameters</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">forward</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">student_model</span><span class="p">(</span><span class="o">*</span><span class="n">args</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">secondary_forward</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">io_dict</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">translator</span><span class="p">(</span><span class="n">io_dict</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">input_module_path</span><span class="p">][</span><span class="s1">&#39;output&#39;</span><span class="p">])</span></div>
+
+
+<div class="viewcode-block" id="Connector4DAB"><a class="viewcode-back" href="../../../subpkgs/models.html#torchdistill.models.wrapper.Connector4DAB">[docs]</a><span class="nd">@register_auxiliary_model_wrapper</span>
+<span class="k">class</span> <span class="nc">Connector4DAB</span><span class="p">(</span><span class="n">AuxiliaryModelWrapper</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    An auxiliary student model wrapper with connector for distillation of activation boundaries (DAB).</span>
+
+<span class="sd">    Byeongho Heo, Minsik Lee, Sangdoo Yun, Jin Young Choi: `&quot;Knowledge Transfer via Distillation of Activation Boundaries Formed by Hidden Neurons&quot; &lt;https://ojs.aaai.org/index.php/AAAI/article/view/4264&gt;`_ @ AAAI 2019 (2019)</span>
+
+<span class="sd">    :param student_model: student model.</span>
+<span class="sd">    :type student_model: nn.Module</span>
+<span class="sd">    :param connectors: connector keys and configurations.</span>
+<span class="sd">    :type connectors: dict</span>
+<span class="sd">    :param device: target device.</span>
+<span class="sd">    :type device: torch.device</span>
+<span class="sd">    :param device_ids: target device IDs.</span>
+<span class="sd">    :type device_ids: list[int]</span>
+<span class="sd">    :param distributed: whether to be in distributed training mode.</span>
+<span class="sd">    :type distributed: bool</span>
+<span class="sd">    :param find_unused_parameters: ``find_unused_parameters`` for DistributedDataParallel.</span>
+<span class="sd">    :type find_unused_parameters: bool or None</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="nd">@staticmethod</span>
+    <span class="k">def</span> <span class="nf">build_connector</span><span class="p">(</span><span class="n">conv2d_kwargs</span><span class="p">,</span> <span class="n">bn2d_kwargs</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+        <span class="n">module_list</span> <span class="o">=</span> <span class="p">[</span><span class="n">nn</span><span class="o">.</span><span class="n">Conv2d</span><span class="p">(</span><span class="o">**</span><span class="n">conv2d_kwargs</span><span class="p">)]</span>
+        <span class="k">if</span> <span class="n">bn2d_kwargs</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="ow">and</span> <span class="nb">len</span><span class="p">(</span><span class="n">bn2d_kwargs</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="n">module_list</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">nn</span><span class="o">.</span><span class="n">BatchNorm2d</span><span class="p">(</span><span class="o">**</span><span class="n">bn2d_kwargs</span><span class="p">))</span>
+        <span class="k">return</span> <span class="n">nn</span><span class="o">.</span><span class="n">Sequential</span><span class="p">(</span><span class="o">*</span><span class="n">module_list</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">student_model</span><span class="p">,</span> <span class="n">connectors</span><span class="p">,</span> <span class="n">device</span><span class="p">,</span> <span class="n">device_ids</span><span class="p">,</span> <span class="n">distributed</span><span class="p">,</span> <span class="n">find_unused_parameters</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+                 <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">student_model</span> <span class="o">=</span> <span class="n">wrap_if_distributed</span><span class="p">(</span><span class="n">student_model</span><span class="p">,</span> <span class="n">device</span><span class="p">,</span> <span class="n">device_ids</span><span class="p">,</span> <span class="n">distributed</span><span class="p">,</span> <span class="n">find_unused_parameters</span><span class="p">)</span>
+        <span class="n">io_path_pairs</span> <span class="o">=</span> <span class="nb">list</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">connector_dict</span> <span class="o">=</span> <span class="n">nn</span><span class="o">.</span><span class="n">ModuleDict</span><span class="p">()</span>
+        <span class="k">for</span> <span class="n">connector_key</span><span class="p">,</span> <span class="n">connector_config</span> <span class="ow">in</span> <span class="n">connectors</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+            <span class="n">connector</span> <span class="o">=</span> \
+                <span class="bp">self</span><span class="o">.</span><span class="n">build_connector</span><span class="p">(</span><span class="n">connector_config</span><span class="p">[</span><span class="s1">&#39;conv2d_kwargs&#39;</span><span class="p">],</span> <span class="n">connector_config</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;bn2d_kwargs&#39;</span><span class="p">,</span> <span class="kc">None</span><span class="p">))</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">connector_dict</span><span class="p">[</span><span class="n">connector_key</span><span class="p">]</span> <span class="o">=</span> \
+                <span class="n">wrap_if_distributed</span><span class="p">(</span><span class="n">connector</span><span class="p">,</span> <span class="n">device</span><span class="p">,</span> <span class="n">device_ids</span><span class="p">,</span> <span class="n">distributed</span><span class="p">,</span> <span class="n">find_unused_parameters</span><span class="p">)</span>
+            <span class="n">io_path_pairs</span><span class="o">.</span><span class="n">append</span><span class="p">((</span><span class="n">connector_key</span><span class="p">,</span> <span class="n">connector_config</span><span class="p">[</span><span class="s1">&#39;io&#39;</span><span class="p">],</span> <span class="n">connector_config</span><span class="p">[</span><span class="s1">&#39;path&#39;</span><span class="p">]))</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">io_path_pairs</span> <span class="o">=</span> <span class="n">io_path_pairs</span>
+
+    <span class="k">def</span> <span class="nf">forward</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">x</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">student_model</span><span class="p">(</span><span class="n">x</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">secondary_forward</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">io_dict</span><span class="p">):</span>
+        <span class="k">for</span> <span class="n">connector_key</span><span class="p">,</span> <span class="n">io_type</span><span class="p">,</span> <span class="n">module_path</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">io_path_pairs</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">connector_dict</span><span class="p">[</span><span class="n">connector_key</span><span class="p">](</span><span class="n">io_dict</span><span class="p">[</span><span class="n">module_path</span><span class="p">][</span><span class="n">io_type</span><span class="p">])</span></div>
+
+
+<div class="viewcode-block" id="Regressor4VID"><a class="viewcode-back" href="../../../subpkgs/models.html#torchdistill.models.wrapper.Regressor4VID">[docs]</a><span class="k">class</span> <span class="nc">Regressor4VID</span><span class="p">(</span><span class="n">nn</span><span class="o">.</span><span class="n">Module</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    An auxiliary module for variational information distillation (VID).</span>
+
+<span class="sd">    Sungsoo Ahn, Shell Xu Hu, Andreas Damianou, Neil D. Lawrence, Zhenwen Dai: `&quot;Variational Information Distillation for Knowledge Transfer&quot; &lt;https://openaccess.thecvf.com/content_CVPR_2019/html/Ahn_Variational_Information_Distillation_for_Knowledge_Transfer_CVPR_2019_paper.html&gt;`_ @ CVPR 2019 (2019)</span>
+
+<span class="sd">    :param in_channels: number of input channels for the first convolution layer.</span>
+<span class="sd">    :type in_channels: int</span>
+<span class="sd">    :param mid_channels: number of output/input channels for the first/second convolution layer.</span>
+<span class="sd">    :type mid_channels: int</span>
+<span class="sd">    :param out_channels: number of output channels for the third convolution layer.</span>
+<span class="sd">    :type out_channels: int</span>
+<span class="sd">    :param eps: eps.</span>
+<span class="sd">    :type eps: float</span>
+<span class="sd">    :param init_pred_var: minimum variance introduced for numerical stability.</span>
+<span class="sd">    :type init_pred_var: float</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">in_channels</span><span class="p">,</span> <span class="n">middle_channels</span><span class="p">,</span> <span class="n">out_channels</span><span class="p">,</span> <span class="n">eps</span><span class="p">,</span> <span class="n">init_pred_var</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">regressor</span> <span class="o">=</span> <span class="n">nn</span><span class="o">.</span><span class="n">Sequential</span><span class="p">(</span>
+            <span class="n">nn</span><span class="o">.</span><span class="n">Conv2d</span><span class="p">(</span><span class="n">in_channels</span><span class="p">,</span> <span class="n">middle_channels</span><span class="p">,</span> <span class="n">kernel_size</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span> <span class="n">stride</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span> <span class="n">padding</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="n">bias</span><span class="o">=</span><span class="kc">False</span><span class="p">),</span>
+            <span class="n">nn</span><span class="o">.</span><span class="n">ReLU</span><span class="p">(</span><span class="n">inplace</span><span class="o">=</span><span class="kc">True</span><span class="p">),</span>
+            <span class="n">nn</span><span class="o">.</span><span class="n">Conv2d</span><span class="p">(</span><span class="n">middle_channels</span><span class="p">,</span> <span class="n">middle_channels</span><span class="p">,</span> <span class="n">kernel_size</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span> <span class="n">stride</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span> <span class="n">padding</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="n">bias</span><span class="o">=</span><span class="kc">False</span><span class="p">),</span>
+            <span class="n">nn</span><span class="o">.</span><span class="n">ReLU</span><span class="p">(</span><span class="n">inplace</span><span class="o">=</span><span class="kc">True</span><span class="p">),</span>
+            <span class="n">nn</span><span class="o">.</span><span class="n">Conv2d</span><span class="p">(</span><span class="n">middle_channels</span><span class="p">,</span> <span class="n">out_channels</span><span class="p">,</span> <span class="n">kernel_size</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span> <span class="n">stride</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span> <span class="n">padding</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="n">bias</span><span class="o">=</span><span class="kc">False</span><span class="p">),</span>
+        <span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">soft_plus_param</span> <span class="o">=</span> \
+            <span class="n">nn</span><span class="o">.</span><span class="n">Parameter</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">log</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">exp</span><span class="p">(</span><span class="n">init_pred_var</span> <span class="o">-</span> <span class="n">eps</span><span class="p">)</span> <span class="o">-</span> <span class="mf">1.0</span><span class="p">)</span> <span class="o">*</span> <span class="n">torch</span><span class="o">.</span><span class="n">ones</span><span class="p">(</span><span class="n">out_channels</span><span class="p">))</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">eps</span> <span class="o">=</span> <span class="n">eps</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">init_pred_var</span> <span class="o">=</span> <span class="n">init_pred_var</span>
+
+    <span class="k">def</span> <span class="nf">forward</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">student_feature_map</span><span class="p">):</span>
+        <span class="n">pred_mean</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">regressor</span><span class="p">(</span><span class="n">student_feature_map</span><span class="p">)</span>
+        <span class="n">pred_var</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">log</span><span class="p">(</span><span class="mf">1.0</span> <span class="o">+</span> <span class="n">torch</span><span class="o">.</span><span class="n">exp</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">soft_plus_param</span><span class="p">))</span> <span class="o">+</span> <span class="bp">self</span><span class="o">.</span><span class="n">eps</span>
+        <span class="n">pred_var</span> <span class="o">=</span> <span class="n">pred_var</span><span class="o">.</span><span class="n">view</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="o">-</span><span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">pred_mean</span><span class="p">,</span> <span class="n">pred_var</span></div>
+
+
+<div class="viewcode-block" id="VariationalDistributor4VID"><a class="viewcode-back" href="../../../subpkgs/models.html#torchdistill.models.wrapper.VariationalDistributor4VID">[docs]</a><span class="nd">@register_auxiliary_model_wrapper</span>
+<span class="k">class</span> <span class="nc">VariationalDistributor4VID</span><span class="p">(</span><span class="n">AuxiliaryModelWrapper</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    An auxiliary student model wrapper for variational information distillation (VID), including translator :class:`Regressor4VID`.</span>
+
+<span class="sd">    Sungsoo Ahn, Shell Xu Hu, Andreas Damianou, Neil D. Lawrence, Zhenwen Dai: `&quot;Variational Information Distillation for Knowledge Transfer&quot; &lt;https://openaccess.thecvf.com/content_CVPR_2019/html/Ahn_Variational_Information_Distillation_for_Knowledge_Transfer_CVPR_2019_paper.html&gt;`_ @ CVPR 2019 (2019)</span>
+
+<span class="sd">    :param student_model: student model.</span>
+<span class="sd">    :type student_model: nn.Module</span>
+<span class="sd">    :param in_channels: number of input channels for the first convolution layer.</span>
+<span class="sd">    :type in_channels: int</span>
+<span class="sd">    :param regressors: regressor keys and configurations.</span>
+<span class="sd">    :type regressors: dict</span>
+<span class="sd">    :param device: target device.</span>
+<span class="sd">    :type device: torch.device</span>
+<span class="sd">    :param device_ids: target device IDs.</span>
+<span class="sd">    :type device_ids: list[int]</span>
+<span class="sd">    :param distributed: whether to be in distributed training mode.</span>
+<span class="sd">    :type distributed: bool</span>
+<span class="sd">    :param find_unused_parameters: ``find_unused_parameters`` for DistributedDataParallel.</span>
+<span class="sd">    :type find_unused_parameters: bool or None</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">student_model</span><span class="p">,</span> <span class="n">regressors</span><span class="p">,</span> <span class="n">device</span><span class="p">,</span> <span class="n">device_ids</span><span class="p">,</span> <span class="n">distributed</span><span class="p">,</span> <span class="n">find_unused_parameters</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+                 <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">student_model</span> <span class="o">=</span> <span class="n">wrap_if_distributed</span><span class="p">(</span><span class="n">student_model</span><span class="p">,</span> <span class="n">device</span><span class="p">,</span> <span class="n">device_ids</span><span class="p">,</span> <span class="n">distributed</span><span class="p">,</span> <span class="n">find_unused_parameters</span><span class="p">)</span>
+        <span class="n">io_path_pairs</span> <span class="o">=</span> <span class="nb">list</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">regressor_dict</span> <span class="o">=</span> <span class="n">nn</span><span class="o">.</span><span class="n">ModuleDict</span><span class="p">()</span>
+        <span class="k">for</span> <span class="n">regressor_key</span><span class="p">,</span> <span class="n">regressor_config</span> <span class="ow">in</span> <span class="n">regressors</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+            <span class="n">regressor</span> <span class="o">=</span> <span class="n">Regressor4VID</span><span class="p">(</span><span class="o">**</span><span class="n">regressor_config</span><span class="p">[</span><span class="s1">&#39;kwargs&#39;</span><span class="p">])</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">regressor_dict</span><span class="p">[</span><span class="n">regressor_key</span><span class="p">]</span> <span class="o">=</span> \
+                <span class="n">wrap_if_distributed</span><span class="p">(</span><span class="n">regressor</span><span class="p">,</span> <span class="n">device</span><span class="p">,</span> <span class="n">device_ids</span><span class="p">,</span> <span class="n">distributed</span><span class="p">,</span> <span class="n">find_unused_parameters</span><span class="p">)</span>
+            <span class="n">io_path_pairs</span><span class="o">.</span><span class="n">append</span><span class="p">((</span><span class="n">regressor_key</span><span class="p">,</span> <span class="n">regressor_config</span><span class="p">[</span><span class="s1">&#39;io&#39;</span><span class="p">],</span> <span class="n">regressor_config</span><span class="p">[</span><span class="s1">&#39;path&#39;</span><span class="p">]))</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">io_path_pairs</span> <span class="o">=</span> <span class="n">io_path_pairs</span>
+
+    <span class="k">def</span> <span class="nf">forward</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">x</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">student_model</span><span class="p">(</span><span class="n">x</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">secondary_forward</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">io_dict</span><span class="p">):</span>
+        <span class="k">for</span> <span class="n">regressor_key</span><span class="p">,</span> <span class="n">io_type</span><span class="p">,</span> <span class="n">module_path</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">io_path_pairs</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">regressor_dict</span><span class="p">[</span><span class="n">regressor_key</span><span class="p">](</span><span class="n">io_dict</span><span class="p">[</span><span class="n">module_path</span><span class="p">][</span><span class="n">io_type</span><span class="p">])</span></div>
+
+
+<div class="viewcode-block" id="Linear4CCKD"><a class="viewcode-back" href="../../../subpkgs/models.html#torchdistill.models.wrapper.Linear4CCKD">[docs]</a><span class="nd">@register_auxiliary_model_wrapper</span>
+<span class="k">class</span> <span class="nc">Linear4CCKD</span><span class="p">(</span><span class="n">AuxiliaryModelWrapper</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    An auxiliary teacher/student model wrapper for correlation congruence for knowledge distillation (CCKD).</span>
+<span class="sd">    Fully-connected layers cope with a mismatch of feature representations of teacher and student models.</span>
+
+<span class="sd">    Baoyun Peng, Xiao Jin, Jiaheng Liu, Dongsheng Li, Yichao Wu, Yu Liu, Shunfeng Zhou, Zhaoning Zhang: `&quot;Correlation Congruence for Knowledge Distillation&quot; &lt;https://openaccess.thecvf.com/content_ICCV_2019/html/Peng_Correlation_Congruence_for_Knowledge_Distillation_ICCV_2019_paper.html&gt;`_ @ ICCV 2019 (2019)</span>
+
+<span class="sd">    :param input_module: input module configuration.</span>
+<span class="sd">    :type input_module: dict</span>
+<span class="sd">    :param linear_kwargs: kwargs for Linear.</span>
+<span class="sd">    :type linear_kwargs: dict</span>
+<span class="sd">    :param device: target device.</span>
+<span class="sd">    :type device: torch.device</span>
+<span class="sd">    :param device_ids: target device IDs.</span>
+<span class="sd">    :type device_ids: list[int]</span>
+<span class="sd">    :param distributed: whether to be in distributed training mode.</span>
+<span class="sd">    :type distributed: bool</span>
+<span class="sd">    :param teacher_model: teacher model.</span>
+<span class="sd">    :type teacher_model: nn.Module or None</span>
+<span class="sd">    :param student_model: student model.</span>
+<span class="sd">    :type student_model: nn.Module or None</span>
+<span class="sd">    :param find_unused_parameters: ``find_unused_parameters`` for DistributedDataParallel.</span>
+<span class="sd">    :type find_unused_parameters: bool or None</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">input_module</span><span class="p">,</span> <span class="n">linear_kwargs</span><span class="p">,</span> <span class="n">device</span><span class="p">,</span> <span class="n">device_ids</span><span class="p">,</span> <span class="n">distributed</span><span class="p">,</span>
+                 <span class="n">teacher_model</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">student_model</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">find_unused_parameters</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">()</span>
+        <span class="n">is_teacher</span> <span class="o">=</span> <span class="n">teacher_model</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">is_teacher</span><span class="p">:</span>
+            <span class="n">student_model</span> <span class="o">=</span> <span class="n">wrap_if_distributed</span><span class="p">(</span><span class="n">student_model</span><span class="p">,</span> <span class="n">device</span><span class="p">,</span> <span class="n">device_ids</span><span class="p">,</span> <span class="n">distributed</span><span class="p">,</span> <span class="n">find_unused_parameters</span><span class="p">)</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">model</span> <span class="o">=</span> <span class="n">teacher_model</span> <span class="k">if</span> <span class="n">is_teacher</span> <span class="k">else</span> <span class="n">student_model</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">is_teacher</span> <span class="o">=</span> <span class="n">is_teacher</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">input_module_path</span> <span class="o">=</span> <span class="n">input_module</span><span class="p">[</span><span class="s1">&#39;path&#39;</span><span class="p">]</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">input_module_io</span> <span class="o">=</span> <span class="n">input_module</span><span class="p">[</span><span class="s1">&#39;io&#39;</span><span class="p">]</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">linear</span> <span class="o">=</span> \
+            <span class="n">wrap_if_distributed</span><span class="p">(</span><span class="n">nn</span><span class="o">.</span><span class="n">Linear</span><span class="p">(</span><span class="o">**</span><span class="n">linear_kwargs</span><span class="p">),</span> <span class="n">device</span><span class="p">,</span> <span class="n">device_ids</span><span class="p">,</span> <span class="n">distributed</span><span class="p">,</span> <span class="n">find_unused_parameters</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">forward</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">x</span><span class="p">):</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">is_teacher</span><span class="p">:</span>
+            <span class="k">with</span> <span class="n">torch</span><span class="o">.</span><span class="n">no_grad</span><span class="p">():</span>
+                <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">model</span><span class="p">(</span><span class="n">x</span><span class="p">)</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">model</span><span class="p">(</span><span class="n">x</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">secondary_forward</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">io_dict</span><span class="p">):</span>
+        <span class="n">flat_outputs</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">flatten</span><span class="p">(</span><span class="n">io_dict</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">input_module_path</span><span class="p">][</span><span class="bp">self</span><span class="o">.</span><span class="n">input_module_io</span><span class="p">],</span> <span class="mi">1</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">linear</span><span class="p">(</span><span class="n">flat_outputs</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="Normalizer4CRD"><a class="viewcode-back" href="../../../subpkgs/models.html#torchdistill.models.wrapper.Normalizer4CRD">[docs]</a><span class="k">class</span> <span class="nc">Normalizer4CRD</span><span class="p">(</span><span class="n">nn</span><span class="o">.</span><span class="n">Module</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    An auxiliary module for contrastive representation distillation (CRD).</span>
+
+<span class="sd">    Yonglong Tian, Dilip Krishnan, Phillip Isola: `&quot;Contrastive Representation Distillation&quot; &lt;https://openreview.net/forum?id=SkgpBJrtvS&gt;`_ @ ICLR 2020 (2020)</span>
+
+<span class="sd">    :param linear: linear module.</span>
+<span class="sd">    :type linear: nn.Module</span>
+<span class="sd">    :param power: the exponents.</span>
+<span class="sd">    :type power: int</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">linear</span><span class="p">,</span> <span class="n">power</span><span class="o">=</span><span class="mi">2</span><span class="p">):</span>
+        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">linear</span> <span class="o">=</span> <span class="n">linear</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">power</span> <span class="o">=</span> <span class="n">power</span>
+
+    <span class="k">def</span> <span class="nf">forward</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">x</span><span class="p">):</span>
+        <span class="n">z</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">linear</span><span class="p">(</span><span class="n">x</span><span class="p">)</span>
+        <span class="n">norm</span> <span class="o">=</span> <span class="n">z</span><span class="o">.</span><span class="n">pow</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">power</span><span class="p">)</span><span class="o">.</span><span class="n">sum</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="n">keepdim</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span><span class="o">.</span><span class="n">pow</span><span class="p">(</span><span class="mf">1.0</span> <span class="o">/</span> <span class="bp">self</span><span class="o">.</span><span class="n">power</span><span class="p">)</span>
+        <span class="n">out</span> <span class="o">=</span> <span class="n">z</span><span class="o">.</span><span class="n">div</span><span class="p">(</span><span class="n">norm</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">out</span></div>
+
+
+<div class="viewcode-block" id="Linear4CRD"><a class="viewcode-back" href="../../../subpkgs/models.html#torchdistill.models.wrapper.Linear4CRD">[docs]</a><span class="nd">@register_auxiliary_model_wrapper</span>
+<span class="k">class</span> <span class="nc">Linear4CRD</span><span class="p">(</span><span class="n">AuxiliaryModelWrapper</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    An auxiliary teacher/student model wrapper for contrastive representation distillation (CRD), including translator :class:`Normalizer4CRD`.</span>
+<span class="sd">    Refactored https://github.com/HobbitLong/RepDistiller/blob/master/crd/memory.py</span>
+
+<span class="sd">    Yonglong Tian, Dilip Krishnan, Phillip Isola: `&quot;Contrastive Representation Distillation&quot; &lt;https://openreview.net/forum?id=SkgpBJrtvS&gt;`_ @ ICLR 2020 (2020)</span>
+
+<span class="sd">    :param input_module_path: path of module whose output will be flattened and then used as input to normalizer.</span>
+<span class="sd">    :type input_module_path: str</span>
+<span class="sd">    :param linear_kwargs: kwargs for Linear.</span>
+<span class="sd">    :type linear_kwargs: dict</span>
+<span class="sd">    :param device: target device.</span>
+<span class="sd">    :type device: torch.device</span>
+<span class="sd">    :param device_ids: target device IDs.</span>
+<span class="sd">    :type device_ids: list[int]</span>
+<span class="sd">    :param distributed: whether to be in distributed training mode.</span>
+<span class="sd">    :type distributed: bool</span>
+<span class="sd">    :param power: ``power`` for :class:`Normalizer4CRD`.</span>
+<span class="sd">    :type power: int</span>
+<span class="sd">    :param teacher_model: teacher model.</span>
+<span class="sd">    :type teacher_model: nn.Module or None</span>
+<span class="sd">    :param student_model: student model.</span>
+<span class="sd">    :type student_model: nn.Module or None</span>
+<span class="sd">    :param find_unused_parameters: ``find_unused_parameters`` for DistributedDataParallel.</span>
+<span class="sd">    :type find_unused_parameters: bool or None</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">input_module_path</span><span class="p">,</span> <span class="n">linear_kwargs</span><span class="p">,</span> <span class="n">device</span><span class="p">,</span> <span class="n">device_ids</span><span class="p">,</span> <span class="n">distributed</span><span class="p">,</span> <span class="n">power</span><span class="o">=</span><span class="mi">2</span><span class="p">,</span>
+                 <span class="n">teacher_model</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">student_model</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">find_unused_parameters</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">()</span>
+        <span class="n">is_teacher</span> <span class="o">=</span> <span class="n">teacher_model</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">is_teacher</span><span class="p">:</span>
+            <span class="n">student_model</span> <span class="o">=</span> <span class="n">wrap_if_distributed</span><span class="p">(</span><span class="n">student_model</span><span class="p">,</span> <span class="n">device</span><span class="p">,</span> <span class="n">device_ids</span><span class="p">,</span> <span class="n">distributed</span><span class="p">,</span> <span class="n">find_unused_parameters</span><span class="p">)</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">model</span> <span class="o">=</span> <span class="n">teacher_model</span> <span class="k">if</span> <span class="n">is_teacher</span> <span class="k">else</span> <span class="n">student_model</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">is_teacher</span> <span class="o">=</span> <span class="n">is_teacher</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">empty</span> <span class="o">=</span> <span class="n">nn</span><span class="o">.</span><span class="n">Sequential</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">input_module_path</span> <span class="o">=</span> <span class="n">input_module_path</span>
+        <span class="n">linear</span> <span class="o">=</span> <span class="n">nn</span><span class="o">.</span><span class="n">Linear</span><span class="p">(</span><span class="o">**</span><span class="n">linear_kwargs</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">normalizer</span> <span class="o">=</span> <span class="n">wrap_if_distributed</span><span class="p">(</span><span class="n">Normalizer4CRD</span><span class="p">(</span><span class="n">linear</span><span class="p">,</span> <span class="n">power</span><span class="o">=</span><span class="n">power</span><span class="p">),</span> <span class="n">device</span><span class="p">,</span> <span class="n">device_ids</span><span class="p">,</span> <span class="n">distributed</span><span class="p">,</span>
+                                              <span class="n">find_unused_parameters</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">forward</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">x</span><span class="p">,</span> <span class="n">supp_dict</span><span class="p">):</span>
+        <span class="c1"># supp_dict is given to be hooked and stored in io_dict</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">empty</span><span class="p">(</span><span class="n">supp_dict</span><span class="p">)</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">is_teacher</span><span class="p">:</span>
+            <span class="k">with</span> <span class="n">torch</span><span class="o">.</span><span class="n">no_grad</span><span class="p">():</span>
+                <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">model</span><span class="p">(</span><span class="n">x</span><span class="p">)</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">model</span><span class="p">(</span><span class="n">x</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">secondary_forward</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">io_dict</span><span class="p">):</span>
+        <span class="n">flat_outputs</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">flatten</span><span class="p">(</span><span class="n">io_dict</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">input_module_path</span><span class="p">][</span><span class="s1">&#39;output&#39;</span><span class="p">],</span> <span class="mi">1</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">normalizer</span><span class="p">(</span><span class="n">flat_outputs</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="HeadRCNN"><a class="viewcode-back" href="../../../subpkgs/models.html#torchdistill.models.wrapper.HeadRCNN">[docs]</a><span class="nd">@register_auxiliary_model_wrapper</span>
+<span class="k">class</span> <span class="nc">HeadRCNN</span><span class="p">(</span><span class="n">AuxiliaryModelWrapper</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    An auxiliary teacher/student model wrapper for head network distillation (HND) and generalized head network distillation (GHND).</span>
+
+<span class="sd">    * Yoshitomo Matsubara, Sabur Baidya, Davide Callegaro, Marco Levorato, Sameer Singh: `&quot;Distilled Split Deep Neural Networks for Edge-Assisted Real-Time Systems&quot; &lt;https://dl.acm.org/doi/10.1145/3349614.3356022&gt;`_ @ MobiCom 2019 Workshop on Hot Topics in Video Analytics and Intelligent Edges (2019)</span>
+<span class="sd">    * Yoshitomo Matsubara, Marco Levorato: `&quot;Neural Compression and Filtering for Edge-assisted Real-time Object Detection in Challenged Networks&quot;  &lt;https://arxiv.org/abs/2007.15818&gt;`_ @ ICPR 2020 (2021)</span>
+
+<span class="sd">    :param head_rcnn: head R-CNN configuration as ``model_config`` in :meth:`torchdistill.models.util.redesign_model`.</span>
+<span class="sd">    :type head_rcnn: dict</span>
+<span class="sd">    :param kwargs: ``teacher_model`` or ``student_model`` keys must be included. If both ``teacher_model`` and ``student_model`` are provided, ``student_model`` will be prioritized.</span>
+<span class="sd">    :type kwargs: dict</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">head_rcnn</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">()</span>
+        <span class="n">tmp_ref_model</span> <span class="o">=</span> <span class="n">kwargs</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;teacher_model&#39;</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span>
+        <span class="n">ref_model</span> <span class="o">=</span> <span class="n">kwargs</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;student_model&#39;</span><span class="p">,</span> <span class="n">tmp_ref_model</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">ref_model</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s1">&#39;Either student_model or teacher_model has to be given.&#39;</span><span class="p">)</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">transform</span> <span class="o">=</span> <span class="n">ref_model</span><span class="o">.</span><span class="n">transform</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">seq</span> <span class="o">=</span> <span class="n">redesign_model</span><span class="p">(</span><span class="n">ref_model</span><span class="p">,</span> <span class="n">head_rcnn</span><span class="p">,</span> <span class="s1">&#39;R-CNN&#39;</span><span class="p">,</span> <span class="s1">&#39;HeadRCNN&#39;</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">forward</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">images</span><span class="p">,</span> <span class="n">targets</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+        <span class="n">original_image_sizes</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">jit</span><span class="o">.</span><span class="n">annotate</span><span class="p">(</span><span class="n">List</span><span class="p">[</span><span class="n">Tuple</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="nb">int</span><span class="p">]],</span> <span class="p">[])</span>
+        <span class="k">for</span> <span class="n">img</span> <span class="ow">in</span> <span class="n">images</span><span class="p">:</span>
+            <span class="n">val</span> <span class="o">=</span> <span class="n">img</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="o">-</span><span class="mi">2</span><span class="p">:]</span>
+            <span class="k">assert</span> <span class="nb">len</span><span class="p">(</span><span class="n">val</span><span class="p">)</span> <span class="o">==</span> <span class="mi">2</span>
+            <span class="n">original_image_sizes</span><span class="o">.</span><span class="n">append</span><span class="p">((</span><span class="n">val</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">val</span><span class="p">[</span><span class="mi">1</span><span class="p">]))</span>
+
+        <span class="n">images</span><span class="p">,</span> <span class="n">targets</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">transform</span><span class="p">(</span><span class="n">images</span><span class="p">,</span> <span class="n">targets</span><span class="p">)</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">seq</span><span class="p">(</span><span class="n">images</span><span class="o">.</span><span class="n">tensors</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="SSWrapper4SSKD"><a class="viewcode-back" href="../../../subpkgs/models.html#torchdistill.models.wrapper.SSWrapper4SSKD">[docs]</a><span class="nd">@register_auxiliary_model_wrapper</span>
+<span class="k">class</span> <span class="nc">SSWrapper4SSKD</span><span class="p">(</span><span class="n">AuxiliaryModelWrapper</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    An auxiliary teacher/student model wrapper for self-supervision knowledge distillation (SSKD).</span>
+<span class="sd">    If both ``teacher_model`` and ``student_model`` are provided, ``student_model`` will be prioritized</span>
+
+<span class="sd">    Guodong Xu, Ziwei Liu, Xiaoxiao Li, Chen Change Loy: `&quot;Knowledge Distillation Meets Self-Supervision&quot; &lt;https://www.ecva.net/papers/eccv_2020/papers_ECCV/html/898_ECCV_2020_paper.php&gt;`_ @ ECCV 2020 (2020)</span>
+
+<span class="sd">    :param input_module: input module configuration.</span>
+<span class="sd">    :type input_module: dict</span>
+<span class="sd">    :param feat_dim: number of input/output features for self-supervision module.</span>
+<span class="sd">    :type feat_dim: int</span>
+<span class="sd">    :param ss_module_ckpt: self-supervision module checkpoint file path.</span>
+<span class="sd">    :type ss_module_ckpt: str</span>
+<span class="sd">    :param device: target device.</span>
+<span class="sd">    :type device: torch.device</span>
+<span class="sd">    :param device_ids: target device IDs.</span>
+<span class="sd">    :type device_ids: list[int]</span>
+<span class="sd">    :param distributed: whether to be in distributed training mode.</span>
+<span class="sd">    :type distributed: bool</span>
+<span class="sd">    :param freezes_ss_module: if True, freezes self-supervision module.</span>
+<span class="sd">    :type freezes_ss_module: bool</span>
+<span class="sd">    :param teacher_model: teacher model.</span>
+<span class="sd">    :type teacher_model: nn.Module or None</span>
+<span class="sd">    :param student_model: student model.</span>
+<span class="sd">    :type student_model: nn.Module or None</span>
+<span class="sd">    :param find_unused_parameters: ``find_unused_parameters`` for DistributedDataParallel.</span>
+<span class="sd">    :type find_unused_parameters: bool or None</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">input_module</span><span class="p">,</span> <span class="n">feat_dim</span><span class="p">,</span> <span class="n">ss_module_ckpt</span><span class="p">,</span> <span class="n">device</span><span class="p">,</span> <span class="n">device_ids</span><span class="p">,</span> <span class="n">distributed</span><span class="p">,</span> <span class="n">freezes_ss_module</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
+                 <span class="n">teacher_model</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">student_model</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">find_unused_parameters</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">()</span>
+        <span class="n">is_teacher</span> <span class="o">=</span> <span class="n">teacher_model</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">is_teacher</span><span class="p">:</span>
+            <span class="n">student_model</span> <span class="o">=</span> <span class="n">wrap_if_distributed</span><span class="p">(</span><span class="n">student_model</span><span class="p">,</span> <span class="n">device</span><span class="p">,</span> <span class="n">device_ids</span><span class="p">,</span> <span class="n">distributed</span><span class="p">,</span> <span class="n">find_unused_parameters</span><span class="p">)</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">model</span> <span class="o">=</span> <span class="n">teacher_model</span> <span class="k">if</span> <span class="n">is_teacher</span> <span class="k">else</span> <span class="n">student_model</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">is_teacher</span> <span class="o">=</span> <span class="n">is_teacher</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">input_module_path</span> <span class="o">=</span> <span class="n">input_module</span><span class="p">[</span><span class="s1">&#39;path&#39;</span><span class="p">]</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">input_module_io</span> <span class="o">=</span> <span class="n">input_module</span><span class="p">[</span><span class="s1">&#39;io&#39;</span><span class="p">]</span>
+        <span class="n">ss_module</span> <span class="o">=</span> <span class="n">nn</span><span class="o">.</span><span class="n">Sequential</span><span class="p">(</span>
+            <span class="n">nn</span><span class="o">.</span><span class="n">Linear</span><span class="p">(</span><span class="n">feat_dim</span><span class="p">,</span> <span class="n">feat_dim</span><span class="p">),</span>
+            <span class="n">nn</span><span class="o">.</span><span class="n">ReLU</span><span class="p">(</span><span class="n">inplace</span><span class="o">=</span><span class="kc">True</span><span class="p">),</span>
+            <span class="n">nn</span><span class="o">.</span><span class="n">Linear</span><span class="p">(</span><span class="n">feat_dim</span><span class="p">,</span> <span class="n">feat_dim</span><span class="p">)</span>
+        <span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">ckpt_file_path</span> <span class="o">=</span> <span class="n">ss_module_ckpt</span>
+        <span class="k">if</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">isfile</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">ckpt_file_path</span><span class="p">):</span>
+            <span class="n">map_location</span> <span class="o">=</span> <span class="p">{</span><span class="s1">&#39;cuda:0&#39;</span><span class="p">:</span> <span class="s1">&#39;cuda:</span><span class="si">{}</span><span class="s1">&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">device_ids</span><span class="p">[</span><span class="mi">0</span><span class="p">])}</span> <span class="k">if</span> <span class="n">distributed</span> <span class="k">else</span> <span class="n">device</span>
+            <span class="n">load_module_ckpt</span><span class="p">(</span><span class="n">ss_module</span><span class="p">,</span> <span class="n">map_location</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">ckpt_file_path</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">ss_module</span> <span class="o">=</span> <span class="n">ss_module</span> <span class="k">if</span> <span class="n">is_teacher</span> <span class="ow">and</span> <span class="n">freezes_ss_module</span> \
+            <span class="k">else</span> <span class="n">wrap_if_distributed</span><span class="p">(</span><span class="n">ss_module</span><span class="p">,</span> <span class="n">device</span><span class="p">,</span> <span class="n">device_ids</span><span class="p">,</span> <span class="n">distributed</span><span class="p">,</span> <span class="n">find_unused_parameters</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">forward</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">x</span><span class="p">):</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">is_teacher</span><span class="p">:</span>
+            <span class="k">with</span> <span class="n">torch</span><span class="o">.</span><span class="n">no_grad</span><span class="p">():</span>
+                <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">model</span><span class="p">(</span><span class="n">x</span><span class="p">)</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">model</span><span class="p">(</span><span class="n">x</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">secondary_forward</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">io_dict</span><span class="p">):</span>
+        <span class="n">flat_outputs</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">flatten</span><span class="p">(</span><span class="n">io_dict</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">input_module_path</span><span class="p">][</span><span class="bp">self</span><span class="o">.</span><span class="n">input_module_io</span><span class="p">],</span> <span class="mi">1</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">ss_module</span><span class="p">(</span><span class="n">flat_outputs</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">post_epoch_process</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+        <span class="n">save_module_ckpt</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">ss_module</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">ckpt_file_path</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="VarianceBranch4PAD"><a class="viewcode-back" href="../../../subpkgs/models.html#torchdistill.models.wrapper.VarianceBranch4PAD">[docs]</a><span class="nd">@register_auxiliary_model_wrapper</span>
+<span class="k">class</span> <span class="nc">VarianceBranch4PAD</span><span class="p">(</span><span class="n">AuxiliaryModelWrapper</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    An auxiliary teacher/student model wrapper for prime-aware adaptive distillation (PAD).</span>
+
+<span class="sd">    Youcai Zhang, Zhonghao Lan, Yuchen Dai, Fangao Zeng, Yan Bai, Jie Chang, Yichen Wei: `&quot;Prime-Aware Adaptive Distillation&quot; &lt;https://www.ecva.net/papers/eccv_2020/papers_ECCV/html/3317_ECCV_2020_paper.php&gt;`_ @ ECCV 2020 (2020)</span>
+
+<span class="sd">    :param student_model: student model.</span>
+<span class="sd">    :type student_model: nn.Module</span>
+<span class="sd">    :param input_module: input module configuration.</span>
+<span class="sd">    :type input_module: dict</span>
+<span class="sd">    :param feat_dim: number of input/output features for self-supervision module.</span>
+<span class="sd">    :type feat_dim: int</span>
+<span class="sd">    :param var_estimator_ckpt: variance estimator module checkpoint file path.</span>
+<span class="sd">    :type var_estimator_ckpt: str</span>
+<span class="sd">    :param device: target device.</span>
+<span class="sd">    :type device: torch.device</span>
+<span class="sd">    :param device_ids: target device IDs.</span>
+<span class="sd">    :type device_ids: list[int]</span>
+<span class="sd">    :param distributed: whether to be in distributed training mode.</span>
+<span class="sd">    :type distributed: bool</span>
+<span class="sd">    :param find_unused_parameters: ``find_unused_parameters`` for DistributedDataParallel.</span>
+<span class="sd">    :type find_unused_parameters: bool or None</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">student_model</span><span class="p">,</span> <span class="n">input_module</span><span class="p">,</span> <span class="n">feat_dim</span><span class="p">,</span> <span class="n">var_estimator_ckpt</span><span class="p">,</span>
+                 <span class="n">device</span><span class="p">,</span> <span class="n">device_ids</span><span class="p">,</span> <span class="n">distributed</span><span class="p">,</span> <span class="n">find_unused_parameters</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">student_model</span> <span class="o">=</span> <span class="n">wrap_if_distributed</span><span class="p">(</span><span class="n">student_model</span><span class="p">,</span> <span class="n">device</span><span class="p">,</span> <span class="n">device_ids</span><span class="p">,</span> <span class="n">distributed</span><span class="p">,</span> <span class="n">find_unused_parameters</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">input_module_path</span> <span class="o">=</span> <span class="n">input_module</span><span class="p">[</span><span class="s1">&#39;path&#39;</span><span class="p">]</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">input_module_io</span> <span class="o">=</span> <span class="n">input_module</span><span class="p">[</span><span class="s1">&#39;io&#39;</span><span class="p">]</span>
+        <span class="n">var_estimator</span> <span class="o">=</span> <span class="n">nn</span><span class="o">.</span><span class="n">Sequential</span><span class="p">(</span>
+            <span class="n">nn</span><span class="o">.</span><span class="n">Linear</span><span class="p">(</span><span class="n">feat_dim</span><span class="p">,</span> <span class="n">feat_dim</span><span class="p">),</span>
+            <span class="n">nn</span><span class="o">.</span><span class="n">BatchNorm1d</span><span class="p">(</span><span class="n">feat_dim</span><span class="p">)</span>
+        <span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">ckpt_file_path</span> <span class="o">=</span> <span class="n">var_estimator_ckpt</span>
+        <span class="k">if</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">isfile</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">ckpt_file_path</span><span class="p">):</span>
+            <span class="n">map_location</span> <span class="o">=</span> <span class="p">{</span><span class="s1">&#39;cuda:0&#39;</span><span class="p">:</span> <span class="s1">&#39;cuda:</span><span class="si">{}</span><span class="s1">&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">device_ids</span><span class="p">[</span><span class="mi">0</span><span class="p">])}</span> <span class="k">if</span> <span class="n">distributed</span> <span class="k">else</span> <span class="n">device</span>
+            <span class="n">load_module_ckpt</span><span class="p">(</span><span class="n">var_estimator</span><span class="p">,</span> <span class="n">map_location</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">ckpt_file_path</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">var_estimator</span> <span class="o">=</span> <span class="n">wrap_if_distributed</span><span class="p">(</span><span class="n">var_estimator</span><span class="p">,</span> <span class="n">device</span><span class="p">,</span> <span class="n">device_ids</span><span class="p">,</span> <span class="n">distributed</span><span class="p">,</span> <span class="n">find_unused_parameters</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">forward</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">x</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">student_model</span><span class="p">(</span><span class="n">x</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">secondary_forward</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">io_dict</span><span class="p">):</span>
+        <span class="n">embed_outputs</span> <span class="o">=</span> <span class="n">io_dict</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">input_module_path</span><span class="p">][</span><span class="bp">self</span><span class="o">.</span><span class="n">input_module_io</span><span class="p">]</span><span class="o">.</span><span class="n">flatten</span><span class="p">(</span><span class="mi">1</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">var_estimator</span><span class="p">(</span><span class="n">embed_outputs</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">post_epoch_process</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+        <span class="n">save_module_ckpt</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">var_estimator</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">ckpt_file_path</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="AttentionBasedFusion"><a class="viewcode-back" href="../../../subpkgs/models.html#torchdistill.models.wrapper.AttentionBasedFusion">[docs]</a><span class="k">class</span> <span class="nc">AttentionBasedFusion</span><span class="p">(</span><span class="n">nn</span><span class="o">.</span><span class="n">Module</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    An auxiliary module for knowledge review (KR). Refactored https://github.com/dvlab-research/ReviewKD/blob/master/ImageNet/models/reviewkd.py</span>
+
+<span class="sd">    Pengguang Chen, Shu Liu, Hengshuang Zhao, Jiaya Jia: `&quot;Distilling Knowledge via Knowledge Review&quot; &lt;https://openaccess.thecvf.com/content/CVPR2021/html/Chen_Distilling_Knowledge_via_Knowledge_Review_CVPR_2021_paper.html&gt;`_ @ CVPR 2021 (2021)</span>
+
+<span class="sd">    :param in_channels: number of input channels for the first convolution layer.</span>
+<span class="sd">    :type in_channels: int</span>
+<span class="sd">    :param mid_channels: number of output/input channels for the first/second convolution layer.</span>
+<span class="sd">    :type mid_channels: int</span>
+<span class="sd">    :param out_channels: number of output channels for the third convolution layer.</span>
+<span class="sd">    :type out_channels: int</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">in_channels</span><span class="p">,</span> <span class="n">mid_channels</span><span class="p">,</span> <span class="n">out_channels</span><span class="p">,</span> <span class="n">uses_attention</span><span class="p">):</span>
+        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">conv1</span> <span class="o">=</span> <span class="n">nn</span><span class="o">.</span><span class="n">Sequential</span><span class="p">(</span>
+            <span class="n">nn</span><span class="o">.</span><span class="n">Conv2d</span><span class="p">(</span><span class="n">in_channels</span><span class="p">,</span> <span class="n">mid_channels</span><span class="p">,</span> <span class="n">kernel_size</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span> <span class="n">bias</span><span class="o">=</span><span class="kc">False</span><span class="p">),</span>
+            <span class="n">nn</span><span class="o">.</span><span class="n">BatchNorm2d</span><span class="p">(</span><span class="n">mid_channels</span><span class="p">),</span>
+        <span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">conv2</span> <span class="o">=</span> <span class="n">nn</span><span class="o">.</span><span class="n">Sequential</span><span class="p">(</span>
+            <span class="n">nn</span><span class="o">.</span><span class="n">Conv2d</span><span class="p">(</span><span class="n">mid_channels</span><span class="p">,</span> <span class="n">out_channels</span><span class="p">,</span> <span class="n">kernel_size</span><span class="o">=</span><span class="mi">3</span><span class="p">,</span> <span class="n">stride</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span> <span class="n">padding</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span> <span class="n">bias</span><span class="o">=</span><span class="kc">False</span><span class="p">),</span>
+            <span class="n">nn</span><span class="o">.</span><span class="n">BatchNorm2d</span><span class="p">(</span><span class="n">out_channels</span><span class="p">),</span>
+        <span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">attention_conv</span> <span class="o">=</span> <span class="kc">None</span> <span class="k">if</span> <span class="ow">not</span> <span class="n">uses_attention</span> \
+            <span class="k">else</span> <span class="n">nn</span><span class="o">.</span><span class="n">Sequential</span><span class="p">(</span><span class="n">nn</span><span class="o">.</span><span class="n">Conv2d</span><span class="p">(</span><span class="n">mid_channels</span> <span class="o">*</span> <span class="mi">2</span><span class="p">,</span> <span class="mi">2</span><span class="p">,</span> <span class="n">kernel_size</span><span class="o">=</span><span class="mi">1</span><span class="p">),</span> <span class="n">nn</span><span class="o">.</span><span class="n">Sigmoid</span><span class="p">())</span>
+        <span class="n">nn</span><span class="o">.</span><span class="n">init</span><span class="o">.</span><span class="n">kaiming_uniform_</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">conv1</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">weight</span><span class="p">,</span> <span class="n">a</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
+        <span class="n">nn</span><span class="o">.</span><span class="n">init</span><span class="o">.</span><span class="n">kaiming_uniform_</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">conv2</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">weight</span><span class="p">,</span> <span class="n">a</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">forward</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">size</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+        <span class="n">x</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">conv1</span><span class="p">(</span><span class="n">x</span><span class="p">)</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">attention_conv</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">n</span><span class="p">,</span> <span class="n">_</span><span class="p">,</span> <span class="n">h</span><span class="p">,</span> <span class="n">w</span> <span class="o">=</span> <span class="n">x</span><span class="o">.</span><span class="n">shape</span>
+            <span class="c1"># upsample residual features</span>
+            <span class="n">y</span> <span class="o">=</span> <span class="n">functional</span><span class="o">.</span><span class="n">interpolate</span><span class="p">(</span><span class="n">y</span><span class="p">,</span> <span class="p">(</span><span class="n">size</span><span class="p">,</span> <span class="n">size</span><span class="p">),</span> <span class="n">mode</span><span class="o">=</span><span class="s1">&#39;nearest&#39;</span><span class="p">)</span>
+            <span class="c1"># fusion</span>
+            <span class="n">z</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">cat</span><span class="p">([</span><span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">],</span> <span class="n">dim</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
+            <span class="n">z</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">attention_conv</span><span class="p">(</span><span class="n">z</span><span class="p">)</span>
+            <span class="n">x</span> <span class="o">=</span> <span class="p">(</span><span class="n">x</span> <span class="o">*</span> <span class="n">z</span><span class="p">[:,</span> <span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">view</span><span class="p">(</span><span class="n">n</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="n">h</span><span class="p">,</span> <span class="n">w</span><span class="p">)</span> <span class="o">+</span> <span class="n">y</span> <span class="o">*</span> <span class="n">z</span><span class="p">[:,</span> <span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">view</span><span class="p">(</span><span class="n">n</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="n">h</span><span class="p">,</span> <span class="n">w</span><span class="p">))</span>
+
+        <span class="n">y</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">conv2</span><span class="p">(</span><span class="n">x</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">y</span><span class="p">,</span> <span class="n">x</span></div>
+
+
+<div class="viewcode-block" id="Student4KnowledgeReview"><a class="viewcode-back" href="../../../subpkgs/models.html#torchdistill.models.wrapper.Student4KnowledgeReview">[docs]</a><span class="nd">@register_auxiliary_model_wrapper</span>
+<span class="k">class</span> <span class="nc">Student4KnowledgeReview</span><span class="p">(</span><span class="n">AuxiliaryModelWrapper</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    An auxiliary student model wrapper for knowledge review (KR). Refactored https://github.com/dvlab-research/ReviewKD/blob/master/ImageNet/models/reviewkd.py</span>
+
+<span class="sd">    Pengguang Chen, Shu Liu, Hengshuang Zhao, Jiaya Jia: `&quot;Distilling Knowledge via Knowledge Review&quot; &lt;https://openaccess.thecvf.com/content/CVPR2021/html/Chen_Distilling_Knowledge_via_Knowledge_Review_CVPR_2021_paper.html&gt;`_ @ CVPR 2021 (2021)</span>
+
+<span class="sd">    :param student_model: student model.</span>
+<span class="sd">    :type student_model: nn.Module</span>
+<span class="sd">    :param abfs: attention based fusion configurations.</span>
+<span class="sd">    :type abfs: list[dict]</span>
+<span class="sd">    :param device: target device.</span>
+<span class="sd">    :type device: torch.device</span>
+<span class="sd">    :param device_ids: target device IDs.</span>
+<span class="sd">    :type device_ids: list[int]</span>
+<span class="sd">    :param distributed: whether to be in distributed training mode.</span>
+<span class="sd">    :type distributed: bool</span>
+<span class="sd">    :param find_unused_parameters: ``find_unused_parameters`` for DistributedDataParallel.</span>
+<span class="sd">    :type find_unused_parameters: bool or None</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">student_model</span><span class="p">,</span> <span class="n">abfs</span><span class="p">,</span> <span class="n">device</span><span class="p">,</span> <span class="n">device_ids</span><span class="p">,</span> <span class="n">distributed</span><span class="p">,</span> <span class="n">sizes</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+                 <span class="n">find_unused_parameters</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">student_model</span> <span class="o">=</span> <span class="n">wrap_if_distributed</span><span class="p">(</span><span class="n">student_model</span><span class="p">,</span> <span class="n">device</span><span class="p">,</span> <span class="n">device_ids</span><span class="p">,</span> <span class="n">distributed</span><span class="p">,</span> <span class="n">find_unused_parameters</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">sizes</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">sizes</span> <span class="o">=</span> <span class="p">[</span><span class="mi">1</span><span class="p">,</span> <span class="mi">7</span><span class="p">,</span> <span class="mi">14</span><span class="p">,</span> <span class="mi">28</span><span class="p">,</span> <span class="mi">56</span><span class="p">]</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">sizes</span> <span class="o">=</span> <span class="n">sizes</span>
+        <span class="n">abf_list</span> <span class="o">=</span> <span class="n">nn</span><span class="o">.</span><span class="n">ModuleList</span><span class="p">()</span>
+        <span class="n">num_abfs</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">abfs</span><span class="p">)</span>
+        <span class="n">io_path_pairs</span> <span class="o">=</span> <span class="nb">list</span><span class="p">()</span>
+        <span class="k">for</span> <span class="n">idx</span><span class="p">,</span> <span class="n">abf_config</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">abfs</span><span class="p">):</span>
+            <span class="n">abf</span> <span class="o">=</span> <span class="n">wrap_if_distributed</span><span class="p">(</span><span class="n">AttentionBasedFusion</span><span class="p">(</span><span class="n">uses_attention</span><span class="o">=</span><span class="n">idx</span> <span class="o">&lt;</span> <span class="n">num_abfs</span> <span class="o">-</span> <span class="mi">1</span><span class="p">,</span> <span class="o">**</span><span class="n">abf_config</span><span class="p">[</span><span class="s1">&#39;kwargs&#39;</span><span class="p">]),</span>
+                                      <span class="n">device</span><span class="p">,</span> <span class="n">device_ids</span><span class="p">,</span> <span class="n">distributed</span><span class="p">,</span> <span class="n">find_unused_parameters</span><span class="p">)</span>
+            <span class="n">abf_list</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">abf</span><span class="p">)</span>
+            <span class="n">io_path_pairs</span><span class="o">.</span><span class="n">append</span><span class="p">((</span><span class="n">abf_config</span><span class="p">[</span><span class="s1">&#39;io&#39;</span><span class="p">],</span> <span class="n">abf_config</span><span class="p">[</span><span class="s1">&#39;path&#39;</span><span class="p">]))</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">abf_modules</span> <span class="o">=</span> <span class="n">abf_list</span><span class="p">[::</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">io_path_pairs</span> <span class="o">=</span> <span class="n">io_path_pairs</span><span class="p">[::</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span>
+
+    <span class="k">def</span> <span class="nf">forward</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">student_model</span><span class="p">(</span><span class="o">*</span><span class="n">args</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">secondary_forward</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">io_dict</span><span class="p">):</span>
+        <span class="n">feature_maps</span> <span class="o">=</span> <span class="p">[</span><span class="n">io_dict</span><span class="p">[</span><span class="n">module_path</span><span class="p">][</span><span class="n">io_type</span><span class="p">]</span> <span class="k">for</span> <span class="n">io_type</span><span class="p">,</span> <span class="n">module_path</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">io_path_pairs</span><span class="p">]</span>
+        <span class="n">out_features</span><span class="p">,</span> <span class="n">res_features</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">abf_modules</span><span class="p">[</span><span class="mi">0</span><span class="p">](</span><span class="n">feature_maps</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span>
+        <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">sizes</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">1</span><span class="p">:</span>
+            <span class="k">for</span> <span class="n">features</span><span class="p">,</span> <span class="n">abf</span><span class="p">,</span> <span class="n">size</span> <span class="ow">in</span> <span class="nb">zip</span><span class="p">(</span><span class="n">feature_maps</span><span class="p">[</span><span class="mi">1</span><span class="p">:],</span> <span class="bp">self</span><span class="o">.</span><span class="n">abf_modules</span><span class="p">[</span><span class="mi">1</span><span class="p">:],</span> <span class="bp">self</span><span class="o">.</span><span class="n">sizes</span><span class="p">[</span><span class="mi">1</span><span class="p">:]):</span>
+                <span class="n">out_features</span><span class="p">,</span> <span class="n">res_features</span> <span class="o">=</span> <span class="n">abf</span><span class="p">(</span><span class="n">features</span><span class="p">,</span> <span class="n">res_features</span><span class="p">,</span> <span class="n">size</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="Student4KTAAD"><a class="viewcode-back" href="../../../subpkgs/models.html#torchdistill.models.wrapper.Student4KTAAD">[docs]</a><span class="nd">@register_auxiliary_model_wrapper</span>
+<span class="k">class</span> <span class="nc">Student4KTAAD</span><span class="p">(</span><span class="n">AuxiliaryModelWrapper</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    An auxiliary student model wrapper for knowledge translation and adaptation + affinity distillation (KTAAD).</span>
+<span class="sd">    Refactored https://github.com/dvlab-research/ReviewKD/blob/master/ImageNet/models/reviewkd.py</span>
+
+<span class="sd">    Tong He, Chunhua Shen, Zhi Tian, Dong Gong, Changming Sun, Youliang Yan.: `&quot;Knowledge Adaptation for Efficient Semantic Segmentation&quot; &lt;https://openaccess.thecvf.com/content_CVPR_2019/html/He_Knowledge_Adaptation_for_Efficient_Semantic_Segmentation_CVPR_2019_paper.html&gt;`_ @ CVPR 2019 (2019)</span>
+
+<span class="sd">    :param student_model: student model.</span>
+<span class="sd">    :type student_model: nn.Module</span>
+<span class="sd">    :param input_module_path: path of module whose output is used as input to feature adapter and affinity adapter.</span>
+<span class="sd">    :type input_module_path: str</span>
+<span class="sd">    :param feature_adapter_config: feature adapter configuration.</span>
+<span class="sd">    :type feature_adapter_config: dict</span>
+<span class="sd">    :param affinity_adapter_config: affinity adapter configuration.</span>
+<span class="sd">    :type affinity_adapter_config: dict</span>
+<span class="sd">    :param device: target device.</span>
+<span class="sd">    :type device: torch.device</span>
+<span class="sd">    :param device_ids: target device IDs.</span>
+<span class="sd">    :type device_ids: list[int]</span>
+<span class="sd">    :param distributed: whether to be in distributed training mode.</span>
+<span class="sd">    :type distributed: bool</span>
+<span class="sd">    :param find_unused_parameters: ``find_unused_parameters`` for DistributedDataParallel.</span>
+<span class="sd">    :type find_unused_parameters: bool or None</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">student_model</span><span class="p">,</span> <span class="n">input_module_path</span><span class="p">,</span> <span class="n">feature_adapter_config</span><span class="p">,</span> <span class="n">affinity_adapter_config</span><span class="p">,</span>
+                 <span class="n">device</span><span class="p">,</span> <span class="n">device_ids</span><span class="p">,</span> <span class="n">distributed</span><span class="p">,</span> <span class="n">find_unused_parameters</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">student_model</span> <span class="o">=</span> <span class="n">wrap_if_distributed</span><span class="p">(</span><span class="n">student_model</span><span class="p">,</span> <span class="n">device</span><span class="p">,</span> <span class="n">device_ids</span><span class="p">,</span> <span class="n">distributed</span><span class="p">,</span> <span class="n">find_unused_parameters</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">input_module_path</span> <span class="o">=</span> <span class="n">input_module_path</span>
+        <span class="n">feature_adapter</span> <span class="o">=</span> <span class="n">nn</span><span class="o">.</span><span class="n">Sequential</span><span class="p">(</span>
+            <span class="n">nn</span><span class="o">.</span><span class="n">Conv2d</span><span class="p">(</span><span class="o">**</span><span class="n">feature_adapter_config</span><span class="p">[</span><span class="s1">&#39;conv_kwargs&#39;</span><span class="p">]),</span>
+            <span class="n">nn</span><span class="o">.</span><span class="n">BatchNorm2d</span><span class="p">(</span><span class="o">**</span><span class="n">feature_adapter_config</span><span class="p">[</span><span class="s1">&#39;bn_kwargs&#39;</span><span class="p">]),</span> <span class="n">nn</span><span class="o">.</span><span class="n">ReLU</span><span class="p">(</span><span class="o">**</span><span class="n">feature_adapter_config</span><span class="p">[</span><span class="s1">&#39;relu_kwargs&#39;</span><span class="p">])</span>
+        <span class="p">)</span>
+        <span class="n">affinity_adapter</span> <span class="o">=</span> <span class="n">nn</span><span class="o">.</span><span class="n">Sequential</span><span class="p">(</span>
+            <span class="n">nn</span><span class="o">.</span><span class="n">Conv2d</span><span class="p">(</span><span class="o">**</span><span class="n">affinity_adapter_config</span><span class="p">[</span><span class="s1">&#39;conv_kwargs&#39;</span><span class="p">])</span>
+        <span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">feature_adapter</span> <span class="o">=</span> \
+            <span class="n">wrap_if_distributed</span><span class="p">(</span><span class="n">feature_adapter</span><span class="p">,</span> <span class="n">device</span><span class="p">,</span> <span class="n">device_ids</span><span class="p">,</span> <span class="n">distributed</span><span class="p">,</span> <span class="n">find_unused_parameters</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">affinity_adapter</span> <span class="o">=</span> \
+            <span class="n">wrap_if_distributed</span><span class="p">(</span><span class="n">affinity_adapter</span><span class="p">,</span> <span class="n">device</span><span class="p">,</span> <span class="n">device_ids</span><span class="p">,</span> <span class="n">distributed</span><span class="p">,</span> <span class="n">find_unused_parameters</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">forward</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">student_model</span><span class="p">(</span><span class="o">*</span><span class="n">args</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">secondary_forward</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">io_dict</span><span class="p">):</span>
+        <span class="n">feature_maps</span> <span class="o">=</span> <span class="n">io_dict</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">input_module_path</span><span class="p">][</span><span class="s1">&#39;output&#39;</span><span class="p">]</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">feature_adapter</span><span class="p">(</span><span class="n">feature_maps</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">affinity_adapter</span><span class="p">(</span><span class="n">feature_maps</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="ChannelSimilarityEmbed"><a class="viewcode-back" href="../../../subpkgs/models.html#torchdistill.models.wrapper.ChannelSimilarityEmbed">[docs]</a><span class="k">class</span> <span class="nc">ChannelSimilarityEmbed</span><span class="p">(</span><span class="n">nn</span><span class="o">.</span><span class="n">Module</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    An auxiliary module for Inter-Channel Correlation for Knowledge Distillation (ICKD). Refactored https://github.com/ADLab-AutoDrive/ICKD/blob/main/ImageNet/torchdistill/models/special.py</span>
+
+<span class="sd">    Li Liu, Qingle Huang, Sihao Lin, Hongwei Xie, Bing Wang, Xiaojun Chang, Xiaodan Liang: `&quot;Inter-Channel Correlation for Knowledge Distillation&quot; &lt;https://openaccess.thecvf.com/content/ICCV2021/html/Liu_Exploring_Inter-Channel_Correlation_for_Diversity-Preserved_Knowledge_Distillation_ICCV_2021_paper.html&gt;`_ @ ICCV 2021 (2021)</span>
+
+<span class="sd">    :param in_channels: number of input channels for the convolution layer.</span>
+<span class="sd">    :type in_channels: int</span>
+<span class="sd">    :param out_channels: number of output channels for the convolution layer.</span>
+<span class="sd">    :type out_channels: int</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">in_channels</span><span class="o">=</span><span class="mi">512</span><span class="p">,</span> <span class="n">out_channels</span><span class="o">=</span><span class="mi">128</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">conv2d</span> <span class="o">=</span> <span class="n">nn</span><span class="o">.</span><span class="n">Conv2d</span><span class="p">(</span><span class="n">in_channels</span><span class="p">,</span> <span class="n">out_channels</span><span class="p">,</span> <span class="n">kernel_size</span><span class="o">=</span><span class="mi">3</span><span class="p">,</span> <span class="n">stride</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span> <span class="n">padding</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span> <span class="n">bias</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">l2norm</span> <span class="o">=</span> <span class="n">nn</span><span class="o">.</span><span class="n">BatchNorm2d</span><span class="p">(</span><span class="n">out_channels</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">forward</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">x</span><span class="p">):</span>
+        <span class="n">x</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">conv2d</span><span class="p">(</span><span class="n">x</span><span class="p">)</span>
+        <span class="n">x</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">l2norm</span><span class="p">(</span><span class="n">x</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">x</span></div>
+
+
+<div class="viewcode-block" id="Student4ICKD"><a class="viewcode-back" href="../../../subpkgs/models.html#torchdistill.models.wrapper.Student4ICKD">[docs]</a><span class="nd">@register_auxiliary_model_wrapper</span>
+<span class="k">class</span> <span class="nc">Student4ICKD</span><span class="p">(</span><span class="n">AuxiliaryModelWrapper</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    An auxiliary student model wrapper for Inter-Channel Correlation for Knowledge Distillation (ICKD).</span>
+<span class="sd">    Referred to https://github.com/ADLab-AutoDrive/ICKD/blob/main/ImageNet/torchdistill/models/special.py</span>
+
+<span class="sd">    Li Liu, Qingle Huang, Sihao Lin, Hongwei Xie, Bing Wang, Xiaojun Chang, Xiaodan Liang: `&quot;Inter-Channel Correlation for Knowledge Distillation&quot; &lt;https://openaccess.thecvf.com/content/ICCV2021/html/Liu_Exploring_Inter-Channel_Correlation_for_Diversity-Preserved_Knowledge_Distillation_ICCV_2021_paper.html&gt;`_ @ ICCV 2021 (2021)</span>
+
+<span class="sd">    :param student_model: student model.</span>
+<span class="sd">    :type student_model: nn.Module</span>
+<span class="sd">    :param embeddings: embeddings keys and configuration.</span>
+<span class="sd">    :type embeddings: dict</span>
+<span class="sd">    :param device: target device.</span>
+<span class="sd">    :type device: torch.device</span>
+<span class="sd">    :param device_ids: target device IDs.</span>
+<span class="sd">    :type device_ids: list[int]</span>
+<span class="sd">    :param distributed: whether to be in distributed training mode.</span>
+<span class="sd">    :type distributed: bool</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">student_model</span><span class="p">,</span> <span class="n">embeddings</span><span class="p">,</span> <span class="n">device</span><span class="p">,</span> <span class="n">device_ids</span><span class="p">,</span> <span class="n">distributed</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">student_model</span> <span class="o">=</span> <span class="n">wrap_if_distributed</span><span class="p">(</span><span class="n">student_model</span><span class="p">,</span> <span class="n">device</span><span class="p">,</span> <span class="n">device_ids</span><span class="p">,</span> <span class="n">distributed</span><span class="p">)</span>
+        <span class="n">io_path_pairs</span> <span class="o">=</span> <span class="nb">list</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">embed_dict</span> <span class="o">=</span> <span class="n">nn</span><span class="o">.</span><span class="n">ModuleDict</span><span class="p">()</span>
+        <span class="k">for</span> <span class="n">embed_key</span><span class="p">,</span> <span class="n">embed_params</span> <span class="ow">in</span> <span class="n">embeddings</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+            <span class="n">embed</span> <span class="o">=</span> <span class="n">ChannelSimilarityEmbed</span><span class="p">(</span><span class="o">**</span><span class="n">embed_params</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">embed_dict</span><span class="p">[</span><span class="n">embed_key</span><span class="p">]</span> <span class="o">=</span> <span class="n">wrap_if_distributed</span><span class="p">(</span><span class="n">embed</span><span class="p">,</span> <span class="n">device</span><span class="p">,</span> <span class="n">device_ids</span><span class="p">,</span> <span class="n">distributed</span><span class="p">)</span>
+            <span class="n">io_path_pairs</span><span class="o">.</span><span class="n">append</span><span class="p">((</span><span class="n">embed_key</span><span class="p">,</span> <span class="n">embed_params</span><span class="p">[</span><span class="s1">&#39;io&#39;</span><span class="p">],</span> <span class="n">embed_params</span><span class="p">[</span><span class="s1">&#39;path&#39;</span><span class="p">]))</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">io_path_pairs</span> <span class="o">=</span> <span class="n">io_path_pairs</span>
+
+    <span class="k">def</span> <span class="nf">forward</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">x</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">student_model</span><span class="p">(</span><span class="n">x</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">secondary_forward</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">io_dict</span><span class="p">):</span>
+        <span class="k">for</span> <span class="n">embed_key</span><span class="p">,</span> <span class="n">io_type</span><span class="p">,</span> <span class="n">module_path</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">io_path_pairs</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">embed_dict</span><span class="p">[</span><span class="n">embed_key</span><span class="p">](</span><span class="n">io_dict</span><span class="p">[</span><span class="n">module_path</span><span class="p">][</span><span class="n">io_type</span><span class="p">])</span></div>
+
+
+<div class="viewcode-block" id="SRDModelWrapper"><a class="viewcode-back" href="../../../subpkgs/models.html#torchdistill.models.wrapper.SRDModelWrapper">[docs]</a><span class="nd">@register_auxiliary_model_wrapper</span>
+<span class="k">class</span> <span class="nc">SRDModelWrapper</span><span class="p">(</span><span class="n">AuxiliaryModelWrapper</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    An auxiliary model wrapper for Understanding the Role of the Projector in Knowledge Distillation.</span>
+<span class="sd">    Referred to https://github.com/roymiles/Simple-Recipe-Distillation/blob/main/imagenet/torchdistill/losses/single.py</span>
+
+<span class="sd">    Roy Miles, Krystian Mikolajczyk: `&quot;Understanding the Role of the Projector in Knowledge Distillation&quot; &lt;https://arxiv.org/abs/2303.11098&gt;`_ @ AAAI 2024 (2024)</span>
+
+<span class="sd">    :param model: model.</span>
+<span class="sd">    :type model: nn.Module</span>
+<span class="sd">    :param input_module: input module configuration.</span>
+<span class="sd">    :type input_module: dict</span>
+<span class="sd">    :param linear_kwargs: nn.Linear keyword arguments.</span>
+<span class="sd">    :type linear_kwargs: dict or None</span>
+<span class="sd">    :param norm_kwargs: nn.BatchNorm1d keyword arguments.</span>
+<span class="sd">    :type norm_kwargs: dict</span>
+<span class="sd">    :param device: target device.</span>
+<span class="sd">    :type device: torch.device</span>
+<span class="sd">    :param device_ids: target device IDs.</span>
+<span class="sd">    :type device_ids: list[int]</span>
+<span class="sd">    :param distributed: whether to be in distributed training mode.</span>
+<span class="sd">    :type distributed: bool</span>
+<span class="sd">    :param teacher_model: teacher model.</span>
+<span class="sd">    :type teacher_model: nn.Module or None</span>
+<span class="sd">    :param student_model: student model.</span>
+<span class="sd">    :type student_model: nn.Module or None</span>
+<span class="sd">    :param find_unused_parameters: ``find_unused_parameters`` for DistributedDataParallel.</span>
+<span class="sd">    :type find_unused_parameters: bool or None</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">input_module</span><span class="p">,</span> <span class="n">norm_kwargs</span><span class="p">,</span> <span class="n">device</span><span class="p">,</span> <span class="n">device_ids</span><span class="p">,</span> <span class="n">distributed</span><span class="p">,</span> <span class="n">linear_kwargs</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+                 <span class="n">teacher_model</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">student_model</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">find_unused_parameters</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">()</span>
+        <span class="n">is_teacher</span> <span class="o">=</span> <span class="n">teacher_model</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">is_teacher</span><span class="p">:</span>
+            <span class="n">student_model</span> <span class="o">=</span> <span class="n">wrap_if_distributed</span><span class="p">(</span><span class="n">student_model</span><span class="p">,</span> <span class="n">device</span><span class="p">,</span> <span class="n">device_ids</span><span class="p">,</span> <span class="n">distributed</span><span class="p">,</span> <span class="n">find_unused_parameters</span><span class="p">)</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">model</span> <span class="o">=</span> <span class="n">teacher_model</span> <span class="k">if</span> <span class="n">is_teacher</span> <span class="k">else</span> <span class="n">student_model</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">input_module_path</span> <span class="o">=</span> <span class="n">input_module</span><span class="p">[</span><span class="s1">&#39;path&#39;</span><span class="p">]</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">input_module_io</span> <span class="o">=</span> <span class="n">input_module</span><span class="p">[</span><span class="s1">&#39;io&#39;</span><span class="p">]</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">linear</span> <span class="o">=</span> <span class="n">wrap_if_distributed</span><span class="p">(</span><span class="n">nn</span><span class="o">.</span><span class="n">Linear</span><span class="p">(</span><span class="o">**</span><span class="n">linear_kwargs</span><span class="p">),</span> <span class="n">device</span><span class="p">,</span> <span class="n">device_ids</span><span class="p">,</span> <span class="n">distributed</span><span class="p">)</span> \
+            <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">linear_kwargs</span><span class="p">,</span> <span class="nb">dict</span><span class="p">)</span> <span class="k">else</span> <span class="kc">None</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">norm_layer</span> <span class="o">=</span> <span class="n">wrap_if_distributed</span><span class="p">(</span><span class="n">nn</span><span class="o">.</span><span class="n">BatchNorm1d</span><span class="p">(</span><span class="o">**</span><span class="n">norm_kwargs</span><span class="p">),</span> <span class="n">device</span><span class="p">,</span> <span class="n">device_ids</span><span class="p">,</span> <span class="n">distributed</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">forward</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">x</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">model</span><span class="p">(</span><span class="n">x</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">secondary_forward</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">io_dict</span><span class="p">):</span>
+        <span class="n">z</span> <span class="o">=</span> <span class="n">io_dict</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">input_module_path</span><span class="p">][</span><span class="bp">self</span><span class="o">.</span><span class="n">input_module_io</span><span class="p">]</span>
+        <span class="n">z</span> <span class="o">=</span> <span class="n">z</span><span class="o">.</span><span class="n">mean</span><span class="p">(</span><span class="o">-</span><span class="mi">1</span><span class="p">)</span><span class="o">.</span><span class="n">mean</span><span class="p">(</span><span class="o">-</span><span class="mi">1</span><span class="p">)</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">linear</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">z</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">linear</span><span class="p">(</span><span class="n">z</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">norm_layer</span><span class="p">(</span><span class="n">z</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="build_auxiliary_model_wrapper"><a class="viewcode-back" href="../../../subpkgs/models.html#torchdistill.models.wrapper.build_auxiliary_model_wrapper">[docs]</a><span class="k">def</span> <span class="nf">build_auxiliary_model_wrapper</span><span class="p">(</span><span class="n">model_config</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Builds an auxiliary model wrapper for either teacher or student models.</span>
+
+<span class="sd">    :param model_config: configuration to build the auxiliary model wrapper. Should contain either &#39;teacher_model&#39; or `student_model&#39;.</span>
+<span class="sd">    :type model_config: dict</span>
+<span class="sd">    :return: auxiliary model wrapper.</span>
+<span class="sd">    :rtype: nn.Module</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">auxiliary_model_wrapper_config</span> <span class="o">=</span> <span class="n">model_config</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;auxiliary_model_wrapper&#39;</span><span class="p">,</span> <span class="nb">dict</span><span class="p">())</span>
+    <span class="n">auxiliary_model_wrapper_key</span> <span class="o">=</span> <span class="n">auxiliary_model_wrapper_config</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;key&#39;</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">auxiliary_model_wrapper_key</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="k">return</span> <span class="kc">None</span>
+
+    <span class="n">auxiliary_model_wrapper_kwargs</span> <span class="o">=</span> <span class="n">auxiliary_model_wrapper_config</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;kwargs&#39;</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">auxiliary_model_wrapper_kwargs</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="n">auxiliary_model_wrapper_kwargs</span> <span class="o">=</span> <span class="nb">dict</span><span class="p">()</span>
+    <span class="k">elif</span> <span class="s1">&#39;teacher_model&#39;</span> <span class="ow">in</span> <span class="n">kwargs</span><span class="p">:</span>
+        <span class="n">kwargs</span><span class="p">[</span><span class="s1">&#39;teacher_model&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">redesign_model</span><span class="p">(</span><span class="n">kwargs</span><span class="p">[</span><span class="s1">&#39;teacher_model&#39;</span><span class="p">],</span> <span class="n">auxiliary_model_wrapper_config</span><span class="p">,</span> <span class="s1">&#39;teacher&#39;</span><span class="p">,</span> <span class="s1">&#39;pre-auxiliary&#39;</span><span class="p">)</span>
+    <span class="k">elif</span> <span class="s1">&#39;student_model&#39;</span> <span class="ow">in</span> <span class="n">kwargs</span><span class="p">:</span>
+        <span class="n">kwargs</span><span class="p">[</span><span class="s1">&#39;student_model&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">redesign_model</span><span class="p">(</span><span class="n">kwargs</span><span class="p">[</span><span class="s1">&#39;student_model&#39;</span><span class="p">],</span> <span class="n">auxiliary_model_wrapper_config</span><span class="p">,</span> <span class="s1">&#39;student&#39;</span><span class="p">,</span> <span class="s1">&#39;pre-auxiliary&#39;</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">get_auxiliary_model_wrapper</span><span class="p">(</span><span class="n">auxiliary_model_wrapper_key</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">,</span> <span class="o">**</span><span class="n">auxiliary_model_wrapper_kwargs</span><span class="p">)</span></div>
+</pre></div>
+
+           </div>
+          </div>
+          <footer>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2023, Yoshitomo Matsubara.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script>
+    <!-- Theme Analytics -->
+    <script async src="https://www.googletagmanager.com/gtag/js?id=G-LYK8SSJ7R5"></script>
+    <script>
+      window.dataLayer = window.dataLayer || [];
+      function gtag(){dataLayer.push(arguments);}
+      gtag('js', new Date());
+
+      gtag('config', 'G-LYK8SSJ7R5', {
+          'anonymize_ip': false,
+      });
+    </script> 
+
+</body>
+</html>
