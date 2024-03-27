@@ -42,7 +42,7 @@ Original work
 * KR: `"Distilling Knowledge via Knowledge Review" <https://openaccess.thecvf.com/content/CVPR2021/html/Chen_Distilling_Knowledge_via_Knowledge_Review_CVPR_2021_paper.html>`_
 * ICKD: `"Exploring Inter-Channel Correlation for Diversity-Preserved Knowledge Distillation" <https://openaccess.thecvf.com/content/ICCV2021/html/Liu_Exploring_Inter-Channel_Correlation_for_Diversity-Preserved_Knowledge_Distillation_ICCV_2021_paper.html>`_
 * DIST: `"Knowledge Distillation from A Stronger Teacher" <https://proceedings.neurips.cc/paper_files/paper/2022/hash/da669dfd3c36c93905a17ddba01eef06-Abstract-Conference.html>`_
-
+* SRD: `"Understanding the Role of the Projector in Knowledge Distillation" <https://ojs.aaai.org/index.php/AAAI/article/view/28219>`_
 
 References
 ^^^^

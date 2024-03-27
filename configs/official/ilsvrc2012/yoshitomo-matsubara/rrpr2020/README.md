@@ -35,7 +35,7 @@ You can find configuration and log files for both 1) and 2) in `imagenet.zip`.
 ### Command to test with checkpoints
 - Download [imagenet.zip](https://github.com/yoshitomo-matsubara/torchdistill/releases/download/v0.0.1/imagenet.zip)
 - Unzip `imagenet.zip`
-- Update `dst_ckpt` of student models defined in the yaml files in this directory with unzipped checkpoint file paths
+- Update `src_ckpt` of student models defined in the yaml files in this directory with unzipped checkpoint file paths
 
 #### Knowledge Distillation
 ```
