@@ -5,6 +5,7 @@
 [![Build Status](https://travis-ci.com/yoshitomo-matsubara/torchdistill.svg?branch=main)](https://travis-ci.com/github/yoshitomo-matsubara/torchdistill)
 [![GitHub Discussions](https://img.shields.io/github/discussions/yoshitomo-matsubara/torchdistill)](https://github.com/yoshitomo-matsubara/torchdistill/discussions)
 [![DOI:10.1007/978-3-030-76423-4_3](https://zenodo.org/badge/DOI/10.1007/978-3-030-76423-4_3.svg)](https://doi.org/10.1007/978-3-030-76423-4_3)
+[![DOI:10.18653/v1/2023.nlposs-1.18](https://zenodo.org/badge/DOI/10.18653/v1/2023.nlposs-1.18.svg)](https://doi.org/10.18653/v1/2023.nlposs-1.18)
 
 
 ***torchdistill*** (formerly *kdkit*) offers various state-of-the-art knowledge distillation methods 
