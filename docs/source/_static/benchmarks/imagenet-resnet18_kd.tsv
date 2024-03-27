@@ -8,7 +8,7 @@ Tf-KD  	70.42	70.52	`torchdistill/configs/official/ <https://github.com/yoshitom
 SSKD  	71.62	70.09	`torchdistill/configs/official/ <https://github.com/yoshitomo-matsubara/torchdistill/tree/main/configs/official/ilsvrc2012/yoshitomo-matsubara/rrpr2020/>`_
 :math:`L_2`  	70.90	71.08	`torchdistill/configs/official/ <https://github.com/yoshitomo-matsubara/torchdistill/tree/main/configs/official/ilsvrc2012/yoshitomo-matsubara/rrpr2020/>`_
 PAD-:math:`L_2`  	71.71	71.71	`torchdistill/configs/official/ <https://github.com/yoshitomo-matsubara/torchdistill/tree/main/configs/official/ilsvrc2012/yoshitomo-matsubara/rrpr2020/>`_
-SRD  	71.63	71.65	`torchdistill/configs/sample/ <https://github.com/yoshitomo-matsubara/torchdistill/tree/main/configs/official/ilsvrc2012/roymiles/aaai2024/>`_
 KR  	71.61	71.64	`torchdistill/configs/official/ <https://github.com/yoshitomo-matsubara/torchdistill/blob/main/configs/official/ilsvrc2012/yoshitomo-matsubara/nlp-oss2023/>`_
 ICKD  	72.19	68.34	`torchdistill/configs/sample/ <https://github.com/yoshitomo-matsubara/torchdistill/tree/main/configs/sample/ilsvrc2012/ickd/>`_
 DIST  	72.07	71.95	`torchdistill/configs/sample/ <https://github.com/yoshitomo-matsubara/torchdistill/tree/main/configs/sample/ilsvrc2012/dist/>`_
+SRD  	71.63	71.65	`torchdistill/configs/official/ <https://github.com/yoshitomo-matsubara/torchdistill/tree/main/configs/official/ilsvrc2012/roymiles/aaai2024/>`_
