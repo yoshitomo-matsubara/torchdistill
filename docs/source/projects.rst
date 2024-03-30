@@ -27,6 +27,16 @@ It is pip-installable and published as a PyPI package i.e., you can install it b
 Papers
 *****
 
+FrankenSplit: Efficient Neural Feature Compression With Shallow Variational Bottleneck Injection for Mobile Edge Computing
+----
+* Author(s): Alireza Furutanpey, Philipp Raith, Schahram Dustdar
+* Venue: IEEE Transactions on Mobile Computing
+* PDF: `Paper <https://ieeexplore.ieee.org/document/10480247/>`_
+* Code: `GitHub <https://github.com/rezafuru/FrankenSplit>`_
+
+**Abstract**: The rise of mobile AI accelerators allows latency-sensitive applications to execute lightweight Deep Neural Networks (DNNs) on the client side. However, critical applications require powerful models that edge devices cannot host and must therefore offload requests, where the high-dimensional data will compete for limited bandwidth. Split Computing (SC) alleviates resource inefficiency by partitioning DNN layers across devices, but current methods are overly specific and only marginally reduce bandwidth consumption. This work proposes shifting away from focusing on executing shallow layers of partitioned DNNs. Instead, it advocates concentrating the local resources on variational compression optimized for machine interpretability. We introduce a novel framework for resource-conscious compression models and extensively evaluate our method in an environment reflecting the asymmetric resource distribution between edge devices and servers. Our method achieves 60% lower bitrate than a state-of-the-art SC method without decreasing accuracy and is up to 16x faster than offloading with existing codec standards.
+
+
 torchdistill Meets Hugging Face Libraries for Reproducible, Coding-Free Deep Learning Studies: A Case Study on NLP
 ----
 * Author(s): Yoshitomo Matsubara
