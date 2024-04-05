@@ -29,7 +29,7 @@ The configuration and log files in this directory are used for distributed train
 
 ---
 ### Command to test with checkpoints
-- Download https://github.com/yoshitomo-matsubara/torchdistill/releases/download/v1.1.0/ilsvrc2012-resnet18_from_resnet34.pt or from [Google Drive]( https://drive.google.com/drive/folders/1P5mePA0vwWkGqzJCiExfVzpqZEpEDEEz?usp=sharing)
+- Download https://github.com/yoshitomo-matsubara/torchdistill/releases/download/v1.1.0/ilsvrc2012.zip from [Google Drive]( https://drive.google.com/drive/folders/1P5mePA0vwWkGqzJCiExfVzpqZEpEDEEz?usp=sharing)
 - Update `src_ckpt` of student models defined in the yaml file in this directory with the checkpoint file path
 
 #### Simple Recipe Distillation
