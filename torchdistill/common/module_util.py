@@ -105,15 +105,17 @@ def get_module(root_module, module_path):
                     if isinstance(module, Sequential) and module_name.lstrip('-').isnumeric():
                         module = module[int(module_name)]
                     else:
-                        logger.info('`{}` of `{}` could not be reached in `{}`'.format(module_name, module_path,
-                                                                                       type(root_module).__name__))
+                        logger.warning('`{}` of `{}` could not be reached in `{}`'.format(
+                            module_name, module_path, type(root_module).__name__)
+                        )
                 else:
                     module = getattr(module, module_name)
             elif isinstance(module, (Sequential, ModuleList)) and module_name.lstrip('-').isnumeric():
                 module = module[int(module_name)]
             else:
-                logger.info('`{}` of `{}` could not be reached in `{}`'.format(module_name, module_path,
-                                                                               type(root_module).__name__))
+                logger.warning('`{}` of `{}` could not be reached in `{}`'.format(
+                    module_name, module_path, type(root_module).__name__)
+                )
                 return None
         else:
             module = getattr(module, module_name)
