@@ -173,11 +173,9 @@ def is_dist_avail_and_initialized():
     :return: True if distributed mode is available and initialized.
     :rtype: bool
     """
-    if not dist.is_available():
-        return False
-    if not dist.is_initialized():
-        return False
-    return True
+    if dist.is_available() and dist.is_initialized():
+        return True
+    return False
 
 
 def get_world_size():
