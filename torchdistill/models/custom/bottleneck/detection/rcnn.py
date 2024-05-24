@@ -49,7 +49,6 @@ def custom_maskrcnn_resnet_fpn(backbone, weights=None, progress=True,
     mask_roi_pool = None if num_feature_maps == 4 \
         else MultiScaleRoIAlign(featmap_names=[str(i) for i in range(num_feature_maps)],
                                 output_size=14, sampling_ratio=2)
-    print(kwargs)
     model = MaskRCNN(backbone_model, num_classes, box_roi_pool=box_roi_pool, mask_roi_pool=mask_roi_pool, **kwargs)
     if weights is not None:
         state_dict = \
