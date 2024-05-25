@@ -2,7 +2,7 @@
 
 # torchdistill: A Modular, Configuration-Driven Framework for Knowledge Distillation
 [![PyPI version](https://img.shields.io/pypi/v/torchdistill?color=00cc00)](https://pypi.org/project/torchdistill/)
-[![Build Status](https://travis-ci.com/yoshitomo-matsubara/torchdistill.svg?branch=main)](https://travis-ci.com/github/yoshitomo-matsubara/torchdistill)
+[![Build Status](https://app.travis-ci.com/yoshitomo-matsubara/torchdistill.svg?token=BsLDELKSQ5j23aFsTQKc&branch=main)](https://travis-ci.com/github/yoshitomo-matsubara/torchdistill)
 [![GitHub Discussions](https://img.shields.io/github/discussions/yoshitomo-matsubara/torchdistill)](https://github.com/yoshitomo-matsubara/torchdistill/discussions)
 [![DOI:10.1007/978-3-030-76423-4_3](https://zenodo.org/badge/DOI/10.1007/978-3-030-76423-4_3.svg)](https://doi.org/10.1007/978-3-030-76423-4_3)
 [![DOI:10.18653/v1/2023.nlposs-1.18](https://zenodo.org/badge/DOI/10.18653/v1/2023.nlposs-1.18.svg)](https://doi.org/10.18653/v1/2023.nlposs-1.18)
@@ -121,11 +121,13 @@ pipenv install "-e ."
 ```
 
 
-## Issues / Questions / Requests
+## Issues / Questions / Requests / Pull Requests
 Feel free to create an issue if you find a bug.  
 If you have either a question or feature request, start a new discussion [here](https://github.com/yoshitomo-matsubara/torchdistill/discussions).
 Please search through [Issues](https://github.com/yoshitomo-matsubara/torchdistill/issues) and [Discussions](https://github.com/yoshitomo-matsubara/torchdistill/discussions) and make sure your issue/question/request has not been addressed yet.
 
+Pull requests are welcome. 
+Please start with an issue and discuss solutions with me rather than start with a pull request. 
 
 ## Citation
 If you use ***torchdistill*** in your research, please cite the following papers:  
