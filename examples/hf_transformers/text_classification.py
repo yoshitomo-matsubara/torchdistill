@@ -43,7 +43,7 @@ from torchdistill.core.distillation import get_distillation_box
 from torchdistill.core.training import get_training_box
 from torchdistill.datasets import util
 from torchdistill.datasets.registry import register_collate_func
-from torchdistill.misc.log import setup_log_file, SmoothedValue, MetricLogger
+from torchdistill.misc.log import set_basic_log_config, setup_log_file, SmoothedValue, MetricLogger
 
 logger = def_logger.getChild(__name__)
 
@@ -206,6 +206,7 @@ def predict_private(model, dataset_dict, label_names_dict, is_regression, accele
 
 
 def main(args):
+    set_basic_log_config()
     log_file_path = args.run_log
     if is_main_process() and log_file_path is not None:
         setup_log_file(os.path.expanduser(log_file_path))
