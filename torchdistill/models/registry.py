@@ -3,7 +3,6 @@ import torch
 from ..common import misc_util
 
 MODEL_DICT = dict()
-MODEL_DICT = dict()
 ADAPTATION_MODULE_DICT = dict()
 AUXILIARY_MODEL_WRAPPER_DICT = dict()
 MODULE_DICT = misc_util.get_classes_as_dict('torch.nn')
