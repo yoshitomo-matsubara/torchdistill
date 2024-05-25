@@ -15,6 +15,9 @@ logger = def_logger.getChild(__name__)
 
 
 def set_basic_log_config():
+    """
+    Sets a default basic configuration for logging.
+    """
     logging.basicConfig(
         format=LOGGING_FORMAT,
         datefmt='%Y/%m/%d %H:%M:%S',
