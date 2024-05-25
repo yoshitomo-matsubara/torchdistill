@@ -296,7 +296,7 @@ def load_ckpt(ckpt_file_path, model=None, optimizer=None, lr_scheduler=None, str
             logger.info('Loading model parameters only')
             model.load_state_dict(ckpt, strict=strict)
         else:
-            logger.info('No model parameters found')
+            logger.warning('No model parameters found')
 
     if optimizer is not None:
         if 'optimizer' in ckpt:
@@ -306,7 +306,7 @@ def load_ckpt(ckpt_file_path, model=None, optimizer=None, lr_scheduler=None, str
             logger.info('Loading optimizer parameters only')
             optimizer.load_state_dict(ckpt)
         else:
-            logger.info('No optimizer parameters found')
+            logger.warning('No optimizer parameters found')
 
     if lr_scheduler is not None:
         if 'lr_scheduler' in ckpt:
@@ -316,7 +316,7 @@ def load_ckpt(ckpt_file_path, model=None, optimizer=None, lr_scheduler=None, str
             logger.info('Loading scheduler parameters only')
             lr_scheduler.load_state_dict(ckpt)
         else:
-            logger.info('No scheduler parameters found')
+            logger.warning('No scheduler parameters found')
     return ckpt.get('best_value', 0.0), ckpt.get('args', None)
 
 
