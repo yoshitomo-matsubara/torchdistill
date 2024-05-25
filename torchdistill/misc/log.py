@@ -1,4 +1,5 @@
 import datetime
+import logging
 import time
 from collections import defaultdict, deque
 from logging import FileHandler, Formatter
@@ -11,6 +12,14 @@ from ..common.file_util import make_parent_dirs
 from ..common.main_util import is_dist_avail_and_initialized
 
 logger = def_logger.getChild(__name__)
+
+
+def set_basic_log_config():
+    logging.basicConfig(
+        format=LOGGING_FORMAT,
+        datefmt='%Y/%m/%d %H:%M:%S',
+        level=logging.INFO
+    )
 
 
 def setup_log_file(log_file_path):

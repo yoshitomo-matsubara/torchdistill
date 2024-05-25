@@ -17,7 +17,7 @@ from torchdistill.common.main_util import is_main_process, init_distributed_mode
 from torchdistill.core.distillation import get_distillation_box
 from torchdistill.core.training import get_training_box
 from torchdistill.datasets.util import build_data_loader
-from torchdistill.misc.log import setup_log_file, SmoothedValue, MetricLogger
+from torchdistill.misc.log import set_basic_log_config, setup_log_file, SmoothedValue, MetricLogger
 from torchdistill.models.official import get_semantic_segmentation_model
 from torchdistill.models.registry import get_model
 from utils.eval import SegEvaluator
@@ -151,6 +151,7 @@ def train(teacher_model, student_model, dataset_dict, src_ckpt_file_path, dst_ck
 
 
 def main(args):
+    set_basic_log_config()
     log_file_path = args.run_log
     if is_main_process() and log_file_path is not None:
         setup_log_file(os.path.expanduser(log_file_path))
