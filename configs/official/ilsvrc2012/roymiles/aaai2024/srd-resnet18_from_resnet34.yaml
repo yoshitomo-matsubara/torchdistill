@@ -116,8 +116,8 @@ train:
     sequential: []
     forward_hook:
       input: []
-      output: ['model.layer4']
-    wrapper: 'DataParallel'
+      output: ['model.layer4', 'norm_layer']
+    wrapper:
     requires_grad: False
   student:
     forward_proc: 'forward_batch_only'
@@ -139,8 +139,8 @@ train:
     frozen_modules: []
     forward_hook:
       input: []
-      output: ['model.layer4']
-    wrapper: 'DataParallel'
+      output: ['model.layer4', 'norm_layer']
+    wrapper:
     requires_grad: True
   optimizer:
     key: 'SGD'
@@ -176,9 +176,9 @@ train:
           criterion:
             key: 'SRDLoss'
             kwargs:
-              student_feature_module_path: 'model.layer4'
+              student_feature_module_path: 'norm_layer'
               student_feature_module_io: 'output'
-              teacher_feature_module_path: 'model.layer4'
+              teacher_feature_module_path: 'norm_layer'
               teacher_feature_module_io: 'output'
               student_linear_module_path: '.'
               student_linear_module_io: 'output'

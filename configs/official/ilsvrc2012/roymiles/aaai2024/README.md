@@ -24,7 +24,7 @@ The configuration and log files in this directory are used for distributed train
 #### Top-1 validation accuracy of student model on ILSVRC 2012
 | T: ResNet-34    | Pretrained |   SRD |  
 | :---            | ---:       |------:|  
-| S: ResNet-18\*  | 69.76      | 71.65 |  
+| S: ResNet-18\*  | 69.76      | 71.92 |  
 
 
 ---
