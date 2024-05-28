@@ -27,6 +27,15 @@ It is pip-installable and published as a PyPI package i.e., you can install it b
 Papers
 *****
 
+Understanding the Role of the Projector in Knowledge Distillation
+----
+* Author(s): Roy Miles, Krystian Mikolajczyk
+* Venue: Proceedings of the 38th AAAI Conference on Artificial Intelligence (AAAI-24)
+* PDF: `Paper <https://ojs.aaai.org/index.php/AAAI/article/view/28219/28433/>`_
+* Code: `GitHub <https://github.com/roymiles/Simple-Recipe-Distillation>`_
+
+**Abstract**: In this paper we revisit the efficacy of knowledge distillation as a function matching and metric learning problem. In doing so we verify three important design decisions, namely the normalisation, soft maximum function, and projection layers as key ingredients. We theoretically show that the projector implicitly encodes information on past examples, enabling relational gradients for the student. We then show that the normalisation of representations is tightly coupled with the training dynamics of this projector, which can have a large impact on the students performance. Finally, we show that a simple soft maximum function can be used to address any significant capacity gap problems. Experimental results on various benchmark datasets demonstrate that using these insights can lead to superior or comparable performance to state-of-the-art knowledge distillation techniques, despite being much more computationally efficient. In particular, we obtain these results across image classification (CIFAR100 and ImageNet), object detection (COCO2017), and on more difficult distillation objectives, such as training data efficient transformers, whereby we attain a 77.2% top-1 accuracy with DeiT-Ti on ImageNet. Code and models are publicly available.
+
 FrankenSplit: Efficient Neural Feature Compression With Shallow Variational Bottleneck Injection for Mobile Edge Computing
 ----
 * Author(s): Alireza Furutanpey, Philipp Raith, Schahram Dustdar
