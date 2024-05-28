@@ -1,0 +1,1505 @@
+<!DOCTYPE html>
+<html class="writer-html5" lang="en">
+<head>
+  <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>torchdistill.models &mdash; torchdistill v1.1.1-dev documentation</title>
+      <link rel="stylesheet" type="text/css" href="../_static/pygments.css?v=80d5e7a1" />
+      <link rel="stylesheet" type="text/css" href="../_static/css/theme.css?v=19f00094" />
+
+  
+  <!--[if lt IE 9]>
+    <script src="../_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+        <script src="../_static/jquery.js?v=5d32c60e"></script>
+        <script src="../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+        <script data-url_root="../" id="documentation_options" src="../_static/documentation_options.js?v=0b675245"></script>
+        <script src="../_static/doctools.js?v=888ff710"></script>
+        <script src="../_static/sphinx_highlight.js?v=4825356b"></script>
+    <script src="../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" />
+    <link rel="next" title="torchdistill.losses" href="losses.html" />
+    <link rel="prev" title="torchdistill.datasets" href="datasets.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="../index.html">
+            
+              <img src="../_static/logo-white.png" class="logo" alt="Logo"/>
+          </a>
+              <div class="version">
+                v1.1.1-dev
+              </div>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">📚 Overview</span></p>
+<ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="../usage.html">Usage</a></li>
+<li class="toctree-l1 current"><a class="reference internal" href="../package.html">torchdistill API</a><ul class="current">
+<li class="toctree-l2"><a class="reference internal" href="core.html">torchdistill.core</a></li>
+<li class="toctree-l2"><a class="reference internal" href="datasets.html">torchdistill.datasets</a></li>
+<li class="toctree-l2 current"><a class="current reference internal" href="#">torchdistill.models</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#torchdistill-models-registry">torchdistill.models.registry</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#torchdistill.models.registry.register_model"><code class="docutils literal notranslate"><span class="pre">register_model()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#torchdistill.models.registry.register_adaptation_module"><code class="docutils literal notranslate"><span class="pre">register_adaptation_module()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#torchdistill.models.registry.register_auxiliary_model_wrapper"><code class="docutils literal notranslate"><span class="pre">register_auxiliary_model_wrapper()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#torchdistill.models.registry.get_model"><code class="docutils literal notranslate"><span class="pre">get_model()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#torchdistill.models.registry.get_adaptation_module"><code class="docutils literal notranslate"><span class="pre">get_adaptation_module()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#torchdistill.models.registry.get_auxiliary_model_wrapper"><code class="docutils literal notranslate"><span class="pre">get_auxiliary_model_wrapper()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="#torchdistill-models-classification">torchdistill.models.classification</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#torchdistill-models-classification-densenet">torchdistill.models.classification.densenet</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#torchdistill-models-classification-resnet">torchdistill.models.classification.resnet</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#torchdistill-models-classification-wide-resnet">torchdistill.models.classification.wide_resnet</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="#torchdistill-models-official">torchdistill.models.official</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#torchdistill.models.official.get_image_classification_model"><code class="docutils literal notranslate"><span class="pre">get_image_classification_model()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#torchdistill.models.official.get_object_detection_model"><code class="docutils literal notranslate"><span class="pre">get_object_detection_model()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#torchdistill.models.official.get_semantic_segmentation_model"><code class="docutils literal notranslate"><span class="pre">get_semantic_segmentation_model()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#torchdistill.models.official.get_vision_model"><code class="docutils literal notranslate"><span class="pre">get_vision_model()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="#torchdistill-models-adaptation">torchdistill.models.adaptation</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#torchdistill.models.adaptation.ConvReg"><code class="docutils literal notranslate"><span class="pre">ConvReg</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="#torchdistill-models-wrapper">torchdistill.models.wrapper</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#torchdistill.models.wrapper.AuxiliaryModelWrapper"><code class="docutils literal notranslate"><span class="pre">AuxiliaryModelWrapper</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#torchdistill.models.wrapper.EmptyModule"><code class="docutils literal notranslate"><span class="pre">EmptyModule</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#torchdistill.models.wrapper.Paraphraser4FactorTransfer"><code class="docutils literal notranslate"><span class="pre">Paraphraser4FactorTransfer</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#torchdistill.models.wrapper.Translator4FactorTransfer"><code class="docutils literal notranslate"><span class="pre">Translator4FactorTransfer</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#torchdistill.models.wrapper.Teacher4FactorTransfer"><code class="docutils literal notranslate"><span class="pre">Teacher4FactorTransfer</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#torchdistill.models.wrapper.Student4FactorTransfer"><code class="docutils literal notranslate"><span class="pre">Student4FactorTransfer</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#torchdistill.models.wrapper.Connector4DAB"><code class="docutils literal notranslate"><span class="pre">Connector4DAB</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#torchdistill.models.wrapper.Regressor4VID"><code class="docutils literal notranslate"><span class="pre">Regressor4VID</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#torchdistill.models.wrapper.VariationalDistributor4VID"><code class="docutils literal notranslate"><span class="pre">VariationalDistributor4VID</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#torchdistill.models.wrapper.Linear4CCKD"><code class="docutils literal notranslate"><span class="pre">Linear4CCKD</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#torchdistill.models.wrapper.Normalizer4CRD"><code class="docutils literal notranslate"><span class="pre">Normalizer4CRD</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#torchdistill.models.wrapper.Linear4CRD"><code class="docutils literal notranslate"><span class="pre">Linear4CRD</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#torchdistill.models.wrapper.HeadRCNN"><code class="docutils literal notranslate"><span class="pre">HeadRCNN</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#torchdistill.models.wrapper.SSWrapper4SSKD"><code class="docutils literal notranslate"><span class="pre">SSWrapper4SSKD</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#torchdistill.models.wrapper.VarianceBranch4PAD"><code class="docutils literal notranslate"><span class="pre">VarianceBranch4PAD</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#torchdistill.models.wrapper.AttentionBasedFusion"><code class="docutils literal notranslate"><span class="pre">AttentionBasedFusion</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#torchdistill.models.wrapper.Student4KnowledgeReview"><code class="docutils literal notranslate"><span class="pre">Student4KnowledgeReview</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#torchdistill.models.wrapper.Student4KTAAD"><code class="docutils literal notranslate"><span class="pre">Student4KTAAD</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#torchdistill.models.wrapper.ChannelSimilarityEmbed"><code class="docutils literal notranslate"><span class="pre">ChannelSimilarityEmbed</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#torchdistill.models.wrapper.Student4ICKD"><code class="docutils literal notranslate"><span class="pre">Student4ICKD</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#torchdistill.models.wrapper.SRDModelWrapper"><code class="docutils literal notranslate"><span class="pre">SRDModelWrapper</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#torchdistill.models.wrapper.build_auxiliary_model_wrapper"><code class="docutils literal notranslate"><span class="pre">build_auxiliary_model_wrapper()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="#torchdistill-models-util">torchdistill.models.util</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#torchdistill.models.util.wrap_if_distributed"><code class="docutils literal notranslate"><span class="pre">wrap_if_distributed()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#torchdistill.models.util.load_module_ckpt"><code class="docutils literal notranslate"><span class="pre">load_module_ckpt()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#torchdistill.models.util.save_module_ckpt"><code class="docutils literal notranslate"><span class="pre">save_module_ckpt()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#torchdistill.models.util.add_submodule"><code class="docutils literal notranslate"><span class="pre">add_submodule()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#torchdistill.models.util.build_sequential_container"><code class="docutils literal notranslate"><span class="pre">build_sequential_container()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#torchdistill.models.util.redesign_model"><code class="docutils literal notranslate"><span class="pre">redesign_model()</span></code></a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="losses.html">torchdistill.losses</a></li>
+<li class="toctree-l2"><a class="reference internal" href="optim.html">torchdistill.optim</a></li>
+<li class="toctree-l2"><a class="reference internal" href="common.html">torchdistill.common</a></li>
+<li class="toctree-l2"><a class="reference internal" href="misc.html">torchdistill.misc</a></li>
+</ul>
+</li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">🧑🏻‍💻 Research</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../benchmarks.html">Benchmarks</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../projects.html">Projects</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../index.html">torchdistill</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content style-external-links">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../index.html" class="icon icon-home" aria-label="Home"></a></li>
+          <li class="breadcrumb-item"><a href="../package.html">torchdistill API</a></li>
+      <li class="breadcrumb-item active">torchdistill.models</li>
+      <li class="wy-breadcrumbs-aside">
+              <a href="https://github.com/yoshitomo-matsubara/torchdistill/blob/main/docs/source/subpkgs/models.rst" class="fa fa-github"> Edit on GitHub</a>
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <section id="torchdistill-models">
+<h1>torchdistill.models<a class="headerlink" href="#torchdistill-models" title="Permalink to this heading"></a></h1>
+<div class="toctree-wrapper compound">
+</div>
+<hr class="docutils" />
+<section id="torchdistill-models-registry">
+<h2>torchdistill.models.registry<a class="headerlink" href="#torchdistill-models-registry" title="Permalink to this heading"></a></h2>
+<span class="target" id="module-torchdistill.models.registry"></span><dl class="py function">
+<dt class="sig sig-object py" id="torchdistill.models.registry.register_model">
+<span class="sig-prename descclassname"><span class="pre">torchdistill.models.registry.</span></span><span class="sig-name descname"><span class="pre">register_model</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">arg</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/torchdistill/models/registry.html#register_model"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#torchdistill.models.registry.register_model" title="Permalink to this definition"></a></dt>
+<dd><p>Registers a model class or function to instantiate it.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>arg</strong> (<em>class</em><em> or </em><em>Callable</em><em> or </em><em>None</em>) – class or function to be registered as a model.</p>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>registered model class or function to instantiate it.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>class or <em>Callable</em></p>
+</dd>
+</dl>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>The model will be registered as an option.
+You can choose the registered class/function by specifying the name of the class/function or <code class="docutils literal notranslate"><span class="pre">key</span></code>
+you used for the registration, in a training configuration used for
+<a class="reference internal" href="core.html#torchdistill.core.distillation.DistillationBox" title="torchdistill.core.distillation.DistillationBox"><code class="xref py py-class docutils literal notranslate"><span class="pre">torchdistill.core.distillation.DistillationBox</span></code></a> or <a class="reference internal" href="core.html#torchdistill.core.training.TrainingBox" title="torchdistill.core.training.TrainingBox"><code class="xref py py-class docutils literal notranslate"><span class="pre">torchdistill.core.training.TrainingBox</span></code></a>.</p>
+<p>If you want to register the class/function with a key of your choice, add <code class="docutils literal notranslate"><span class="pre">key</span></code> to the decorator as below:</p>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">torch</span> <span class="kn">import</span> <span class="n">nn</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">torchdistill.models.registry</span> <span class="kn">import</span> <span class="n">register_model</span>
+<span class="gp">&gt;&gt;&gt;</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="nd">@register_model</span><span class="p">(</span><span class="n">key</span><span class="o">=</span><span class="s1">&#39;my_custom_model&#39;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="k">class</span> <span class="nc">CustomModel</span><span class="p">(</span><span class="n">nn</span><span class="o">.</span><span class="n">Module</span><span class="p">):</span>
+<span class="gp">&gt;&gt;&gt; </span>    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+<span class="gp">&gt;&gt;&gt; </span>        <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;This is my custom model class&#39;</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>In the example, <code class="docutils literal notranslate"><span class="pre">CustomModel</span></code> class is registered with a key “my_custom_model”.
+When you configure <a class="reference internal" href="core.html#torchdistill.core.distillation.DistillationBox" title="torchdistill.core.distillation.DistillationBox"><code class="xref py py-class docutils literal notranslate"><span class="pre">torchdistill.core.distillation.DistillationBox</span></code></a> or
+<a class="reference internal" href="core.html#torchdistill.core.training.TrainingBox" title="torchdistill.core.training.TrainingBox"><code class="xref py py-class docutils literal notranslate"><span class="pre">torchdistill.core.training.TrainingBox</span></code></a>, you can choose the <code class="docutils literal notranslate"><span class="pre">CustomModel</span></code> class by
+“my_custom_model”.</p>
+</div>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="torchdistill.models.registry.register_adaptation_module">
+<span class="sig-prename descclassname"><span class="pre">torchdistill.models.registry.</span></span><span class="sig-name descname"><span class="pre">register_adaptation_module</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">arg</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/torchdistill/models/registry.html#register_adaptation_module"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#torchdistill.models.registry.register_adaptation_module" title="Permalink to this definition"></a></dt>
+<dd><p>Registers an adaptation module class or function to instantiate it.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>arg</strong> (<em>class</em><em> or </em><em>Callable</em><em> or </em><em>None</em>) – class or function to be registered as an adaptation module.</p>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>registered adaptation module class or function to instantiate it.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>class or <em>Callable</em></p>
+</dd>
+</dl>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>The adaptation module will be registered as an option.
+You can choose the registered class/function by specifying the name of the class/function or <code class="docutils literal notranslate"><span class="pre">key</span></code>
+you used for the registration, in a training configuration used for
+<a class="reference internal" href="core.html#torchdistill.core.distillation.DistillationBox" title="torchdistill.core.distillation.DistillationBox"><code class="xref py py-class docutils literal notranslate"><span class="pre">torchdistill.core.distillation.DistillationBox</span></code></a> or <a class="reference internal" href="core.html#torchdistill.core.training.TrainingBox" title="torchdistill.core.training.TrainingBox"><code class="xref py py-class docutils literal notranslate"><span class="pre">torchdistill.core.training.TrainingBox</span></code></a>.</p>
+<p>If you want to register the class/function with a key of your choice, add <code class="docutils literal notranslate"><span class="pre">key</span></code> to the decorator as below:</p>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">torch</span> <span class="kn">import</span> <span class="n">nn</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">torchdistill.models.registry</span> <span class="kn">import</span> <span class="n">register_adaptation_module</span>
+<span class="gp">&gt;&gt;&gt;</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="nd">@register_adaptation_module</span><span class="p">(</span><span class="n">key</span><span class="o">=</span><span class="s1">&#39;my_custom_adaptation_module&#39;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="k">class</span> <span class="nc">CustomAdaptationModule</span><span class="p">(</span><span class="n">nn</span><span class="o">.</span><span class="n">Module</span><span class="p">):</span>
+<span class="gp">&gt;&gt;&gt; </span>    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+<span class="gp">&gt;&gt;&gt; </span>        <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;This is my custom adaptation module class&#39;</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>In the example, <code class="docutils literal notranslate"><span class="pre">CustomAdaptationModule</span></code> class is registered with a key “my_custom_adaptation_module”.
+When you configure <a class="reference internal" href="core.html#torchdistill.core.distillation.DistillationBox" title="torchdistill.core.distillation.DistillationBox"><code class="xref py py-class docutils literal notranslate"><span class="pre">torchdistill.core.distillation.DistillationBox</span></code></a> or
+<a class="reference internal" href="core.html#torchdistill.core.training.TrainingBox" title="torchdistill.core.training.TrainingBox"><code class="xref py py-class docutils literal notranslate"><span class="pre">torchdistill.core.training.TrainingBox</span></code></a>, you can choose the <code class="docutils literal notranslate"><span class="pre">CustomAdaptationModule</span></code> class by
+“my_custom_adaptation_module”.</p>
+</div>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="torchdistill.models.registry.register_auxiliary_model_wrapper">
+<span class="sig-prename descclassname"><span class="pre">torchdistill.models.registry.</span></span><span class="sig-name descname"><span class="pre">register_auxiliary_model_wrapper</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">arg</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/torchdistill/models/registry.html#register_auxiliary_model_wrapper"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#torchdistill.models.registry.register_auxiliary_model_wrapper" title="Permalink to this definition"></a></dt>
+<dd><p>Registers an auxiliary model wrapper class or function to instantiate it.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>arg</strong> (<em>class</em><em> or </em><em>Callable</em><em> or </em><em>None</em>) – class or function to be registered as an auxiliary model wrapper.</p>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>registered auxiliary model wrapper class or function to instantiate it.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>class or <em>Callable</em></p>
+</dd>
+</dl>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>The auxiliary model wrapper will be registered as an option.
+You can choose the registered class/function by specifying the name of the class/function or <code class="docutils literal notranslate"><span class="pre">key</span></code>
+you used for the registration, in a training configuration used for
+<a class="reference internal" href="core.html#torchdistill.core.distillation.DistillationBox" title="torchdistill.core.distillation.DistillationBox"><code class="xref py py-class docutils literal notranslate"><span class="pre">torchdistill.core.distillation.DistillationBox</span></code></a> or <a class="reference internal" href="core.html#torchdistill.core.training.TrainingBox" title="torchdistill.core.training.TrainingBox"><code class="xref py py-class docutils literal notranslate"><span class="pre">torchdistill.core.training.TrainingBox</span></code></a>.</p>
+<p>If you want to register the class/function with a key of your choice, add <code class="docutils literal notranslate"><span class="pre">key</span></code> to the decorator as below:</p>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">torch</span> <span class="kn">import</span> <span class="n">nn</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">torchdistill.models.registry</span> <span class="kn">import</span> <span class="n">register_auxiliary_model_wrapper</span>
+<span class="gp">&gt;&gt;&gt;</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="nd">@register_auxiliary_model_wrapper</span><span class="p">(</span><span class="n">key</span><span class="o">=</span><span class="s1">&#39;my_custom_auxiliary_model_wrapper&#39;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="k">class</span> <span class="nc">CustomAuxiliaryModelWrapper</span><span class="p">(</span><span class="n">nn</span><span class="o">.</span><span class="n">Module</span><span class="p">):</span>
+<span class="gp">&gt;&gt;&gt; </span>    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+<span class="gp">&gt;&gt;&gt; </span>        <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;This is my custom auxiliary model wrapper class&#39;</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>In the example, <code class="docutils literal notranslate"><span class="pre">CustomAuxiliaryModelWrapper</span></code> class is registered with a key “my_custom_auxiliary_model_wrapper”.
+When you configure <a class="reference internal" href="core.html#torchdistill.core.distillation.DistillationBox" title="torchdistill.core.distillation.DistillationBox"><code class="xref py py-class docutils literal notranslate"><span class="pre">torchdistill.core.distillation.DistillationBox</span></code></a> or
+<a class="reference internal" href="core.html#torchdistill.core.training.TrainingBox" title="torchdistill.core.training.TrainingBox"><code class="xref py py-class docutils literal notranslate"><span class="pre">torchdistill.core.training.TrainingBox</span></code></a>, you can choose the <code class="docutils literal notranslate"><span class="pre">CustomAuxiliaryModelWrapper</span></code> class by
+“my_custom_auxiliary_model_wrapper”.</p>
+</div>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="torchdistill.models.registry.get_model">
+<span class="sig-prename descclassname"><span class="pre">torchdistill.models.registry.</span></span><span class="sig-name descname"><span class="pre">get_model</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">key</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">repo_or_dir</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">*</span></span><span class="n"><span class="pre">args</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/torchdistill/models/registry.html#get_model"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#torchdistill.models.registry.get_model" title="Permalink to this definition"></a></dt>
+<dd><p>Gets a model from the model registry.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>key</strong> (<em>str</em>) – model key.</p></li>
+<li><p><strong>repo_or_dir</strong> (<em>str</em><em> or </em><em>None</em>) – <code class="docutils literal notranslate"><span class="pre">repo_or_dir</span></code> for torch.hub.load.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>model.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>nn.Module</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="torchdistill.models.registry.get_adaptation_module">
+<span class="sig-prename descclassname"><span class="pre">torchdistill.models.registry.</span></span><span class="sig-name descname"><span class="pre">get_adaptation_module</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">key</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">*</span></span><span class="n"><span class="pre">args</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/torchdistill/models/registry.html#get_adaptation_module"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#torchdistill.models.registry.get_adaptation_module" title="Permalink to this definition"></a></dt>
+<dd><p>Gets an adaptation module from the adaptation module registry.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>key</strong> (<em>str</em>) – model key.</p>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>adaptation module.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>nn.Module</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="torchdistill.models.registry.get_auxiliary_model_wrapper">
+<span class="sig-prename descclassname"><span class="pre">torchdistill.models.registry.</span></span><span class="sig-name descname"><span class="pre">get_auxiliary_model_wrapper</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">key</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">*</span></span><span class="n"><span class="pre">args</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/torchdistill/models/registry.html#get_auxiliary_model_wrapper"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#torchdistill.models.registry.get_auxiliary_model_wrapper" title="Permalink to this definition"></a></dt>
+<dd><p>Gets an auxiliary model wrapper from the auxiliary model wrapper registry.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>key</strong> (<em>str</em>) – model key.</p>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>auxiliary model wrapper.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>nn.Module</p>
+</dd>
+</dl>
+</dd></dl>
+
+</section>
+<hr class="docutils" />
+<section id="torchdistill-models-classification">
+<h2>torchdistill.models.classification<a class="headerlink" href="#torchdistill-models-classification" title="Permalink to this heading"></a></h2>
+<hr class="docutils" />
+<p>To reproduce the test results for CIFAR datasets, the following repositories were referred for training methods:</p>
+<ul class="simple">
+<li><p>ResNet: <a class="reference external" href="https://github.com/facebookarchive/fb.resnet.torch">https://github.com/facebookarchive/fb.resnet.torch</a></p></li>
+<li><p>WRN (Wide ResNet): <a class="reference external" href="https://github.com/szagoruyko/wide-residual-networks">https://github.com/szagoruyko/wide-residual-networks</a></p></li>
+<li><p>DenseNet-BC: <a class="reference external" href="https://github.com/liuzhuang13/DenseNet">https://github.com/liuzhuang13/DenseNet</a></p></li>
+</ul>
+<table class="docutils align-default" id="id25">
+<caption><span class="caption-text">Accuracy of models pretrained on CIFAR-10/100 datasets</span><a class="headerlink" href="#id25" title="Permalink to this table"></a></caption>
+<colgroup>
+<col style="width: 50.0%" />
+<col style="width: 25.0%" />
+<col style="width: 25.0%" />
+</colgroup>
+<thead>
+<tr class="row-odd"><th class="head"><p>Model</p></th>
+<th class="head"><p>CIFAR-10</p></th>
+<th class="head"><p>CIFAR-100</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p><a class="reference external" href="#torchdistill.models.classification.resnet.resnet20">ResNet-20</a></p></td>
+<td><p>91.92</p></td>
+<td><p>N/A</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference external" href="#torchdistill.models.classification.resnet.resnet32">ResNet-32</a></p></td>
+<td><p>93.03</p></td>
+<td><p>N/A</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference external" href="#torchdistill.models.classification.resnet.resnet44">ResNet-44</a></p></td>
+<td><p>93.20</p></td>
+<td><p>N/A</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference external" href="#torchdistill.models.classification.resnet.resnet56">ResNet-56</a></p></td>
+<td><p>93.57</p></td>
+<td><p>N/A</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference external" href="#torchdistill.models.classification.resnet.resnet110">ResNet-110</a></p></td>
+<td><p>93.50</p></td>
+<td><p>N/A</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference external" href="#torchdistill.models.classification.wide_resnet.wide_resnet40_4">WRN-40-4</a></p></td>
+<td><p>95.24</p></td>
+<td><p>79.44</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference external" href="#torchdistill.models.classification.wide_resnet.wide_resnet28_10">WRN-28-10</a></p></td>
+<td><p>95.53</p></td>
+<td><p>81.27</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference external" href="#torchdistill.models.classification.wide_resnet.wide_resnet16_8">WRN-16-8</a></p></td>
+<td><p>94.76</p></td>
+<td><p>79.26</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference external" href="#torchdistill.models.classification.densenet.densenet_bc_k12_depth100">DenseNet-BC (k=12, depth=100)</a></p></td>
+<td><p>95.53</p></td>
+<td><p>77.14</p></td>
+</tr>
+</tbody>
+</table>
+<p>Those results are reported in the following paper:</p>
+<ul class="simple">
+<li><p>Yoshitomo Matsubara: <a class="reference external" href="https://aclanthology.org/2023.nlposs-1.18/">“torchdistill Meets Hugging Face Libraries for Reproducible, Coding-Free Deep Learning Studies: A Case Study on NLP”</a></p></li>
+</ul>
+<span class="target" id="module-torchdistill.models.classification"></span><hr class="docutils" />
+<section id="torchdistill-models-classification-densenet">
+<h3>torchdistill.models.classification.densenet<a class="headerlink" href="#torchdistill-models-classification-densenet" title="Permalink to this heading"></a></h3>
+<span class="target" id="module-torchdistill.models.classification.densenet"></span><dl class="py class">
+<dt class="sig sig-object py" id="torchdistill.models.classification.densenet.DenseNet4Cifar">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">torchdistill.models.classification.densenet.</span></span><span class="sig-name descname"><span class="pre">DenseNet4Cifar</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">growth_rate</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">32</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">block_config</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Tuple</span><span class="p"><span class="pre">[</span></span><span class="pre">int</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">int</span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">int</span><span class="p"><span class="pre">]</span></span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">(12,</span> <span class="pre">12,</span> <span class="pre">12)</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">num_init_features</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">64</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">bn_size</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">4</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">drop_rate</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">num_classes</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">10</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">memory_efficient</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/torchdistill/models/classification/densenet.html#DenseNet4Cifar"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#torchdistill.models.classification.densenet.DenseNet4Cifar" title="Permalink to this definition"></a></dt>
+<dd><p>DenseNet-BC model for CIFAR datasets. Refactored <a class="reference external" href="https://github.com/pytorch/vision/blob/master/torchvision/models/densenet.py">https://github.com/pytorch/vision/blob/master/torchvision/models/densenet.py</a>
+for CIFAR datasets, referring to <a class="reference external" href="https://github.com/liuzhuang13/DenseNet">https://github.com/liuzhuang13/DenseNet</a></p>
+<p>Gao Huang, Zhuang Liu, Laurens van der Maaten, Kilian Q. Weinberger: <a class="reference external" href="https://openaccess.thecvf.com/content_cvpr_2017/html/Huang_Densely_Connected_Convolutional_CVPR_2017_paper.html">“Densely Connected Convolutional Networks”</a> &#64; CVPR 2017 (2017).</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>growth_rate</strong> (<em>int</em>) – number of filters to add each layer (<cite>k</cite> in paper).</p></li>
+<li><p><strong>block_config</strong> (<em>list</em><em>[</em><em>int</em><em>]</em>) – three numbers of layers in each pooling block.</p></li>
+<li><p><strong>num_init_features</strong> (<em>int</em>) – number of filters to learn in the first convolution layer.</p></li>
+<li><p><strong>bn_size</strong> (<em>int</em>) – multiplicative factor for number of bottleneck layers. (i.e. bn_size * k features in the bottleneck layer)</p></li>
+<li><p><strong>drop_rate</strong> (<em>float</em>) – dropout rate after each dense layer.</p></li>
+<li><p><strong>num_classes</strong> (<em>int</em>) – number of classification classes.</p></li>
+<li><p><strong>memory_efficient</strong> (<em>bool</em>) – if True, uses checkpointing. Much more memory efficient, but slower. Refer to <a class="reference external" href="https://openaccess.thecvf.com/content_cvpr_2017/html/Huang_Densely_Connected_Convolutional_CVPR_2017_paper.html">“the paper”</a> for details.</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="torchdistill.models.classification.densenet.densenet">
+<span class="sig-prename descclassname"><span class="pre">torchdistill.models.classification.densenet.</span></span><span class="sig-name descname"><span class="pre">densenet</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">growth_rate</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">depth</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">num_init_features</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">bottleneck</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">num_classes</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">pretrained</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">progress</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Any</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/torchdistill/models/classification/densenet.html#densenet"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#torchdistill.models.classification.densenet.densenet" title="Permalink to this definition"></a></dt>
+<dd><p>Instantiates a DenseNet model for CIFAR datasets.</p>
+<p>Gao Huang, Zhuang Liu, Laurens van der Maaten, Kilian Q. Weinberger: <a class="reference external" href="https://openaccess.thecvf.com/content_cvpr_2017/html/Huang_Densely_Connected_Convolutional_CVPR_2017_paper.html">“Densely Connected Convolutional Networks”</a> &#64; CVPR 2017 (2017).</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>growth_rate</strong> (<em>int</em>) – number of filters to add each layer (<cite>k</cite> in paper).</p></li>
+<li><p><strong>depth</strong> (<em>int</em>) – depth.</p></li>
+<li><p><strong>num_init_features</strong> (<em>int</em>) – number of filters to learn in the first convolution layer.</p></li>
+<li><p><strong>bottleneck</strong> (<em>bool</em>) – if True, uses bottleneck.</p></li>
+<li><p><strong>num_classes</strong> (<em>int</em>) – 10 or 100 for CIFAR-10 or CIFAR-100, respectively.</p></li>
+<li><p><strong>pretrained</strong> (<em>bool</em>) – if True, returns a model pre-trained on CIFAR dataset.</p></li>
+<li><p><strong>progress</strong> (<em>bool</em>) – if True, displays a progress bar of the download to stderr.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>DenseNet model.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><a class="reference internal" href="#torchdistill.models.classification.densenet.DenseNet4Cifar" title="torchdistill.models.classification.densenet.DenseNet4Cifar">DenseNet4Cifar</a></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="torchdistill.models.classification.densenet.densenet_bc_k12_depth100">
+<span class="sig-prename descclassname"><span class="pre">torchdistill.models.classification.densenet.</span></span><span class="sig-name descname"><span class="pre">densenet_bc_k12_depth100</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">num_classes</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">10</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">pretrained</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">progress</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Any</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/torchdistill/models/classification/densenet.html#densenet_bc_k12_depth100"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#torchdistill.models.classification.densenet.densenet_bc_k12_depth100" title="Permalink to this definition"></a></dt>
+<dd><p>DenseNet-BC (k=12, depth=100) model.</p>
+<p>Gao Huang, Zhuang Liu, Laurens van der Maaten, Kilian Q. Weinberger: <a class="reference external" href="https://openaccess.thecvf.com/content_cvpr_2017/html/Huang_Densely_Connected_Convolutional_CVPR_2017_paper.html">“Densely Connected Convolutional Networks”</a> &#64; CVPR 2017 (2017).</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>num_classes</strong> (<em>int</em>) – 10 or 100 for CIFAR-10 or CIFAR-100, respectively.</p></li>
+<li><p><strong>pretrained</strong> (<em>bool</em>) – if True, returns a model pre-trained on CIFAR dataset.</p></li>
+<li><p><strong>progress</strong> (<em>bool</em>) – if True, displays a progress bar of the download to stderr.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>DenseNet-BC (k=12, depth=100) model.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><a class="reference internal" href="#torchdistill.models.classification.densenet.DenseNet4Cifar" title="torchdistill.models.classification.densenet.DenseNet4Cifar">DenseNet4Cifar</a></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="torchdistill.models.classification.densenet.densenet_bc_k24_depth250">
+<span class="sig-prename descclassname"><span class="pre">torchdistill.models.classification.densenet.</span></span><span class="sig-name descname"><span class="pre">densenet_bc_k24_depth250</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">num_classes</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">10</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">pretrained</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">progress</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Any</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/torchdistill/models/classification/densenet.html#densenet_bc_k24_depth250"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#torchdistill.models.classification.densenet.densenet_bc_k24_depth250" title="Permalink to this definition"></a></dt>
+<dd><p>DenseNet-BC (k=24, depth=250) model.</p>
+<p>Gao Huang, Zhuang Liu, Laurens van der Maaten, Kilian Q. Weinberger: <a class="reference external" href="https://openaccess.thecvf.com/content_cvpr_2017/html/Huang_Densely_Connected_Convolutional_CVPR_2017_paper.html">“Densely Connected Convolutional Networks”</a> &#64; CVPR 2017 (2017).</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>num_classes</strong> (<em>int</em>) – 10 or 100 for CIFAR-10 or CIFAR-100, respectively.</p></li>
+<li><p><strong>pretrained</strong> (<em>bool</em>) – if True, returns a model pre-trained on CIFAR dataset.</p></li>
+<li><p><strong>progress</strong> (<em>bool</em>) – if True, displays a progress bar of the download to stderr.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>DenseNet-BC (k=24, depth=250) model.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><a class="reference internal" href="#torchdistill.models.classification.densenet.DenseNet4Cifar" title="torchdistill.models.classification.densenet.DenseNet4Cifar">DenseNet4Cifar</a></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="torchdistill.models.classification.densenet.densenet_bc_k40_depth190">
+<span class="sig-prename descclassname"><span class="pre">torchdistill.models.classification.densenet.</span></span><span class="sig-name descname"><span class="pre">densenet_bc_k40_depth190</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">num_classes</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">10</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">pretrained</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">progress</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Any</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/torchdistill/models/classification/densenet.html#densenet_bc_k40_depth190"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#torchdistill.models.classification.densenet.densenet_bc_k40_depth190" title="Permalink to this definition"></a></dt>
+<dd><p>DenseNet-BC (k=40, depth=190) model.</p>
+<p>Gao Huang, Zhuang Liu, Laurens van der Maaten, Kilian Q. Weinberger: <a class="reference external" href="https://openaccess.thecvf.com/content_cvpr_2017/html/Huang_Densely_Connected_Convolutional_CVPR_2017_paper.html">“Densely Connected Convolutional Networks”</a> &#64; CVPR 2017 (2017).</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>num_classes</strong> (<em>int</em>) – 10 or 100 for CIFAR-10 or CIFAR-100, respectively.</p></li>
+<li><p><strong>pretrained</strong> (<em>bool</em>) – if True, returns a model pre-trained on CIFAR dataset.</p></li>
+<li><p><strong>progress</strong> (<em>bool</em>) – if True, displays a progress bar of the download to stderr.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>DenseNet-BC (k=40, depth=190) model.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><a class="reference internal" href="#torchdistill.models.classification.densenet.DenseNet4Cifar" title="torchdistill.models.classification.densenet.DenseNet4Cifar">DenseNet4Cifar</a></p>
+</dd>
+</dl>
+</dd></dl>
+
+</section>
+<hr class="docutils" />
+<section id="torchdistill-models-classification-resnet">
+<h3>torchdistill.models.classification.resnet<a class="headerlink" href="#torchdistill-models-classification-resnet" title="Permalink to this heading"></a></h3>
+<span class="target" id="module-torchdistill.models.classification.resnet"></span><dl class="py class">
+<dt class="sig sig-object py" id="torchdistill.models.classification.resnet.ResNet4Cifar">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">torchdistill.models.classification.resnet.</span></span><span class="sig-name descname"><span class="pre">ResNet4Cifar</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">block</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Type</span><span class="p"><span class="pre">[</span></span><span class="pre">BasicBlock</span><span class="p"><span class="pre">]</span></span></span></em>, <em class="sig-param"><span class="n"><span class="pre">layers</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">List</span><span class="p"><span class="pre">[</span></span><span class="pre">int</span><span class="p"><span class="pre">]</span></span></span></em>, <em class="sig-param"><span class="n"><span class="pre">num_classes</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">10</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">zero_init_residual</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">groups</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">1</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">width_per_group</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">64</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">replace_stride_with_dilation</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">List</span><span class="p"><span class="pre">[</span></span><span class="pre">bool</span><span class="p"><span class="pre">]</span></span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">norm_layer</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Callable</span><span class="p"><span class="pre">[</span></span><span class="p"><span class="pre">[</span></span><span class="p"><span class="pre">...</span></span><span class="p"><span class="pre">]</span></span><span class="p"><span class="pre">,</span></span><span class="w"> </span><span class="pre">Module</span><span class="p"><span class="pre">]</span></span><span class="w"> </span><span class="p"><span class="pre">|</span></span><span class="w"> </span><span class="pre">None</span></span><span class="w"> </span><span class="o"><span class="pre">=</span></span><span class="w"> </span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/torchdistill/models/classification/resnet.html#ResNet4Cifar"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#torchdistill.models.classification.resnet.ResNet4Cifar" title="Permalink to this definition"></a></dt>
+<dd><p>ResNet model for CIFAR datasets. Refactored <a class="reference external" href="https://github.com/pytorch/vision/blob/master/torchvision/models/resnet.py">https://github.com/pytorch/vision/blob/master/torchvision/models/resnet.py</a>
+for CIFAR datasets, referring to <a class="reference external" href="https://github.com/facebookarchive/fb.resnet.torch">https://github.com/facebookarchive/fb.resnet.torch</a></p>
+<p>Kaiming He, Xiangyu Zhang, Shaoqing Ren, Jian Sun: <a class="reference external" href="https://openaccess.thecvf.com/content_cvpr_2016/html/He_Deep_Residual_Learning_CVPR_2016_paper.html">“Deep Residual Learning for Image Recognition”</a> &#64; CVPR 2016 (2016).</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>block</strong> (<em>BasicBlock</em>) – block class.</p></li>
+<li><p><strong>layers</strong> (<em>list</em><em>[</em><em>int</em><em>]</em>) – three numbers of layers in each pooling block.</p></li>
+<li><p><strong>num_classes</strong> (<em>int</em>) – number of classification classes.</p></li>
+<li><p><strong>zero_init_residual</strong> (<em>bool</em>) – if True, zero-initializes the last BN in each residual branch</p></li>
+<li><p><strong>groups</strong> (<em>int</em>) – <code class="docutils literal notranslate"><span class="pre">groups</span></code> for Conv2d.</p></li>
+<li><p><strong>width_per_group</strong> (<em>int</em>) – base width for Conv2d.</p></li>
+<li><p><strong>replace_stride_with_dilation</strong> (<em>list</em><em>[</em><em>bool</em><em>] or </em><em>None</em>) – indicates if we should replace the 2x2 stride with a dilated convolution instead.</p></li>
+<li><p><strong>norm_layer</strong> (<em>Callable</em><em> or </em><em>nn.Module</em><em> or </em><em>None</em>) – normalization module class or callable object.</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="torchdistill.models.classification.resnet.resnet">
+<span class="sig-prename descclassname"><span class="pre">torchdistill.models.classification.resnet.</span></span><span class="sig-name descname"><span class="pre">resnet</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">depth</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">num_classes</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">pretrained</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">progress</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Any</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/torchdistill/models/classification/resnet.html#resnet"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#torchdistill.models.classification.resnet.resnet" title="Permalink to this definition"></a></dt>
+<dd><p>Instantiates a ResNet model for CIFAR datasets.</p>
+<p>Kaiming He, Xiangyu Zhang, Shaoqing Ren, Jian Sun: <a class="reference external" href="https://openaccess.thecvf.com/content_cvpr_2016/html/He_Deep_Residual_Learning_CVPR_2016_paper.html">“Deep Residual Learning for Image Recognition”</a> &#64; CVPR 2016 (2016).</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>depth</strong> (<em>int</em>) – depth.</p></li>
+<li><p><strong>num_classes</strong> (<em>int</em>) – number of classification classes.</p></li>
+<li><p><strong>pretrained</strong> (<em>bool</em>) – if True, returns a model pre-trained on CIFAR dataset.</p></li>
+<li><p><strong>progress</strong> (<em>bool</em>) – if True, displays a progress bar of the download to stderr.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>ResNet model.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><a class="reference internal" href="#torchdistill.models.classification.resnet.ResNet4Cifar" title="torchdistill.models.classification.resnet.ResNet4Cifar">ResNet4Cifar</a></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="torchdistill.models.classification.resnet.resnet20">
+<span class="sig-prename descclassname"><span class="pre">torchdistill.models.classification.resnet.</span></span><span class="sig-name descname"><span class="pre">resnet20</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">num_classes</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">10</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">pretrained</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">progress</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Any</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/torchdistill/models/classification/resnet.html#resnet20"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#torchdistill.models.classification.resnet.resnet20" title="Permalink to this definition"></a></dt>
+<dd><p>ResNet-20 model.</p>
+<p>Kaiming He, Xiangyu Zhang, Shaoqing Ren, Jian Sun: <a class="reference external" href="https://openaccess.thecvf.com/content_cvpr_2016/html/He_Deep_Residual_Learning_CVPR_2016_paper.html">“Deep Residual Learning for Image Recognition”</a> &#64; CVPR 2016 (2016).</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>num_classes</strong> (<em>int</em>) – 10 or 100 for CIFAR-10 or CIFAR-100, respectively.</p></li>
+<li><p><strong>pretrained</strong> (<em>bool</em>) – if True, returns a model pre-trained on CIFAR dataset.</p></li>
+<li><p><strong>progress</strong> (<em>bool</em>) – if True, displays a progress bar of the download to stderr.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>ResNet-20 model.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><a class="reference internal" href="#torchdistill.models.classification.resnet.ResNet4Cifar" title="torchdistill.models.classification.resnet.ResNet4Cifar">ResNet4Cifar</a></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="torchdistill.models.classification.resnet.resnet32">
+<span class="sig-prename descclassname"><span class="pre">torchdistill.models.classification.resnet.</span></span><span class="sig-name descname"><span class="pre">resnet32</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">num_classes</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">10</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">pretrained</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">progress</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Any</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><a class="reference internal" href="#torchdistill.models.classification.resnet.ResNet4Cifar" title="torchdistill.models.classification.resnet.ResNet4Cifar"><span class="pre">ResNet4Cifar</span></a></span></span><a class="reference internal" href="../_modules/torchdistill/models/classification/resnet.html#resnet32"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#torchdistill.models.classification.resnet.resnet32" title="Permalink to this definition"></a></dt>
+<dd><p>ResNet-32 model.</p>
+<p>Kaiming He, Xiangyu Zhang, Shaoqing Ren, Jian Sun: <a class="reference external" href="https://openaccess.thecvf.com/content_cvpr_2016/html/He_Deep_Residual_Learning_CVPR_2016_paper.html">“Deep Residual Learning for Image Recognition”</a> &#64; CVPR 2016 (2016).</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>num_classes</strong> (<em>int</em>) – 10 or 100 for CIFAR-10 or CIFAR-100, respectively.</p></li>
+<li><p><strong>pretrained</strong> (<em>bool</em>) – if True, returns a model pre-trained on CIFAR dataset.</p></li>
+<li><p><strong>progress</strong> (<em>bool</em>) – if True, displays a progress bar of the download to stderr.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>ResNet-32 model.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><a class="reference internal" href="#torchdistill.models.classification.resnet.ResNet4Cifar" title="torchdistill.models.classification.resnet.ResNet4Cifar">ResNet4Cifar</a></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="torchdistill.models.classification.resnet.resnet44">
+<span class="sig-prename descclassname"><span class="pre">torchdistill.models.classification.resnet.</span></span><span class="sig-name descname"><span class="pre">resnet44</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">num_classes</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">10</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">pretrained</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">progress</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Any</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><a class="reference internal" href="#torchdistill.models.classification.resnet.ResNet4Cifar" title="torchdistill.models.classification.resnet.ResNet4Cifar"><span class="pre">ResNet4Cifar</span></a></span></span><a class="reference internal" href="../_modules/torchdistill/models/classification/resnet.html#resnet44"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#torchdistill.models.classification.resnet.resnet44" title="Permalink to this definition"></a></dt>
+<dd><p>ResNet-44 model.</p>
+<p>Kaiming He, Xiangyu Zhang, Shaoqing Ren, Jian Sun: <a class="reference external" href="https://openaccess.thecvf.com/content_cvpr_2016/html/He_Deep_Residual_Learning_CVPR_2016_paper.html">“Deep Residual Learning for Image Recognition”</a> &#64; CVPR 2016 (2016).</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>num_classes</strong> (<em>int</em>) – 10 or 100 for CIFAR-10 or CIFAR-100, respectively.</p></li>
+<li><p><strong>pretrained</strong> (<em>bool</em>) – if True, returns a model pre-trained on CIFAR dataset.</p></li>
+<li><p><strong>progress</strong> (<em>bool</em>) – if True, displays a progress bar of the download to stderr.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>ResNet-44 model.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><a class="reference internal" href="#torchdistill.models.classification.resnet.ResNet4Cifar" title="torchdistill.models.classification.resnet.ResNet4Cifar">ResNet4Cifar</a></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="torchdistill.models.classification.resnet.resnet56">
+<span class="sig-prename descclassname"><span class="pre">torchdistill.models.classification.resnet.</span></span><span class="sig-name descname"><span class="pre">resnet56</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">num_classes</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">10</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">pretrained</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">progress</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Any</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><a class="reference internal" href="#torchdistill.models.classification.resnet.ResNet4Cifar" title="torchdistill.models.classification.resnet.ResNet4Cifar"><span class="pre">ResNet4Cifar</span></a></span></span><a class="reference internal" href="../_modules/torchdistill/models/classification/resnet.html#resnet56"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#torchdistill.models.classification.resnet.resnet56" title="Permalink to this definition"></a></dt>
+<dd><p>ResNet-56 model.</p>
+<p>Kaiming He, Xiangyu Zhang, Shaoqing Ren, Jian Sun: <a class="reference external" href="https://openaccess.thecvf.com/content_cvpr_2016/html/He_Deep_Residual_Learning_CVPR_2016_paper.html">“Deep Residual Learning for Image Recognition”</a> &#64; CVPR 2016 (2016).</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>num_classes</strong> (<em>int</em>) – 10 or 100 for CIFAR-10 or CIFAR-100, respectively.</p></li>
+<li><p><strong>pretrained</strong> (<em>bool</em>) – if True, returns a model pre-trained on CIFAR dataset.</p></li>
+<li><p><strong>progress</strong> (<em>bool</em>) – if True, displays a progress bar of the download to stderr.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>ResNet-56 model.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><a class="reference internal" href="#torchdistill.models.classification.resnet.ResNet4Cifar" title="torchdistill.models.classification.resnet.ResNet4Cifar">ResNet4Cifar</a></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="torchdistill.models.classification.resnet.resnet110">
+<span class="sig-prename descclassname"><span class="pre">torchdistill.models.classification.resnet.</span></span><span class="sig-name descname"><span class="pre">resnet110</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">num_classes</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">10</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">pretrained</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">progress</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Any</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><a class="reference internal" href="#torchdistill.models.classification.resnet.ResNet4Cifar" title="torchdistill.models.classification.resnet.ResNet4Cifar"><span class="pre">ResNet4Cifar</span></a></span></span><a class="reference internal" href="../_modules/torchdistill/models/classification/resnet.html#resnet110"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#torchdistill.models.classification.resnet.resnet110" title="Permalink to this definition"></a></dt>
+<dd><p>ResNet-110 model.</p>
+<p>Kaiming He, Xiangyu Zhang, Shaoqing Ren, Jian Sun: <a class="reference external" href="https://openaccess.thecvf.com/content_cvpr_2016/html/He_Deep_Residual_Learning_CVPR_2016_paper.html">“Deep Residual Learning for Image Recognition”</a> &#64; CVPR 2016 (2016).</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>num_classes</strong> (<em>int</em>) – 10 or 100 for CIFAR-10 or CIFAR-100, respectively.</p></li>
+<li><p><strong>pretrained</strong> (<em>bool</em>) – if True, returns a model pre-trained on CIFAR dataset.</p></li>
+<li><p><strong>progress</strong> (<em>bool</em>) – if True, displays a progress bar of the download to stderr.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>ResNet-110 model.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><a class="reference internal" href="#torchdistill.models.classification.resnet.ResNet4Cifar" title="torchdistill.models.classification.resnet.ResNet4Cifar">ResNet4Cifar</a></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="torchdistill.models.classification.resnet.resnet1202">
+<span class="sig-prename descclassname"><span class="pre">torchdistill.models.classification.resnet.</span></span><span class="sig-name descname"><span class="pre">resnet1202</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">num_classes</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">10</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">pretrained</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">progress</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Any</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><a class="reference internal" href="#torchdistill.models.classification.resnet.ResNet4Cifar" title="torchdistill.models.classification.resnet.ResNet4Cifar"><span class="pre">ResNet4Cifar</span></a></span></span><a class="reference internal" href="../_modules/torchdistill/models/classification/resnet.html#resnet1202"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#torchdistill.models.classification.resnet.resnet1202" title="Permalink to this definition"></a></dt>
+<dd><p>ResNet-1202 model.</p>
+<p>Kaiming He, Xiangyu Zhang, Shaoqing Ren, Jian Sun: <a class="reference external" href="https://openaccess.thecvf.com/content_cvpr_2016/html/He_Deep_Residual_Learning_CVPR_2016_paper.html">“Deep Residual Learning for Image Recognition”</a> &#64; CVPR 2016 (2016).</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>num_classes</strong> (<em>int</em>) – 10 or 100 for CIFAR-10 or CIFAR-100, respectively.</p></li>
+<li><p><strong>pretrained</strong> (<em>bool</em>) – if True, returns a model pre-trained on CIFAR dataset.</p></li>
+<li><p><strong>progress</strong> (<em>bool</em>) – if True, displays a progress bar of the download to stderr.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>ResNet-1202 model.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><a class="reference internal" href="#torchdistill.models.classification.resnet.ResNet4Cifar" title="torchdistill.models.classification.resnet.ResNet4Cifar">ResNet4Cifar</a></p>
+</dd>
+</dl>
+</dd></dl>
+
+</section>
+<hr class="docutils" />
+<section id="torchdistill-models-classification-wide-resnet">
+<h3>torchdistill.models.classification.wide_resnet<a class="headerlink" href="#torchdistill-models-classification-wide-resnet" title="Permalink to this heading"></a></h3>
+<span class="target" id="module-torchdistill.models.classification.wide_resnet"></span><dl class="py class">
+<dt class="sig sig-object py" id="torchdistill.models.classification.wide_resnet.WideBasicBlock">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">torchdistill.models.classification.wide_resnet.</span></span><span class="sig-name descname"><span class="pre">WideBasicBlock</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">in_planes</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">planes</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">dropout_rate</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">stride</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/torchdistill/models/classification/wide_resnet.html#WideBasicBlock"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#torchdistill.models.classification.wide_resnet.WideBasicBlock" title="Permalink to this definition"></a></dt>
+<dd><p>A basic block of Wide ResNet for CIFAR datasets.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>in_planes</strong> (<em>int</em>) – number of input feature planes.</p></li>
+<li><p><strong>planes</strong> (<em>int</em>) – number of output feature planes.</p></li>
+<li><p><strong>dropout_rate</strong> (<em>float</em>) – dropout rate.</p></li>
+<li><p><strong>stride</strong> (<em>int</em>) – stride for Conv2d.</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="torchdistill.models.classification.wide_resnet.WideResNet4Cifar">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">torchdistill.models.classification.wide_resnet.</span></span><span class="sig-name descname"><span class="pre">WideResNet4Cifar</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">depth</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">k</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">dropout_p</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">block</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">num_classes</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">norm_layer</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/torchdistill/models/classification/wide_resnet.html#WideResNet4Cifar"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#torchdistill.models.classification.wide_resnet.WideResNet4Cifar" title="Permalink to this definition"></a></dt>
+<dd><p>Wide ResNet (WRN) model for CIFAR datasets. Refactored <a class="reference external" href="https://github.com/pytorch/vision/blob/master/torchvision/models/resnet.py">https://github.com/pytorch/vision/blob/master/torchvision/models/resnet.py</a>
+for CIFAR datasets, referring to <a class="reference external" href="https://github.com/szagoruyko/wide-residual-networks">https://github.com/szagoruyko/wide-residual-networks</a></p>
+<p>Sergey Zagoruyko, Nikos Komodakis: <a class="reference external" href="https://bmva-archive.org.uk/bmvc/2016/papers/paper087/index.html">“Wide Residual Networks”</a> &#64; BMVC 2016 (2016)</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>depth</strong> (<em>int</em>) – depth.</p></li>
+<li><p><strong>k</strong> (<em>int</em>) – widening factor.</p></li>
+<li><p><strong>dropout_p</strong> (<em>float</em>) – dropout rate.</p></li>
+<li><p><strong>block</strong> (<a class="reference internal" href="#torchdistill.models.classification.wide_resnet.WideBasicBlock" title="torchdistill.models.classification.wide_resnet.WideBasicBlock"><em>WideBasicBlock</em></a>) – block class.</p></li>
+<li><p><strong>num_classes</strong> (<em>int</em>) – number of classification classes.</p></li>
+<li><p><strong>norm_layer</strong> (<em>Callable</em><em> or </em><em>nn.Module</em><em> or </em><em>None</em>) – normalization module class or callable object.</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="torchdistill.models.classification.wide_resnet.wide_resnet">
+<span class="sig-prename descclassname"><span class="pre">torchdistill.models.classification.wide_resnet.</span></span><span class="sig-name descname"><span class="pre">wide_resnet</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">depth</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">k</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">dropout_p</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">float</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">num_classes</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">int</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">pretrained</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">progress</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">bool</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Any</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/torchdistill/models/classification/wide_resnet.html#wide_resnet"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#torchdistill.models.classification.wide_resnet.wide_resnet" title="Permalink to this definition"></a></dt>
+<dd><p>Instantiates a Wide ResNet model for CIFAR datasets.</p>
+<p>Sergey Zagoruyko, Nikos Komodakis: <a class="reference external" href="https://bmva-archive.org.uk/bmvc/2016/papers/paper087/index.html">“Wide Residual Networks”</a> &#64; BMVC 2016 (2016)</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>depth</strong> (<em>int</em>) – depth.</p></li>
+<li><p><strong>k</strong> (<em>int</em>) – widening factor.</p></li>
+<li><p><strong>dropout_p</strong> (<em>float</em>) – dropout rate.</p></li>
+<li><p><strong>num_classes</strong> (<em>int</em>) – number of classification classes.</p></li>
+<li><p><strong>pretrained</strong> (<em>bool</em>) – if True, returns a model pre-trained on CIFAR dataset.</p></li>
+<li><p><strong>progress</strong> (<em>bool</em>) – if True, displays a progress bar of the download to stderr.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>Wide ResNet model.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><a class="reference internal" href="#torchdistill.models.classification.wide_resnet.WideResNet4Cifar" title="torchdistill.models.classification.wide_resnet.WideResNet4Cifar">WideResNet4Cifar</a></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="torchdistill.models.classification.wide_resnet.wide_resnet40_4">
+<span class="sig-prename descclassname"><span class="pre">torchdistill.models.classification.wide_resnet.</span></span><span class="sig-name descname"><span class="pre">wide_resnet40_4</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">dropout_p</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0.3</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">num_classes</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">10</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">pretrained</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">progress</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Any</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/torchdistill/models/classification/wide_resnet.html#wide_resnet40_4"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#torchdistill.models.classification.wide_resnet.wide_resnet40_4" title="Permalink to this definition"></a></dt>
+<dd><p>WRN-40-4 model.</p>
+<p>Sergey Zagoruyko, Nikos Komodakis: <a class="reference external" href="https://bmva-archive.org.uk/bmvc/2016/papers/paper087/index.html">“Wide Residual Networks”</a> &#64; BMVC 2016 (2016)</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>dropout_p</strong> (<em>float</em>) – dropout rate.</p></li>
+<li><p><strong>num_classes</strong> (<em>int</em>) – number of classification classes.</p></li>
+<li><p><strong>pretrained</strong> (<em>bool</em>) – if True, returns a model pre-trained on CIFAR dataset.</p></li>
+<li><p><strong>progress</strong> (<em>bool</em>) – if True, displays a progress bar of the download to stderr.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>WRN-40-4 model.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><a class="reference internal" href="#torchdistill.models.classification.wide_resnet.WideResNet4Cifar" title="torchdistill.models.classification.wide_resnet.WideResNet4Cifar">WideResNet4Cifar</a></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="torchdistill.models.classification.wide_resnet.wide_resnet28_10">
+<span class="sig-prename descclassname"><span class="pre">torchdistill.models.classification.wide_resnet.</span></span><span class="sig-name descname"><span class="pre">wide_resnet28_10</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">dropout_p</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0.3</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">num_classes</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">10</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">pretrained</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">progress</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Any</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/torchdistill/models/classification/wide_resnet.html#wide_resnet28_10"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#torchdistill.models.classification.wide_resnet.wide_resnet28_10" title="Permalink to this definition"></a></dt>
+<dd><p>WRN-28-10 model.</p>
+<p>Sergey Zagoruyko, Nikos Komodakis: <a class="reference external" href="https://bmva-archive.org.uk/bmvc/2016/papers/paper087/index.html">“Wide Residual Networks”</a> &#64; BMVC 2016 (2016)</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>dropout_p</strong> (<em>float</em>) – dropout rate.</p></li>
+<li><p><strong>num_classes</strong> (<em>int</em>) – number of classification classes.</p></li>
+<li><p><strong>pretrained</strong> (<em>bool</em>) – if True, returns a model pre-trained on CIFAR dataset.</p></li>
+<li><p><strong>progress</strong> (<em>bool</em>) – if True, displays a progress bar of the download to stderr.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>WRN-28-10 model.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><a class="reference internal" href="#torchdistill.models.classification.wide_resnet.WideResNet4Cifar" title="torchdistill.models.classification.wide_resnet.WideResNet4Cifar">WideResNet4Cifar</a></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="torchdistill.models.classification.wide_resnet.wide_resnet16_8">
+<span class="sig-prename descclassname"><span class="pre">torchdistill.models.classification.wide_resnet.</span></span><span class="sig-name descname"><span class="pre">wide_resnet16_8</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">dropout_p</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0.3</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">num_classes</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">10</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">pretrained</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">progress</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">Any</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/torchdistill/models/classification/wide_resnet.html#wide_resnet16_8"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#torchdistill.models.classification.wide_resnet.wide_resnet16_8" title="Permalink to this definition"></a></dt>
+<dd><p>WRN-16-8 model.</p>
+<p>Sergey Zagoruyko, Nikos Komodakis: <a class="reference external" href="https://bmva-archive.org.uk/bmvc/2016/papers/paper087/index.html">“Wide Residual Networks”</a> &#64; BMVC 2016 (2016)</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>dropout_p</strong> (<em>float</em>) – dropout rate.</p></li>
+<li><p><strong>num_classes</strong> (<em>int</em>) – number of classification classes.</p></li>
+<li><p><strong>pretrained</strong> (<em>bool</em>) – if True, returns a model pre-trained on CIFAR dataset.</p></li>
+<li><p><strong>progress</strong> (<em>bool</em>) – if True, displays a progress bar of the download to stderr.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>WRN-16-8 model.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><a class="reference internal" href="#torchdistill.models.classification.wide_resnet.WideResNet4Cifar" title="torchdistill.models.classification.wide_resnet.WideResNet4Cifar">WideResNet4Cifar</a></p>
+</dd>
+</dl>
+</dd></dl>
+
+</section>
+</section>
+<hr class="docutils" />
+<section id="torchdistill-models-official">
+<h2>torchdistill.models.official<a class="headerlink" href="#torchdistill-models-official" title="Permalink to this heading"></a></h2>
+<span class="target" id="module-torchdistill.models.official"></span><dl class="py function">
+<dt class="sig sig-object py" id="torchdistill.models.official.get_image_classification_model">
+<span class="sig-prename descclassname"><span class="pre">torchdistill.models.official.</span></span><span class="sig-name descname"><span class="pre">get_image_classification_model</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">model_config</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">distributed</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/torchdistill/models/official.html#get_image_classification_model"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#torchdistill.models.official.get_image_classification_model" title="Permalink to this definition"></a></dt>
+<dd><p>Gets an image classification model from torchvision.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>model_config</strong> (<em>dict</em>) – image classification model configuration.</p></li>
+<li><p><strong>distributed</strong> (<em>bool</em>) – whether to be in distributed training mode.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>image classification model.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>nn.Module</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="torchdistill.models.official.get_object_detection_model">
+<span class="sig-prename descclassname"><span class="pre">torchdistill.models.official.</span></span><span class="sig-name descname"><span class="pre">get_object_detection_model</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">model_config</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/torchdistill/models/official.html#get_object_detection_model"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#torchdistill.models.official.get_object_detection_model" title="Permalink to this definition"></a></dt>
+<dd><p>Gets an object detection model from torchvision.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>model_config</strong> (<em>dict</em>) – object detection model configuration.</p>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>object detection model.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>nn.Module</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="torchdistill.models.official.get_semantic_segmentation_model">
+<span class="sig-prename descclassname"><span class="pre">torchdistill.models.official.</span></span><span class="sig-name descname"><span class="pre">get_semantic_segmentation_model</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">model_config</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/torchdistill/models/official.html#get_semantic_segmentation_model"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#torchdistill.models.official.get_semantic_segmentation_model" title="Permalink to this definition"></a></dt>
+<dd><p>Gets a semantic segmentation model from torchvision.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>model_config</strong> (<em>dict</em>) – semantic segmentation model configuration.</p>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>semantic segmentation model.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>nn.Module</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="torchdistill.models.official.get_vision_model">
+<span class="sig-prename descclassname"><span class="pre">torchdistill.models.official.</span></span><span class="sig-name descname"><span class="pre">get_vision_model</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">model_config</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/torchdistill/models/official.html#get_vision_model"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#torchdistill.models.official.get_vision_model" title="Permalink to this definition"></a></dt>
+<dd><p>Gets a computer vision model from torchvision.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>model_config</strong> (<em>dict</em>) – model configuration.</p>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>computer vision model.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>nn.Module</p>
+</dd>
+</dl>
+</dd></dl>
+
+</section>
+<hr class="docutils" />
+<section id="torchdistill-models-adaptation">
+<h2>torchdistill.models.adaptation<a class="headerlink" href="#torchdistill-models-adaptation" title="Permalink to this heading"></a></h2>
+<span class="target" id="module-torchdistill.models.adaptation"></span><dl class="py class">
+<dt class="sig sig-object py" id="torchdistill.models.adaptation.ConvReg">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">torchdistill.models.adaptation.</span></span><span class="sig-name descname"><span class="pre">ConvReg</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">num_input_channels</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">num_output_channels</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">kernel_size</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">stride</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">padding</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">uses_relu</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/torchdistill/models/adaptation.html#ConvReg"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#torchdistill.models.adaptation.ConvReg" title="Permalink to this definition"></a></dt>
+<dd><p><a class="reference external" href="https://github.com/HobbitLong/RepDistiller/blob/34557d27282c83d49cff08b594944cf9570512bb/models/util.py#L131-L154">A convolutional regression for FitNets used in “Contrastive Representation Distillation” (CRD)</a></p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>num_input_channels</strong> (<em>int</em>) – <code class="docutils literal notranslate"><span class="pre">in_channels</span></code> for Conv2d.</p></li>
+<li><p><strong>num_output_channels</strong> (<em>int</em>) – <code class="docutils literal notranslate"><span class="pre">out_channels</span></code> for Conv2d.</p></li>
+<li><p><strong>kernel_size</strong> (<em>(</em><em>int</em><em>, </em><em>int</em><em>) or </em><em>int</em>) – <code class="docutils literal notranslate"><span class="pre">kernel_size</span></code> for Conv2d.</p></li>
+<li><p><strong>stride</strong> (<em>int</em>) – <code class="docutils literal notranslate"><span class="pre">stride</span></code> for Conv2d.</p></li>
+<li><p><strong>padding</strong> (<em>int</em>) – <code class="docutils literal notranslate"><span class="pre">padding</span></code> for Conv2d.</p></li>
+<li><p><strong>uses_relu</strong> (<em>bool</em>) – if True, uses ReLU as the last module.</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+</section>
+<hr class="docutils" />
+<section id="torchdistill-models-wrapper">
+<h2>torchdistill.models.wrapper<a class="headerlink" href="#torchdistill-models-wrapper" title="Permalink to this heading"></a></h2>
+<span class="target" id="module-torchdistill.models.wrapper"></span><dl class="py class">
+<dt class="sig sig-object py" id="torchdistill.models.wrapper.AuxiliaryModelWrapper">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">torchdistill.models.wrapper.</span></span><span class="sig-name descname"><span class="pre">AuxiliaryModelWrapper</span></span><a class="reference internal" href="../_modules/torchdistill/models/wrapper.html#AuxiliaryModelWrapper"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#torchdistill.models.wrapper.AuxiliaryModelWrapper" title="Permalink to this definition"></a></dt>
+<dd><p>An abstract auxiliary model wrapper.</p>
+<p><code class="xref py py-meth docutils literal notranslate"><span class="pre">forward()</span></code>, <code class="xref py py-meth docutils literal notranslate"><span class="pre">secondary_forward()</span></code>, and <code class="xref py py-meth docutils literal notranslate"><span class="pre">post_epoch_process()</span></code> should be overridden by all subclasses.</p>
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="torchdistill.models.wrapper.EmptyModule">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">torchdistill.models.wrapper.</span></span><span class="sig-name descname"><span class="pre">EmptyModule</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/torchdistill/models/wrapper.html#EmptyModule"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#torchdistill.models.wrapper.EmptyModule" title="Permalink to this definition"></a></dt>
+<dd><p>An empty auxiliary model wrapper. This module returns input as output and is useful when you want to replace
+your teacher/student model with an empty model for saving inference time.
+e.g., Multi-stage knowledge distillation may have some stages that do not require either teacher or student models.</p>
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="torchdistill.models.wrapper.Paraphraser4FactorTransfer">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">torchdistill.models.wrapper.</span></span><span class="sig-name descname"><span class="pre">Paraphraser4FactorTransfer</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">k</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">num_input_channels</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">kernel_size</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">3</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">stride</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">padding</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">uses_bn</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">uses_decoder</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/torchdistill/models/wrapper.html#Paraphraser4FactorTransfer"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#torchdistill.models.wrapper.Paraphraser4FactorTransfer" title="Permalink to this definition"></a></dt>
+<dd><p>Paraphraser for factor transfer (FT). This module is used at the 1st and 2nd stages of FT method.</p>
+<p>Jangho Kim, Seonguk Park, Nojun Kwak: <a class="reference external" href="https://papers.neurips.cc/paper_files/paper/2018/hash/6d9cb7de5e8ac30bd5e8734bc96a35c1-Abstract.html">“Paraphrasing Complex Network: Network Compression via Factor Transfer”</a> &#64; NeurIPS 2018 (2018)</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>k</strong> (<em>float</em>) – paraphrase rate.</p></li>
+<li><p><strong>num_input_channels</strong> (<em>int</em>) – number of input channels.</p></li>
+<li><p><strong>kernel_size</strong> (<em>int</em>) – <code class="docutils literal notranslate"><span class="pre">kernel_size</span></code> for Conv2d.</p></li>
+<li><p><strong>stride</strong> (<em>int</em>) – <code class="docutils literal notranslate"><span class="pre">stride</span></code> for Conv2d.</p></li>
+<li><p><strong>padding</strong> (<em>int</em>) – <code class="docutils literal notranslate"><span class="pre">padding</span></code> for Conv2d.</p></li>
+<li><p><strong>uses_bn</strong> (<em>bool</em>) – if True, uses BatchNorm2d.</p></li>
+<li><p><strong>uses_decoder</strong> (<em>bool</em>) – if True, uses decoder in <code class="xref py py-meth docutils literal notranslate"><span class="pre">forward()</span></code>.</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="torchdistill.models.wrapper.Translator4FactorTransfer">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">torchdistill.models.wrapper.</span></span><span class="sig-name descname"><span class="pre">Translator4FactorTransfer</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">num_input_channels</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">num_output_channels</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">kernel_size</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">3</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">stride</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">padding</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">uses_bn</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/torchdistill/models/wrapper.html#Translator4FactorTransfer"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#torchdistill.models.wrapper.Translator4FactorTransfer" title="Permalink to this definition"></a></dt>
+<dd><p>Translator for factor transfer (FT). This module is used at the 2nd stage of FT method.
+Note that “the student translator has the same three convolution layers as the paraphraser”.</p>
+<p>Jangho Kim, Seonguk Park, Nojun Kwak: <a class="reference external" href="https://papers.neurips.cc/paper_files/paper/2018/hash/6d9cb7de5e8ac30bd5e8734bc96a35c1-Abstract.html">“Paraphrasing Complex Network: Network Compression via Factor Transfer”</a> &#64; NeurIPS 2018 (2018)</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>num_input_channels</strong> (<em>int</em>) – number of input channels.</p></li>
+<li><p><strong>kernel_size</strong> (<em>int</em>) – <code class="docutils literal notranslate"><span class="pre">kernel_size</span></code> for Conv2d.</p></li>
+<li><p><strong>stride</strong> (<em>int</em>) – <code class="docutils literal notranslate"><span class="pre">stride</span></code> for Conv2d.</p></li>
+<li><p><strong>padding</strong> (<em>int</em>) – <code class="docutils literal notranslate"><span class="pre">padding</span></code> for Conv2d.</p></li>
+<li><p><strong>uses_bn</strong> (<em>bool</em>) – if True, uses BatchNorm2d.</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="torchdistill.models.wrapper.Teacher4FactorTransfer">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">torchdistill.models.wrapper.</span></span><span class="sig-name descname"><span class="pre">Teacher4FactorTransfer</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">teacher_model</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">minimal</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">input_module_path</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">paraphraser_kwargs</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">paraphraser_ckpt</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">uses_decoder</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">device</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">device_ids</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">distributed</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">find_unused_parameters</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/torchdistill/models/wrapper.html#Teacher4FactorTransfer"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#torchdistill.models.wrapper.Teacher4FactorTransfer" title="Permalink to this definition"></a></dt>
+<dd><p>An auxiliary teacher model wrapper for factor transfer (FT), including paraphraser <a class="reference internal" href="#torchdistill.models.wrapper.Paraphraser4FactorTransfer" title="torchdistill.models.wrapper.Paraphraser4FactorTransfer"><code class="xref py py-class docutils literal notranslate"><span class="pre">Paraphraser4FactorTransfer</span></code></a>.</p>
+<p>Jangho Kim, Seonguk Park, Nojun Kwak: <a class="reference external" href="https://papers.neurips.cc/paper_files/paper/2018/hash/6d9cb7de5e8ac30bd5e8734bc96a35c1-Abstract.html">“Paraphrasing Complex Network: Network Compression via Factor Transfer”</a> &#64; NeurIPS 2018 (2018)</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>teacher_model</strong> (<em>nn.Module</em>) – teacher model.</p></li>
+<li><p><strong>minimal</strong> (<em>dict</em><em> or </em><em>None</em>) – <code class="docutils literal notranslate"><span class="pre">model_config</span></code> for <a class="reference internal" href="#torchdistill.models.wrapper.build_auxiliary_model_wrapper" title="torchdistill.models.wrapper.build_auxiliary_model_wrapper"><code class="xref py py-meth docutils literal notranslate"><span class="pre">build_auxiliary_model_wrapper()</span></code></a> if you want to.</p></li>
+<li><p><strong>input_module_path</strong> (<em>str</em>) – path of module whose output is used as input to paraphraser.</p></li>
+<li><p><strong>paraphraser_kwargs</strong> (<em>dict</em>) – kwargs to instantiate <a class="reference internal" href="#torchdistill.models.wrapper.Paraphraser4FactorTransfer" title="torchdistill.models.wrapper.Paraphraser4FactorTransfer"><code class="xref py py-class docutils literal notranslate"><span class="pre">Paraphraser4FactorTransfer</span></code></a>.</p></li>
+<li><p><strong>uses_decoder</strong> (<em>bool</em>) – <code class="docutils literal notranslate"><span class="pre">uses_decoder</span></code> for <a class="reference internal" href="#torchdistill.models.wrapper.Paraphraser4FactorTransfer" title="torchdistill.models.wrapper.Paraphraser4FactorTransfer"><code class="xref py py-class docutils literal notranslate"><span class="pre">Paraphraser4FactorTransfer</span></code></a>.</p></li>
+<li><p><strong>device</strong> (<em>torch.device</em>) – target device.</p></li>
+<li><p><strong>device_ids</strong> (<em>list</em><em>[</em><em>int</em><em>]</em>) – target device IDs.</p></li>
+<li><p><strong>distributed</strong> (<em>bool</em>) – whether to be in distributed training mode.</p></li>
+<li><p><strong>find_unused_parameters</strong> (<em>bool</em><em> or </em><em>None</em>) – <code class="docutils literal notranslate"><span class="pre">find_unused_parameters</span></code> for DistributedDataParallel.</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="torchdistill.models.wrapper.Student4FactorTransfer">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">torchdistill.models.wrapper.</span></span><span class="sig-name descname"><span class="pre">Student4FactorTransfer</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">student_model</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">input_module_path</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">translator_kwargs</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">device</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">device_ids</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">distributed</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">find_unused_parameters</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/torchdistill/models/wrapper.html#Student4FactorTransfer"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#torchdistill.models.wrapper.Student4FactorTransfer" title="Permalink to this definition"></a></dt>
+<dd><p>An auxiliary student model wrapper for factor transfer (FT), including translator <a class="reference internal" href="#torchdistill.models.wrapper.Translator4FactorTransfer" title="torchdistill.models.wrapper.Translator4FactorTransfer"><code class="xref py py-class docutils literal notranslate"><span class="pre">Translator4FactorTransfer</span></code></a>.</p>
+<p>Jangho Kim, Seonguk Park, Nojun Kwak: <a class="reference external" href="https://papers.neurips.cc/paper_files/paper/2018/hash/6d9cb7de5e8ac30bd5e8734bc96a35c1-Abstract.html">“Paraphrasing Complex Network: Network Compression via Factor Transfer”</a> &#64; NeurIPS 2018 (2018)</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>student_model</strong> (<em>nn.Module</em>) – student model.</p></li>
+<li><p><strong>input_module_path</strong> (<em>str</em>) – path of module whose output is used as input to paraphraser.</p></li>
+<li><p><strong>translator_kwargs</strong> (<em>dict</em>) – kwargs to instantiate <a class="reference internal" href="#torchdistill.models.wrapper.Translator4FactorTransfer" title="torchdistill.models.wrapper.Translator4FactorTransfer"><code class="xref py py-class docutils literal notranslate"><span class="pre">Translator4FactorTransfer</span></code></a>.</p></li>
+<li><p><strong>device</strong> (<em>torch.device</em>) – target device.</p></li>
+<li><p><strong>device_ids</strong> (<em>list</em><em>[</em><em>int</em><em>]</em>) – target device IDs.</p></li>
+<li><p><strong>distributed</strong> (<em>bool</em>) – whether to be in distributed training mode.</p></li>
+<li><p><strong>find_unused_parameters</strong> (<em>bool</em><em> or </em><em>None</em>) – <code class="docutils literal notranslate"><span class="pre">find_unused_parameters</span></code> for DistributedDataParallel.</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="torchdistill.models.wrapper.Connector4DAB">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">torchdistill.models.wrapper.</span></span><span class="sig-name descname"><span class="pre">Connector4DAB</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">student_model</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">connectors</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">device</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">device_ids</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">distributed</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">find_unused_parameters</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/torchdistill/models/wrapper.html#Connector4DAB"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#torchdistill.models.wrapper.Connector4DAB" title="Permalink to this definition"></a></dt>
+<dd><p>An auxiliary student model wrapper with connector for distillation of activation boundaries (DAB).</p>
+<p>Byeongho Heo, Minsik Lee, Sangdoo Yun, Jin Young Choi: <a class="reference external" href="https://ojs.aaai.org/index.php/AAAI/article/view/4264">“Knowledge Transfer via Distillation of Activation Boundaries Formed by Hidden Neurons”</a> &#64; AAAI 2019 (2019)</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>student_model</strong> (<em>nn.Module</em>) – student model.</p></li>
+<li><p><strong>connectors</strong> (<em>dict</em>) – connector keys and configurations.</p></li>
+<li><p><strong>device</strong> (<em>torch.device</em>) – target device.</p></li>
+<li><p><strong>device_ids</strong> (<em>list</em><em>[</em><em>int</em><em>]</em>) – target device IDs.</p></li>
+<li><p><strong>distributed</strong> (<em>bool</em>) – whether to be in distributed training mode.</p></li>
+<li><p><strong>find_unused_parameters</strong> (<em>bool</em><em> or </em><em>None</em>) – <code class="docutils literal notranslate"><span class="pre">find_unused_parameters</span></code> for DistributedDataParallel.</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="torchdistill.models.wrapper.Regressor4VID">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">torchdistill.models.wrapper.</span></span><span class="sig-name descname"><span class="pre">Regressor4VID</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">in_channels</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">middle_channels</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">out_channels</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">eps</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">init_pred_var</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/torchdistill/models/wrapper.html#Regressor4VID"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#torchdistill.models.wrapper.Regressor4VID" title="Permalink to this definition"></a></dt>
+<dd><p>An auxiliary module for variational information distillation (VID).</p>
+<p>Sungsoo Ahn, Shell Xu Hu, Andreas Damianou, Neil D. Lawrence, Zhenwen Dai: <a class="reference external" href="https://openaccess.thecvf.com/content_CVPR_2019/html/Ahn_Variational_Information_Distillation_for_Knowledge_Transfer_CVPR_2019_paper.html">“Variational Information Distillation for Knowledge Transfer”</a> &#64; CVPR 2019 (2019)</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>in_channels</strong> (<em>int</em>) – number of input channels for the first convolution layer.</p></li>
+<li><p><strong>mid_channels</strong> (<em>int</em>) – number of output/input channels for the first/second convolution layer.</p></li>
+<li><p><strong>out_channels</strong> (<em>int</em>) – number of output channels for the third convolution layer.</p></li>
+<li><p><strong>eps</strong> (<em>float</em>) – eps.</p></li>
+<li><p><strong>init_pred_var</strong> (<em>float</em>) – minimum variance introduced for numerical stability.</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="torchdistill.models.wrapper.VariationalDistributor4VID">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">torchdistill.models.wrapper.</span></span><span class="sig-name descname"><span class="pre">VariationalDistributor4VID</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">student_model</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">regressors</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">device</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">device_ids</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">distributed</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">find_unused_parameters</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/torchdistill/models/wrapper.html#VariationalDistributor4VID"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#torchdistill.models.wrapper.VariationalDistributor4VID" title="Permalink to this definition"></a></dt>
+<dd><p>An auxiliary student model wrapper for variational information distillation (VID), including translator <a class="reference internal" href="#torchdistill.models.wrapper.Regressor4VID" title="torchdistill.models.wrapper.Regressor4VID"><code class="xref py py-class docutils literal notranslate"><span class="pre">Regressor4VID</span></code></a>.</p>
+<p>Sungsoo Ahn, Shell Xu Hu, Andreas Damianou, Neil D. Lawrence, Zhenwen Dai: <a class="reference external" href="https://openaccess.thecvf.com/content_CVPR_2019/html/Ahn_Variational_Information_Distillation_for_Knowledge_Transfer_CVPR_2019_paper.html">“Variational Information Distillation for Knowledge Transfer”</a> &#64; CVPR 2019 (2019)</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>student_model</strong> (<em>nn.Module</em>) – student model.</p></li>
+<li><p><strong>in_channels</strong> (<em>int</em>) – number of input channels for the first convolution layer.</p></li>
+<li><p><strong>regressors</strong> (<em>dict</em>) – regressor keys and configurations.</p></li>
+<li><p><strong>device</strong> (<em>torch.device</em>) – target device.</p></li>
+<li><p><strong>device_ids</strong> (<em>list</em><em>[</em><em>int</em><em>]</em>) – target device IDs.</p></li>
+<li><p><strong>distributed</strong> (<em>bool</em>) – whether to be in distributed training mode.</p></li>
+<li><p><strong>find_unused_parameters</strong> (<em>bool</em><em> or </em><em>None</em>) – <code class="docutils literal notranslate"><span class="pre">find_unused_parameters</span></code> for DistributedDataParallel.</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="torchdistill.models.wrapper.Linear4CCKD">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">torchdistill.models.wrapper.</span></span><span class="sig-name descname"><span class="pre">Linear4CCKD</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">input_module</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">linear_kwargs</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">device</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">device_ids</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">distributed</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">teacher_model</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">student_model</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">find_unused_parameters</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/torchdistill/models/wrapper.html#Linear4CCKD"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#torchdistill.models.wrapper.Linear4CCKD" title="Permalink to this definition"></a></dt>
+<dd><p>An auxiliary teacher/student model wrapper for correlation congruence for knowledge distillation (CCKD).
+Fully-connected layers cope with a mismatch of feature representations of teacher and student models.</p>
+<p>Baoyun Peng, Xiao Jin, Jiaheng Liu, Dongsheng Li, Yichao Wu, Yu Liu, Shunfeng Zhou, Zhaoning Zhang: <a class="reference external" href="https://openaccess.thecvf.com/content_ICCV_2019/html/Peng_Correlation_Congruence_for_Knowledge_Distillation_ICCV_2019_paper.html">“Correlation Congruence for Knowledge Distillation”</a> &#64; ICCV 2019 (2019)</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>input_module</strong> (<em>dict</em>) – input module configuration.</p></li>
+<li><p><strong>linear_kwargs</strong> (<em>dict</em>) – kwargs for Linear.</p></li>
+<li><p><strong>device</strong> (<em>torch.device</em>) – target device.</p></li>
+<li><p><strong>device_ids</strong> (<em>list</em><em>[</em><em>int</em><em>]</em>) – target device IDs.</p></li>
+<li><p><strong>distributed</strong> (<em>bool</em>) – whether to be in distributed training mode.</p></li>
+<li><p><strong>teacher_model</strong> (<em>nn.Module</em><em> or </em><em>None</em>) – teacher model.</p></li>
+<li><p><strong>student_model</strong> (<em>nn.Module</em><em> or </em><em>None</em>) – student model.</p></li>
+<li><p><strong>find_unused_parameters</strong> (<em>bool</em><em> or </em><em>None</em>) – <code class="docutils literal notranslate"><span class="pre">find_unused_parameters</span></code> for DistributedDataParallel.</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="torchdistill.models.wrapper.Normalizer4CRD">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">torchdistill.models.wrapper.</span></span><span class="sig-name descname"><span class="pre">Normalizer4CRD</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">linear</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">power</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">2</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/torchdistill/models/wrapper.html#Normalizer4CRD"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#torchdistill.models.wrapper.Normalizer4CRD" title="Permalink to this definition"></a></dt>
+<dd><p>An auxiliary module for contrastive representation distillation (CRD).</p>
+<p>Yonglong Tian, Dilip Krishnan, Phillip Isola: <a class="reference external" href="https://openreview.net/forum?id=SkgpBJrtvS">“Contrastive Representation Distillation”</a> &#64; ICLR 2020 (2020)</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>linear</strong> (<em>nn.Module</em>) – linear module.</p></li>
+<li><p><strong>power</strong> (<em>int</em>) – the exponents.</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="torchdistill.models.wrapper.Linear4CRD">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">torchdistill.models.wrapper.</span></span><span class="sig-name descname"><span class="pre">Linear4CRD</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">input_module_path</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">linear_kwargs</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">device</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">device_ids</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">distributed</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">power</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">2</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">teacher_model</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">student_model</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">find_unused_parameters</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/torchdistill/models/wrapper.html#Linear4CRD"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#torchdistill.models.wrapper.Linear4CRD" title="Permalink to this definition"></a></dt>
+<dd><p>An auxiliary teacher/student model wrapper for contrastive representation distillation (CRD), including translator <a class="reference internal" href="#torchdistill.models.wrapper.Normalizer4CRD" title="torchdistill.models.wrapper.Normalizer4CRD"><code class="xref py py-class docutils literal notranslate"><span class="pre">Normalizer4CRD</span></code></a>.
+Refactored <a class="reference external" href="https://github.com/HobbitLong/RepDistiller/blob/master/crd/memory.py">https://github.com/HobbitLong/RepDistiller/blob/master/crd/memory.py</a></p>
+<p>Yonglong Tian, Dilip Krishnan, Phillip Isola: <a class="reference external" href="https://openreview.net/forum?id=SkgpBJrtvS">“Contrastive Representation Distillation”</a> &#64; ICLR 2020 (2020)</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>input_module_path</strong> (<em>str</em>) – path of module whose output will be flattened and then used as input to normalizer.</p></li>
+<li><p><strong>linear_kwargs</strong> (<em>dict</em>) – kwargs for Linear.</p></li>
+<li><p><strong>device</strong> (<em>torch.device</em>) – target device.</p></li>
+<li><p><strong>device_ids</strong> (<em>list</em><em>[</em><em>int</em><em>]</em>) – target device IDs.</p></li>
+<li><p><strong>distributed</strong> (<em>bool</em>) – whether to be in distributed training mode.</p></li>
+<li><p><strong>power</strong> (<em>int</em>) – <code class="docutils literal notranslate"><span class="pre">power</span></code> for <a class="reference internal" href="#torchdistill.models.wrapper.Normalizer4CRD" title="torchdistill.models.wrapper.Normalizer4CRD"><code class="xref py py-class docutils literal notranslate"><span class="pre">Normalizer4CRD</span></code></a>.</p></li>
+<li><p><strong>teacher_model</strong> (<em>nn.Module</em><em> or </em><em>None</em>) – teacher model.</p></li>
+<li><p><strong>student_model</strong> (<em>nn.Module</em><em> or </em><em>None</em>) – student model.</p></li>
+<li><p><strong>find_unused_parameters</strong> (<em>bool</em><em> or </em><em>None</em>) – <code class="docutils literal notranslate"><span class="pre">find_unused_parameters</span></code> for DistributedDataParallel.</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="torchdistill.models.wrapper.HeadRCNN">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">torchdistill.models.wrapper.</span></span><span class="sig-name descname"><span class="pre">HeadRCNN</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">head_rcnn</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/torchdistill/models/wrapper.html#HeadRCNN"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#torchdistill.models.wrapper.HeadRCNN" title="Permalink to this definition"></a></dt>
+<dd><p>An auxiliary teacher/student model wrapper for head network distillation (HND) and generalized head network distillation (GHND).</p>
+<ul class="simple">
+<li><p>Yoshitomo Matsubara, Sabur Baidya, Davide Callegaro, Marco Levorato, Sameer Singh: <a class="reference external" href="https://dl.acm.org/doi/10.1145/3349614.3356022">“Distilled Split Deep Neural Networks for Edge-Assisted Real-Time Systems”</a> &#64; MobiCom 2019 Workshop on Hot Topics in Video Analytics and Intelligent Edges (2019)</p></li>
+<li><p>Yoshitomo Matsubara, Marco Levorato: <a class="reference external" href="https://arxiv.org/abs/2007.15818">“Neural Compression and Filtering for Edge-assisted Real-time Object Detection in Challenged Networks”</a> &#64; ICPR 2020 (2021)</p></li>
+</ul>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>head_rcnn</strong> (<em>dict</em>) – head R-CNN configuration as <code class="docutils literal notranslate"><span class="pre">model_config</span></code> in <a class="reference internal" href="#torchdistill.models.util.redesign_model" title="torchdistill.models.util.redesign_model"><code class="xref py py-meth docutils literal notranslate"><span class="pre">torchdistill.models.util.redesign_model()</span></code></a>.</p></li>
+<li><p><strong>kwargs</strong> (<em>dict</em>) – <code class="docutils literal notranslate"><span class="pre">teacher_model</span></code> or <code class="docutils literal notranslate"><span class="pre">student_model</span></code> keys must be included. If both <code class="docutils literal notranslate"><span class="pre">teacher_model</span></code> and <code class="docutils literal notranslate"><span class="pre">student_model</span></code> are provided, <code class="docutils literal notranslate"><span class="pre">student_model</span></code> will be prioritized.</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="torchdistill.models.wrapper.SSWrapper4SSKD">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">torchdistill.models.wrapper.</span></span><span class="sig-name descname"><span class="pre">SSWrapper4SSKD</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">input_module</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">feat_dim</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">ss_module_ckpt</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">device</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">device_ids</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">distributed</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">freezes_ss_module</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">teacher_model</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">student_model</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">find_unused_parameters</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/torchdistill/models/wrapper.html#SSWrapper4SSKD"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#torchdistill.models.wrapper.SSWrapper4SSKD" title="Permalink to this definition"></a></dt>
+<dd><p>An auxiliary teacher/student model wrapper for self-supervision knowledge distillation (SSKD).
+If both <code class="docutils literal notranslate"><span class="pre">teacher_model</span></code> and <code class="docutils literal notranslate"><span class="pre">student_model</span></code> are provided, <code class="docutils literal notranslate"><span class="pre">student_model</span></code> will be prioritized</p>
+<p>Guodong Xu, Ziwei Liu, Xiaoxiao Li, Chen Change Loy: <a class="reference external" href="https://www.ecva.net/papers/eccv_2020/papers_ECCV/html/898_ECCV_2020_paper.php">“Knowledge Distillation Meets Self-Supervision”</a> &#64; ECCV 2020 (2020)</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>input_module</strong> (<em>dict</em>) – input module configuration.</p></li>
+<li><p><strong>feat_dim</strong> (<em>int</em>) – number of input/output features for self-supervision module.</p></li>
+<li><p><strong>ss_module_ckpt</strong> (<em>str</em>) – self-supervision module checkpoint file path.</p></li>
+<li><p><strong>device</strong> (<em>torch.device</em>) – target device.</p></li>
+<li><p><strong>device_ids</strong> (<em>list</em><em>[</em><em>int</em><em>]</em>) – target device IDs.</p></li>
+<li><p><strong>distributed</strong> (<em>bool</em>) – whether to be in distributed training mode.</p></li>
+<li><p><strong>freezes_ss_module</strong> (<em>bool</em>) – if True, freezes self-supervision module.</p></li>
+<li><p><strong>teacher_model</strong> (<em>nn.Module</em><em> or </em><em>None</em>) – teacher model.</p></li>
+<li><p><strong>student_model</strong> (<em>nn.Module</em><em> or </em><em>None</em>) – student model.</p></li>
+<li><p><strong>find_unused_parameters</strong> (<em>bool</em><em> or </em><em>None</em>) – <code class="docutils literal notranslate"><span class="pre">find_unused_parameters</span></code> for DistributedDataParallel.</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="torchdistill.models.wrapper.VarianceBranch4PAD">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">torchdistill.models.wrapper.</span></span><span class="sig-name descname"><span class="pre">VarianceBranch4PAD</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">student_model</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">input_module</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">feat_dim</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">var_estimator_ckpt</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">device</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">device_ids</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">distributed</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">find_unused_parameters</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/torchdistill/models/wrapper.html#VarianceBranch4PAD"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#torchdistill.models.wrapper.VarianceBranch4PAD" title="Permalink to this definition"></a></dt>
+<dd><p>An auxiliary teacher/student model wrapper for prime-aware adaptive distillation (PAD).</p>
+<p>Youcai Zhang, Zhonghao Lan, Yuchen Dai, Fangao Zeng, Yan Bai, Jie Chang, Yichen Wei: <a class="reference external" href="https://www.ecva.net/papers/eccv_2020/papers_ECCV/html/3317_ECCV_2020_paper.php">“Prime-Aware Adaptive Distillation”</a> &#64; ECCV 2020 (2020)</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>student_model</strong> (<em>nn.Module</em>) – student model.</p></li>
+<li><p><strong>input_module</strong> (<em>dict</em>) – input module configuration.</p></li>
+<li><p><strong>feat_dim</strong> (<em>int</em>) – number of input/output features for self-supervision module.</p></li>
+<li><p><strong>var_estimator_ckpt</strong> (<em>str</em>) – variance estimator module checkpoint file path.</p></li>
+<li><p><strong>device</strong> (<em>torch.device</em>) – target device.</p></li>
+<li><p><strong>device_ids</strong> (<em>list</em><em>[</em><em>int</em><em>]</em>) – target device IDs.</p></li>
+<li><p><strong>distributed</strong> (<em>bool</em>) – whether to be in distributed training mode.</p></li>
+<li><p><strong>find_unused_parameters</strong> (<em>bool</em><em> or </em><em>None</em>) – <code class="docutils literal notranslate"><span class="pre">find_unused_parameters</span></code> for DistributedDataParallel.</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="torchdistill.models.wrapper.AttentionBasedFusion">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">torchdistill.models.wrapper.</span></span><span class="sig-name descname"><span class="pre">AttentionBasedFusion</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">in_channels</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">mid_channels</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">out_channels</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">uses_attention</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/torchdistill/models/wrapper.html#AttentionBasedFusion"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#torchdistill.models.wrapper.AttentionBasedFusion" title="Permalink to this definition"></a></dt>
+<dd><p>An auxiliary module for knowledge review (KR). Refactored <a class="reference external" href="https://github.com/dvlab-research/ReviewKD/blob/master/ImageNet/models/reviewkd.py">https://github.com/dvlab-research/ReviewKD/blob/master/ImageNet/models/reviewkd.py</a></p>
+<p>Pengguang Chen, Shu Liu, Hengshuang Zhao, Jiaya Jia: <a class="reference external" href="https://openaccess.thecvf.com/content/CVPR2021/html/Chen_Distilling_Knowledge_via_Knowledge_Review_CVPR_2021_paper.html">“Distilling Knowledge via Knowledge Review”</a> &#64; CVPR 2021 (2021)</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>in_channels</strong> (<em>int</em>) – number of input channels for the first convolution layer.</p></li>
+<li><p><strong>mid_channels</strong> (<em>int</em>) – number of output/input channels for the first/second convolution layer.</p></li>
+<li><p><strong>out_channels</strong> (<em>int</em>) – number of output channels for the third convolution layer.</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="torchdistill.models.wrapper.Student4KnowledgeReview">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">torchdistill.models.wrapper.</span></span><span class="sig-name descname"><span class="pre">Student4KnowledgeReview</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">student_model</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">abfs</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">device</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">device_ids</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">distributed</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">sizes</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">find_unused_parameters</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/torchdistill/models/wrapper.html#Student4KnowledgeReview"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#torchdistill.models.wrapper.Student4KnowledgeReview" title="Permalink to this definition"></a></dt>
+<dd><p>An auxiliary student model wrapper for knowledge review (KR). Refactored <a class="reference external" href="https://github.com/dvlab-research/ReviewKD/blob/master/ImageNet/models/reviewkd.py">https://github.com/dvlab-research/ReviewKD/blob/master/ImageNet/models/reviewkd.py</a></p>
+<p>Pengguang Chen, Shu Liu, Hengshuang Zhao, Jiaya Jia: <a class="reference external" href="https://openaccess.thecvf.com/content/CVPR2021/html/Chen_Distilling_Knowledge_via_Knowledge_Review_CVPR_2021_paper.html">“Distilling Knowledge via Knowledge Review”</a> &#64; CVPR 2021 (2021)</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>student_model</strong> (<em>nn.Module</em>) – student model.</p></li>
+<li><p><strong>abfs</strong> (<em>list</em><em>[</em><em>dict</em><em>]</em>) – attention based fusion configurations.</p></li>
+<li><p><strong>device</strong> (<em>torch.device</em>) – target device.</p></li>
+<li><p><strong>device_ids</strong> (<em>list</em><em>[</em><em>int</em><em>]</em>) – target device IDs.</p></li>
+<li><p><strong>distributed</strong> (<em>bool</em>) – whether to be in distributed training mode.</p></li>
+<li><p><strong>find_unused_parameters</strong> (<em>bool</em><em> or </em><em>None</em>) – <code class="docutils literal notranslate"><span class="pre">find_unused_parameters</span></code> for DistributedDataParallel.</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="torchdistill.models.wrapper.Student4KTAAD">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">torchdistill.models.wrapper.</span></span><span class="sig-name descname"><span class="pre">Student4KTAAD</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">student_model</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">input_module_path</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">feature_adapter_config</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">affinity_adapter_config</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">device</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">device_ids</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">distributed</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">find_unused_parameters</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/torchdistill/models/wrapper.html#Student4KTAAD"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#torchdistill.models.wrapper.Student4KTAAD" title="Permalink to this definition"></a></dt>
+<dd><p>An auxiliary student model wrapper for knowledge translation and adaptation + affinity distillation (KTAAD).
+Refactored <a class="reference external" href="https://github.com/dvlab-research/ReviewKD/blob/master/ImageNet/models/reviewkd.py">https://github.com/dvlab-research/ReviewKD/blob/master/ImageNet/models/reviewkd.py</a></p>
+<p>Tong He, Chunhua Shen, Zhi Tian, Dong Gong, Changming Sun, Youliang Yan.: <a class="reference external" href="https://openaccess.thecvf.com/content_CVPR_2019/html/He_Knowledge_Adaptation_for_Efficient_Semantic_Segmentation_CVPR_2019_paper.html">“Knowledge Adaptation for Efficient Semantic Segmentation”</a> &#64; CVPR 2019 (2019)</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>student_model</strong> (<em>nn.Module</em>) – student model.</p></li>
+<li><p><strong>input_module_path</strong> (<em>str</em>) – path of module whose output is used as input to feature adapter and affinity adapter.</p></li>
+<li><p><strong>feature_adapter_config</strong> (<em>dict</em>) – feature adapter configuration.</p></li>
+<li><p><strong>affinity_adapter_config</strong> (<em>dict</em>) – affinity adapter configuration.</p></li>
+<li><p><strong>device</strong> (<em>torch.device</em>) – target device.</p></li>
+<li><p><strong>device_ids</strong> (<em>list</em><em>[</em><em>int</em><em>]</em>) – target device IDs.</p></li>
+<li><p><strong>distributed</strong> (<em>bool</em>) – whether to be in distributed training mode.</p></li>
+<li><p><strong>find_unused_parameters</strong> (<em>bool</em><em> or </em><em>None</em>) – <code class="docutils literal notranslate"><span class="pre">find_unused_parameters</span></code> for DistributedDataParallel.</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="torchdistill.models.wrapper.ChannelSimilarityEmbed">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">torchdistill.models.wrapper.</span></span><span class="sig-name descname"><span class="pre">ChannelSimilarityEmbed</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">in_channels</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">512</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">out_channels</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">128</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/torchdistill/models/wrapper.html#ChannelSimilarityEmbed"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#torchdistill.models.wrapper.ChannelSimilarityEmbed" title="Permalink to this definition"></a></dt>
+<dd><p>An auxiliary module for Inter-Channel Correlation for Knowledge Distillation (ICKD). Refactored <a class="reference external" href="https://github.com/ADLab-AutoDrive/ICKD/blob/main/ImageNet/torchdistill/models/special.py">https://github.com/ADLab-AutoDrive/ICKD/blob/main/ImageNet/torchdistill/models/special.py</a></p>
+<p>Li Liu, Qingle Huang, Sihao Lin, Hongwei Xie, Bing Wang, Xiaojun Chang, Xiaodan Liang: <a class="reference external" href="https://openaccess.thecvf.com/content/ICCV2021/html/Liu_Exploring_Inter-Channel_Correlation_for_Diversity-Preserved_Knowledge_Distillation_ICCV_2021_paper.html">“Inter-Channel Correlation for Knowledge Distillation”</a> &#64; ICCV 2021 (2021)</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>in_channels</strong> (<em>int</em>) – number of input channels for the convolution layer.</p></li>
+<li><p><strong>out_channels</strong> (<em>int</em>) – number of output channels for the convolution layer.</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="torchdistill.models.wrapper.Student4ICKD">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">torchdistill.models.wrapper.</span></span><span class="sig-name descname"><span class="pre">Student4ICKD</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">student_model</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">embeddings</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">device</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">device_ids</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">distributed</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/torchdistill/models/wrapper.html#Student4ICKD"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#torchdistill.models.wrapper.Student4ICKD" title="Permalink to this definition"></a></dt>
+<dd><p>An auxiliary student model wrapper for Inter-Channel Correlation for Knowledge Distillation (ICKD).
+Referred to <a class="reference external" href="https://github.com/ADLab-AutoDrive/ICKD/blob/main/ImageNet/torchdistill/models/special.py">https://github.com/ADLab-AutoDrive/ICKD/blob/main/ImageNet/torchdistill/models/special.py</a></p>
+<p>Li Liu, Qingle Huang, Sihao Lin, Hongwei Xie, Bing Wang, Xiaojun Chang, Xiaodan Liang: <a class="reference external" href="https://openaccess.thecvf.com/content/ICCV2021/html/Liu_Exploring_Inter-Channel_Correlation_for_Diversity-Preserved_Knowledge_Distillation_ICCV_2021_paper.html">“Inter-Channel Correlation for Knowledge Distillation”</a> &#64; ICCV 2021 (2021)</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>student_model</strong> (<em>nn.Module</em>) – student model.</p></li>
+<li><p><strong>embeddings</strong> (<em>dict</em>) – embeddings keys and configuration.</p></li>
+<li><p><strong>device</strong> (<em>torch.device</em>) – target device.</p></li>
+<li><p><strong>device_ids</strong> (<em>list</em><em>[</em><em>int</em><em>]</em>) – target device IDs.</p></li>
+<li><p><strong>distributed</strong> (<em>bool</em>) – whether to be in distributed training mode.</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="torchdistill.models.wrapper.SRDModelWrapper">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">torchdistill.models.wrapper.</span></span><span class="sig-name descname"><span class="pre">SRDModelWrapper</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">input_module</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">norm_kwargs</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">device</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">device_ids</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">distributed</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">linear_kwargs</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">teacher_model</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">student_model</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">find_unused_parameters</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/torchdistill/models/wrapper.html#SRDModelWrapper"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#torchdistill.models.wrapper.SRDModelWrapper" title="Permalink to this definition"></a></dt>
+<dd><p>An auxiliary model wrapper for Understanding the Role of the Projector in Knowledge Distillation.
+Referred to <a class="reference external" href="https://github.com/roymiles/Simple-Recipe-Distillation/blob/main/imagenet/torchdistill/losses/single.py">https://github.com/roymiles/Simple-Recipe-Distillation/blob/main/imagenet/torchdistill/losses/single.py</a></p>
+<p>Roy Miles, Krystian Mikolajczyk: <a class="reference external" href="https://arxiv.org/abs/2303.11098">“Understanding the Role of the Projector in Knowledge Distillation”</a> &#64; AAAI 2024 (2024)</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>model</strong> (<em>nn.Module</em>) – model.</p></li>
+<li><p><strong>input_module</strong> (<em>dict</em>) – input module configuration.</p></li>
+<li><p><strong>linear_kwargs</strong> (<em>dict</em><em> or </em><em>None</em>) – nn.Linear keyword arguments.</p></li>
+<li><p><strong>norm_kwargs</strong> (<em>dict</em>) – nn.BatchNorm1d keyword arguments.</p></li>
+<li><p><strong>device</strong> (<em>torch.device</em>) – target device.</p></li>
+<li><p><strong>device_ids</strong> (<em>list</em><em>[</em><em>int</em><em>]</em>) – target device IDs.</p></li>
+<li><p><strong>distributed</strong> (<em>bool</em>) – whether to be in distributed training mode.</p></li>
+<li><p><strong>teacher_model</strong> (<em>nn.Module</em><em> or </em><em>None</em>) – teacher model.</p></li>
+<li><p><strong>student_model</strong> (<em>nn.Module</em><em> or </em><em>None</em>) – student model.</p></li>
+<li><p><strong>find_unused_parameters</strong> (<em>bool</em><em> or </em><em>None</em>) – <code class="docutils literal notranslate"><span class="pre">find_unused_parameters</span></code> for DistributedDataParallel.</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="torchdistill.models.wrapper.build_auxiliary_model_wrapper">
+<span class="sig-prename descclassname"><span class="pre">torchdistill.models.wrapper.</span></span><span class="sig-name descname"><span class="pre">build_auxiliary_model_wrapper</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">model_config</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/torchdistill/models/wrapper.html#build_auxiliary_model_wrapper"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#torchdistill.models.wrapper.build_auxiliary_model_wrapper" title="Permalink to this definition"></a></dt>
+<dd><p>Builds an auxiliary model wrapper for either teacher or student models.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>model_config</strong> (<em>dict</em>) – configuration to build the auxiliary model wrapper. Should contain either ‘teacher_model’ or <a href="#id23"><span class="problematic" id="id24">`</span></a>student_model’.</p>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>auxiliary model wrapper.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>nn.Module</p>
+</dd>
+</dl>
+</dd></dl>
+
+</section>
+<hr class="docutils" />
+<section id="torchdistill-models-util">
+<h2>torchdistill.models.util<a class="headerlink" href="#torchdistill-models-util" title="Permalink to this heading"></a></h2>
+<span class="target" id="module-torchdistill.models.util"></span><dl class="py function">
+<dt class="sig sig-object py" id="torchdistill.models.util.wrap_if_distributed">
+<span class="sig-prename descclassname"><span class="pre">torchdistill.models.util.</span></span><span class="sig-name descname"><span class="pre">wrap_if_distributed</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">module</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">device</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">device_ids</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">distributed</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">find_unused_parameters</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/torchdistill/models/util.html#wrap_if_distributed"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#torchdistill.models.util.wrap_if_distributed" title="Permalink to this definition"></a></dt>
+<dd><p>Wraps <code class="docutils literal notranslate"><span class="pre">module</span></code> with DistributedDataParallel if <code class="docutils literal notranslate"><span class="pre">distributed</span></code> = True and <code class="docutils literal notranslate"><span class="pre">module</span></code> has any updatable parameters.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>module</strong> (<em>nn.Module</em>) – module to be wrapped.</p></li>
+<li><p><strong>device</strong> (<em>torch.device</em>) – target device.</p></li>
+<li><p><strong>device_ids</strong> (<em>list</em><em>[</em><em>int</em><em>]</em>) – target device IDs.</p></li>
+<li><p><strong>distributed</strong> (<em>bool</em>) – whether to be in distributed training mode.</p></li>
+<li><p><strong>find_unused_parameters</strong> (<em>bool</em><em> or </em><em>None</em>) – <code class="docutils literal notranslate"><span class="pre">find_unused_parameters</span></code> for DistributedDataParallel.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>wrapped module if <code class="docutils literal notranslate"><span class="pre">distributed</span></code> = True and it contains any updatable parameters.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>nn.Module</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="torchdistill.models.util.load_module_ckpt">
+<span class="sig-prename descclassname"><span class="pre">torchdistill.models.util.</span></span><span class="sig-name descname"><span class="pre">load_module_ckpt</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">module</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">map_location</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">ckpt_file_path</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/torchdistill/models/util.html#load_module_ckpt"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#torchdistill.models.util.load_module_ckpt" title="Permalink to this definition"></a></dt>
+<dd><p>Loads checkpoint for <code class="docutils literal notranslate"><span class="pre">module</span></code>.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>module</strong> (<em>nn.Module</em>) – module to load checkpoint.</p></li>
+<li><p><strong>map_location</strong> (<em>torch.device</em><em> or </em><em>str</em><em> or </em><em>dict</em><em> or </em><em>Callable</em>) – <code class="docutils literal notranslate"><span class="pre">map_location</span></code> for torch.load.</p></li>
+<li><p><strong>ckpt_file_path</strong> (<em>str</em>) – file path to load checkpoint.</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="torchdistill.models.util.save_module_ckpt">
+<span class="sig-prename descclassname"><span class="pre">torchdistill.models.util.</span></span><span class="sig-name descname"><span class="pre">save_module_ckpt</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">module</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">ckpt_file_path</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/torchdistill/models/util.html#save_module_ckpt"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#torchdistill.models.util.save_module_ckpt" title="Permalink to this definition"></a></dt>
+<dd><p>Saves checkpoint of <code class="docutils literal notranslate"><span class="pre">module</span></code>’s state dict.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>module</strong> (<em>nn.Module</em>) – module to load checkpoint.</p></li>
+<li><p><strong>ckpt_file_path</strong> (<em>str</em>) – file path to save checkpoint.</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="torchdistill.models.util.add_submodule">
+<span class="sig-prename descclassname"><span class="pre">torchdistill.models.util.</span></span><span class="sig-name descname"><span class="pre">add_submodule</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">module</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">module_path</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">module_dict</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/torchdistill/models/util.html#add_submodule"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#torchdistill.models.util.add_submodule" title="Permalink to this definition"></a></dt>
+<dd><p>Recursively adds submodules to <cite>module_dict</cite>.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>module</strong> (<em>nn.Module</em>) – module.</p></li>
+<li><p><strong>module_path</strong> (<em>str</em>) – module path.</p></li>
+<li><p><strong>module_dict</strong> (<em>nn.ModuleDict</em><em> or </em><em>dict</em>) – module dict.</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="torchdistill.models.util.build_sequential_container">
+<span class="sig-prename descclassname"><span class="pre">torchdistill.models.util.</span></span><span class="sig-name descname"><span class="pre">build_sequential_container</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">module_dict</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/torchdistill/models/util.html#build_sequential_container"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#torchdistill.models.util.build_sequential_container" title="Permalink to this definition"></a></dt>
+<dd><p>Builds sequential container (nn.Sequential) from <code class="docutils literal notranslate"><span class="pre">module_dict</span></code>.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>module_dict</strong> (<em>nn.ModuleDict</em><em> or </em><em>collections.OrderedDict</em>) – module dict to build sequential to build a sequential container.</p>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>sequential container.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>nn.Sequential</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="torchdistill.models.util.redesign_model">
+<span class="sig-prename descclassname"><span class="pre">torchdistill.models.util.</span></span><span class="sig-name descname"><span class="pre">redesign_model</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">org_model</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">model_config</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">model_label</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">model_type</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'original'</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/torchdistill/models/util.html#redesign_model"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#torchdistill.models.util.redesign_model" title="Permalink to this definition"></a></dt>
+<dd><p>Redesigns <code class="docutils literal notranslate"><span class="pre">org_model</span></code> and returns a new separate model e.g.,</p>
+<ul class="simple">
+<li><p>prunes some modules from <code class="docutils literal notranslate"><span class="pre">org_model</span></code>,</p></li>
+<li><p>freezes parameters of some modules in <code class="docutils literal notranslate"><span class="pre">org_model</span></code>, and</p></li>
+<li><p>adds adaptation module(s) to <code class="docutils literal notranslate"><span class="pre">org_model</span></code> as a new separate model.</p></li>
+</ul>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>The parameters and states of modules in <code class="docutils literal notranslate"><span class="pre">org_model</span></code> will be kept in a new redesigned model.</p>
+</div>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>org_model</strong> (<em>nn.Module</em>) – original model to be redesigned.</p></li>
+<li><p><strong>model_config</strong> (<em>dict</em>) – configuration to redesign <code class="docutils literal notranslate"><span class="pre">org_model</span></code>.</p></li>
+<li><p><strong>model_label</strong> (<em>str</em>) – model label (e.g., ‘teacher’, ‘student’) to be printed just for debugging purpose.</p></li>
+<li><p><strong>model_type</strong> (<em>str</em>) – model type (e.g., ‘original’, name of model class, etc) to be printed just for debugging purpose.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>redesigned model.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>nn.Module</p>
+</dd>
+</dl>
+</dd></dl>
+
+</section>
+</section>
+
+
+           </div>
+          </div>
+          <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
+        <a href="datasets.html" class="btn btn-neutral float-left" title="torchdistill.datasets" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="losses.html" class="btn btn-neutral float-right" title="torchdistill.losses" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2023, Yoshitomo Matsubara.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script>
+    <!-- Theme Analytics -->
+    <script async src="https://www.googletagmanager.com/gtag/js?id=G-LYK8SSJ7R5"></script>
+    <script>
+      window.dataLayer = window.dataLayer || [];
+      function gtag(){dataLayer.push(arguments);}
+      gtag('js', new Date());
+
+      gtag('config', 'G-LYK8SSJ7R5', {
+          'anonymize_ip': false,
+      });
+    </script> 
+
+</body>
+</html>

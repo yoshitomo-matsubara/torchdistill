@@ -1,0 +1,1373 @@
+<!DOCTYPE html>
+<html class="writer-html5" lang="en">
+<head>
+  <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>torchdistill.losses &mdash; torchdistill v1.1.1-dev documentation</title>
+      <link rel="stylesheet" type="text/css" href="../_static/pygments.css?v=80d5e7a1" />
+      <link rel="stylesheet" type="text/css" href="../_static/css/theme.css?v=19f00094" />
+
+  
+  <!--[if lt IE 9]>
+    <script src="../_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+        <script src="../_static/jquery.js?v=5d32c60e"></script>
+        <script src="../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+        <script data-url_root="../" id="documentation_options" src="../_static/documentation_options.js?v=0b675245"></script>
+        <script src="../_static/doctools.js?v=888ff710"></script>
+        <script src="../_static/sphinx_highlight.js?v=4825356b"></script>
+        <script async="async" src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
+    <script src="../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" />
+    <link rel="next" title="torchdistill.optim" href="optim.html" />
+    <link rel="prev" title="torchdistill.models" href="models.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="../index.html">
+            
+              <img src="../_static/logo-white.png" class="logo" alt="Logo"/>
+          </a>
+              <div class="version">
+                v1.1.1-dev
+              </div>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">📚 Overview</span></p>
+<ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="../usage.html">Usage</a></li>
+<li class="toctree-l1 current"><a class="reference internal" href="../package.html">torchdistill API</a><ul class="current">
+<li class="toctree-l2"><a class="reference internal" href="core.html">torchdistill.core</a></li>
+<li class="toctree-l2"><a class="reference internal" href="datasets.html">torchdistill.datasets</a></li>
+<li class="toctree-l2"><a class="reference internal" href="models.html">torchdistill.models</a></li>
+<li class="toctree-l2 current"><a class="current reference internal" href="#">torchdistill.losses</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#torchdistill-losses-registry">torchdistill.losses.registry</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#torchdistill.losses.registry.register_low_level_loss"><code class="docutils literal notranslate"><span class="pre">register_low_level_loss()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#torchdistill.losses.registry.register_mid_level_loss"><code class="docutils literal notranslate"><span class="pre">register_mid_level_loss()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#torchdistill.losses.registry.register_high_level_loss"><code class="docutils literal notranslate"><span class="pre">register_high_level_loss()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#torchdistill.losses.registry.register_loss_wrapper"><code class="docutils literal notranslate"><span class="pre">register_loss_wrapper()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#torchdistill.losses.registry.register_func2extract_model_output"><code class="docutils literal notranslate"><span class="pre">register_func2extract_model_output()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#torchdistill.losses.registry.get_low_level_loss"><code class="docutils literal notranslate"><span class="pre">get_low_level_loss()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#torchdistill.losses.registry.get_mid_level_loss"><code class="docutils literal notranslate"><span class="pre">get_mid_level_loss()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#torchdistill.losses.registry.get_high_level_loss"><code class="docutils literal notranslate"><span class="pre">get_high_level_loss()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#torchdistill.losses.registry.get_loss_wrapper"><code class="docutils literal notranslate"><span class="pre">get_loss_wrapper()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#torchdistill.losses.registry.get_func2extract_model_output"><code class="docutils literal notranslate"><span class="pre">get_func2extract_model_output()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="#torchdistill-losses-high-level">torchdistill.losses.high_level</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#torchdistill.losses.high_level.AbstractLoss"><code class="docutils literal notranslate"><span class="pre">AbstractLoss</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#torchdistill.losses.high_level.WeightedSumLoss"><code class="docutils literal notranslate"><span class="pre">WeightedSumLoss</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="#torchdistill-losses-mid-level">torchdistill.losses.mid_level</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#torchdistill.losses.mid_level.SimpleLossWrapper"><code class="docutils literal notranslate"><span class="pre">SimpleLossWrapper</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#torchdistill.losses.mid_level.DictLossWrapper"><code class="docutils literal notranslate"><span class="pre">DictLossWrapper</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#torchdistill.losses.mid_level.KDLoss"><code class="docutils literal notranslate"><span class="pre">KDLoss</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#torchdistill.losses.mid_level.FSPLoss"><code class="docutils literal notranslate"><span class="pre">FSPLoss</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#torchdistill.losses.mid_level.ATLoss"><code class="docutils literal notranslate"><span class="pre">ATLoss</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#torchdistill.losses.mid_level.PKTLoss"><code class="docutils literal notranslate"><span class="pre">PKTLoss</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#torchdistill.losses.mid_level.FTLoss"><code class="docutils literal notranslate"><span class="pre">FTLoss</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#torchdistill.losses.mid_level.AltActTransferLoss"><code class="docutils literal notranslate"><span class="pre">AltActTransferLoss</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#torchdistill.losses.mid_level.RKDLoss"><code class="docutils literal notranslate"><span class="pre">RKDLoss</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#torchdistill.losses.mid_level.VIDLoss"><code class="docutils literal notranslate"><span class="pre">VIDLoss</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#torchdistill.losses.mid_level.CCKDLoss"><code class="docutils literal notranslate"><span class="pre">CCKDLoss</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#torchdistill.losses.mid_level.SPKDLoss"><code class="docutils literal notranslate"><span class="pre">SPKDLoss</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#torchdistill.losses.mid_level.CRDLoss"><code class="docutils literal notranslate"><span class="pre">CRDLoss</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#torchdistill.losses.mid_level.AuxSSKDLoss"><code class="docutils literal notranslate"><span class="pre">AuxSSKDLoss</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#torchdistill.losses.mid_level.SSKDLoss"><code class="docutils literal notranslate"><span class="pre">SSKDLoss</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#torchdistill.losses.mid_level.PADL2Loss"><code class="docutils literal notranslate"><span class="pre">PADL2Loss</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#torchdistill.losses.mid_level.HierarchicalContextLoss"><code class="docutils literal notranslate"><span class="pre">HierarchicalContextLoss</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#torchdistill.losses.mid_level.RegularizationLoss"><code class="docutils literal notranslate"><span class="pre">RegularizationLoss</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#torchdistill.losses.mid_level.KTALoss"><code class="docutils literal notranslate"><span class="pre">KTALoss</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#torchdistill.losses.mid_level.AffinityLoss"><code class="docutils literal notranslate"><span class="pre">AffinityLoss</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#torchdistill.losses.mid_level.ChSimLoss"><code class="docutils literal notranslate"><span class="pre">ChSimLoss</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#torchdistill.losses.mid_level.DISTLoss"><code class="docutils literal notranslate"><span class="pre">DISTLoss</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#torchdistill.losses.mid_level.SRDLoss"><code class="docutils literal notranslate"><span class="pre">SRDLoss</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#torchdistill.losses.mid_level.LogitStdKDLoss"><code class="docutils literal notranslate"><span class="pre">LogitStdKDLoss</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="#torchdistill-losses-util">torchdistill.losses.util</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#torchdistill.losses.util.extract_model_loss_dict"><code class="docutils literal notranslate"><span class="pre">extract_model_loss_dict()</span></code></a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="optim.html">torchdistill.optim</a></li>
+<li class="toctree-l2"><a class="reference internal" href="common.html">torchdistill.common</a></li>
+<li class="toctree-l2"><a class="reference internal" href="misc.html">torchdistill.misc</a></li>
+</ul>
+</li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">🧑🏻‍💻 Research</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../benchmarks.html">Benchmarks</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../projects.html">Projects</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../index.html">torchdistill</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content style-external-links">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../index.html" class="icon icon-home" aria-label="Home"></a></li>
+          <li class="breadcrumb-item"><a href="../package.html">torchdistill API</a></li>
+      <li class="breadcrumb-item active">torchdistill.losses</li>
+      <li class="wy-breadcrumbs-aside">
+              <a href="https://github.com/yoshitomo-matsubara/torchdistill/blob/main/docs/source/subpkgs/losses.rst" class="fa fa-github"> Edit on GitHub</a>
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <section id="torchdistill-losses">
+<h1>torchdistill.losses<a class="headerlink" href="#torchdistill-losses" title="Permalink to this heading"></a></h1>
+<div class="toctree-wrapper compound">
+</div>
+<hr class="docutils" />
+<section id="torchdistill-losses-registry">
+<h2>torchdistill.losses.registry<a class="headerlink" href="#torchdistill-losses-registry" title="Permalink to this heading"></a></h2>
+<span class="target" id="module-torchdistill.losses.registry"></span><dl class="py function">
+<dt class="sig sig-object py" id="torchdistill.losses.registry.register_low_level_loss">
+<span class="sig-prename descclassname"><span class="pre">torchdistill.losses.registry.</span></span><span class="sig-name descname"><span class="pre">register_low_level_loss</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">arg</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/torchdistill/losses/registry.html#register_low_level_loss"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#torchdistill.losses.registry.register_low_level_loss" title="Permalink to this definition"></a></dt>
+<dd><p>Registers a low-level loss class or function to instantiate it.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>arg</strong> (<em>class</em><em> or </em><em>Callable</em><em> or </em><em>None</em>) – class or function to be registered as a low-level loss.</p>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>registered low-level loss class or function to instantiate it.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>class or <em>Callable</em></p>
+</dd>
+</dl>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>The low-level loss will be registered as an option.
+You can choose the registered class/function by specifying the name of the class/function or <code class="docutils literal notranslate"><span class="pre">key</span></code>
+you used for the registration, in a training configuration used for
+<a class="reference internal" href="core.html#torchdistill.core.distillation.DistillationBox" title="torchdistill.core.distillation.DistillationBox"><code class="xref py py-class docutils literal notranslate"><span class="pre">torchdistill.core.distillation.DistillationBox</span></code></a> or <a class="reference internal" href="core.html#torchdistill.core.training.TrainingBox" title="torchdistill.core.training.TrainingBox"><code class="xref py py-class docutils literal notranslate"><span class="pre">torchdistill.core.training.TrainingBox</span></code></a>.</p>
+<p>If you want to register the class/function with a key of your choice, add <code class="docutils literal notranslate"><span class="pre">key</span></code> to the decorator as below:</p>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">torch</span> <span class="kn">import</span> <span class="n">nn</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">torchdistill.losses.registry</span> <span class="kn">import</span> <span class="n">register_low_level_loss</span>
+<span class="gp">&gt;&gt;&gt;</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="nd">@register_low_level_loss</span><span class="p">(</span><span class="n">key</span><span class="o">=</span><span class="s1">&#39;my_custom_low_level_loss&#39;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="k">class</span> <span class="nc">CustomLowLevelLoss</span><span class="p">(</span><span class="n">nn</span><span class="o">.</span><span class="n">Module</span><span class="p">):</span>
+<span class="gp">&gt;&gt;&gt; </span>    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+<span class="gp">&gt;&gt;&gt; </span>        <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;This is my custom low-level loss class&#39;</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>In the example, <code class="docutils literal notranslate"><span class="pre">CustomLowLevelLoss</span></code> class is registered with a key “my_custom_low_level_loss”.
+When you configure <a class="reference internal" href="core.html#torchdistill.core.distillation.DistillationBox" title="torchdistill.core.distillation.DistillationBox"><code class="xref py py-class docutils literal notranslate"><span class="pre">torchdistill.core.distillation.DistillationBox</span></code></a> or
+<a class="reference internal" href="core.html#torchdistill.core.training.TrainingBox" title="torchdistill.core.training.TrainingBox"><code class="xref py py-class docutils literal notranslate"><span class="pre">torchdistill.core.training.TrainingBox</span></code></a>, you can choose the <code class="docutils literal notranslate"><span class="pre">CustomLowLevelLoss</span></code> class by
+“my_custom_low_level_loss”.</p>
+</div>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="torchdistill.losses.registry.register_mid_level_loss">
+<span class="sig-prename descclassname"><span class="pre">torchdistill.losses.registry.</span></span><span class="sig-name descname"><span class="pre">register_mid_level_loss</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">arg</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/torchdistill/losses/registry.html#register_mid_level_loss"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#torchdistill.losses.registry.register_mid_level_loss" title="Permalink to this definition"></a></dt>
+<dd><p>Registers a middle-level loss class or function to instantiate it.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>arg</strong> (<em>class</em><em> or </em><em>Callable</em><em> or </em><em>None</em>) – class or function to be registered as a middle-level loss.</p>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>registered middle-level loss class or function to instantiate it.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>class or <em>Callable</em></p>
+</dd>
+</dl>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>The middle-level loss will be registered as an option.
+You can choose the registered class/function by specifying the name of the class/function or <code class="docutils literal notranslate"><span class="pre">key</span></code>
+you used for the registration, in a training configuration used for
+<a class="reference internal" href="core.html#torchdistill.core.distillation.DistillationBox" title="torchdistill.core.distillation.DistillationBox"><code class="xref py py-class docutils literal notranslate"><span class="pre">torchdistill.core.distillation.DistillationBox</span></code></a> or <a class="reference internal" href="core.html#torchdistill.core.training.TrainingBox" title="torchdistill.core.training.TrainingBox"><code class="xref py py-class docutils literal notranslate"><span class="pre">torchdistill.core.training.TrainingBox</span></code></a>.</p>
+<p>If you want to register the class/function with a key of your choice, add <code class="docutils literal notranslate"><span class="pre">key</span></code> to the decorator as below:</p>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">torch</span> <span class="kn">import</span> <span class="n">nn</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">torchdistill.losses.registry</span> <span class="kn">import</span> <span class="n">register_mid_level_loss</span>
+<span class="gp">&gt;&gt;&gt;</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="nd">@register_mid_level_loss</span><span class="p">(</span><span class="n">key</span><span class="o">=</span><span class="s1">&#39;my_custom_mid_level_loss&#39;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="k">class</span> <span class="nc">CustomMidLevelLoss</span><span class="p">(</span><span class="n">nn</span><span class="o">.</span><span class="n">Module</span><span class="p">):</span>
+<span class="gp">&gt;&gt;&gt; </span>    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+<span class="gp">&gt;&gt;&gt; </span>        <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;This is my custom middle-level loss class&#39;</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>In the example, <code class="docutils literal notranslate"><span class="pre">CustomMidLevelLoss</span></code> class is registered with a key “my_custom_mid_level_loss”.
+When you configure <a class="reference internal" href="core.html#torchdistill.core.distillation.DistillationBox" title="torchdistill.core.distillation.DistillationBox"><code class="xref py py-class docutils literal notranslate"><span class="pre">torchdistill.core.distillation.DistillationBox</span></code></a> or
+<a class="reference internal" href="core.html#torchdistill.core.training.TrainingBox" title="torchdistill.core.training.TrainingBox"><code class="xref py py-class docutils literal notranslate"><span class="pre">torchdistill.core.training.TrainingBox</span></code></a>, you can choose the <code class="docutils literal notranslate"><span class="pre">CustomMidLevelLoss</span></code> class by
+“my_custom_mid_level_loss”.</p>
+</div>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="torchdistill.losses.registry.register_high_level_loss">
+<span class="sig-prename descclassname"><span class="pre">torchdistill.losses.registry.</span></span><span class="sig-name descname"><span class="pre">register_high_level_loss</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">arg</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/torchdistill/losses/registry.html#register_high_level_loss"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#torchdistill.losses.registry.register_high_level_loss" title="Permalink to this definition"></a></dt>
+<dd><p>Registers a high-level loss class or function to instantiate it.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>arg</strong> (<em>class</em><em> or </em><em>Callable</em><em> or </em><em>None</em>) – class or function to be registered as a high-level loss.</p>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>registered high-level loss class or function to instantiate it.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>class or <em>Callable</em></p>
+</dd>
+</dl>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>The high-level loss will be registered as an option.
+You can choose the registered class/function by specifying the name of the class/function or <code class="docutils literal notranslate"><span class="pre">key</span></code>
+you used for the registration, in a training configuration used for
+<a class="reference internal" href="core.html#torchdistill.core.distillation.DistillationBox" title="torchdistill.core.distillation.DistillationBox"><code class="xref py py-class docutils literal notranslate"><span class="pre">torchdistill.core.distillation.DistillationBox</span></code></a> or <a class="reference internal" href="core.html#torchdistill.core.training.TrainingBox" title="torchdistill.core.training.TrainingBox"><code class="xref py py-class docutils literal notranslate"><span class="pre">torchdistill.core.training.TrainingBox</span></code></a>.</p>
+<p>If you want to register the class/function with a key of your choice, add <code class="docutils literal notranslate"><span class="pre">key</span></code> to the decorator as below:</p>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">torch</span> <span class="kn">import</span> <span class="n">nn</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">torchdistill.losses.registry</span> <span class="kn">import</span> <span class="n">register_high_level_loss</span>
+<span class="gp">&gt;&gt;&gt;</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="nd">@register_high_level_loss</span><span class="p">(</span><span class="n">key</span><span class="o">=</span><span class="s1">&#39;my_custom_high_level_loss&#39;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="k">class</span> <span class="nc">CustomHighLevelLoss</span><span class="p">(</span><span class="n">nn</span><span class="o">.</span><span class="n">Module</span><span class="p">):</span>
+<span class="gp">&gt;&gt;&gt; </span>    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+<span class="gp">&gt;&gt;&gt; </span>        <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;This is my custom high-level loss class&#39;</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>In the example, <code class="docutils literal notranslate"><span class="pre">CustomHighLevelLoss</span></code> class is registered with a key “my_custom_high_level_loss”.
+When you configure <a class="reference internal" href="core.html#torchdistill.core.distillation.DistillationBox" title="torchdistill.core.distillation.DistillationBox"><code class="xref py py-class docutils literal notranslate"><span class="pre">torchdistill.core.distillation.DistillationBox</span></code></a> or
+<a class="reference internal" href="core.html#torchdistill.core.training.TrainingBox" title="torchdistill.core.training.TrainingBox"><code class="xref py py-class docutils literal notranslate"><span class="pre">torchdistill.core.training.TrainingBox</span></code></a>, you can choose the <code class="docutils literal notranslate"><span class="pre">CustomHighLevelLoss</span></code> class by
+“my_custom_high_level_loss”.</p>
+</div>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="torchdistill.losses.registry.register_loss_wrapper">
+<span class="sig-prename descclassname"><span class="pre">torchdistill.losses.registry.</span></span><span class="sig-name descname"><span class="pre">register_loss_wrapper</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">arg</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/torchdistill/losses/registry.html#register_loss_wrapper"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#torchdistill.losses.registry.register_loss_wrapper" title="Permalink to this definition"></a></dt>
+<dd><p>Registers a loss wrapper class or function to instantiate it.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>arg</strong> (<em>class</em><em> or </em><em>Callable</em><em> or </em><em>None</em>) – class or function to be registered as a loss wrapper.</p>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>registered loss wrapper class or function to instantiate it.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>class or <em>Callable</em></p>
+</dd>
+</dl>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>The loss wrapper will be registered as an option.
+You can choose the registered class/function by specifying the name of the class/function or <code class="docutils literal notranslate"><span class="pre">key</span></code>
+you used for the registration, in a training configuration used for
+<a class="reference internal" href="core.html#torchdistill.core.distillation.DistillationBox" title="torchdistill.core.distillation.DistillationBox"><code class="xref py py-class docutils literal notranslate"><span class="pre">torchdistill.core.distillation.DistillationBox</span></code></a> or <a class="reference internal" href="core.html#torchdistill.core.training.TrainingBox" title="torchdistill.core.training.TrainingBox"><code class="xref py py-class docutils literal notranslate"><span class="pre">torchdistill.core.training.TrainingBox</span></code></a>.</p>
+<p>If you want to register the class/function with a key of your choice, add <code class="docutils literal notranslate"><span class="pre">key</span></code> to the decorator as below:</p>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">torch</span> <span class="kn">import</span> <span class="n">nn</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">torchdistill.losses.registry</span> <span class="kn">import</span> <span class="n">register_loss_wrapper</span>
+<span class="gp">&gt;&gt;&gt;</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="nd">@register_loss_wrapper</span><span class="p">(</span><span class="n">key</span><span class="o">=</span><span class="s1">&#39;my_custom_loss_wrapper&#39;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="k">class</span> <span class="nc">CustomLossWrapper</span><span class="p">(</span><span class="n">nn</span><span class="o">.</span><span class="n">Module</span><span class="p">):</span>
+<span class="gp">&gt;&gt;&gt; </span>    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+<span class="gp">&gt;&gt;&gt; </span>        <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;This is my custom loss wrapper class&#39;</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>In the example, <code class="docutils literal notranslate"><span class="pre">CustomHighLevelLoss</span></code> class is registered with a key “my_custom_loss_wrapper”.
+When you configure <a class="reference internal" href="core.html#torchdistill.core.distillation.DistillationBox" title="torchdistill.core.distillation.DistillationBox"><code class="xref py py-class docutils literal notranslate"><span class="pre">torchdistill.core.distillation.DistillationBox</span></code></a> or
+<a class="reference internal" href="core.html#torchdistill.core.training.TrainingBox" title="torchdistill.core.training.TrainingBox"><code class="xref py py-class docutils literal notranslate"><span class="pre">torchdistill.core.training.TrainingBox</span></code></a>, you can choose the <code class="docutils literal notranslate"><span class="pre">CustomLossWrapper</span></code> class by
+“my_custom_loss_wrapper”.</p>
+</div>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="torchdistill.losses.registry.register_func2extract_model_output">
+<span class="sig-prename descclassname"><span class="pre">torchdistill.losses.registry.</span></span><span class="sig-name descname"><span class="pre">register_func2extract_model_output</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">arg</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/torchdistill/losses/registry.html#register_func2extract_model_output"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#torchdistill.losses.registry.register_func2extract_model_output" title="Permalink to this definition"></a></dt>
+<dd><p>Registers a function to extract model output.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>arg</strong> (<em>Callable</em><em> or </em><em>None</em>) – function to be registered for extracting model output.</p>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>registered function.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><em>Callable</em></p>
+</dd>
+</dl>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>The function to extract model output will be registered as an option.
+You can choose the registered function by specifying the name of the function or <code class="docutils literal notranslate"><span class="pre">key</span></code>
+you used for the registration, in a training configuration used for
+<a class="reference internal" href="core.html#torchdistill.core.distillation.DistillationBox" title="torchdistill.core.distillation.DistillationBox"><code class="xref py py-class docutils literal notranslate"><span class="pre">torchdistill.core.distillation.DistillationBox</span></code></a> or <a class="reference internal" href="core.html#torchdistill.core.training.TrainingBox" title="torchdistill.core.training.TrainingBox"><code class="xref py py-class docutils literal notranslate"><span class="pre">torchdistill.core.training.TrainingBox</span></code></a>.</p>
+<p>If you want to register the function with a key of your choice, add <code class="docutils literal notranslate"><span class="pre">key</span></code> to the decorator as below:</p>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">torchdistill.losses.registry</span> <span class="kn">import</span> <span class="n">register_func2extract_model_output</span>
+<span class="gp">&gt;&gt;&gt;</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="nd">@register_func2extract_model_output</span><span class="p">(</span><span class="n">key</span><span class="o">=</span><span class="s1">&#39;my_custom_function2extract_model_output&#39;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="k">def</span> <span class="nf">custom_func2extract_model_output</span><span class="p">(</span><span class="n">batch</span><span class="p">,</span> <span class="n">label</span><span class="p">):</span>
+<span class="gp">&gt;&gt;&gt; </span>    <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;This is my custom collate function&#39;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span>    <span class="k">return</span> <span class="n">batch</span><span class="p">,</span> <span class="n">label</span>
+</pre></div>
+</div>
+<p>In the example, <code class="docutils literal notranslate"><span class="pre">custom_func2extract_model_output</span></code> function is registered with a key “my_custom_function2extract_model_output”.
+When you configure <a class="reference internal" href="core.html#torchdistill.core.distillation.DistillationBox" title="torchdistill.core.distillation.DistillationBox"><code class="xref py py-class docutils literal notranslate"><span class="pre">torchdistill.core.distillation.DistillationBox</span></code></a> or
+<a class="reference internal" href="core.html#torchdistill.core.training.TrainingBox" title="torchdistill.core.training.TrainingBox"><code class="xref py py-class docutils literal notranslate"><span class="pre">torchdistill.core.training.TrainingBox</span></code></a>, you can choose the <code class="docutils literal notranslate"><span class="pre">custom_func2extract_model_output</span></code> function by
+“my_custom_function2extract_model_output”.</p>
+</div>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="torchdistill.losses.registry.get_low_level_loss">
+<span class="sig-prename descclassname"><span class="pre">torchdistill.losses.registry.</span></span><span class="sig-name descname"><span class="pre">get_low_level_loss</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">key</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/torchdistill/losses/registry.html#get_low_level_loss"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#torchdistill.losses.registry.get_low_level_loss" title="Permalink to this definition"></a></dt>
+<dd><p>Gets a registered (low-level) loss module.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>key</strong> (<em>str</em>) – unique key to identify the registered loss class/function.</p>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>registered loss class or function to instantiate it.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>nn.Module</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="torchdistill.losses.registry.get_mid_level_loss">
+<span class="sig-prename descclassname"><span class="pre">torchdistill.losses.registry.</span></span><span class="sig-name descname"><span class="pre">get_mid_level_loss</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">mid_level_criterion_config</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">criterion_wrapper_config</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/torchdistill/losses/registry.html#get_mid_level_loss"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#torchdistill.losses.registry.get_mid_level_loss" title="Permalink to this definition"></a></dt>
+<dd><p>Gets a registered middle-level loss module.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>mid_level_criterion_config</strong> (<em>dict</em>) – middle-level loss configuration to identify and instantiate the registered middle-level loss class.</p></li>
+<li><p><strong>criterion_wrapper_config</strong> (<em>dict</em>) – middle-level loss configuration to identify and instantiate the registered middle-level loss class.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>registered middle-level loss class or function to instantiate it.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>nn.Module</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="torchdistill.losses.registry.get_high_level_loss">
+<span class="sig-prename descclassname"><span class="pre">torchdistill.losses.registry.</span></span><span class="sig-name descname"><span class="pre">get_high_level_loss</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">criterion_config</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/torchdistill/losses/registry.html#get_high_level_loss"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#torchdistill.losses.registry.get_high_level_loss" title="Permalink to this definition"></a></dt>
+<dd><p>Gets a registered high-level loss module.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>criterion_config</strong> (<em>dict</em>) – high-level loss configuration to identify and instantiate the registered high-level loss class.</p>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>registered high-level loss class or function to instantiate it.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>nn.Module</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="torchdistill.losses.registry.get_loss_wrapper">
+<span class="sig-prename descclassname"><span class="pre">torchdistill.losses.registry.</span></span><span class="sig-name descname"><span class="pre">get_loss_wrapper</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">mid_level_loss</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">criterion_wrapper_config</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/torchdistill/losses/registry.html#get_loss_wrapper"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#torchdistill.losses.registry.get_loss_wrapper" title="Permalink to this definition"></a></dt>
+<dd><p>Gets a registered loss wrapper module.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>mid_level_loss</strong> (<em>nn.Module</em>) – middle-level loss module.</p></li>
+<li><p><strong>criterion_wrapper_config</strong> (<em>dict</em>) – loss wrapper configuration to identify and instantiate the registered loss wrapper class.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>registered loss wrapper class or function to instantiate it.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>nn.Module</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="torchdistill.losses.registry.get_func2extract_model_output">
+<span class="sig-prename descclassname"><span class="pre">torchdistill.losses.registry.</span></span><span class="sig-name descname"><span class="pre">get_func2extract_model_output</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">key</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/torchdistill/losses/registry.html#get_func2extract_model_output"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#torchdistill.losses.registry.get_func2extract_model_output" title="Permalink to this definition"></a></dt>
+<dd><p>Gets a registered function to extract model output.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>key</strong> (<em>str</em>) – unique key to identify the registered function to extract model output.</p>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>registered function to extract model output.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><em>Callable</em></p>
+</dd>
+</dl>
+</dd></dl>
+
+</section>
+<hr class="docutils" />
+<section id="torchdistill-losses-high-level">
+<h2>torchdistill.losses.high_level<a class="headerlink" href="#torchdistill-losses-high-level" title="Permalink to this heading"></a></h2>
+<span class="target" id="module-torchdistill.losses.high_level"></span><dl class="py class">
+<dt class="sig sig-object py" id="torchdistill.losses.high_level.AbstractLoss">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">torchdistill.losses.high_level.</span></span><span class="sig-name descname"><span class="pre">AbstractLoss</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">sub_terms</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/torchdistill/losses/high_level.html#AbstractLoss"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#torchdistill.losses.high_level.AbstractLoss" title="Permalink to this definition"></a></dt>
+<dd><p>An abstract loss module.</p>
+<p><code class="xref py py-meth docutils literal notranslate"><span class="pre">forward()</span></code> and <code class="xref py py-meth docutils literal notranslate"><span class="pre">__str__()</span></code> should be overridden by all subclasses.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>sub_terms</strong> (<em>dict</em><em> or </em><em>None</em>) – loss module configurations.</p>
+</dd>
+</dl>
+<div class="literal-block-wrapper docutils container" id="id3">
+<div class="code-block-caption"><span class="caption-text">An example yaml of <code class="docutils literal notranslate"><span class="pre">sub_terms</span></code></span><a class="headerlink" href="#id3" title="Permalink to this code"></a></div>
+<div class="highlight-YAML notranslate"><div class="highlight"><pre><span></span><span class="w"> </span><span class="nt">sub_terms</span><span class="p">:</span>
+<span class="w">   </span><span class="nt">ce</span><span class="p">:</span>
+<span class="w">     </span><span class="nt">criterion</span><span class="p">:</span>
+<span class="w">       </span><span class="nt">key</span><span class="p">:</span><span class="w"> </span><span class="s">&#39;CrossEntropyLoss&#39;</span>
+<span class="w">       </span><span class="nt">kwargs</span><span class="p">:</span>
+<span class="w">         </span><span class="nt">reduction</span><span class="p">:</span><span class="w"> </span><span class="s">&#39;mean&#39;</span>
+<span class="w">     </span><span class="nt">criterion_wrapper</span><span class="p">:</span>
+<span class="w">       </span><span class="nt">key</span><span class="p">:</span><span class="w"> </span><span class="s">&#39;SimpleLossWrapper&#39;</span>
+<span class="w">       </span><span class="nt">kwargs</span><span class="p">:</span>
+<span class="w">         </span><span class="nt">input</span><span class="p">:</span>
+<span class="w">           </span><span class="nt">is_from_teacher</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">False</span>
+<span class="w">           </span><span class="nt">module_path</span><span class="p">:</span><span class="w"> </span><span class="s">&#39;.&#39;</span>
+<span class="w">           </span><span class="nt">io</span><span class="p">:</span><span class="w"> </span><span class="s">&#39;output&#39;</span>
+<span class="w">         </span><span class="nt">target</span><span class="p">:</span>
+<span class="w">           </span><span class="nt">uses_label</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">True</span>
+<span class="w">     </span><span class="nt">weight</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">1.0</span>
+</pre></div>
+</div>
+</div>
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="torchdistill.losses.high_level.WeightedSumLoss">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">torchdistill.losses.high_level.</span></span><span class="sig-name descname"><span class="pre">WeightedSumLoss</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">model_term</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">sub_terms</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/torchdistill/losses/high_level.html#WeightedSumLoss"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#torchdistill.losses.high_level.WeightedSumLoss" title="Permalink to this definition"></a></dt>
+<dd><p>A weighted sum (linear combination) of mid-/low-level loss modules.</p>
+<p>If <code class="docutils literal notranslate"><span class="pre">model_term</span></code> contains a numerical value with <code class="docutils literal notranslate"><span class="pre">weight</span></code> key, it will be a multiplier <span class="math notranslate nohighlight">\(W_{model}\)</span>
+for the sum of model-driven loss values <span class="math notranslate nohighlight">\(\sum_{i} L_{model, i}\)</span>.</p>
+<div class="math notranslate nohighlight">
+\[L_{total} = W_{model} \cdot (\sum_{i} L_{model, i}) + \sum_{k} W_{sub, k} \cdot L_{sub, k}\]</div>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>model_term</strong> (<em>dict</em><em> or </em><em>None</em>) – model-driven loss module configurations.</p></li>
+<li><p><strong>sub_terms</strong> (<em>dict</em><em> or </em><em>None</em>) – loss module configurations.</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+</section>
+<hr class="docutils" />
+<section id="torchdistill-losses-mid-level">
+<h2>torchdistill.losses.mid_level<a class="headerlink" href="#torchdistill-losses-mid-level" title="Permalink to this heading"></a></h2>
+<span class="target" id="module-torchdistill.losses.mid_level"></span><dl class="py class">
+<dt class="sig sig-object py" id="torchdistill.losses.mid_level.SimpleLossWrapper">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">torchdistill.losses.mid_level.</span></span><span class="sig-name descname"><span class="pre">SimpleLossWrapper</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">low_level_loss</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/torchdistill/losses/mid_level.html#SimpleLossWrapper"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#torchdistill.losses.mid_level.SimpleLossWrapper" title="Permalink to this definition"></a></dt>
+<dd><p>A simple loss wrapper module designed to use low-level loss modules (e.g., loss modules in PyTorch)
+in torchdistill’s pipelines.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>low_level_loss</strong> (<em>nn.Module</em>) – low-level loss module e.g., torch.nn.CrossEntropyLoss.</p></li>
+<li><p><strong>kwargs</strong> (<em>dict</em><em> or </em><em>None</em>) – kwargs to configure what the wrapper passes <code class="docutils literal notranslate"><span class="pre">low_level_loss</span></code>.</p></li>
+</ul>
+</dd>
+</dl>
+<div class="literal-block-wrapper docutils container" id="id4">
+<div class="code-block-caption"><span class="caption-text">An example YAML to instantiate <a class="reference internal" href="#torchdistill.losses.mid_level.SimpleLossWrapper" title="torchdistill.losses.mid_level.SimpleLossWrapper"><code class="xref py py-class docutils literal notranslate"><span class="pre">SimpleLossWrapper</span></code></a>.</span><a class="headerlink" href="#id4" title="Permalink to this code"></a></div>
+<div class="highlight-YAML notranslate"><div class="highlight"><pre><span></span><span class="w"> </span><span class="nt">criterion_wrapper</span><span class="p">:</span>
+<span class="w">   </span><span class="nt">key</span><span class="p">:</span><span class="w"> </span><span class="s">&#39;SimpleLossWrapper&#39;</span>
+<span class="w">   </span><span class="nt">kwargs</span><span class="p">:</span>
+<span class="w">     </span><span class="nt">input</span><span class="p">:</span>
+<span class="w">       </span><span class="nt">is_from_teacher</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">False</span>
+<span class="w">       </span><span class="nt">module_path</span><span class="p">:</span><span class="w"> </span><span class="s">&#39;.&#39;</span>
+<span class="w">       </span><span class="nt">io</span><span class="p">:</span><span class="w"> </span><span class="s">&#39;output&#39;</span>
+<span class="w">     </span><span class="nt">target</span><span class="p">:</span>
+<span class="w">       </span><span class="nt">uses_label</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">True</span>
+</pre></div>
+</div>
+</div>
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="torchdistill.losses.mid_level.DictLossWrapper">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">torchdistill.losses.mid_level.</span></span><span class="sig-name descname"><span class="pre">DictLossWrapper</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">low_level_loss</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">weights</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/torchdistill/losses/mid_level.html#DictLossWrapper"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#torchdistill.losses.mid_level.DictLossWrapper" title="Permalink to this definition"></a></dt>
+<dd><p>A dict-based wrapper module designed to use low-level loss modules (e.g., loss modules in PyTorch)
+in torchdistill’s pipelines. This is a subclass of <a class="reference internal" href="#torchdistill.losses.mid_level.SimpleLossWrapper" title="torchdistill.losses.mid_level.SimpleLossWrapper"><code class="xref py py-class docutils literal notranslate"><span class="pre">SimpleLossWrapper</span></code></a> and useful for models whose forward
+output is dict.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>low_level_loss</strong> (<em>nn.Module</em>) – low-level loss module e.g., torch.nn.CrossEntropyLoss.</p></li>
+<li><p><strong>weights</strong> (<em>dict</em>) – dict contains keys that match the model’s output dict keys and corresponding loss weights.</p></li>
+<li><p><strong>kwargs</strong> (<em>dict</em><em> or </em><em>None</em>) – kwargs to configure what the wrapper passes <code class="docutils literal notranslate"><span class="pre">low_level_loss</span></code>.</p></li>
+</ul>
+</dd>
+</dl>
+<div class="literal-block-wrapper docutils container" id="id5">
+<div class="code-block-caption"><span class="caption-text">An example YAML to instantiate <a class="reference internal" href="#torchdistill.losses.mid_level.DictLossWrapper" title="torchdistill.losses.mid_level.DictLossWrapper"><code class="xref py py-class docutils literal notranslate"><span class="pre">DictLossWrapper</span></code></a> for deeplabv3_resnet50 in torchvision, whose default output is a dict of outputs from its main and auxiliary branches with keys ‘out’ and ‘aux’ respectively.</span><a class="headerlink" href="#id5" title="Permalink to this code"></a></div>
+<div class="highlight-yaml notranslate"><div class="highlight"><pre><span></span><span class="w"> </span><span class="nt">criterion_wrapper</span><span class="p">:</span>
+<span class="w">   </span><span class="nt">key</span><span class="p">:</span><span class="w"> </span><span class="s">&#39;DictLossWrapper&#39;</span>
+<span class="w">   </span><span class="nt">kwargs</span><span class="p">:</span>
+<span class="w">     </span><span class="nt">input</span><span class="p">:</span>
+<span class="w">       </span><span class="nt">is_from_teacher</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">False</span>
+<span class="w">       </span><span class="nt">module_path</span><span class="p">:</span><span class="w"> </span><span class="s">&#39;.&#39;</span>
+<span class="w">       </span><span class="nt">io</span><span class="p">:</span><span class="w"> </span><span class="s">&#39;output&#39;</span>
+<span class="w">     </span><span class="nt">target</span><span class="p">:</span>
+<span class="w">       </span><span class="nt">uses_label</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">True</span>
+<span class="w">     </span><span class="nt">weights</span><span class="p">:</span>
+<span class="w">       </span><span class="nt">out</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">1.0</span>
+<span class="w">       </span><span class="nt">aux</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">0.5</span>
+</pre></div>
+</div>
+</div>
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="torchdistill.losses.mid_level.KDLoss">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">torchdistill.losses.mid_level.</span></span><span class="sig-name descname"><span class="pre">KDLoss</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">student_module_path</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">student_module_io</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">teacher_module_path</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">teacher_module_io</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">temperature</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">alpha</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">beta</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">reduction</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'batchmean'</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/torchdistill/losses/mid_level.html#KDLoss"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#torchdistill.losses.mid_level.KDLoss" title="Permalink to this definition"></a></dt>
+<dd><p>A standard knowledge distillation (KD) loss module.</p>
+<div class="math notranslate nohighlight">
+\[L_{KD} = \alpha \cdot L_{CE} + (1 - \alpha) \cdot \tau^2 \cdot L_{KL}\]</div>
+<p>Geoffrey Hinton, Oriol Vinyals, Jeff Dean: <a class="reference external" href="https://arxiv.org/abs/1503.02531">“Distilling the Knowledge in a Neural Network”</a> &#64; NIPS 2014 Deep Learning and Representation Learning Workshop (2014)</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>student_module_path</strong> (<em>str</em>) – student model’s logit module path.</p></li>
+<li><p><strong>student_module_io</strong> (<em>str</em>) – ‘input’ or ‘output’ of the module in the student model.</p></li>
+<li><p><strong>teacher_module_path</strong> (<em>str</em>) – teacher model’s logit module path.</p></li>
+<li><p><strong>teacher_module_io</strong> (<em>str</em>) – ‘input’ or ‘output’ of the module in the teacher model.</p></li>
+<li><p><strong>temperature</strong> (<em>float</em>) – hyperparameter <span class="math notranslate nohighlight">\(\tau\)</span> to soften class-probability distributions.</p></li>
+<li><p><strong>alpha</strong> (<em>float</em>) – balancing factor for <span class="math notranslate nohighlight">\(L_{CE}\)</span>, cross-entropy.</p></li>
+<li><p><strong>beta</strong> (<em>float</em><em> or </em><em>None</em>) – balancing factor (default: <span class="math notranslate nohighlight">\(1 - \alpha\)</span>) for <span class="math notranslate nohighlight">\(L_{KL}\)</span>, KL divergence between class-probability distributions softened by <span class="math notranslate nohighlight">\(\tau\)</span>.</p></li>
+<li><p><strong>reduction</strong> (<em>str</em><em> or </em><em>None</em>) – <code class="docutils literal notranslate"><span class="pre">reduction</span></code> for KLDivLoss. If <code class="docutils literal notranslate"><span class="pre">reduction</span></code> = ‘batchmean’, CrossEntropyLoss’s <code class="docutils literal notranslate"><span class="pre">reduction</span></code> will be ‘mean’.</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="torchdistill.losses.mid_level.FSPLoss">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">torchdistill.losses.mid_level.</span></span><span class="sig-name descname"><span class="pre">FSPLoss</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">fsp_pairs</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/torchdistill/losses/mid_level.html#FSPLoss"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#torchdistill.losses.mid_level.FSPLoss" title="Permalink to this definition"></a></dt>
+<dd><p>A loss module for the flow of solution procedure (FSP) matrix.</p>
+<p>Junho Yim, Donggyu Joo, Jihoon Bae, Junmo Kim: <a class="reference external" href="https://openaccess.thecvf.com/content_cvpr_2017/html/Yim_A_Gift_From_CVPR_2017_paper.html">“A Gift From Knowledge Distillation: Fast Optimization, Network Minimization and Transfer Learning”</a> &#64; CVPR 2017 (2017)</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>fsp_pairs</strong> (<em>dict</em>) – configuration of teacher-student module pairs to compute the loss for the FSP matrix.</p>
+</dd>
+</dl>
+<div class="literal-block-wrapper docutils container" id="id6">
+<div class="code-block-caption"><span class="caption-text">An example YAML to instantiate <a class="reference internal" href="#torchdistill.losses.mid_level.FSPLoss" title="torchdistill.losses.mid_level.FSPLoss"><code class="xref py py-class docutils literal notranslate"><span class="pre">FSPLoss</span></code></a> for a teacher-student pair of ResNet-34 and ResNet-18 in torchvision.</span><a class="headerlink" href="#id6" title="Permalink to this code"></a></div>
+<div class="highlight-yaml notranslate"><div class="highlight"><pre><span></span><span class="w"> </span><span class="nt">criterion</span><span class="p">:</span>
+<span class="w">   </span><span class="nt">key</span><span class="p">:</span><span class="w"> </span><span class="s">&#39;FSPLoss&#39;</span>
+<span class="w">   </span><span class="nt">kwargs</span><span class="p">:</span>
+<span class="w">     </span><span class="nt">fsp_pairs</span><span class="p">:</span>
+<span class="w">       </span><span class="nt">pair1</span><span class="p">:</span>
+<span class="w">         </span><span class="nt">teacher_first</span><span class="p">:</span>
+<span class="w">           </span><span class="nt">io</span><span class="p">:</span><span class="w"> </span><span class="s">&#39;input&#39;</span>
+<span class="w">           </span><span class="nt">path</span><span class="p">:</span><span class="w"> </span><span class="s">&#39;layer1&#39;</span>
+<span class="w">         </span><span class="nt">teacher_second</span><span class="p">:</span>
+<span class="w">           </span><span class="nt">io</span><span class="p">:</span><span class="w"> </span><span class="s">&#39;output&#39;</span>
+<span class="w">           </span><span class="nt">path</span><span class="p">:</span><span class="w"> </span><span class="s">&#39;layer1&#39;</span>
+<span class="w">         </span><span class="nt">student_first</span><span class="p">:</span>
+<span class="w">           </span><span class="nt">io</span><span class="p">:</span><span class="w"> </span><span class="s">&#39;input&#39;</span>
+<span class="w">           </span><span class="nt">path</span><span class="p">:</span><span class="w"> </span><span class="s">&#39;layer1&#39;</span>
+<span class="w">         </span><span class="nt">student_second</span><span class="p">:</span>
+<span class="w">           </span><span class="nt">io</span><span class="p">:</span><span class="w"> </span><span class="s">&#39;output&#39;</span>
+<span class="w">           </span><span class="nt">path</span><span class="p">:</span><span class="w"> </span><span class="s">&#39;layer1&#39;</span>
+<span class="w">         </span><span class="nt">weight</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">1</span>
+<span class="w">       </span><span class="nt">pair2</span><span class="p">:</span>
+<span class="w">         </span><span class="nt">teacher_first</span><span class="p">:</span>
+<span class="w">           </span><span class="nt">io</span><span class="p">:</span><span class="w"> </span><span class="s">&#39;input&#39;</span>
+<span class="w">           </span><span class="nt">path</span><span class="p">:</span><span class="w"> </span><span class="s">&#39;layer2.1&#39;</span>
+<span class="w">         </span><span class="nt">teacher_second</span><span class="p">:</span>
+<span class="w">           </span><span class="nt">io</span><span class="p">:</span><span class="w"> </span><span class="s">&#39;output&#39;</span>
+<span class="w">           </span><span class="nt">path</span><span class="p">:</span><span class="w"> </span><span class="s">&#39;layer2&#39;</span>
+<span class="w">         </span><span class="nt">student_first</span><span class="p">:</span>
+<span class="w">           </span><span class="nt">io</span><span class="p">:</span><span class="w"> </span><span class="s">&#39;input&#39;</span>
+<span class="w">           </span><span class="nt">path</span><span class="p">:</span><span class="w"> </span><span class="s">&#39;layer2.1&#39;</span>
+<span class="w">         </span><span class="nt">student_second</span><span class="p">:</span>
+<span class="w">           </span><span class="nt">io</span><span class="p">:</span><span class="w"> </span><span class="s">&#39;output&#39;</span>
+<span class="w">           </span><span class="nt">path</span><span class="p">:</span><span class="w"> </span><span class="s">&#39;layer2&#39;</span>
+<span class="w">         </span><span class="nt">weight</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">1</span>
+</pre></div>
+</div>
+</div>
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="torchdistill.losses.mid_level.ATLoss">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">torchdistill.losses.mid_level.</span></span><span class="sig-name descname"><span class="pre">ATLoss</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">at_pairs</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">mode</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'code'</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/torchdistill/losses/mid_level.html#ATLoss"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#torchdistill.losses.mid_level.ATLoss" title="Permalink to this definition"></a></dt>
+<dd><p>A loss module for attention transfer (AT). Referred to <a class="reference external" href="https://github.com/szagoruyko/attention-transfer/blob/master/utils.py">https://github.com/szagoruyko/attention-transfer/blob/master/utils.py</a></p>
+<p>Sergey Zagoruyko, Nikos Komodakis: <a class="reference external" href="https://openreview.net/forum?id=Sks9_ajex">“Paying More Attention to Attention: Improving the Performance of Convolutional Neural Networks via Attention Transfer”</a> &#64; ICLR 2017 (2017)</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>at_pairs</strong> (<em>dict</em>) – configuration of teacher-student module pairs to compute the loss for attention transfer.</p></li>
+<li><p><strong>mode</strong> (<em>dict</em>) – reference to follow ‘paper’ or ‘code’.</p></li>
+</ul>
+</dd>
+</dl>
+<div class="admonition warning">
+<p class="admonition-title">Warning</p>
+<p>There is a discrepancy between Eq. (2) in the paper and <a class="reference external" href="https://github.com/szagoruyko/attention-transfer/blob/893df5488f93691799f082a70e2521a9dc2ddf2d/utils.py#L18-L23">the authors’ implementation</a>
+as pointed out in <a class="reference external" href="https://link.springer.com/chapter/10.1007/978-3-030-76423-4_3">a paper</a> and <a class="reference external" href="https://github.com/szagoruyko/attention-transfer/issues/34">an issue at the repository</a>.
+Use <code class="docutils literal notranslate"><span class="pre">mode</span></code> = ‘paper’ instead of ‘code’ if you want to follow the equations in the paper.</p>
+</div>
+<div class="literal-block-wrapper docutils container" id="id7">
+<div class="code-block-caption"><span class="caption-text">An example YAML to instantiate <a class="reference internal" href="#torchdistill.losses.mid_level.ATLoss" title="torchdistill.losses.mid_level.ATLoss"><code class="xref py py-class docutils literal notranslate"><span class="pre">ATLoss</span></code></a> for a teacher-student pair of ResNet-34 and ResNet-18 in torchvision.</span><a class="headerlink" href="#id7" title="Permalink to this code"></a></div>
+<div class="highlight-yaml notranslate"><div class="highlight"><pre><span></span><span class="w"> </span><span class="nt">criterion</span><span class="p">:</span>
+<span class="w">   </span><span class="nt">key</span><span class="p">:</span><span class="w"> </span><span class="s">&#39;ATLoss&#39;</span>
+<span class="w">   </span><span class="nt">kwargs</span><span class="p">:</span>
+<span class="w">     </span><span class="nt">at_pairs</span><span class="p">:</span>
+<span class="w">       </span><span class="nt">pair1</span><span class="p">:</span>
+<span class="w">         </span><span class="nt">teacher</span><span class="p">:</span>
+<span class="w">           </span><span class="nt">io</span><span class="p">:</span><span class="w"> </span><span class="s">&#39;output&#39;</span>
+<span class="w">           </span><span class="nt">path</span><span class="p">:</span><span class="w"> </span><span class="s">&#39;layer3&#39;</span>
+<span class="w">         </span><span class="nt">student</span><span class="p">:</span>
+<span class="w">           </span><span class="nt">io</span><span class="p">:</span><span class="w"> </span><span class="s">&#39;output&#39;</span>
+<span class="w">           </span><span class="nt">path</span><span class="p">:</span><span class="w"> </span><span class="s">&#39;layer3&#39;</span>
+<span class="w">         </span><span class="nt">weight</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">1</span>
+<span class="w">       </span><span class="nt">pair2</span><span class="p">:</span>
+<span class="w">         </span><span class="nt">teacher</span><span class="p">:</span>
+<span class="w">           </span><span class="nt">io</span><span class="p">:</span><span class="w"> </span><span class="s">&#39;output&#39;</span>
+<span class="w">           </span><span class="nt">path</span><span class="p">:</span><span class="w"> </span><span class="s">&#39;layer4&#39;</span>
+<span class="w">         </span><span class="nt">student</span><span class="p">:</span>
+<span class="w">           </span><span class="nt">io</span><span class="p">:</span><span class="w"> </span><span class="s">&#39;output&#39;</span>
+<span class="w">           </span><span class="nt">path</span><span class="p">:</span><span class="w"> </span><span class="s">&#39;layer4&#39;</span>
+<span class="w">         </span><span class="nt">weight</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">1</span>
+<span class="w">     </span><span class="nt">mode</span><span class="p">:</span><span class="w"> </span><span class="s">&#39;code&#39;</span>
+</pre></div>
+</div>
+</div>
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="torchdistill.losses.mid_level.PKTLoss">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">torchdistill.losses.mid_level.</span></span><span class="sig-name descname"><span class="pre">PKTLoss</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">student_module_path</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">student_module_io</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">teacher_module_path</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">teacher_module_io</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">eps</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1e-07</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/torchdistill/losses/mid_level.html#PKTLoss"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#torchdistill.losses.mid_level.PKTLoss" title="Permalink to this definition"></a></dt>
+<dd><p>A loss module for probabilistic knowledge transfer (PKT). Refactored <a class="reference external" href="https://github.com/passalis/probabilistic_kt/blob/master/nn/pkt.py">https://github.com/passalis/probabilistic_kt/blob/master/nn/pkt.py</a></p>
+<p>Nikolaos Passalis, Anastasios Tefas: <a class="reference external" href="https://openaccess.thecvf.com/content_ECCV_2018/html/Nikolaos_Passalis_Learning_Deep_Representations_ECCV_2018_paper.html">“Learning Deep Representations with Probabilistic Knowledge Transfer”</a> &#64; ECCV 2018 (2018)</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>student_module_path</strong> (<em>str</em>) – student model’s logit module path.</p></li>
+<li><p><strong>student_module_io</strong> (<em>str</em>) – ‘input’ or ‘output’ of the module in the student model.</p></li>
+<li><p><strong>teacher_module_path</strong> (<em>str</em>) – teacher model’s logit module path.</p></li>
+<li><p><strong>teacher_module_io</strong> (<em>str</em>) – ‘input’ or ‘output’ of the module in the teacher model.</p></li>
+<li><p><strong>eps</strong> (<em>float</em>) – constant to avoid zero division.</p></li>
+</ul>
+</dd>
+</dl>
+<div class="literal-block-wrapper docutils container" id="id8">
+<div class="code-block-caption"><span class="caption-text">An example YAML to instantiate <a class="reference internal" href="#torchdistill.losses.mid_level.PKTLoss" title="torchdistill.losses.mid_level.PKTLoss"><code class="xref py py-class docutils literal notranslate"><span class="pre">PKTLoss</span></code></a> for a teacher-student pair of ResNet-34 and ResNet-18 in torchvision.</span><a class="headerlink" href="#id8" title="Permalink to this code"></a></div>
+<div class="highlight-yaml notranslate"><div class="highlight"><pre><span></span><span class="w"> </span><span class="nt">criterion</span><span class="p">:</span>
+<span class="w">   </span><span class="nt">key</span><span class="p">:</span><span class="w"> </span><span class="s">&#39;PKTLoss&#39;</span>
+<span class="w">   </span><span class="nt">kwargs</span><span class="p">:</span>
+<span class="w">     </span><span class="nt">student_module_path</span><span class="p">:</span><span class="w"> </span><span class="s">&#39;fc&#39;</span>
+<span class="w">     </span><span class="nt">student_module_io</span><span class="p">:</span><span class="w"> </span><span class="s">&#39;input&#39;</span>
+<span class="w">     </span><span class="nt">teacher_module_path</span><span class="p">:</span><span class="w"> </span><span class="s">&#39;fc&#39;</span>
+<span class="w">     </span><span class="nt">teacher_module_io</span><span class="p">:</span><span class="w"> </span><span class="s">&#39;input&#39;</span>
+<span class="w">     </span><span class="nt">eps</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">0.0000001</span>
+</pre></div>
+</div>
+</div>
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="torchdistill.losses.mid_level.FTLoss">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">torchdistill.losses.mid_level.</span></span><span class="sig-name descname"><span class="pre">FTLoss</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">p</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">reduction</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'mean'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">paraphraser_path</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'paraphraser'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">translator_path</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'translator'</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/torchdistill/losses/mid_level.html#FTLoss"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#torchdistill.losses.mid_level.FTLoss" title="Permalink to this definition"></a></dt>
+<dd><p>A loss module for factor transfer (FT). This loss module is used at the 2nd stage of FT method.</p>
+<p>Jangho Kim, Seonguk Park, Nojun Kwak: <a class="reference external" href="https://papers.neurips.cc/paper_files/paper/2018/hash/6d9cb7de5e8ac30bd5e8734bc96a35c1-Abstract.html">“Paraphrasing Complex Network: Network Compression via Factor Transfer”</a> &#64; NeurIPS 2018 (2018)</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>p</strong> (<em>int</em>) – the order of norm.</p></li>
+<li><p><strong>reduction</strong> (<em>str</em>) – loss reduction type.</p></li>
+<li><p><strong>paraphraser_path</strong> (<em>str</em>) – teacher model’s paraphrase module path.</p></li>
+<li><p><strong>translator_path</strong> (<em>str</em>) – student model’s translator module path.</p></li>
+</ul>
+</dd>
+</dl>
+<div class="literal-block-wrapper docutils container" id="id9">
+<div class="code-block-caption"><span class="caption-text">An example YAML to instantiate <a class="reference internal" href="#torchdistill.losses.mid_level.FTLoss" title="torchdistill.losses.mid_level.FTLoss"><code class="xref py py-class docutils literal notranslate"><span class="pre">FTLoss</span></code></a> for a teacher-student pair of ResNet-34 and ResNet-18 in torchvision, using auxiliary modules <a class="reference internal" href="models.html#torchdistill.models.wrapper.Teacher4FactorTransfer" title="torchdistill.models.wrapper.Teacher4FactorTransfer"><code class="xref py py-class docutils literal notranslate"><span class="pre">torchdistill.models.wrapper.Teacher4FactorTransfer</span></code></a> and <a class="reference internal" href="models.html#torchdistill.models.wrapper.Student4FactorTransfer" title="torchdistill.models.wrapper.Student4FactorTransfer"><code class="xref py py-class docutils literal notranslate"><span class="pre">torchdistill.models.wrapper.Student4FactorTransfer</span></code></a>.</span><a class="headerlink" href="#id9" title="Permalink to this code"></a></div>
+<div class="highlight-yaml notranslate"><div class="highlight"><pre><span></span><span class="w"> </span><span class="nt">criterion</span><span class="p">:</span>
+<span class="w">   </span><span class="nt">key</span><span class="p">:</span><span class="w"> </span><span class="s">&#39;FTLoss&#39;</span>
+<span class="w">   </span><span class="nt">kwargs</span><span class="p">:</span>
+<span class="w">     </span><span class="nt">p</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">1</span>
+<span class="w">     </span><span class="nt">reduction</span><span class="p">:</span><span class="w"> </span><span class="s">&#39;mean&#39;</span>
+<span class="w">     </span><span class="nt">paraphraser_path</span><span class="p">:</span><span class="w"> </span><span class="s">&#39;paraphraser&#39;</span>
+<span class="w">     </span><span class="nt">translator_path</span><span class="p">:</span><span class="w"> </span><span class="s">&#39;translator&#39;</span>
+</pre></div>
+</div>
+</div>
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="torchdistill.losses.mid_level.AltActTransferLoss">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">torchdistill.losses.mid_level.</span></span><span class="sig-name descname"><span class="pre">AltActTransferLoss</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">feature_pairs</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">margin</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">reduction</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/torchdistill/losses/mid_level.html#AltActTransferLoss"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#torchdistill.losses.mid_level.AltActTransferLoss" title="Permalink to this definition"></a></dt>
+<dd><p>A loss module for distillation of activation boundaries (DAB). Refactored <a class="reference external" href="https://github.com/bhheo/AB_distillation/blob/master/cifar10_AB_distillation.py">https://github.com/bhheo/AB_distillation/blob/master/cifar10_AB_distillation.py</a></p>
+<p>Byeongho Heo, Minsik Lee, Sangdoo Yun, Jin Young Choi: <a class="reference external" href="https://ojs.aaai.org/index.php/AAAI/article/view/4264">“Knowledge Transfer via Distillation of Activation Boundaries Formed by Hidden Neurons”</a> &#64; AAAI 2019 (2019)</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>feature_pairs</strong> (<em>dict</em>) – configuration of teacher-student module pairs to compute the loss for distillation of activation boundaries.</p></li>
+<li><p><strong>margin</strong> (<em>float</em>) – margin.</p></li>
+<li><p><strong>reduction</strong> (<em>str</em>) – loss reduction type.</p></li>
+</ul>
+</dd>
+</dl>
+<div class="literal-block-wrapper docutils container" id="id10">
+<div class="code-block-caption"><span class="caption-text">An example YAML to instantiate <a class="reference internal" href="#torchdistill.losses.mid_level.AltActTransferLoss" title="torchdistill.losses.mid_level.AltActTransferLoss"><code class="xref py py-class docutils literal notranslate"><span class="pre">AltActTransferLoss</span></code></a> for a teacher-student pair of ResNet-34 and ResNet-18 in torchvision, using an auxiliary module <a class="reference internal" href="models.html#torchdistill.models.wrapper.Connector4DAB" title="torchdistill.models.wrapper.Connector4DAB"><code class="xref py py-class docutils literal notranslate"><span class="pre">torchdistill.models.wrapper.Connector4DAB</span></code></a>.</span><a class="headerlink" href="#id10" title="Permalink to this code"></a></div>
+<div class="highlight-yaml notranslate"><div class="highlight"><pre><span></span><span class="w"> </span><span class="nt">criterion</span><span class="p">:</span>
+<span class="w">   </span><span class="nt">key</span><span class="p">:</span><span class="w"> </span><span class="s">&#39;AltActTransferLoss&#39;</span>
+<span class="w">   </span><span class="nt">kwargs</span><span class="p">:</span>
+<span class="w">     </span><span class="nt">feature_pairs</span><span class="p">:</span>
+<span class="w">       </span><span class="nt">pair1</span><span class="p">:</span>
+<span class="w">         </span><span class="nt">teacher</span><span class="p">:</span>
+<span class="w">           </span><span class="nt">io</span><span class="p">:</span><span class="w"> </span><span class="s">&#39;output&#39;</span>
+<span class="w">           </span><span class="nt">path</span><span class="p">:</span><span class="w"> </span><span class="s">&#39;layer1&#39;</span>
+<span class="w">         </span><span class="nt">student</span><span class="p">:</span>
+<span class="w">           </span><span class="nt">io</span><span class="p">:</span><span class="w"> </span><span class="s">&#39;output&#39;</span>
+<span class="w">           </span><span class="nt">path</span><span class="p">:</span><span class="w"> </span><span class="s">&#39;connector_dict.connector1&#39;</span>
+<span class="w">         </span><span class="nt">weight</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">1</span>
+<span class="w">       </span><span class="nt">pair2</span><span class="p">:</span>
+<span class="w">         </span><span class="nt">teacher</span><span class="p">:</span>
+<span class="w">           </span><span class="nt">io</span><span class="p">:</span><span class="w"> </span><span class="s">&#39;output&#39;</span>
+<span class="w">           </span><span class="nt">path</span><span class="p">:</span><span class="w"> </span><span class="s">&#39;layer2&#39;</span>
+<span class="w">         </span><span class="nt">student</span><span class="p">:</span>
+<span class="w">           </span><span class="nt">io</span><span class="p">:</span><span class="w"> </span><span class="s">&#39;output&#39;</span>
+<span class="w">           </span><span class="nt">path</span><span class="p">:</span><span class="w"> </span><span class="s">&#39;connector_dict.connector2&#39;</span>
+<span class="w">         </span><span class="nt">weight</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">1</span>
+<span class="w">       </span><span class="nt">pair3</span><span class="p">:</span>
+<span class="w">         </span><span class="nt">teacher</span><span class="p">:</span>
+<span class="w">           </span><span class="nt">io</span><span class="p">:</span><span class="w"> </span><span class="s">&#39;output&#39;</span>
+<span class="w">           </span><span class="nt">path</span><span class="p">:</span><span class="w"> </span><span class="s">&#39;layer3&#39;</span>
+<span class="w">         </span><span class="nt">student</span><span class="p">:</span>
+<span class="w">           </span><span class="nt">io</span><span class="p">:</span><span class="w"> </span><span class="s">&#39;output&#39;</span>
+<span class="w">           </span><span class="nt">path</span><span class="p">:</span><span class="w"> </span><span class="s">&#39;connector_dict.connector3&#39;</span>
+<span class="w">         </span><span class="nt">weight</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">1</span>
+<span class="w">       </span><span class="nt">pair4</span><span class="p">:</span>
+<span class="w">         </span><span class="nt">teacher</span><span class="p">:</span>
+<span class="w">           </span><span class="nt">io</span><span class="p">:</span><span class="w"> </span><span class="s">&#39;output&#39;</span>
+<span class="w">           </span><span class="nt">path</span><span class="p">:</span><span class="w"> </span><span class="s">&#39;layer4&#39;</span>
+<span class="w">         </span><span class="nt">student</span><span class="p">:</span>
+<span class="w">           </span><span class="nt">io</span><span class="p">:</span><span class="w"> </span><span class="s">&#39;output&#39;</span>
+<span class="w">           </span><span class="nt">path</span><span class="p">:</span><span class="w"> </span><span class="s">&#39;connector_dict.connector4&#39;</span>
+<span class="w">         </span><span class="nt">weight</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">1</span>
+<span class="w">     </span><span class="nt">margin</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">1.0</span>
+<span class="w">     </span><span class="nt">reduction</span><span class="p">:</span><span class="w"> </span><span class="s">&#39;mean&#39;</span>
+</pre></div>
+</div>
+</div>
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="torchdistill.losses.mid_level.RKDLoss">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">torchdistill.losses.mid_level.</span></span><span class="sig-name descname"><span class="pre">RKDLoss</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">student_output_path</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">teacher_output_path</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">dist_factor</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">angle_factor</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">reduction</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/torchdistill/losses/mid_level.html#RKDLoss"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#torchdistill.losses.mid_level.RKDLoss" title="Permalink to this definition"></a></dt>
+<dd><p>A loss module for relational knowledge distillation (RKD). Refactored <a class="reference external" href="https://github.com/lenscloth/RKD/blob/master/metric/loss.py">https://github.com/lenscloth/RKD/blob/master/metric/loss.py</a></p>
+<p>Wonpyo Park, Dongju Kim, Yan Lu, Minsu Cho: <a class="reference external" href="https://openaccess.thecvf.com/content_CVPR_2019/html/Park_Relational_Knowledge_Distillation_CVPR_2019_paper.html">“Relational Knowledge Distillation”</a> &#64; CVPR 2019 (2019)</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>student_output_path</strong> (<em>str</em>) – student module path whose output is used in this loss module.</p></li>
+<li><p><strong>teacher_output_path</strong> (<em>str</em>) – teacher module path whose output is used in this loss module.</p></li>
+<li><p><strong>dist_factor</strong> (<em>float</em>) – weight on distance-based RKD loss.</p></li>
+<li><p><strong>angle_factor</strong> (<em>float</em>) – weight on angle-based RKD loss.</p></li>
+<li><p><strong>reduction</strong> (<em>str</em>) – <code class="docutils literal notranslate"><span class="pre">reduction</span></code> for SmoothL1Loss.</p></li>
+</ul>
+</dd>
+</dl>
+<div class="literal-block-wrapper docutils container" id="id11">
+<div class="code-block-caption"><span class="caption-text">An example YAML to instantiate <a class="reference internal" href="#torchdistill.losses.mid_level.RKDLoss" title="torchdistill.losses.mid_level.RKDLoss"><code class="xref py py-class docutils literal notranslate"><span class="pre">RKDLoss</span></code></a> for a teacher-student pair of ResNet-34 and ResNet-18 in torchvision.</span><a class="headerlink" href="#id11" title="Permalink to this code"></a></div>
+<div class="highlight-yaml notranslate"><div class="highlight"><pre><span></span><span class="w"> </span><span class="nt">criterion</span><span class="p">:</span>
+<span class="w">   </span><span class="nt">key</span><span class="p">:</span><span class="w"> </span><span class="s">&#39;RKDLoss&#39;</span>
+<span class="w">   </span><span class="nt">kwargs</span><span class="p">:</span>
+<span class="w">     </span><span class="nt">teacher_output_path</span><span class="p">:</span><span class="w"> </span><span class="s">&#39;layer4&#39;</span>
+<span class="w">     </span><span class="nt">student_output_path</span><span class="p">:</span><span class="w"> </span><span class="s">&#39;layer4&#39;</span>
+<span class="w">     </span><span class="nt">dist_factor</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">1.0</span>
+<span class="w">     </span><span class="nt">angle_factor</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">2.0</span>
+<span class="w">     </span><span class="nt">reduction</span><span class="p">:</span><span class="w"> </span><span class="s">&#39;mean&#39;</span>
+</pre></div>
+</div>
+</div>
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="torchdistill.losses.mid_level.VIDLoss">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">torchdistill.losses.mid_level.</span></span><span class="sig-name descname"><span class="pre">VIDLoss</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">feature_pairs</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/torchdistill/losses/mid_level.html#VIDLoss"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#torchdistill.losses.mid_level.VIDLoss" title="Permalink to this definition"></a></dt>
+<dd><p>A loss module for variational information distillation (VID). Referred to <a class="reference external" href="https://github.com/HobbitLong/RepDistiller/blob/master/distiller_zoo/VID.py">https://github.com/HobbitLong/RepDistiller/blob/master/distiller_zoo/VID.py</a></p>
+<p>Sungsoo Ahn, Shell Xu Hu, Andreas Damianou, Neil D. Lawrence, Zhenwen Dai: <a class="reference external" href="https://openaccess.thecvf.com/content_CVPR_2019/html/Ahn_Variational_Information_Distillation_for_Knowledge_Transfer_CVPR_2019_paper.html">“Variational Information Distillation for Knowledge Transfer”</a> &#64; CVPR 2019 (2019)</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>feature_pairs</strong> (<em>dict</em>) – configuration of teacher-student module pairs to compute the loss for variational information distillation.</p>
+</dd>
+</dl>
+<div class="literal-block-wrapper docutils container" id="id12">
+<div class="code-block-caption"><span class="caption-text">An example YAML to instantiate <a class="reference internal" href="#torchdistill.losses.mid_level.VIDLoss" title="torchdistill.losses.mid_level.VIDLoss"><code class="xref py py-class docutils literal notranslate"><span class="pre">VIDLoss</span></code></a> for a teacher-student pair of ResNet-50 and ResNet-18 in torchvision, using an auxiliary module <a class="reference internal" href="models.html#torchdistill.models.wrapper.VariationalDistributor4VID" title="torchdistill.models.wrapper.VariationalDistributor4VID"><code class="xref py py-class docutils literal notranslate"><span class="pre">torchdistill.models.wrapper.VariationalDistributor4VID</span></code></a> for the student model.</span><a class="headerlink" href="#id12" title="Permalink to this code"></a></div>
+<div class="highlight-yaml notranslate"><div class="highlight"><pre><span></span><span class="w"> </span><span class="nt">criterion</span><span class="p">:</span>
+<span class="w">   </span><span class="nt">key</span><span class="p">:</span><span class="w"> </span><span class="s">&#39;VIDLoss&#39;</span>
+<span class="w">   </span><span class="nt">kwargs</span><span class="p">:</span>
+<span class="w">     </span><span class="nt">feature_pairs</span><span class="p">:</span>
+<span class="w">       </span><span class="nt">pair1</span><span class="p">:</span>
+<span class="w">         </span><span class="nt">teacher</span><span class="p">:</span>
+<span class="w">           </span><span class="nt">io</span><span class="p">:</span><span class="w"> </span><span class="s">&#39;output&#39;</span>
+<span class="w">           </span><span class="nt">path</span><span class="p">:</span><span class="w"> </span><span class="s">&#39;layer1&#39;</span>
+<span class="w">         </span><span class="nt">student</span><span class="p">:</span>
+<span class="w">           </span><span class="nt">io</span><span class="p">:</span><span class="w"> </span><span class="s">&#39;output&#39;</span>
+<span class="w">           </span><span class="nt">path</span><span class="p">:</span><span class="w"> </span><span class="s">&#39;regressor_dict.regressor1&#39;</span>
+<span class="w">         </span><span class="nt">weight</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">1</span>
+<span class="w">       </span><span class="nt">pair2</span><span class="p">:</span>
+<span class="w">         </span><span class="nt">teacher</span><span class="p">:</span>
+<span class="w">           </span><span class="nt">io</span><span class="p">:</span><span class="w"> </span><span class="s">&#39;output&#39;</span>
+<span class="w">           </span><span class="nt">path</span><span class="p">:</span><span class="w"> </span><span class="s">&#39;layer2&#39;</span>
+<span class="w">         </span><span class="nt">student</span><span class="p">:</span>
+<span class="w">           </span><span class="nt">io</span><span class="p">:</span><span class="w"> </span><span class="s">&#39;output&#39;</span>
+<span class="w">           </span><span class="nt">path</span><span class="p">:</span><span class="w"> </span><span class="s">&#39;regressor_dict.regressor2&#39;</span>
+<span class="w">         </span><span class="nt">weight</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">1</span>
+<span class="w">       </span><span class="nt">pair3</span><span class="p">:</span>
+<span class="w">         </span><span class="nt">teacher</span><span class="p">:</span>
+<span class="w">           </span><span class="nt">io</span><span class="p">:</span><span class="w"> </span><span class="s">&#39;output&#39;</span>
+<span class="w">           </span><span class="nt">path</span><span class="p">:</span><span class="w"> </span><span class="s">&#39;layer3&#39;</span>
+<span class="w">         </span><span class="nt">student</span><span class="p">:</span>
+<span class="w">           </span><span class="nt">io</span><span class="p">:</span><span class="w"> </span><span class="s">&#39;output&#39;</span>
+<span class="w">           </span><span class="nt">path</span><span class="p">:</span><span class="w"> </span><span class="s">&#39;regressor_dict.regressor3&#39;</span>
+<span class="w">         </span><span class="nt">weight</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">1</span>
+<span class="w">       </span><span class="nt">pair4</span><span class="p">:</span>
+<span class="w">         </span><span class="nt">teacher</span><span class="p">:</span>
+<span class="w">           </span><span class="nt">io</span><span class="p">:</span><span class="w"> </span><span class="s">&#39;output&#39;</span>
+<span class="w">           </span><span class="nt">path</span><span class="p">:</span><span class="w"> </span><span class="s">&#39;layer4&#39;</span>
+<span class="w">         </span><span class="nt">student</span><span class="p">:</span>
+<span class="w">           </span><span class="nt">io</span><span class="p">:</span><span class="w"> </span><span class="s">&#39;output&#39;</span>
+<span class="w">           </span><span class="nt">path</span><span class="p">:</span><span class="w"> </span><span class="s">&#39;regressor_dict.regressor4&#39;</span>
+<span class="w">         </span><span class="nt">weight</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">1</span>
+<span class="w">     </span><span class="nt">margin</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">1.0</span>
+</pre></div>
+</div>
+</div>
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="torchdistill.losses.mid_level.CCKDLoss">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">torchdistill.losses.mid_level.</span></span><span class="sig-name descname"><span class="pre">CCKDLoss</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">student_linear_path</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">teacher_linear_path</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">kernel_config</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">reduction</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/torchdistill/losses/mid_level.html#CCKDLoss"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#torchdistill.losses.mid_level.CCKDLoss" title="Permalink to this definition"></a></dt>
+<dd><p>A loss module for correlation congruence for knowledge distillation (CCKD).</p>
+<p>Baoyun Peng, Xiao Jin, Jiaheng Liu, Dongsheng Li, Yichao Wu, Yu Liu, Shunfeng Zhou, Zhaoning Zhang: <a class="reference external" href="https://openaccess.thecvf.com/content_ICCV_2019/html/Peng_Correlation_Congruence_for_Knowledge_Distillation_ICCV_2019_paper.html">“Correlation Congruence for Knowledge Distillation”</a> &#64; ICCV 2019 (2019)</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>student_linear_path</strong> (<em>str</em>) – student model’s linear module path in an auxiliary wrapper <a class="reference internal" href="models.html#torchdistill.models.wrapper.Linear4CCKD" title="torchdistill.models.wrapper.Linear4CCKD"><code class="xref py py-class docutils literal notranslate"><span class="pre">torchdistill.models.wrapper.Linear4CCKD</span></code></a>.</p></li>
+<li><p><strong>teacher_linear_path</strong> (<em>str</em>) – teacher model’s linear module path in an auxiliary wrapper <a class="reference internal" href="models.html#torchdistill.models.wrapper.Linear4CCKD" title="torchdistill.models.wrapper.Linear4CCKD"><code class="xref py py-class docutils literal notranslate"><span class="pre">torchdistill.models.wrapper.Linear4CCKD</span></code></a>.</p></li>
+<li><p><strong>kernel_config</strong> (<em>dict</em>) – kernel (‘gaussian’ or ‘bilinear’) configuration.</p></li>
+<li><p><strong>reduction</strong> (<em>str</em>) – loss reduction type.</p></li>
+</ul>
+</dd>
+</dl>
+<div class="literal-block-wrapper docutils container" id="id13">
+<div class="code-block-caption"><span class="caption-text">An example YAML to instantiate <a class="reference internal" href="#torchdistill.losses.mid_level.CCKDLoss" title="torchdistill.losses.mid_level.CCKDLoss"><code class="xref py py-class docutils literal notranslate"><span class="pre">CCKDLoss</span></code></a> for a teacher-student pair of ResNet-50 and ResNet-18 in torchvision, using an auxiliary module <a class="reference internal" href="models.html#torchdistill.models.wrapper.Linear4CCKD" title="torchdistill.models.wrapper.Linear4CCKD"><code class="xref py py-class docutils literal notranslate"><span class="pre">torchdistill.models.wrapper.Linear4CCKD</span></code></a> for the teacher and student models.</span><a class="headerlink" href="#id13" title="Permalink to this code"></a></div>
+<div class="highlight-yaml notranslate"><div class="highlight"><pre><span></span><span class="w"> </span><span class="nt">criterion</span><span class="p">:</span>
+<span class="w">   </span><span class="nt">key</span><span class="p">:</span><span class="w"> </span><span class="s">&#39;CCKDLoss&#39;</span>
+<span class="w">   </span><span class="nt">kwargs</span><span class="p">:</span>
+<span class="w">     </span><span class="nt">teacher_linear_path</span><span class="p">:</span><span class="w"> </span><span class="s">&#39;linear&#39;</span>
+<span class="w">     </span><span class="nt">student_linear_path</span><span class="p">:</span><span class="w"> </span><span class="s">&#39;linear&#39;</span>
+<span class="w">     </span><span class="nt">kernel_params</span><span class="p">:</span>
+<span class="w">       </span><span class="nt">key</span><span class="p">:</span><span class="w"> </span><span class="s">&#39;gaussian&#39;</span>
+<span class="w">       </span><span class="nt">gamma</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">0.4</span>
+<span class="w">       </span><span class="nt">max_p</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">2</span>
+<span class="w">     </span><span class="nt">reduction</span><span class="p">:</span><span class="w"> </span><span class="s">&#39;batchmean&#39;</span>
+</pre></div>
+</div>
+</div>
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="torchdistill.losses.mid_level.SPKDLoss">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">torchdistill.losses.mid_level.</span></span><span class="sig-name descname"><span class="pre">SPKDLoss</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">student_output_path</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">teacher_output_path</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">reduction</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/torchdistill/losses/mid_level.html#SPKDLoss"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#torchdistill.losses.mid_level.SPKDLoss" title="Permalink to this definition"></a></dt>
+<dd><p>A loss module for similarity-preserving knowledge distillation (SPKD).</p>
+<p>Frederick Tung, Greg Mori: <a class="reference external" href="https://openaccess.thecvf.com/content_ICCV_2019/html/Tung_Similarity-Preserving_Knowledge_Distillation_ICCV_2019_paper.html">“Similarity-Preserving Knowledge Distillation”</a> &#64; ICCV2019 (2019)</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>student_output_path</strong> (<em>str</em>) – student module path whose output is used in this loss module.</p></li>
+<li><p><strong>teacher_output_path</strong> (<em>str</em>) – teacher module path whose output is used in this loss module.</p></li>
+<li><p><strong>reduction</strong> (<em>str</em>) – loss reduction type.</p></li>
+</ul>
+</dd>
+</dl>
+<div class="literal-block-wrapper docutils container" id="id14">
+<div class="code-block-caption"><span class="caption-text">An example YAML to instantiate <a class="reference internal" href="#torchdistill.losses.mid_level.SPKDLoss" title="torchdistill.losses.mid_level.SPKDLoss"><code class="xref py py-class docutils literal notranslate"><span class="pre">SPKDLoss</span></code></a> for a teacher-student pair of ResNet-34 and ResNet-18 in torchvision.</span><a class="headerlink" href="#id14" title="Permalink to this code"></a></div>
+<div class="highlight-yaml notranslate"><div class="highlight"><pre><span></span><span class="w"> </span><span class="nt">criterion</span><span class="p">:</span>
+<span class="w">   </span><span class="nt">key</span><span class="p">:</span><span class="w"> </span><span class="s">&#39;SPKDLoss&#39;</span>
+<span class="w">   </span><span class="nt">kwargs</span><span class="p">:</span>
+<span class="w">     </span><span class="nt">teacher_output_path</span><span class="p">:</span><span class="w"> </span><span class="s">&#39;layer4&#39;</span>
+<span class="w">     </span><span class="nt">student_output_path</span><span class="p">:</span><span class="w"> </span><span class="s">&#39;layer4&#39;</span>
+<span class="w">     </span><span class="nt">reduction</span><span class="p">:</span><span class="w"> </span><span class="s">&#39;batchmean&#39;</span>
+</pre></div>
+</div>
+</div>
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="torchdistill.losses.mid_level.CRDLoss">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">torchdistill.losses.mid_level.</span></span><span class="sig-name descname"><span class="pre">CRDLoss</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">student_norm_module_path</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">student_empty_module_path</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">teacher_norm_module_path</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">input_size</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">output_size</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">num_negative_samples</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">num_samples</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">temperature</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0.07</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">momentum</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0.5</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">eps</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1e-07</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/torchdistill/losses/mid_level.html#CRDLoss"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#torchdistill.losses.mid_level.CRDLoss" title="Permalink to this definition"></a></dt>
+<dd><p>A loss module for contrastive representation distillation (CRD). Refactored <a class="reference external" href="https://github.com/HobbitLong/RepDistiller/blob/master/crd/criterion.py">https://github.com/HobbitLong/RepDistiller/blob/master/crd/criterion.py</a></p>
+<p>Yonglong Tian, Dilip Krishnan, Phillip Isola: <a class="reference external" href="https://openreview.net/forum?id=SkgpBJrtvS">“Contrastive Representation Distillation”</a> &#64; ICLR 2020 (2020)</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>student_norm_module_path</strong> (<em>str</em>) – student model’s normalizer module path (<a class="reference internal" href="models.html#torchdistill.models.wrapper.Normalizer4CRD" title="torchdistill.models.wrapper.Normalizer4CRD"><code class="xref py py-class docutils literal notranslate"><span class="pre">torchdistill.models.wrapper.Normalizer4CRD</span></code></a> in an auxiliary wrapper <a class="reference internal" href="models.html#torchdistill.models.wrapper.Linear4CRD" title="torchdistill.models.wrapper.Linear4CRD"><code class="xref py py-class docutils literal notranslate"><span class="pre">torchdistill.models.wrapper.Linear4CRD</span></code></a>).</p></li>
+<li><p><strong>student_empty_module_path</strong> (<em>str</em>) – student model’s empty module path in an auxiliary wrapper <a class="reference internal" href="models.html#torchdistill.models.wrapper.Linear4CRD" title="torchdistill.models.wrapper.Linear4CRD"><code class="xref py py-class docutils literal notranslate"><span class="pre">torchdistill.models.wrapper.Linear4CRD</span></code></a>.</p></li>
+<li><p><strong>teacher_norm_module_path</strong> (<em>str</em>) – teacher model’s normalizer module path (<a class="reference internal" href="models.html#torchdistill.models.wrapper.Normalizer4CRD" title="torchdistill.models.wrapper.Normalizer4CRD"><code class="xref py py-class docutils literal notranslate"><span class="pre">torchdistill.models.wrapper.Normalizer4CRD</span></code></a> in an auxiliary wrapper <a class="reference internal" href="models.html#torchdistill.models.wrapper.Linear4CRD" title="torchdistill.models.wrapper.Linear4CRD"><code class="xref py py-class docutils literal notranslate"><span class="pre">torchdistill.models.wrapper.Linear4CRD</span></code></a>).</p></li>
+<li><p><strong>input_size</strong> (<em>int</em>) – number of input features.</p></li>
+<li><p><strong>output_size</strong> (<em>int</em>) – number of output features.</p></li>
+<li><p><strong>num_negative_samples</strong> (<em>int</em>) – number of negative samples.</p></li>
+<li><p><strong>num_samples</strong> (<em>int</em>) – number of samples.</p></li>
+<li><p><strong>temperature</strong> (<em>float</em>) – temperature to adjust concentration level (not the temperature for <a class="reference internal" href="#torchdistill.losses.mid_level.KDLoss" title="torchdistill.losses.mid_level.KDLoss"><code class="xref py py-class docutils literal notranslate"><span class="pre">KDLoss</span></code></a>).</p></li>
+<li><p><strong>momentum</strong> (<em>float</em>) – momentum.</p></li>
+<li><p><strong>eps</strong> (<em>float</em>) – eps.</p></li>
+</ul>
+</dd>
+</dl>
+<div class="literal-block-wrapper docutils container" id="id15">
+<div class="code-block-caption"><span class="caption-text">An example YAML to instantiate <a class="reference internal" href="#torchdistill.losses.mid_level.CRDLoss" title="torchdistill.losses.mid_level.CRDLoss"><code class="xref py py-class docutils literal notranslate"><span class="pre">CRDLoss</span></code></a> for a teacher-student pair of ResNet-34 and ResNet-18 in torchvision, using an auxiliary module <a class="reference internal" href="models.html#torchdistill.models.wrapper.Linear4CRD" title="torchdistill.models.wrapper.Linear4CRD"><code class="xref py py-class docutils literal notranslate"><span class="pre">torchdistill.models.wrapper.Linear4CRD</span></code></a> for the teacher and student models.</span><a class="headerlink" href="#id15" title="Permalink to this code"></a></div>
+<div class="highlight-yaml notranslate"><div class="highlight"><pre><span></span><span class="w"> </span><span class="nt">criterion</span><span class="p">:</span>
+<span class="w">   </span><span class="nt">key</span><span class="p">:</span><span class="w"> </span><span class="s">&#39;CRDLoss&#39;</span>
+<span class="w">   </span><span class="nt">kwargs</span><span class="p">:</span>
+<span class="w">     </span><span class="nt">teacher_norm_module_path</span><span class="p">:</span><span class="w"> </span><span class="s">&#39;normalizer&#39;</span>
+<span class="w">     </span><span class="nt">student_norm_module_path</span><span class="p">:</span><span class="w"> </span><span class="s">&#39;normalizer&#39;</span>
+<span class="w">     </span><span class="nt">student_empty_module_path</span><span class="p">:</span><span class="w"> </span><span class="s">&#39;empty&#39;</span>
+<span class="w">     </span><span class="nt">input_size</span><span class="p">:</span><span class="w"> </span><span class="nv">*feature_dim</span>
+<span class="w">     </span><span class="nt">output_size</span><span class="p">:</span><span class="w"> </span><span class="nl">&amp;num_samples</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">1281167</span>
+<span class="w">     </span><span class="nt">num_negative_samples</span><span class="p">:</span><span class="w"> </span><span class="nv">*num_negative_samples</span>
+<span class="w">     </span><span class="nt">num_samples</span><span class="p">:</span><span class="w"> </span><span class="nv">*num_samples</span>
+<span class="w">     </span><span class="nt">temperature</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">0.07</span>
+<span class="w">     </span><span class="nt">momentum</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">0.5</span>
+<span class="w">     </span><span class="nt">eps</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">0.0000001</span>
+</pre></div>
+</div>
+</div>
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="torchdistill.losses.mid_level.AuxSSKDLoss">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">torchdistill.losses.mid_level.</span></span><span class="sig-name descname"><span class="pre">AuxSSKDLoss</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">module_path</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'ss_module'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">module_io</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'output'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">reduction</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'mean'</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/torchdistill/losses/mid_level.html#AuxSSKDLoss"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#torchdistill.losses.mid_level.AuxSSKDLoss" title="Permalink to this definition"></a></dt>
+<dd><p>A loss module for self-supervision knowledge distillation (SSKD) that treats contrastive prediction as
+a self-supervision task (auxiliary task). This loss module is used at the 1st stage of SSKD method.
+Refactored <a class="reference external" href="https://github.com/xuguodong03/SSKD/blob/master/student.py">https://github.com/xuguodong03/SSKD/blob/master/student.py</a></p>
+<p>Guodong Xu, Ziwei Liu, Xiaoxiao Li, Chen Change Loy: <a class="reference external" href="https://www.ecva.net/papers/eccv_2020/papers_ECCV/html/898_ECCV_2020_paper.php">“Knowledge Distillation Meets Self-Supervision”</a> &#64; ECCV 2020 (2020)</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>module_path</strong> (<em>str</em>) – model’s self-supervision module path.</p></li>
+<li><p><strong>module_io</strong> (<em>str</em>) – ‘input’ or ‘output’ of the module in the model.</p></li>
+<li><p><strong>reduction</strong> (<em>str</em>) – <code class="docutils literal notranslate"><span class="pre">reduction</span></code> for CrossEntropyLoss.</p></li>
+</ul>
+</dd>
+</dl>
+<div class="literal-block-wrapper docutils container" id="id16">
+<div class="code-block-caption"><span class="caption-text">An example YAML to instantiate <a class="reference internal" href="#torchdistill.losses.mid_level.AuxSSKDLoss" title="torchdistill.losses.mid_level.AuxSSKDLoss"><code class="xref py py-class docutils literal notranslate"><span class="pre">AuxSSKDLoss</span></code></a> for a teacher-student pair of ResNet-34 and ResNet-18 in torchvision, using an auxiliary module <a class="reference internal" href="models.html#torchdistill.models.wrapper.SSWrapper4SSKD" title="torchdistill.models.wrapper.SSWrapper4SSKD"><code class="xref py py-class docutils literal notranslate"><span class="pre">torchdistill.models.wrapper.SSWrapper4SSKD</span></code></a> for teacher model.</span><a class="headerlink" href="#id16" title="Permalink to this code"></a></div>
+<div class="highlight-yaml notranslate"><div class="highlight"><pre><span></span><span class="w"> </span><span class="nt">criterion</span><span class="p">:</span>
+<span class="w">   </span><span class="nt">key</span><span class="p">:</span><span class="w"> </span><span class="s">&#39;AuxSSKDLoss&#39;</span>
+<span class="w">   </span><span class="nt">kwargs</span><span class="p">:</span>
+<span class="w">     </span><span class="nt">module_path</span><span class="p">:</span><span class="w"> </span><span class="s">&#39;ss_module&#39;</span>
+<span class="w">     </span><span class="nt">module_io</span><span class="p">:</span><span class="w"> </span><span class="s">&#39;output&#39;</span>
+<span class="w">     </span><span class="nt">reduction</span><span class="p">:</span><span class="w"> </span><span class="s">&#39;mean&#39;</span>
+</pre></div>
+</div>
+</div>
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="torchdistill.losses.mid_level.SSKDLoss">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">torchdistill.losses.mid_level.</span></span><span class="sig-name descname"><span class="pre">SSKDLoss</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">student_linear_module_path</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">teacher_linear_module_path</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">student_ss_module_path</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">teacher_ss_module_path</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">kl_temp</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">ss_temp</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">tf_temp</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">ss_ratio</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">tf_ratio</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">student_linear_module_io</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'output'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">teacher_linear_module_io</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'output'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">student_ss_module_io</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'output'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">teacher_ss_module_io</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'output'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">loss_weights</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">reduction</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'batchmean'</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/torchdistill/losses/mid_level.html#SSKDLoss"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#torchdistill.losses.mid_level.SSKDLoss" title="Permalink to this definition"></a></dt>
+<dd><p>A loss module for self-supervision knowledge distillation (SSKD).
+This loss module is used at the 2nd stage of SSKD method. Refactored <a class="reference external" href="https://github.com/xuguodong03/SSKD/blob/master/student.py">https://github.com/xuguodong03/SSKD/blob/master/student.py</a></p>
+<p>Guodong Xu, Ziwei Liu, Xiaoxiao Li, Chen Change Loy: <a class="reference external" href="https://www.ecva.net/papers/eccv_2020/papers_ECCV/html/898_ECCV_2020_paper.php">“Knowledge Distillation Meets Self-Supervision”</a> &#64; ECCV 2020 (2020)</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>student_linear_path</strong> (<em>str</em>) – student model’s linear module path in an auxiliary wrapper <a class="reference internal" href="models.html#torchdistill.models.wrapper.SSWrapper4SSKD" title="torchdistill.models.wrapper.SSWrapper4SSKD"><code class="xref py py-class docutils literal notranslate"><span class="pre">torchdistill.models.wrapper.SSWrapper4SSKD</span></code></a>.</p></li>
+<li><p><strong>teacher_linear_path</strong> (<em>str</em>) – teacher model’s linear module path in an auxiliary wrapper <a class="reference internal" href="models.html#torchdistill.models.wrapper.SSWrapper4SSKD" title="torchdistill.models.wrapper.SSWrapper4SSKD"><code class="xref py py-class docutils literal notranslate"><span class="pre">torchdistill.models.wrapper.SSWrapper4SSKD</span></code></a>.</p></li>
+<li><p><strong>student_ss_module_path</strong> (<em>str</em>) – student model’s self-supervision module path.</p></li>
+<li><p><strong>teacher_ss_module_path</strong> (<em>str</em>) – teacher model’s self-supervision module path.</p></li>
+<li><p><strong>kl_temp</strong> (<em>float</em>) – temperature to soften teacher and student’s class-probability distributions for KL divergence given original data.</p></li>
+<li><p><strong>ss_temp</strong> (<em>float</em>) – temperature to soften teacher and student’s self-supervision cosine similarities for KL divergence.</p></li>
+<li><p><strong>tf_temp</strong> (<em>float</em>) – temperature to soften teacher and student’s class-probability distributions for KL divergence given augmented data by transform.</p></li>
+<li><p><strong>ss_ratio</strong> (<em>float</em>) – ratio of samples with the smallest error levels used for self-supervision.</p></li>
+<li><p><strong>tf_ratio</strong> (<em>float</em>) – ratio of samples with the smallest error levels used for transform.</p></li>
+<li><p><strong>student_linear_module_io</strong> (<em>str</em>) – ‘input’ or ‘output’ of the linear module in the student model.</p></li>
+<li><p><strong>teacher_linear_module_io</strong> (<em>str</em>) – ‘input’ or ‘output’ of the linear module in the teacher model.</p></li>
+<li><p><strong>student_ss_module_io</strong> (<em>str</em>) – ‘input’ or ‘output’ of the self-supervision module in the student model.</p></li>
+<li><p><strong>teacher_ss_module_io</strong> (<em>str</em>) – ‘input’ or ‘output’ of the self-supervision module in the teacher model.</p></li>
+<li><p><strong>loss_weights</strong> (<em>list</em><em>[</em><em>float</em><em>] or </em><em>None</em>) – weights for 1) cross-entropy, 2) KL divergence for the original data, 3) KL divergence for self-supervision cosine similarities, and 4) KL divergence for the augmented data by transform.</p></li>
+<li><p><strong>reduction</strong> (<em>str</em><em> or </em><em>None</em>) – <code class="docutils literal notranslate"><span class="pre">reduction</span></code> for KLDivLoss. If <code class="docutils literal notranslate"><span class="pre">reduction</span></code> = ‘batchmean’, CrossEntropyLoss’s <code class="docutils literal notranslate"><span class="pre">reduction</span></code> will be ‘mean’.</p></li>
+</ul>
+</dd>
+</dl>
+<div class="literal-block-wrapper docutils container" id="id17">
+<div class="code-block-caption"><span class="caption-text">An example YAML to instantiate <a class="reference internal" href="#torchdistill.losses.mid_level.SSKDLoss" title="torchdistill.losses.mid_level.SSKDLoss"><code class="xref py py-class docutils literal notranslate"><span class="pre">SSKDLoss</span></code></a> for a teacher-student pair of ResNet-34 and ResNet-18 in torchvision, using an auxiliary module <a class="reference internal" href="models.html#torchdistill.models.wrapper.SSWrapper4SSKD" title="torchdistill.models.wrapper.SSWrapper4SSKD"><code class="xref py py-class docutils literal notranslate"><span class="pre">torchdistill.models.wrapper.SSWrapper4SSKD</span></code></a> for the teacher and student models.</span><a class="headerlink" href="#id17" title="Permalink to this code"></a></div>
+<div class="highlight-yaml notranslate"><div class="highlight"><pre><span></span><span class="w"> </span><span class="nt">criterion</span><span class="p">:</span>
+<span class="w">   </span><span class="nt">key</span><span class="p">:</span><span class="w"> </span><span class="s">&#39;SSKDLoss&#39;</span>
+<span class="w">   </span><span class="nt">kwargs</span><span class="p">:</span>
+<span class="w">     </span><span class="nt">student_linear_module_path</span><span class="p">:</span><span class="w"> </span><span class="s">&#39;model.fc&#39;</span>
+<span class="w">     </span><span class="nt">teacher_linear_module_path</span><span class="p">:</span><span class="w"> </span><span class="s">&#39;model.fc&#39;</span>
+<span class="w">     </span><span class="nt">student_ss_module_path</span><span class="p">:</span><span class="w"> </span><span class="s">&#39;ss_module&#39;</span>
+<span class="w">     </span><span class="nt">teacher_ss_module_path</span><span class="p">:</span><span class="w"> </span><span class="s">&#39;ss_module&#39;</span>
+<span class="w">     </span><span class="nt">kl_temp</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">4.0</span>
+<span class="w">     </span><span class="nt">ss_temp</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">0.5</span>
+<span class="w">     </span><span class="nt">tf_temp</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">4.0</span>
+<span class="w">     </span><span class="nt">ss_ratio</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">0.75</span>
+<span class="w">     </span><span class="nt">tf_ratio</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">1.0</span>
+<span class="w">     </span><span class="nt">loss_weights</span><span class="p">:</span><span class="w"> </span><span class="p p-Indicator">[</span><span class="nv">1.0</span><span class="p p-Indicator">,</span><span class="w"> </span><span class="nv">0.9</span><span class="p p-Indicator">,</span><span class="w"> </span><span class="nv">10.0</span><span class="p p-Indicator">,</span><span class="w"> </span><span class="nv">2.7</span><span class="p p-Indicator">]</span>
+<span class="w">     </span><span class="nt">reduction</span><span class="p">:</span><span class="w"> </span><span class="s">&#39;batchmean&#39;</span>
+</pre></div>
+</div>
+</div>
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="torchdistill.losses.mid_level.PADL2Loss">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">torchdistill.losses.mid_level.</span></span><span class="sig-name descname"><span class="pre">PADL2Loss</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">student_embed_module_path</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">teacher_embed_module_path</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">student_embed_module_io</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'output'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">teacher_embed_module_io</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'output'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">module_path</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'var_estimator'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">module_io</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'output'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">eps</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1e-06</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">reduction</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'mean'</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/torchdistill/losses/mid_level.html#PADL2Loss"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#torchdistill.losses.mid_level.PADL2Loss" title="Permalink to this definition"></a></dt>
+<dd><p>A loss module for prime-aware adaptive distillation (PAD) with L2 loss. This loss module is used at the 2nd stage of PAD method.</p>
+<p>Youcai Zhang, Zhonghao Lan, Yuchen Dai, Fangao Zeng, Yan Bai, Jie Chang, Yichen Wei: <a class="reference external" href="https://www.ecva.net/papers/eccv_2020/papers_ECCV/html/3317_ECCV_2020_paper.php">“Prime-Aware Adaptive Distillation”</a> &#64; ECCV 2020 (2020)</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>student_embed_module_path</strong> (<em>str</em>) – student model’s embedding module path in an auxiliary wrapper <a class="reference internal" href="models.html#torchdistill.models.wrapper.VarianceBranch4PAD" title="torchdistill.models.wrapper.VarianceBranch4PAD"><code class="xref py py-class docutils literal notranslate"><span class="pre">torchdistill.models.wrapper.VarianceBranch4PAD</span></code></a>.</p></li>
+<li><p><strong>teacher_embed_module_path</strong> (<em>str</em>) – teacher model’s embedding module path.</p></li>
+<li><p><strong>student_embed_module_io</strong> (<em>str</em>) – ‘input’ or ‘output’ of the embedding module in the student model.</p></li>
+<li><p><strong>teacher_embed_module_io</strong> (<em>str</em>) – ‘input’ or ‘output’ of the embedding module in the teacher model.</p></li>
+<li><p><strong>module_path</strong> (<em>str</em>) – student model’s variance estimator module path in an auxiliary wrapper <a class="reference internal" href="models.html#torchdistill.models.wrapper.VarianceBranch4PAD" title="torchdistill.models.wrapper.VarianceBranch4PAD"><code class="xref py py-class docutils literal notranslate"><span class="pre">torchdistill.models.wrapper.VarianceBranch4PAD</span></code></a>.</p></li>
+<li><p><strong>module_io</strong> (<em>str</em>) – ‘input’ or ‘output’ of the variance estimator module in the student model.</p></li>
+<li><p><strong>eps</strong> (<em>float</em>) – constant to avoid zero division.</p></li>
+<li><p><strong>reduction</strong> (<em>str</em>) – loss reduction type.</p></li>
+</ul>
+</dd>
+</dl>
+<div class="literal-block-wrapper docutils container" id="id18">
+<div class="code-block-caption"><span class="caption-text">An example YAML to instantiate <a class="reference internal" href="#torchdistill.losses.mid_level.PADL2Loss" title="torchdistill.losses.mid_level.PADL2Loss"><code class="xref py py-class docutils literal notranslate"><span class="pre">PADL2Loss</span></code></a> for a teacher-student pair of ResNet-34 and ResNet-18 in torchvision, using an auxiliary module <a class="reference internal" href="models.html#torchdistill.models.wrapper.VarianceBranch4PAD" title="torchdistill.models.wrapper.VarianceBranch4PAD"><code class="xref py py-class docutils literal notranslate"><span class="pre">torchdistill.models.wrapper.VarianceBranch4PAD</span></code></a> for the student model.</span><a class="headerlink" href="#id18" title="Permalink to this code"></a></div>
+<div class="highlight-yaml notranslate"><div class="highlight"><pre><span></span><span class="w"> </span><span class="nt">criterion</span><span class="p">:</span>
+<span class="w">   </span><span class="nt">key</span><span class="p">:</span><span class="w"> </span><span class="s">&#39;PADL2Loss&#39;</span>
+<span class="w">   </span><span class="nt">kwargs</span><span class="p">:</span>
+<span class="w">     </span><span class="nt">student_embed_module_path</span><span class="p">:</span><span class="w"> </span><span class="s">&#39;student_model.avgpool&#39;</span>
+<span class="w">     </span><span class="nt">student_embed_module_io</span><span class="p">:</span><span class="w"> </span><span class="s">&#39;output&#39;</span>
+<span class="w">     </span><span class="nt">teacher_embed_module_path</span><span class="p">:</span><span class="w"> </span><span class="s">&#39;avgpool&#39;</span>
+<span class="w">     </span><span class="nt">teacher_embed_module_io</span><span class="p">:</span><span class="w"> </span><span class="s">&#39;output&#39;</span>
+<span class="w">     </span><span class="nt">module_path</span><span class="p">:</span><span class="w"> </span><span class="s">&#39;var_estimator&#39;</span>
+<span class="w">     </span><span class="nt">module_io</span><span class="p">:</span><span class="w"> </span><span class="s">&#39;output&#39;</span>
+<span class="w">     </span><span class="nt">eps</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">0.000001</span>
+<span class="w">     </span><span class="nt">reduction</span><span class="p">:</span><span class="w"> </span><span class="s">&#39;mean&#39;</span>
+</pre></div>
+</div>
+</div>
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="torchdistill.losses.mid_level.HierarchicalContextLoss">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">torchdistill.losses.mid_level.</span></span><span class="sig-name descname"><span class="pre">HierarchicalContextLoss</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">student_module_path</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">student_module_io</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">teacher_module_path</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">teacher_module_io</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">reduction</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'mean'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">output_sizes</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/torchdistill/losses/mid_level.html#HierarchicalContextLoss"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#torchdistill.losses.mid_level.HierarchicalContextLoss" title="Permalink to this definition"></a></dt>
+<dd><p>A loss module for knowledge review (KR) method. Referred to <a class="reference external" href="https://github.com/dvlab-research/ReviewKD/blob/master/ImageNet/models/reviewkd.py">https://github.com/dvlab-research/ReviewKD/blob/master/ImageNet/models/reviewkd.py</a></p>
+<p>Pengguang Chen, Shu Liu, Hengshuang Zhao, Jiaya Jia: <a class="reference external" href="https://openaccess.thecvf.com/content/CVPR2021/html/Chen_Distilling_Knowledge_via_Knowledge_Review_CVPR_2021_paper.html">“Distilling Knowledge via Knowledge Review”</a> &#64; CVPR 2021 (2021)</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>student_module_path</strong> (<em>str</em>) – student model’s module path in an auxiliary wrapper <a class="reference internal" href="models.html#torchdistill.models.wrapper.Student4KnowledgeReview" title="torchdistill.models.wrapper.Student4KnowledgeReview"><code class="xref py py-class docutils literal notranslate"><span class="pre">torchdistill.models.wrapper.Student4KnowledgeReview</span></code></a>.</p></li>
+<li><p><strong>student_module_io</strong> (<em>str</em>) – ‘input’ or ‘output’ of the module in the student model.</p></li>
+<li><p><strong>teacher_module_path</strong> (<em>str</em>) – teacher model’s module path.</p></li>
+<li><p><strong>teacher_module_io</strong> (<em>str</em>) – ‘input’ or ‘output’ of the module in the teacher model.</p></li>
+<li><p><strong>reduction</strong> (<em>str</em><em> or </em><em>None</em>) – <code class="docutils literal notranslate"><span class="pre">reduction</span></code> for MSELoss.</p></li>
+<li><p><strong>output_sizes</strong> (<em>list</em><em>[</em><em>int</em><em>] or </em><em>None</em>) – output sizes of adaptive_avg_pool2d.</p></li>
+</ul>
+</dd>
+</dl>
+<div class="literal-block-wrapper docutils container" id="id19">
+<div class="code-block-caption"><span class="caption-text">An example YAML to instantiate <a class="reference internal" href="#torchdistill.losses.mid_level.HierarchicalContextLoss" title="torchdistill.losses.mid_level.HierarchicalContextLoss"><code class="xref py py-class docutils literal notranslate"><span class="pre">HierarchicalContextLoss</span></code></a> for a teacher-student pair of ResNet-34 and ResNet-18 in torchvision, using an auxiliary module <a class="reference internal" href="models.html#torchdistill.models.wrapper.Student4KnowledgeReview" title="torchdistill.models.wrapper.Student4KnowledgeReview"><code class="xref py py-class docutils literal notranslate"><span class="pre">torchdistill.models.wrapper.Student4KnowledgeReview</span></code></a> for the student model.</span><a class="headerlink" href="#id19" title="Permalink to this code"></a></div>
+<div class="highlight-yaml notranslate"><div class="highlight"><pre><span></span><span class="w"> </span><span class="nt">criterion</span><span class="p">:</span>
+<span class="w">   </span><span class="nt">key</span><span class="p">:</span><span class="w"> </span><span class="s">&#39;HierarchicalContextLoss&#39;</span>
+<span class="w">   </span><span class="nt">kwargs</span><span class="p">:</span>
+<span class="w">     </span><span class="nt">student_module_path</span><span class="p">:</span><span class="w"> </span><span class="s">&#39;abf_modules.4&#39;</span>
+<span class="w">     </span><span class="nt">student_module_io</span><span class="p">:</span><span class="w"> </span><span class="s">&#39;output&#39;</span>
+<span class="w">     </span><span class="nt">teacher_module_path</span><span class="p">:</span><span class="w"> </span><span class="s">&#39;layer1.-1.relu&#39;</span>
+<span class="w">     </span><span class="nt">teacher_module_io</span><span class="p">:</span><span class="w"> </span><span class="s">&#39;input&#39;</span>
+<span class="w">     </span><span class="nt">reduction</span><span class="p">:</span><span class="w"> </span><span class="s">&#39;mean&#39;</span>
+<span class="w">     </span><span class="nt">output_sizes</span><span class="p">:</span><span class="w"> </span><span class="p p-Indicator">[</span><span class="nv">4</span><span class="p p-Indicator">,</span><span class="w"> </span><span class="nv">2</span><span class="p p-Indicator">,</span><span class="w"> </span><span class="nv">1</span><span class="p p-Indicator">]</span>
+</pre></div>
+</div>
+</div>
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="torchdistill.losses.mid_level.RegularizationLoss">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">torchdistill.losses.mid_level.</span></span><span class="sig-name descname"><span class="pre">RegularizationLoss</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">module_path</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">io_type</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'output'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">is_from_teacher</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">p</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/torchdistill/losses/mid_level.html#RegularizationLoss"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#torchdistill.losses.mid_level.RegularizationLoss" title="Permalink to this definition"></a></dt>
+<dd><p>A regularization loss module.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>module_path</strong> (<em>str</em>) – module path.</p></li>
+<li><p><strong>module_io</strong> (<em>str</em>) – ‘input’ or ‘output’ of the module in the student model.</p></li>
+<li><p><strong>is_from_teacher</strong> (<em>bool</em>) – True if you use teacher’s I/O dict. Otherwise, you use student’s I/O dict.</p></li>
+<li><p><strong>p</strong> (<em>int</em>) – the order of norm.</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="torchdistill.losses.mid_level.KTALoss">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">torchdistill.losses.mid_level.</span></span><span class="sig-name descname"><span class="pre">KTALoss</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">p</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">q</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">2</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">reduction</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'mean'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">knowledge_translator_path</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'paraphraser'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">feature_adapter_path</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'feature_adapter'</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/torchdistill/losses/mid_level.html#KTALoss"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#torchdistill.losses.mid_level.KTALoss" title="Permalink to this definition"></a></dt>
+<dd><p>A loss module for knowledge translation and adaptation (KTA).
+This loss module is used at the 2nd stage of KTAAD method.</p>
+<p>Tong He, Chunhua Shen, Zhi Tian, Dong Gong, Changming Sun, Youliang Yan.: <a class="reference external" href="https://openaccess.thecvf.com/content_CVPR_2019/html/He_Knowledge_Adaptation_for_Efficient_Semantic_Segmentation_CVPR_2019_paper.html">“Knowledge Adaptation for Efficient Semantic Segmentation”</a> &#64; CVPR 2019 (2019)</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>p</strong> (<em>int</em>) – the order of norm for differences between normalized feature adapter’s (flattened) output and knowledge translator’s (flattened) output.</p></li>
+<li><p><strong>q</strong> (<em>int</em>) – the order of norm for the denominator to normalize feature adapter (flattened) output.</p></li>
+<li><p><strong>reduction</strong> (<em>str</em>) – loss reduction type.</p></li>
+<li><p><strong>knowledge_translator_path</strong> (<em>str</em>) – knowledge translator module path.</p></li>
+<li><p><strong>feature_adapter_path</strong> (<em>str</em>) – feature adapter module path.</p></li>
+</ul>
+</dd>
+</dl>
+<div class="literal-block-wrapper docutils container" id="id20">
+<div class="code-block-caption"><span class="caption-text">An example YAML to instantiate <a class="reference internal" href="#torchdistill.losses.mid_level.KTALoss" title="torchdistill.losses.mid_level.KTALoss"><code class="xref py py-class docutils literal notranslate"><span class="pre">KTALoss</span></code></a> for a teacher-student pair of DeepLabv3 with ResNet50 and LRASPP with MobileNet v3 (Large) in torchvision, using an auxiliary module <a class="reference internal" href="models.html#torchdistill.models.wrapper.Teacher4FactorTransfer" title="torchdistill.models.wrapper.Teacher4FactorTransfer"><code class="xref py py-class docutils literal notranslate"><span class="pre">torchdistill.models.wrapper.Teacher4FactorTransfer</span></code></a> and <a class="reference internal" href="models.html#torchdistill.models.wrapper.Student4KTAAD" title="torchdistill.models.wrapper.Student4KTAAD"><code class="xref py py-class docutils literal notranslate"><span class="pre">torchdistill.models.wrapper.Student4KTAAD</span></code></a> for the teacher and student models.</span><a class="headerlink" href="#id20" title="Permalink to this code"></a></div>
+<div class="highlight-yaml notranslate"><div class="highlight"><pre><span></span><span class="w"> </span><span class="nt">criterion</span><span class="p">:</span>
+<span class="w">   </span><span class="nt">key</span><span class="p">:</span><span class="w"> </span><span class="s">&#39;KTALoss&#39;</span>
+<span class="w">   </span><span class="nt">kwargs</span><span class="p">:</span>
+<span class="w">     </span><span class="nt">p</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">1</span>
+<span class="w">     </span><span class="nt">q</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">2</span>
+<span class="w">     </span><span class="nt">reduction</span><span class="p">:</span><span class="w"> </span><span class="s">&#39;mean&#39;</span>
+<span class="w">     </span><span class="nt">knowledge_translator_path</span><span class="p">:</span><span class="w"> </span><span class="s">&#39;paraphraser.encoder&#39;</span>
+<span class="w">     </span><span class="nt">feature_adapter_path</span><span class="p">:</span><span class="w"> </span><span class="s">&#39;feature_adapter&#39;</span>
+</pre></div>
+</div>
+</div>
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="torchdistill.losses.mid_level.AffinityLoss">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">torchdistill.losses.mid_level.</span></span><span class="sig-name descname"><span class="pre">AffinityLoss</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">student_module_path</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">teacher_module_path</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">student_module_io</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'output'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">teacher_module_io</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'output'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">reduction</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'mean'</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/torchdistill/losses/mid_level.html#AffinityLoss"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#torchdistill.losses.mid_level.AffinityLoss" title="Permalink to this definition"></a></dt>
+<dd><p>A loss module for affinity distillation in KTA. This loss module is used at the 2nd stage of KTAAD method.</p>
+<p>Tong He, Chunhua Shen, Zhi Tian, Dong Gong, Changming Sun, Youliang Yan.: <a class="reference external" href="https://openaccess.thecvf.com/content_CVPR_2019/html/He_Knowledge_Adaptation_for_Efficient_Semantic_Segmentation_CVPR_2019_paper.html">“Knowledge Adaptation for Efficient Semantic Segmentation”</a> &#64; CVPR 2019 (2019)</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>student_module_path</strong> (<em>str</em>) – student model’s module path in an auxiliary wrapper <a class="reference internal" href="models.html#torchdistill.models.wrapper.Student4KTAAD" title="torchdistill.models.wrapper.Student4KTAAD"><code class="xref py py-class docutils literal notranslate"><span class="pre">torchdistill.models.wrapper.Student4KTAAD</span></code></a>.</p></li>
+<li><p><strong>student_module_io</strong> (<em>str</em>) – ‘input’ or ‘output’ of the module in the student model.</p></li>
+<li><p><strong>teacher_module_path</strong> (<em>str</em>) – teacher model’s module path in an auxiliary wrapper <a class="reference internal" href="models.html#torchdistill.models.wrapper.Teacher4FactorTransfer" title="torchdistill.models.wrapper.Teacher4FactorTransfer"><code class="xref py py-class docutils literal notranslate"><span class="pre">torchdistill.models.wrapper.Teacher4FactorTransfer</span></code></a>.</p></li>
+<li><p><strong>teacher_module_io</strong> (<em>str</em>) – ‘input’ or ‘output’ of the module in the teacher model.</p></li>
+<li><p><strong>reduction</strong> (<em>str</em><em> or </em><em>None</em>) – loss reduction type.</p></li>
+</ul>
+</dd>
+</dl>
+<div class="literal-block-wrapper docutils container" id="id21">
+<div class="code-block-caption"><span class="caption-text">An example YAML to instantiate <a class="reference internal" href="#torchdistill.losses.mid_level.AffinityLoss" title="torchdistill.losses.mid_level.AffinityLoss"><code class="xref py py-class docutils literal notranslate"><span class="pre">AffinityLoss</span></code></a> for a teacher-student pair of DeepLabv3 with ResNet50 and LRASPP with MobileNet v3 (Large) in torchvision, using an auxiliary module <a class="reference internal" href="models.html#torchdistill.models.wrapper.Teacher4FactorTransfer" title="torchdistill.models.wrapper.Teacher4FactorTransfer"><code class="xref py py-class docutils literal notranslate"><span class="pre">torchdistill.models.wrapper.Teacher4FactorTransfer</span></code></a> and <a class="reference internal" href="models.html#torchdistill.models.wrapper.Student4KTAAD" title="torchdistill.models.wrapper.Student4KTAAD"><code class="xref py py-class docutils literal notranslate"><span class="pre">torchdistill.models.wrapper.Student4KTAAD</span></code></a> for the teacher and student models.</span><a class="headerlink" href="#id21" title="Permalink to this code"></a></div>
+<div class="highlight-yaml notranslate"><div class="highlight"><pre><span></span><span class="w"> </span><span class="nt">criterion</span><span class="p">:</span>
+<span class="w">   </span><span class="nt">key</span><span class="p">:</span><span class="w"> </span><span class="s">&#39;AffinityLoss&#39;</span>
+<span class="w">   </span><span class="nt">kwargs</span><span class="p">:</span>
+<span class="w">     </span><span class="nt">student_module_path</span><span class="p">:</span><span class="w"> </span><span class="s">&#39;affinity_adapter&#39;</span>
+<span class="w">     </span><span class="nt">student_module_io</span><span class="p">:</span><span class="w"> </span><span class="s">&#39;output&#39;</span>
+<span class="w">     </span><span class="nt">teacher_module_path</span><span class="p">:</span><span class="w"> </span><span class="s">&#39;paraphraser.encoder&#39;</span>
+<span class="w">     </span><span class="nt">teacher_module_io</span><span class="p">:</span><span class="w"> </span><span class="s">&#39;output&#39;</span>
+<span class="w">     </span><span class="nt">reduction</span><span class="p">:</span><span class="w"> </span><span class="s">&#39;mean&#39;</span>
+</pre></div>
+</div>
+</div>
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="torchdistill.losses.mid_level.ChSimLoss">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">torchdistill.losses.mid_level.</span></span><span class="sig-name descname"><span class="pre">ChSimLoss</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">feature_pairs</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/torchdistill/losses/mid_level.html#ChSimLoss"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#torchdistill.losses.mid_level.ChSimLoss" title="Permalink to this definition"></a></dt>
+<dd><p>A loss module for Inter-Channel Correlation for Knowledge Distillation (ICKD).
+Refactored <a class="reference external" href="https://github.com/ADLab-AutoDrive/ICKD/blob/main/ImageNet/torchdistill/losses/single.py">https://github.com/ADLab-AutoDrive/ICKD/blob/main/ImageNet/torchdistill/losses/single.py</a></p>
+<p>Li Liu, Qingle Huang, Sihao Lin, Hongwei Xie, Bing Wang, Xiaojun Chang, Xiaodan Liang: <a class="reference external" href="https://openaccess.thecvf.com/content/ICCV2021/html/Liu_Exploring_Inter-Channel_Correlation_for_Diversity-Preserved_Knowledge_Distillation_ICCV_2021_paper.html">“Inter-Channel Correlation for Knowledge Distillation”</a> &#64; ICCV 2021 (2021)</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>feature_pairs</strong> (<em>dict</em>) – configuration of teacher-student module pairs to compute the L2 distance between the inter-channel correlation matrices of the student and the teacher.</p>
+</dd>
+</dl>
+<div class="literal-block-wrapper docutils container" id="id22">
+<div class="code-block-caption"><span class="caption-text">An example YAML to instantiate <a class="reference internal" href="#torchdistill.losses.mid_level.ChSimLoss" title="torchdistill.losses.mid_level.ChSimLoss"><code class="xref py py-class docutils literal notranslate"><span class="pre">ChSimLoss</span></code></a> for a teacher-student pair of ResNet-34 and ResNet-18 in torchvision, using an auxiliary module <a class="reference internal" href="models.html#torchdistill.models.wrapper.Student4ICKD" title="torchdistill.models.wrapper.Student4ICKD"><code class="xref py py-class docutils literal notranslate"><span class="pre">torchdistill.models.wrapper.Student4ICKD</span></code></a>.</span><a class="headerlink" href="#id22" title="Permalink to this code"></a></div>
+<div class="highlight-yaml notranslate"><div class="highlight"><pre><span></span><span class="w"> </span><span class="nt">criterion</span><span class="p">:</span>
+<span class="w">   </span><span class="nt">key</span><span class="p">:</span><span class="w"> </span><span class="s">&#39;ChSimLoss&#39;</span>
+<span class="w">   </span><span class="nt">kwargs</span><span class="p">:</span>
+<span class="w">     </span><span class="nt">feature_pairs</span><span class="p">:</span>
+<span class="w">       </span><span class="nt">pair1</span><span class="p">:</span>
+<span class="w">         </span><span class="nt">teacher</span><span class="p">:</span>
+<span class="w">           </span><span class="nt">io</span><span class="p">:</span><span class="w"> </span><span class="s">&#39;output&#39;</span>
+<span class="w">           </span><span class="nt">path</span><span class="p">:</span><span class="w"> </span><span class="s">&#39;layer4&#39;</span>
+<span class="w">         </span><span class="nt">student</span><span class="p">:</span>
+<span class="w">           </span><span class="nt">io</span><span class="p">:</span><span class="w"> </span><span class="s">&#39;output&#39;</span>
+<span class="w">           </span><span class="nt">path</span><span class="p">:</span><span class="w"> </span><span class="s">&#39;embed_dict.embed1&#39;</span>
+<span class="w">         </span><span class="nt">weight</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">1</span>
+</pre></div>
+</div>
+</div>
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="torchdistill.losses.mid_level.DISTLoss">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">torchdistill.losses.mid_level.</span></span><span class="sig-name descname"><span class="pre">DISTLoss</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">student_module_path</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">student_module_io</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">teacher_module_path</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">teacher_module_io</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">beta</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1.0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">gamma</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1.0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">tau</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1.0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">eps</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1e-08</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/torchdistill/losses/mid_level.html#DISTLoss"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#torchdistill.losses.mid_level.DISTLoss" title="Permalink to this definition"></a></dt>
+<dd><p>A loss module for Knowledge Distillation from A Stronger Teacher (DIST).
+Referred to <a class="reference external" href="https://github.com/hunto/image_classification_sota/blob/main/lib/models/losses/dist_kd.py">https://github.com/hunto/image_classification_sota/blob/main/lib/models/losses/dist_kd.py</a></p>
+<p>Tao Huang, Shan You, Fei Wang, Chen Qian, Chang Xu: <a class="reference external" href="https://proceedings.neurips.cc/paper_files/paper/2022/hash/da669dfd3c36c93905a17ddba01eef06-Abstract-Conference.html">“Knowledge Distillation from A Stronger Teacher”</a> &#64; NeurIPS 2022 (2022)</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>student_module_path</strong> (<em>str</em>) – student model’s logit module path.</p></li>
+<li><p><strong>student_module_io</strong> (<em>str</em>) – ‘input’ or ‘output’ of the module in the student model.</p></li>
+<li><p><strong>teacher_module_path</strong> (<em>str</em>) – teacher model’s logit module path.</p></li>
+<li><p><strong>teacher_module_io</strong> – ‘input’ or ‘output’ of the module in the teacher model.</p></li>
+<li><p><strong>beta</strong> (<em>float</em>) – balancing factor for inter-loss.</p></li>
+<li><p><strong>gamma</strong> (<em>float</em>) – balancing factor for intra-loss.</p></li>
+<li><p><strong>tau</strong> (<em>float</em>) – hyperparameter <span class="math notranslate nohighlight">\(\tau\)</span> to soften class-probability distributions.</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="torchdistill.losses.mid_level.SRDLoss">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">torchdistill.losses.mid_level.</span></span><span class="sig-name descname"><span class="pre">SRDLoss</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">student_feature_module_path</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">student_feature_module_io</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">teacher_feature_module_path</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">teacher_feature_module_io</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">student_linear_module_path</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">student_linear_module_io</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">teacher_linear_module_path</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">teacher_linear_module_io</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">exponent</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1.0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">temperature</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1.0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">reduction</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'batchmean'</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/torchdistill/losses/mid_level.html#SRDLoss"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#torchdistill.losses.mid_level.SRDLoss" title="Permalink to this definition"></a></dt>
+<dd><p>A loss module for Understanding the Role of the Projector in Knowledge Distillation.
+Referred to <a class="reference external" href="https://github.com/roymiles/Simple-Recipe-Distillation/blob/main/imagenet/torchdistill/losses/single.py">https://github.com/roymiles/Simple-Recipe-Distillation/blob/main/imagenet/torchdistill/losses/single.py</a></p>
+<p>Roy Miles, Krystian Mikolajczyk: <a class="reference external" href="https://arxiv.org/abs/2303.11098">“Understanding the Role of the Projector in Knowledge Distillation”</a> &#64; AAAI 2024 (2024)</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>student_feature_module_path</strong> (<em>str</em>) – student model’s feature module path in an auxiliary wrapper <a class="reference internal" href="models.html#torchdistill.models.wrapper.SRDModelWrapper" title="torchdistill.models.wrapper.SRDModelWrapper"><code class="xref py py-class docutils literal notranslate"><span class="pre">torchdistill.models.wrapper.SRDModelWrapper</span></code></a>.</p></li>
+<li><p><strong>student_feature_module_io</strong> (<em>str</em>) – ‘input’ or ‘output’ of the feature module in the student model.</p></li>
+<li><p><strong>teacher_feature_module_path</strong> (<em>str</em>) – teacher model’s feature module path in an auxiliary wrapper <a class="reference internal" href="models.html#torchdistill.models.wrapper.SRDModelWrapper" title="torchdistill.models.wrapper.SRDModelWrapper"><code class="xref py py-class docutils literal notranslate"><span class="pre">torchdistill.models.wrapper.SRDModelWrapper</span></code></a>.</p></li>
+<li><p><strong>teacher_feature_module_io</strong> (<em>str</em>) – ‘input’ or ‘output’ of the feature module in the teacher model.</p></li>
+<li><p><strong>student_linear_module_path</strong> (<em>str</em>) – student model’s linear module path.</p></li>
+<li><p><strong>student_linear_module_io</strong> (<em>str</em>) – ‘input’ or ‘output’ of the linear module in the student model.</p></li>
+<li><p><strong>teacher_linear_module_path</strong> (<em>str</em>) – teacher model’s linear module path.</p></li>
+<li><p><strong>teacher_linear_module_io</strong> (<em>str</em>) – ‘input’ or ‘output’ of the linear module in the teacher model.</p></li>
+<li><p><strong>exponent</strong> (<em>float</em>) – exponent for feature distillation loss.</p></li>
+<li><p><strong>temperature</strong> (<em>float</em>) – hyperparameter <span class="math notranslate nohighlight">\(\tau\)</span> to soften class-probability distributions.</p></li>
+<li><p><strong>reduction</strong> (<em>str</em><em> or </em><em>None</em>) – loss reduction type.</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="torchdistill.losses.mid_level.LogitStdKDLoss">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">torchdistill.losses.mid_level.</span></span><span class="sig-name descname"><span class="pre">LogitStdKDLoss</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">student_module_path</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">student_module_io</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">teacher_module_path</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">teacher_module_io</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">temperature</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">eps</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1e-07</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">alpha</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">beta</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">reduction</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'batchmean'</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/torchdistill/losses/mid_level.html#LogitStdKDLoss"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#torchdistill.losses.mid_level.LogitStdKDLoss" title="Permalink to this definition"></a></dt>
+<dd><p>A standard knowledge distillation (KD) loss module with logits standardization.</p>
+<p>Shangquan Sun, Wenqi Ren, Jingzhi Li, Rui Wang, Xiaochun Cao: <a class="reference external" href="https://arxiv.org/abs/2403.01427">“Logit Standardization in Knowledge Distillation”</a> &#64; CVPR 2024 (2024)</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>student_module_path</strong> (<em>str</em>) – student model’s logit module path.</p></li>
+<li><p><strong>student_module_io</strong> (<em>str</em>) – ‘input’ or ‘output’ of the module in the student model.</p></li>
+<li><p><strong>teacher_module_path</strong> (<em>str</em>) – teacher model’s logit module path.</p></li>
+<li><p><strong>teacher_module_io</strong> (<em>str</em>) – ‘input’ or ‘output’ of the module in the teacher model.</p></li>
+<li><p><strong>temperature</strong> (<em>float</em>) – hyperparameter <span class="math notranslate nohighlight">\(\tau\)</span> to soften class-probability distributions.</p></li>
+<li><p><strong>eps</strong> (<em>float</em>) – value added to the denominator for numerical stability.</p></li>
+<li><p><strong>alpha</strong> (<em>float</em>) – balancing factor for <span class="math notranslate nohighlight">\(L_{CE}\)</span>, cross-entropy.</p></li>
+<li><p><strong>beta</strong> (<em>float</em><em> or </em><em>None</em>) – balancing factor (default: <span class="math notranslate nohighlight">\(1 - \alpha\)</span>) for <span class="math notranslate nohighlight">\(L_{KL}\)</span>, KL divergence between class-probability distributions softened by <span class="math notranslate nohighlight">\(\tau\)</span>.</p></li>
+<li><p><strong>reduction</strong> (<em>str</em><em> or </em><em>None</em>) – <code class="docutils literal notranslate"><span class="pre">reduction</span></code> for KLDivLoss. If <code class="docutils literal notranslate"><span class="pre">reduction</span></code> = ‘batchmean’, CrossEntropyLoss’s <code class="docutils literal notranslate"><span class="pre">reduction</span></code> will be ‘mean’.</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+</section>
+<hr class="docutils" />
+<section id="torchdistill-losses-util">
+<h2>torchdistill.losses.util<a class="headerlink" href="#torchdistill-losses-util" title="Permalink to this heading"></a></h2>
+<span class="target" id="module-torchdistill.losses.util"></span><dl class="py function">
+<dt class="sig sig-object py" id="torchdistill.losses.util.extract_model_loss_dict">
+<span class="sig-prename descclassname"><span class="pre">torchdistill.losses.util.</span></span><span class="sig-name descname"><span class="pre">extract_model_loss_dict</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">student_outputs</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">targets</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/torchdistill/losses/util.html#extract_model_loss_dict"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#torchdistill.losses.util.extract_model_loss_dict" title="Permalink to this definition"></a></dt>
+<dd><p>Extracts model’s loss dict.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>student_outputs</strong> (<em>Amy</em>) – student model’s output.</p></li>
+<li><p><strong>targets</strong> (<em>Amy</em>) – training targets (won’t be used).</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>registered function to extract model output.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>dict</p>
+</dd>
+</dl>
+</dd></dl>
+
+</section>
+</section>
+
+
+           </div>
+          </div>
+          <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
+        <a href="models.html" class="btn btn-neutral float-left" title="torchdistill.models" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="optim.html" class="btn btn-neutral float-right" title="torchdistill.optim" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2023, Yoshitomo Matsubara.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script>
+    <!-- Theme Analytics -->
+    <script async src="https://www.googletagmanager.com/gtag/js?id=G-LYK8SSJ7R5"></script>
+    <script>
+      window.dataLayer = window.dataLayer || [];
+      function gtag(){dataLayer.push(arguments);}
+      gtag('js', new Date());
+
+      gtag('config', 'G-LYK8SSJ7R5', {
+          'anonymize_ip': false,
+      });
+    </script> 
+
+</body>
+</html>

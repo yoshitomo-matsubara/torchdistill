@@ -1,0 +1,247 @@
+<!DOCTYPE html>
+<html class="writer-html5" lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>torchdistill.common.file_util &mdash; torchdistill v1.1.1-dev documentation</title>
+      <link rel="stylesheet" type="text/css" href="../../../_static/pygments.css?v=80d5e7a1" />
+      <link rel="stylesheet" type="text/css" href="../../../_static/css/theme.css?v=19f00094" />
+
+  
+  <!--[if lt IE 9]>
+    <script src="../../../_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+        <script src="../../../_static/jquery.js?v=5d32c60e"></script>
+        <script src="../../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+        <script data-url_root="../../../" id="documentation_options" src="../../../_static/documentation_options.js?v=0b675245"></script>
+        <script src="../../../_static/doctools.js?v=888ff710"></script>
+        <script src="../../../_static/sphinx_highlight.js?v=4825356b"></script>
+    <script src="../../../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../search.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="../../../index.html">
+            
+              <img src="../../../_static/logo-white.png" class="logo" alt="Logo"/>
+          </a>
+              <div class="version">
+                v1.1.1-dev
+              </div>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">📚 Overview</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../usage.html">Usage</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../package.html">torchdistill API</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">🧑🏻‍💻 Research</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../benchmarks.html">Benchmarks</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../projects.html">Projects</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../../index.html">torchdistill</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content style-external-links">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../../../index.html" class="icon icon-home" aria-label="Home"></a></li>
+          <li class="breadcrumb-item"><a href="../../index.html">Module code</a></li>
+      <li class="breadcrumb-item active">torchdistill.common.file_util</li>
+      <li class="wy-breadcrumbs-aside">
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <h1>Source code for torchdistill.common.file_util</h1><div class="highlight"><pre>
+<span></span><span class="kn">import</span> <span class="nn">os</span>
+<span class="kn">import</span> <span class="nn">pickle</span>
+<span class="kn">import</span> <span class="nn">sys</span>
+<span class="kn">from</span> <span class="nn">pathlib</span> <span class="kn">import</span> <span class="n">Path</span>
+
+
+<div class="viewcode-block" id="check_if_exists"><a class="viewcode-back" href="../../../subpkgs/common.html#torchdistill.common.file_util.check_if_exists">[docs]</a><span class="k">def</span> <span class="nf">check_if_exists</span><span class="p">(</span><span class="n">file_path</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Checks if a file/dir exists.</span>
+
+<span class="sd">    :param file_path: file/dir path</span>
+<span class="sd">    :type file_path: str</span>
+<span class="sd">    :return: True if the given file exists</span>
+<span class="sd">    :rtype: bool</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">return</span> <span class="n">file_path</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="ow">and</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">exists</span><span class="p">(</span><span class="n">file_path</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="get_file_path_list"><a class="viewcode-back" href="../../../subpkgs/common.html#torchdistill.common.file_util.get_file_path_list">[docs]</a><span class="k">def</span> <span class="nf">get_file_path_list</span><span class="p">(</span><span class="n">dir_path</span><span class="p">,</span> <span class="n">is_recursive</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">is_sorted</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Gets file paths for a given dir path.</span>
+
+<span class="sd">    :param dir_path: dir path</span>
+<span class="sd">    :type dir_path: str</span>
+<span class="sd">    :param is_recursive: if True, get file paths recursively</span>
+<span class="sd">    :type is_recursive: bool</span>
+<span class="sd">    :param is_sorted: if True, sort file paths in ascending order</span>
+<span class="sd">    :type is_sorted: bool</span>
+<span class="sd">    :return: list of file paths</span>
+<span class="sd">    :rtype: list[str]</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">file_list</span> <span class="o">=</span> <span class="nb">list</span><span class="p">()</span>
+    <span class="k">for</span> <span class="n">file</span> <span class="ow">in</span> <span class="n">os</span><span class="o">.</span><span class="n">listdir</span><span class="p">(</span><span class="n">dir_path</span><span class="p">):</span>
+        <span class="n">path</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">dir_path</span><span class="p">,</span> <span class="n">file</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">isfile</span><span class="p">(</span><span class="n">path</span><span class="p">):</span>
+            <span class="n">file_list</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">path</span><span class="p">)</span>
+        <span class="k">elif</span> <span class="n">is_recursive</span><span class="p">:</span>
+            <span class="n">file_list</span><span class="o">.</span><span class="n">extend</span><span class="p">(</span><span class="n">get_file_path_list</span><span class="p">(</span><span class="n">path</span><span class="p">,</span> <span class="n">is_recursive</span><span class="p">))</span>
+    <span class="k">return</span> <span class="nb">sorted</span><span class="p">(</span><span class="n">file_list</span><span class="p">)</span> <span class="k">if</span> <span class="n">is_sorted</span> <span class="k">else</span> <span class="n">file_list</span></div>
+
+
+<div class="viewcode-block" id="get_dir_path_list"><a class="viewcode-back" href="../../../subpkgs/common.html#torchdistill.common.file_util.get_dir_path_list">[docs]</a><span class="k">def</span> <span class="nf">get_dir_path_list</span><span class="p">(</span><span class="n">dir_path</span><span class="p">,</span> <span class="n">is_recursive</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">is_sorted</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Gets dir paths for a given dir path.</span>
+
+<span class="sd">    :param dir_path: dir path</span>
+<span class="sd">    :type dir_path: str</span>
+<span class="sd">    :param is_recursive: if True, get dir paths recursively</span>
+<span class="sd">    :type is_recursive: bool</span>
+<span class="sd">    :param is_sorted: if True, sort dir paths in ascending order</span>
+<span class="sd">    :type is_sorted: bool</span>
+<span class="sd">    :return: list of dir paths</span>
+<span class="sd">    :rtype: list[str]</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">dir_list</span> <span class="o">=</span> <span class="nb">list</span><span class="p">()</span>
+    <span class="k">for</span> <span class="n">file</span> <span class="ow">in</span> <span class="n">os</span><span class="o">.</span><span class="n">listdir</span><span class="p">(</span><span class="n">dir_path</span><span class="p">):</span>
+        <span class="n">path</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">dir_path</span><span class="p">,</span> <span class="n">file</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">isdir</span><span class="p">(</span><span class="n">path</span><span class="p">):</span>
+            <span class="n">dir_list</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">path</span><span class="p">)</span>
+        <span class="k">elif</span> <span class="n">is_recursive</span><span class="p">:</span>
+            <span class="n">dir_list</span><span class="o">.</span><span class="n">extend</span><span class="p">(</span><span class="n">get_dir_path_list</span><span class="p">(</span><span class="n">path</span><span class="p">,</span> <span class="n">is_recursive</span><span class="p">))</span>
+    <span class="k">return</span> <span class="nb">sorted</span><span class="p">(</span><span class="n">dir_list</span><span class="p">)</span> <span class="k">if</span> <span class="n">is_sorted</span> <span class="k">else</span> <span class="n">dir_list</span></div>
+
+
+<div class="viewcode-block" id="make_dirs"><a class="viewcode-back" href="../../../subpkgs/common.html#torchdistill.common.file_util.make_dirs">[docs]</a><span class="k">def</span> <span class="nf">make_dirs</span><span class="p">(</span><span class="n">dir_path</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Makes a directory and its parent directories.</span>
+
+<span class="sd">    :param dir_path: dir path</span>
+<span class="sd">    :type dir_path: str</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">Path</span><span class="p">(</span><span class="n">dir_path</span><span class="p">)</span><span class="o">.</span><span class="n">mkdir</span><span class="p">(</span><span class="n">parents</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">exist_ok</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="make_parent_dirs"><a class="viewcode-back" href="../../../subpkgs/common.html#torchdistill.common.file_util.make_parent_dirs">[docs]</a><span class="k">def</span> <span class="nf">make_parent_dirs</span><span class="p">(</span><span class="n">file_path</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Makes parent directories.</span>
+
+<span class="sd">    :param file_path: file path</span>
+<span class="sd">    :type file_path: str</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">Path</span><span class="p">(</span><span class="n">file_path</span><span class="p">)</span><span class="o">.</span><span class="n">parent</span><span class="o">.</span><span class="n">mkdir</span><span class="p">(</span><span class="n">parents</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">exist_ok</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="save_pickle"><a class="viewcode-back" href="../../../subpkgs/common.html#torchdistill.common.file_util.save_pickle">[docs]</a><span class="k">def</span> <span class="nf">save_pickle</span><span class="p">(</span><span class="n">obj</span><span class="p">,</span> <span class="n">file_path</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Saves a serialized object as a file.</span>
+
+<span class="sd">    :param obj: object to be serialized</span>
+<span class="sd">    :type obj: Any</span>
+<span class="sd">    :param file_path: output file path</span>
+<span class="sd">    :type file_path: str</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">make_parent_dirs</span><span class="p">(</span><span class="n">file_path</span><span class="p">)</span>
+    <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="n">file_path</span><span class="p">,</span> <span class="s1">&#39;wb&#39;</span><span class="p">)</span> <span class="k">as</span> <span class="n">fp</span><span class="p">:</span>
+        <span class="n">pickle</span><span class="o">.</span><span class="n">dump</span><span class="p">(</span><span class="n">obj</span><span class="p">,</span> <span class="n">fp</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="load_pickle"><a class="viewcode-back" href="../../../subpkgs/common.html#torchdistill.common.file_util.load_pickle">[docs]</a><span class="k">def</span> <span class="nf">load_pickle</span><span class="p">(</span><span class="n">file_path</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Loads a deserialized object from a file.</span>
+
+<span class="sd">    :param file_path: serialized file path</span>
+<span class="sd">    :type file_path: str</span>
+<span class="sd">    :return: deserialized object</span>
+<span class="sd">    :rtype: Any</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="n">file_path</span><span class="p">,</span> <span class="s1">&#39;rb&#39;</span><span class="p">)</span> <span class="k">as</span> <span class="n">fp</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">pickle</span><span class="o">.</span><span class="n">load</span><span class="p">(</span><span class="n">fp</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="get_binary_object_size"><a class="viewcode-back" href="../../../subpkgs/common.html#torchdistill.common.file_util.get_binary_object_size">[docs]</a><span class="k">def</span> <span class="nf">get_binary_object_size</span><span class="p">(</span><span class="n">obj</span><span class="p">,</span> <span class="n">unit_size</span><span class="o">=</span><span class="mi">1024</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Computes the size of object in bytes after serialization.</span>
+
+<span class="sd">    :param obj: object</span>
+<span class="sd">    :type obj: Any</span>
+<span class="sd">    :param unit_size: unit file size</span>
+<span class="sd">    :type unit_size: int or float</span>
+<span class="sd">    :return: size of object in bytes, divided by the ``unit_size``</span>
+<span class="sd">    :rtype: float</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">return</span> <span class="n">sys</span><span class="o">.</span><span class="n">getsizeof</span><span class="p">(</span><span class="n">pickle</span><span class="o">.</span><span class="n">dumps</span><span class="p">(</span><span class="n">obj</span><span class="p">))</span> <span class="o">/</span> <span class="n">unit_size</span></div>
+</pre></div>
+
+           </div>
+          </div>
+          <footer>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2023, Yoshitomo Matsubara.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script>
+    <!-- Theme Analytics -->
+    <script async src="https://www.googletagmanager.com/gtag/js?id=G-LYK8SSJ7R5"></script>
+    <script>
+      window.dataLayer = window.dataLayer || [];
+      function gtag(){dataLayer.push(arguments);}
+      gtag('js', new Date());
+
+      gtag('config', 'G-LYK8SSJ7R5', {
+          'anonymize_ip': false,
+      });
+    </script> 
+
+</body>
+</html>

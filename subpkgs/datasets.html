@@ -1,0 +1,670 @@
+<!DOCTYPE html>
+<html class="writer-html5" lang="en">
+<head>
+  <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>torchdistill.datasets &mdash; torchdistill v1.1.1-dev documentation</title>
+      <link rel="stylesheet" type="text/css" href="../_static/pygments.css?v=80d5e7a1" />
+      <link rel="stylesheet" type="text/css" href="../_static/css/theme.css?v=19f00094" />
+
+  
+  <!--[if lt IE 9]>
+    <script src="../_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+        <script src="../_static/jquery.js?v=5d32c60e"></script>
+        <script src="../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+        <script data-url_root="../" id="documentation_options" src="../_static/documentation_options.js?v=0b675245"></script>
+        <script src="../_static/doctools.js?v=888ff710"></script>
+        <script src="../_static/sphinx_highlight.js?v=4825356b"></script>
+    <script src="../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" />
+    <link rel="next" title="torchdistill.models" href="models.html" />
+    <link rel="prev" title="torchdistill.core" href="core.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="../index.html">
+            
+              <img src="../_static/logo-white.png" class="logo" alt="Logo"/>
+          </a>
+              <div class="version">
+                v1.1.1-dev
+              </div>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">📚 Overview</span></p>
+<ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="../usage.html">Usage</a></li>
+<li class="toctree-l1 current"><a class="reference internal" href="../package.html">torchdistill API</a><ul class="current">
+<li class="toctree-l2"><a class="reference internal" href="core.html">torchdistill.core</a></li>
+<li class="toctree-l2 current"><a class="current reference internal" href="#">torchdistill.datasets</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#torchdistill-datasets-registry">torchdistill.datasets.registry</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#torchdistill.datasets.registry.register_dataset"><code class="docutils literal notranslate"><span class="pre">register_dataset()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#torchdistill.datasets.registry.register_collate_func"><code class="docutils literal notranslate"><span class="pre">register_collate_func()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#torchdistill.datasets.registry.register_sample_loader"><code class="docutils literal notranslate"><span class="pre">register_sample_loader()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#torchdistill.datasets.registry.register_batch_sampler"><code class="docutils literal notranslate"><span class="pre">register_batch_sampler()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#torchdistill.datasets.registry.register_transform"><code class="docutils literal notranslate"><span class="pre">register_transform()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#torchdistill.datasets.registry.register_dataset_wrapper"><code class="docutils literal notranslate"><span class="pre">register_dataset_wrapper()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#torchdistill.datasets.registry.get_dataset"><code class="docutils literal notranslate"><span class="pre">get_dataset()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#torchdistill.datasets.registry.get_collate_func"><code class="docutils literal notranslate"><span class="pre">get_collate_func()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#torchdistill.datasets.registry.get_sample_loader"><code class="docutils literal notranslate"><span class="pre">get_sample_loader()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#torchdistill.datasets.registry.get_batch_sampler"><code class="docutils literal notranslate"><span class="pre">get_batch_sampler()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#torchdistill.datasets.registry.get_transform"><code class="docutils literal notranslate"><span class="pre">get_transform()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#torchdistill.datasets.registry.get_dataset_wrapper"><code class="docutils literal notranslate"><span class="pre">get_dataset_wrapper()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="#torchdistill-datasets-sample-loader">torchdistill.datasets.sample_loader</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#torchdistill.datasets.sample_loader.JpegCompressionLoader"><code class="docutils literal notranslate"><span class="pre">JpegCompressionLoader</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="#torchdistill-datasets-util">torchdistill.datasets.util</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#torchdistill.datasets.util.split_dataset"><code class="docutils literal notranslate"><span class="pre">split_dataset()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#torchdistill.datasets.util.build_data_loader"><code class="docutils literal notranslate"><span class="pre">build_data_loader()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#torchdistill.datasets.util.build_data_loaders"><code class="docutils literal notranslate"><span class="pre">build_data_loaders()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="#torchdistill-datasets-wrapper">torchdistill.datasets.wrapper</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#torchdistill.datasets.wrapper.default_idx2subpath"><code class="docutils literal notranslate"><span class="pre">default_idx2subpath()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#torchdistill.datasets.wrapper.BaseDatasetWrapper"><code class="docutils literal notranslate"><span class="pre">BaseDatasetWrapper</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#torchdistill.datasets.wrapper.CacheableDataset"><code class="docutils literal notranslate"><span class="pre">CacheableDataset</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#torchdistill.datasets.wrapper.CRDDatasetWrapper"><code class="docutils literal notranslate"><span class="pre">CRDDatasetWrapper</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#torchdistill.datasets.wrapper.SSKDDatasetWrapper"><code class="docutils literal notranslate"><span class="pre">SSKDDatasetWrapper</span></code></a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="models.html">torchdistill.models</a></li>
+<li class="toctree-l2"><a class="reference internal" href="losses.html">torchdistill.losses</a></li>
+<li class="toctree-l2"><a class="reference internal" href="optim.html">torchdistill.optim</a></li>
+<li class="toctree-l2"><a class="reference internal" href="common.html">torchdistill.common</a></li>
+<li class="toctree-l2"><a class="reference internal" href="misc.html">torchdistill.misc</a></li>
+</ul>
+</li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">🧑🏻‍💻 Research</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../benchmarks.html">Benchmarks</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../projects.html">Projects</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../index.html">torchdistill</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content style-external-links">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../index.html" class="icon icon-home" aria-label="Home"></a></li>
+          <li class="breadcrumb-item"><a href="../package.html">torchdistill API</a></li>
+      <li class="breadcrumb-item active">torchdistill.datasets</li>
+      <li class="wy-breadcrumbs-aside">
+              <a href="https://github.com/yoshitomo-matsubara/torchdistill/blob/main/docs/source/subpkgs/datasets.rst" class="fa fa-github"> Edit on GitHub</a>
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <section id="torchdistill-datasets">
+<h1>torchdistill.datasets<a class="headerlink" href="#torchdistill-datasets" title="Permalink to this heading"></a></h1>
+<div class="toctree-wrapper compound">
+</div>
+<hr class="docutils" />
+<section id="torchdistill-datasets-registry">
+<h2>torchdistill.datasets.registry<a class="headerlink" href="#torchdistill-datasets-registry" title="Permalink to this heading"></a></h2>
+<span class="target" id="module-torchdistill.datasets.registry"></span><dl class="py function">
+<dt class="sig sig-object py" id="torchdistill.datasets.registry.register_dataset">
+<span class="sig-prename descclassname"><span class="pre">torchdistill.datasets.registry.</span></span><span class="sig-name descname"><span class="pre">register_dataset</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">arg</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/torchdistill/datasets/registry.html#register_dataset"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#torchdistill.datasets.registry.register_dataset" title="Permalink to this definition"></a></dt>
+<dd><p>Registers a dataset class or function to instantiate it.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>arg</strong> (<em>class</em><em> or </em><em>Callable</em><em> or </em><em>None</em>) – class or function to be registered as a dataset.</p>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>registered dataset class or function to instantiate it.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>class or <em>Callable</em></p>
+</dd>
+</dl>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>The dataset will be registered as an option.
+You can choose the registered class/function by specifying the name of the class/function or <code class="docutils literal notranslate"><span class="pre">key</span></code>
+you used for the registration, in a training configuration used for
+<a class="reference internal" href="core.html#torchdistill.core.distillation.DistillationBox" title="torchdistill.core.distillation.DistillationBox"><code class="xref py py-class docutils literal notranslate"><span class="pre">torchdistill.core.distillation.DistillationBox</span></code></a> or <a class="reference internal" href="core.html#torchdistill.core.training.TrainingBox" title="torchdistill.core.training.TrainingBox"><code class="xref py py-class docutils literal notranslate"><span class="pre">torchdistill.core.training.TrainingBox</span></code></a>.</p>
+<p>If you want to register the class/function with a key of your choice, add <code class="docutils literal notranslate"><span class="pre">key</span></code> to the decorator as below:</p>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">torch.utils.data</span> <span class="kn">import</span> <span class="n">Dataset</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">torchdistill.datasets.registry</span> <span class="kn">import</span> <span class="n">register_dataset</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="nd">@register_dataset</span><span class="p">(</span><span class="n">key</span><span class="o">=</span><span class="s1">&#39;my_custom_dataset&#39;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="k">class</span> <span class="nc">CustomDataset</span><span class="p">(</span><span class="n">Dataset</span><span class="p">):</span>
+<span class="gp">&gt;&gt;&gt; </span>    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+<span class="gp">&gt;&gt;&gt; </span>        <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;This is my custom dataset class&#39;</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>In the example, <code class="docutils literal notranslate"><span class="pre">CustomDataset</span></code> class is registered with a key “my_custom_dataset”.
+When you configure <a class="reference internal" href="core.html#torchdistill.core.distillation.DistillationBox" title="torchdistill.core.distillation.DistillationBox"><code class="xref py py-class docutils literal notranslate"><span class="pre">torchdistill.core.distillation.DistillationBox</span></code></a> or
+<a class="reference internal" href="core.html#torchdistill.core.training.TrainingBox" title="torchdistill.core.training.TrainingBox"><code class="xref py py-class docutils literal notranslate"><span class="pre">torchdistill.core.training.TrainingBox</span></code></a>, you can choose the <code class="docutils literal notranslate"><span class="pre">CustomDataset</span></code> class by
+“my_custom_dataset”.</p>
+</div>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="torchdistill.datasets.registry.register_collate_func">
+<span class="sig-prename descclassname"><span class="pre">torchdistill.datasets.registry.</span></span><span class="sig-name descname"><span class="pre">register_collate_func</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">arg</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/torchdistill/datasets/registry.html#register_collate_func"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#torchdistill.datasets.registry.register_collate_func" title="Permalink to this definition"></a></dt>
+<dd><p>Registers a collate function.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>arg</strong> (<em>Callable</em><em> or </em><em>None</em>) – function to be registered as a collate function.</p>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>registered function.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><em>Callable</em></p>
+</dd>
+</dl>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>The collate function will be registered as an option.
+You can choose the registered function by specifying the name of the function or <code class="docutils literal notranslate"><span class="pre">key</span></code>
+you used for the registration, in a training configuration used for
+<a class="reference internal" href="core.html#torchdistill.core.distillation.DistillationBox" title="torchdistill.core.distillation.DistillationBox"><code class="xref py py-class docutils literal notranslate"><span class="pre">torchdistill.core.distillation.DistillationBox</span></code></a> or <a class="reference internal" href="core.html#torchdistill.core.training.TrainingBox" title="torchdistill.core.training.TrainingBox"><code class="xref py py-class docutils literal notranslate"><span class="pre">torchdistill.core.training.TrainingBox</span></code></a>.</p>
+<p>If you want to register the function with a key of your choice, add <code class="docutils literal notranslate"><span class="pre">key</span></code> to the decorator as below:</p>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">torchdistill.datasets.registry</span> <span class="kn">import</span> <span class="n">register_collate_func</span>
+<span class="gp">&gt;&gt;&gt;</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="nd">@register_collate_func</span><span class="p">(</span><span class="n">key</span><span class="o">=</span><span class="s1">&#39;my_custom_collate&#39;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="k">def</span> <span class="nf">custom_collate</span><span class="p">(</span><span class="n">batch</span><span class="p">,</span> <span class="n">label</span><span class="p">):</span>
+<span class="gp">&gt;&gt;&gt; </span>    <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;This is my custom collate function&#39;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span>    <span class="k">return</span> <span class="n">batch</span><span class="p">,</span> <span class="n">label</span>
+</pre></div>
+</div>
+<p>In the example, <code class="docutils literal notranslate"><span class="pre">custom_collate</span></code> function is registered with a key “my_custom_collate”.
+When you configure <a class="reference internal" href="core.html#torchdistill.core.distillation.DistillationBox" title="torchdistill.core.distillation.DistillationBox"><code class="xref py py-class docutils literal notranslate"><span class="pre">torchdistill.core.distillation.DistillationBox</span></code></a> or
+<a class="reference internal" href="core.html#torchdistill.core.training.TrainingBox" title="torchdistill.core.training.TrainingBox"><code class="xref py py-class docutils literal notranslate"><span class="pre">torchdistill.core.training.TrainingBox</span></code></a>, you can choose the <code class="docutils literal notranslate"><span class="pre">custom_collate</span></code> function by
+“my_custom_collate”.</p>
+</div>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="torchdistill.datasets.registry.register_sample_loader">
+<span class="sig-prename descclassname"><span class="pre">torchdistill.datasets.registry.</span></span><span class="sig-name descname"><span class="pre">register_sample_loader</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">arg</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/torchdistill/datasets/registry.html#register_sample_loader"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#torchdistill.datasets.registry.register_sample_loader" title="Permalink to this definition"></a></dt>
+<dd><p>Registers a sample loader class or function to instantiate it.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>arg</strong> (<em>class</em><em> or </em><em>Callable</em><em> or </em><em>None</em>) – class or function to be registered as a sample loader.</p>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>registered sample loader class or function to instantiate it.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>class</p>
+</dd>
+</dl>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>The sample loader will be registered as an option.
+You can choose the registered class/function by specifying the name of the class/function or <code class="docutils literal notranslate"><span class="pre">key</span></code>
+you used for the registration, in a training configuration used for
+<a class="reference internal" href="core.html#torchdistill.core.distillation.DistillationBox" title="torchdistill.core.distillation.DistillationBox"><code class="xref py py-class docutils literal notranslate"><span class="pre">torchdistill.core.distillation.DistillationBox</span></code></a> or <a class="reference internal" href="core.html#torchdistill.core.training.TrainingBox" title="torchdistill.core.training.TrainingBox"><code class="xref py py-class docutils literal notranslate"><span class="pre">torchdistill.core.training.TrainingBox</span></code></a>.</p>
+<p>If you want to register the class with a key of your choice, add <code class="docutils literal notranslate"><span class="pre">key</span></code> to the decorator as below:</p>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">torch.utils.data</span> <span class="kn">import</span> <span class="n">Sampler</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">torchdistill.datasets.registry</span> <span class="kn">import</span> <span class="n">register_sample_loader</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="nd">@register_sample_loader</span><span class="p">(</span><span class="n">key</span><span class="o">=</span><span class="s1">&#39;my_custom_sample_loader&#39;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="k">class</span> <span class="nc">CustomSampleLoader</span><span class="p">(</span><span class="n">Sampler</span><span class="p">):</span>
+<span class="gp">&gt;&gt;&gt; </span>    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+<span class="gp">&gt;&gt;&gt; </span>        <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;This is my custom dataset class&#39;</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>In the example, <code class="docutils literal notranslate"><span class="pre">CustomSampleLoader</span></code> class is registered with a key “my_custom_sample_loader”.
+When you configure <a class="reference internal" href="core.html#torchdistill.core.distillation.DistillationBox" title="torchdistill.core.distillation.DistillationBox"><code class="xref py py-class docutils literal notranslate"><span class="pre">torchdistill.core.distillation.DistillationBox</span></code></a> or
+<a class="reference internal" href="core.html#torchdistill.core.training.TrainingBox" title="torchdistill.core.training.TrainingBox"><code class="xref py py-class docutils literal notranslate"><span class="pre">torchdistill.core.training.TrainingBox</span></code></a>, you can choose the <code class="docutils literal notranslate"><span class="pre">CustomSampleLoader</span></code> class by
+“my_custom_sample_loader”.</p>
+</div>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="torchdistill.datasets.registry.register_batch_sampler">
+<span class="sig-prename descclassname"><span class="pre">torchdistill.datasets.registry.</span></span><span class="sig-name descname"><span class="pre">register_batch_sampler</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">arg</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/torchdistill/datasets/registry.html#register_batch_sampler"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#torchdistill.datasets.registry.register_batch_sampler" title="Permalink to this definition"></a></dt>
+<dd><p>Registers a batch sampler or function to instantiate it.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>arg</strong> (<em>Callable</em><em> or </em><em>None</em>) – function to be registered as a batch sample loader.</p>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>registered batch sample loader function.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><em>Callable</em></p>
+</dd>
+</dl>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>The batch sampler will be registered as an option.
+You can choose the registered class/function by specifying the name of the class/function or <code class="docutils literal notranslate"><span class="pre">key</span></code>
+you used for the registration, in a training configuration used for
+<a class="reference internal" href="core.html#torchdistill.core.distillation.DistillationBox" title="torchdistill.core.distillation.DistillationBox"><code class="xref py py-class docutils literal notranslate"><span class="pre">torchdistill.core.distillation.DistillationBox</span></code></a> or <a class="reference internal" href="core.html#torchdistill.core.training.TrainingBox" title="torchdistill.core.training.TrainingBox"><code class="xref py py-class docutils literal notranslate"><span class="pre">torchdistill.core.training.TrainingBox</span></code></a>.</p>
+<p>If you want to register the class with a key of your choice, add <code class="docutils literal notranslate"><span class="pre">key</span></code> to the decorator as below:</p>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">torch.utils.data</span> <span class="kn">import</span> <span class="n">Sampler</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">torchdistill.datasets.registry</span> <span class="kn">import</span> <span class="n">register_batch_sampler</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="nd">@register_batch_sampler</span><span class="p">(</span><span class="n">key</span><span class="o">=</span><span class="s1">&#39;my_custom_batch_sampler&#39;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="k">class</span> <span class="nc">CustomSampleLoader</span><span class="p">(</span><span class="n">Sampler</span><span class="p">):</span>
+<span class="gp">&gt;&gt;&gt; </span>    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+<span class="gp">&gt;&gt;&gt; </span>        <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;This is my custom dataset class&#39;</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>In the example, <code class="docutils literal notranslate"><span class="pre">CustomSampleLoader</span></code> class is registered with a key “my_custom_batch_sampler”.
+When you configure <a class="reference internal" href="core.html#torchdistill.core.distillation.DistillationBox" title="torchdistill.core.distillation.DistillationBox"><code class="xref py py-class docutils literal notranslate"><span class="pre">torchdistill.core.distillation.DistillationBox</span></code></a> or
+<a class="reference internal" href="core.html#torchdistill.core.training.TrainingBox" title="torchdistill.core.training.TrainingBox"><code class="xref py py-class docutils literal notranslate"><span class="pre">torchdistill.core.training.TrainingBox</span></code></a>, you can choose the <code class="docutils literal notranslate"><span class="pre">CustomSampleLoader</span></code> class by
+“my_custom_batch_sampler”.</p>
+</div>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="torchdistill.datasets.registry.register_transform">
+<span class="sig-prename descclassname"><span class="pre">torchdistill.datasets.registry.</span></span><span class="sig-name descname"><span class="pre">register_transform</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">arg</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/torchdistill/datasets/registry.html#register_transform"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#torchdistill.datasets.registry.register_transform" title="Permalink to this definition"></a></dt>
+<dd><p>Registers a transform class or function to instantiate it.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>arg</strong> (<em>class</em><em> or </em><em>Callable</em><em> or </em><em>None</em>) – class/function to be registered as a transform.</p>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>registered transform class/function.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><em>Callable</em></p>
+</dd>
+</dl>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>The transform will be registered as an option.
+You can choose the registered class/function by specifying the name of the class/function or <code class="docutils literal notranslate"><span class="pre">key</span></code>
+you used for the registration, in a training configuration used for
+<a class="reference internal" href="core.html#torchdistill.core.distillation.DistillationBox" title="torchdistill.core.distillation.DistillationBox"><code class="xref py py-class docutils literal notranslate"><span class="pre">torchdistill.core.distillation.DistillationBox</span></code></a> or <a class="reference internal" href="core.html#torchdistill.core.training.TrainingBox" title="torchdistill.core.training.TrainingBox"><code class="xref py py-class docutils literal notranslate"><span class="pre">torchdistill.core.training.TrainingBox</span></code></a>.</p>
+<p>If you want to register the class with a key of your choice, add <code class="docutils literal notranslate"><span class="pre">key</span></code> to the decorator as below:</p>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">torch</span> <span class="kn">import</span> <span class="n">nn</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">torchdistill.datasets.registry</span> <span class="kn">import</span> <span class="n">register_transform</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="nd">@register_transform</span><span class="p">(</span><span class="n">key</span><span class="o">=</span><span class="s1">&#39;my_custom_transform&#39;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="k">class</span> <span class="nc">CustomTransform</span><span class="p">(</span><span class="n">nn</span><span class="o">.</span><span class="n">Module</span><span class="p">):</span>
+<span class="gp">&gt;&gt;&gt; </span>    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+<span class="gp">&gt;&gt;&gt; </span>        <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;This is my custom transform class&#39;</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>In the example, <code class="docutils literal notranslate"><span class="pre">CustomTransform</span></code> class is registered with a key “my_custom_transform”.
+When you configure <a class="reference internal" href="core.html#torchdistill.core.distillation.DistillationBox" title="torchdistill.core.distillation.DistillationBox"><code class="xref py py-class docutils literal notranslate"><span class="pre">torchdistill.core.distillation.DistillationBox</span></code></a> or
+<a class="reference internal" href="core.html#torchdistill.core.training.TrainingBox" title="torchdistill.core.training.TrainingBox"><code class="xref py py-class docutils literal notranslate"><span class="pre">torchdistill.core.training.TrainingBox</span></code></a>, you can choose the <code class="docutils literal notranslate"><span class="pre">CustomTransform</span></code> class by
+“my_custom_transform”.</p>
+</div>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="torchdistill.datasets.registry.register_dataset_wrapper">
+<span class="sig-prename descclassname"><span class="pre">torchdistill.datasets.registry.</span></span><span class="sig-name descname"><span class="pre">register_dataset_wrapper</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">arg</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/torchdistill/datasets/registry.html#register_dataset_wrapper"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#torchdistill.datasets.registry.register_dataset_wrapper" title="Permalink to this definition"></a></dt>
+<dd><p>Registers a dataset wrapper class or function to instantiate it.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>arg</strong> (<em>class</em><em> or </em><em>Callable</em><em> or </em><em>None</em>) – class/function to be registered as a dataset wrapper.</p>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>registered dataset wrapper class/function.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><em>Callable</em></p>
+</dd>
+</dl>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>The dataset wrapper will be registered as an option.
+You can choose the registered class/function by specifying the name of the class/function or <code class="docutils literal notranslate"><span class="pre">key</span></code>
+you used for the registration, in a training configuration used for
+<a class="reference internal" href="core.html#torchdistill.core.distillation.DistillationBox" title="torchdistill.core.distillation.DistillationBox"><code class="xref py py-class docutils literal notranslate"><span class="pre">torchdistill.core.distillation.DistillationBox</span></code></a> or <a class="reference internal" href="core.html#torchdistill.core.training.TrainingBox" title="torchdistill.core.training.TrainingBox"><code class="xref py py-class docutils literal notranslate"><span class="pre">torchdistill.core.training.TrainingBox</span></code></a>.</p>
+<p>If you want to register the class with a key of your choice, add <code class="docutils literal notranslate"><span class="pre">key</span></code> to the decorator as below:</p>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">torch.utils.data</span> <span class="kn">import</span> <span class="n">Dataset</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span> <span class="nn">torchdistill.datasets.registry</span> <span class="kn">import</span> <span class="n">register_dataset_wrapper</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="nd">@register_transform</span><span class="p">(</span><span class="n">key</span><span class="o">=</span><span class="s1">&#39;my_custom_dataset_wrapper&#39;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="k">class</span> <span class="nc">CustomDatasetWrapper</span><span class="p">(</span><span class="n">Dataset</span><span class="p">):</span>
+<span class="gp">&gt;&gt;&gt; </span>    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+<span class="gp">&gt;&gt;&gt; </span>        <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;This is my custom dataset wrapper class&#39;</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>In the example, <code class="docutils literal notranslate"><span class="pre">CustomDatasetWrapper</span></code> class is registered with a key “my_custom_dataset_wrapper”.
+When you configure <a class="reference internal" href="core.html#torchdistill.core.distillation.DistillationBox" title="torchdistill.core.distillation.DistillationBox"><code class="xref py py-class docutils literal notranslate"><span class="pre">torchdistill.core.distillation.DistillationBox</span></code></a> or
+<a class="reference internal" href="core.html#torchdistill.core.training.TrainingBox" title="torchdistill.core.training.TrainingBox"><code class="xref py py-class docutils literal notranslate"><span class="pre">torchdistill.core.training.TrainingBox</span></code></a>, you can choose the <code class="docutils literal notranslate"><span class="pre">CustomDatasetWrapper</span></code> class by
+“my_custom_dataset_wrapper”.</p>
+</div>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="torchdistill.datasets.registry.get_dataset">
+<span class="sig-prename descclassname"><span class="pre">torchdistill.datasets.registry.</span></span><span class="sig-name descname"><span class="pre">get_dataset</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">key</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/torchdistill/datasets/registry.html#get_dataset"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#torchdistill.datasets.registry.get_dataset" title="Permalink to this definition"></a></dt>
+<dd><p>Gets a registered dataset class or function to instantiate it.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>key</strong> (<em>str</em>) – unique key to identify the registered dataset class/function.</p>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>registered dataset class or function to instantiate it.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>class or <em>Callable</em></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="torchdistill.datasets.registry.get_collate_func">
+<span class="sig-prename descclassname"><span class="pre">torchdistill.datasets.registry.</span></span><span class="sig-name descname"><span class="pre">get_collate_func</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">key</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/torchdistill/datasets/registry.html#get_collate_func"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#torchdistill.datasets.registry.get_collate_func" title="Permalink to this definition"></a></dt>
+<dd><p>Gets a registered collate function.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>key</strong> (<em>str</em>) – unique key to identify the registered collate function.</p>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>registered collate function.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><em>Callable</em></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="torchdistill.datasets.registry.get_sample_loader">
+<span class="sig-prename descclassname"><span class="pre">torchdistill.datasets.registry.</span></span><span class="sig-name descname"><span class="pre">get_sample_loader</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">key</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/torchdistill/datasets/registry.html#get_sample_loader"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#torchdistill.datasets.registry.get_sample_loader" title="Permalink to this definition"></a></dt>
+<dd><p>Gets a registered sample loader class or function to instantiate it.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>key</strong> (<em>str</em>) – unique key to identify the registered sample loader class or function to instantiate it.</p>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>registered sample loader class or function to instantiate it.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>class or <em>Callable</em></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="torchdistill.datasets.registry.get_batch_sampler">
+<span class="sig-prename descclassname"><span class="pre">torchdistill.datasets.registry.</span></span><span class="sig-name descname"><span class="pre">get_batch_sampler</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">key</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/torchdistill/datasets/registry.html#get_batch_sampler"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#torchdistill.datasets.registry.get_batch_sampler" title="Permalink to this definition"></a></dt>
+<dd><p>Gets a registered batch sampler class or function to instantiate it.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>key</strong> (<em>str</em>) – unique key to identify the registered batch sampler class or function to instantiate it.</p>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>registered batch sampler class or function to instantiate it.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>class or <em>Callable</em></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="torchdistill.datasets.registry.get_transform">
+<span class="sig-prename descclassname"><span class="pre">torchdistill.datasets.registry.</span></span><span class="sig-name descname"><span class="pre">get_transform</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">key</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/torchdistill/datasets/registry.html#get_transform"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#torchdistill.datasets.registry.get_transform" title="Permalink to this definition"></a></dt>
+<dd><p>Gets a registered transform class or function to instantiate it.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>key</strong> (<em>str</em>) – unique key to identify the registered transform class or function to instantiate it.</p>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>registered transform class or function to instantiate it.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>class or <em>Callable</em></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="torchdistill.datasets.registry.get_dataset_wrapper">
+<span class="sig-prename descclassname"><span class="pre">torchdistill.datasets.registry.</span></span><span class="sig-name descname"><span class="pre">get_dataset_wrapper</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">key</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/torchdistill/datasets/registry.html#get_dataset_wrapper"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#torchdistill.datasets.registry.get_dataset_wrapper" title="Permalink to this definition"></a></dt>
+<dd><p>Gets a registered dataset wrapper class or function to instantiate it.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>key</strong> (<em>str</em>) – unique key to identify the registered dataset wrapper class or function to instantiate it.</p>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>registered dataset wrapper class or function to instantiate it.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>class or <em>Callable</em></p>
+</dd>
+</dl>
+</dd></dl>
+
+</section>
+<hr class="docutils" />
+<section id="torchdistill-datasets-sample-loader">
+<h2>torchdistill.datasets.sample_loader<a class="headerlink" href="#torchdistill-datasets-sample-loader" title="Permalink to this heading"></a></h2>
+<span class="target" id="module-torchdistill.datasets.sample_loader"></span><dl class="py class">
+<dt class="sig sig-object py" id="torchdistill.datasets.sample_loader.JpegCompressionLoader">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">torchdistill.datasets.sample_loader.</span></span><span class="sig-name descname"><span class="pre">JpegCompressionLoader</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">jpeg_quality</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/torchdistill/datasets/sample_loader.html#JpegCompressionLoader"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#torchdistill.datasets.sample_loader.JpegCompressionLoader" title="Permalink to this definition"></a></dt>
+<dd><p>A sample loader with JPEG compression.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>jpeg_quality</strong> (<em>int</em>) – <code class="docutils literal notranslate"><span class="pre">quality</span></code> for JPEG compression with PIL.</p>
+</dd>
+</dl>
+</dd></dl>
+
+</section>
+<hr class="docutils" />
+<section id="torchdistill-datasets-util">
+<h2>torchdistill.datasets.util<a class="headerlink" href="#torchdistill-datasets-util" title="Permalink to this heading"></a></h2>
+<span class="target" id="module-torchdistill.datasets.util"></span><dl class="py function">
+<dt class="sig sig-object py" id="torchdistill.datasets.util.split_dataset">
+<span class="sig-prename descclassname"><span class="pre">torchdistill.datasets.util.</span></span><span class="sig-name descname"><span class="pre">split_dataset</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">dataset</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">lengths</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">generator_seed</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">sub_splits_configs</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">dataset_id</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/torchdistill/datasets/util.html#split_dataset"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#torchdistill.datasets.util.split_dataset" title="Permalink to this definition"></a></dt>
+<dd><p>Randomly splits <code class="docutils literal notranslate"><span class="pre">dataset</span></code> into sub datasets.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>dataset</strong> (<em>torch.utils.data.Dataset</em>) – dataset to be split.</p></li>
+<li><p><strong>lengths</strong> (<em>list</em><em>[</em><em>int</em><em>]</em>) – length ratios e.g., (9, 1) by default (if None).</p></li>
+<li><p><strong>generator_seed</strong> (<em>int</em><em> or </em><em>None</em>) – random seed for <code class="xref py py-meth docutils literal notranslate"><span class="pre">torch.Generator().manual_seed()</span></code>.</p></li>
+<li><p><strong>sub_splits_configs</strong> (<em>list</em><em>[</em><em>dict</em><em>] or </em><em>None</em>) – sub-split configurations.</p></li>
+<li><p><strong>dataset_id</strong> (<em>str</em><em> or </em><em>None</em>) – dataset ID to be printed just for debugging purpose.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>sub-splits of <code class="docutils literal notranslate"><span class="pre">dataset</span></code>.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>list[torch.utils.data.Subset]</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="torchdistill.datasets.util.build_data_loader">
+<span class="sig-prename descclassname"><span class="pre">torchdistill.datasets.util.</span></span><span class="sig-name descname"><span class="pre">build_data_loader</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">dataset</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">data_loader_config</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">distributed</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">accelerator</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/torchdistill/datasets/util.html#build_data_loader"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#torchdistill.datasets.util.build_data_loader" title="Permalink to this definition"></a></dt>
+<dd><p>Builds a data loader for <code class="docutils literal notranslate"><span class="pre">dataset</span></code>.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>dataset</strong> (<em>torch.utils.data.Dataset</em>) – dataset.</p></li>
+<li><p><strong>data_loader_config</strong> (<em>dict</em>) – data loader configuration.</p></li>
+<li><p><strong>distributed</strong> (<em>bool</em>) – whether to be in distributed training mode.</p></li>
+<li><p><strong>accelerator</strong> (<em>accelerate.Accelerator</em><em> or </em><em>None</em>) – Hugging Face accelerator.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>data loader.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>torch.utils.data.DataLoader</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="torchdistill.datasets.util.build_data_loaders">
+<span class="sig-prename descclassname"><span class="pre">torchdistill.datasets.util.</span></span><span class="sig-name descname"><span class="pre">build_data_loaders</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">dataset_dict</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">data_loader_configs</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">distributed</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">accelerator</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/torchdistill/datasets/util.html#build_data_loaders"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#torchdistill.datasets.util.build_data_loaders" title="Permalink to this definition"></a></dt>
+<dd><p>Builds data loaders for <code class="docutils literal notranslate"><span class="pre">dataset_dict</span></code>.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>dataset_dict</strong> (<em>dict</em>) – dict of dataset tied with dataset ID as a key.</p></li>
+<li><p><strong>data_loader_configs</strong> (<em>list</em><em>[</em><em>dict</em><em>]</em>) – data loader configurations.</p></li>
+<li><p><strong>distributed</strong> (<em>bool</em>) – whether to be in distributed training mode.</p></li>
+<li><p><strong>accelerator</strong> (<em>accelerate.Accelerator</em><em> or </em><em>None</em>) – Hugging Face accelerator.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>data loaders.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>list[torch.utils.data.DataLoader]</p>
+</dd>
+</dl>
+</dd></dl>
+
+</section>
+<hr class="docutils" />
+<section id="torchdistill-datasets-wrapper">
+<h2>torchdistill.datasets.wrapper<a class="headerlink" href="#torchdistill-datasets-wrapper" title="Permalink to this heading"></a></h2>
+<span class="target" id="module-torchdistill.datasets.wrapper"></span><dl class="py function">
+<dt class="sig sig-object py" id="torchdistill.datasets.wrapper.default_idx2subpath">
+<span class="sig-prename descclassname"><span class="pre">torchdistill.datasets.wrapper.</span></span><span class="sig-name descname"><span class="pre">default_idx2subpath</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">index</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/torchdistill/datasets/wrapper.html#default_idx2subpath"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#torchdistill.datasets.wrapper.default_idx2subpath" title="Permalink to this definition"></a></dt>
+<dd><p>Converts index to a file path including a parent dir name, which consists of the last four digits of the index.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>index</strong> (<em>int</em>) – index.</p>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>file path with a parent directory.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>str</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="torchdistill.datasets.wrapper.BaseDatasetWrapper">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">torchdistill.datasets.wrapper.</span></span><span class="sig-name descname"><span class="pre">BaseDatasetWrapper</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">org_dataset</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/torchdistill/datasets/wrapper.html#BaseDatasetWrapper"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#torchdistill.datasets.wrapper.BaseDatasetWrapper" title="Permalink to this definition"></a></dt>
+<dd><p>A base dataset wrapper. This is a subclass of <code class="xref py py-class docutils literal notranslate"><span class="pre">torch.utils.data.Dataset</span></code>.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>org_dataset</strong> (<em>torch.utils.data.Dataset</em>) – original dataset to be wrapped.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="torchdistill.datasets.wrapper.CacheableDataset">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">torchdistill.datasets.wrapper.</span></span><span class="sig-name descname"><span class="pre">CacheableDataset</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">org_dataset</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">cache_dir_path</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">idx2subpath_func</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">ext</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'.pt'</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/torchdistill/datasets/wrapper.html#CacheableDataset"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#torchdistill.datasets.wrapper.CacheableDataset" title="Permalink to this definition"></a></dt>
+<dd><p>A dataset wrapper that additionally loads cached files in <code class="docutils literal notranslate"><span class="pre">cache_dir_path</span></code> if exists.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>org_dataset</strong> (<em>torch.utils.data.Dataset</em>) – original dataset to be wrapped.</p></li>
+<li><p><strong>cache_dir_path</strong> (<em>str</em>) – cache directory path.</p></li>
+<li><p><strong>idx2subpath_func</strong> (<em>Callable</em><em> or </em><em>None</em>) – function to convert a sample index to a file path.</p></li>
+<li><p><strong>ext</strong> (<em>str</em>) – cache file extension.</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="torchdistill.datasets.wrapper.CRDDatasetWrapper">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">torchdistill.datasets.wrapper.</span></span><span class="sig-name descname"><span class="pre">CRDDatasetWrapper</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">org_dataset</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">num_negative_samples</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">mode</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">ratio</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/torchdistill/datasets/wrapper.html#CRDDatasetWrapper"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#torchdistill.datasets.wrapper.CRDDatasetWrapper" title="Permalink to this definition"></a></dt>
+<dd><p>A dataset wrapper for Contrastive Representation Distillation (CRD).</p>
+<p>Yonglong Tian, Dilip Krishnan, Phillip Isola: <a class="reference external" href="https://openreview.net/forum?id=SkgpBJrtvS">“Contrastive Representation Distillation”</a> &#64; ICLR 2020 (2020)</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>org_dataset</strong> (<em>torch.utils.data.Dataset</em>) – original dataset to be wrapped.</p></li>
+<li><p><strong>num_negative_samples</strong> (<em>int</em>) – number of negative samples for CRD.</p></li>
+<li><p><strong>mode</strong> (<em>str</em>) – either ‘exact’ or ‘relax’.</p></li>
+<li><p><strong>ratio</strong> (<em>float</em>) – ratio of class-wise negative samples.</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="torchdistill.datasets.wrapper.SSKDDatasetWrapper">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">torchdistill.datasets.wrapper.</span></span><span class="sig-name descname"><span class="pre">SSKDDatasetWrapper</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">org_dataset</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/torchdistill/datasets/wrapper.html#SSKDDatasetWrapper"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#torchdistill.datasets.wrapper.SSKDDatasetWrapper" title="Permalink to this definition"></a></dt>
+<dd><p>A dataset wrapper for Self-Supervised Knowledge Distillation (SSKD).</p>
+<p>Guodong Xu, Ziwei Liu, Xiaoxiao Li, Chen Change Loy: <a class="reference external" href="https://www.ecva.net/papers/eccv_2020/papers_ECCV/html/898_ECCV_2020_paper.php">“Knowledge Distillation Meets Self-Supervision”</a> &#64; ECCV 2020 (2020)</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>org_dataset</strong> (<em>torch.utils.data.Dataset</em>) – original dataset to be wrapped.</p>
+</dd>
+</dl>
+</dd></dl>
+
+</section>
+</section>
+
+
+           </div>
+          </div>
+          <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
+        <a href="core.html" class="btn btn-neutral float-left" title="torchdistill.core" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="models.html" class="btn btn-neutral float-right" title="torchdistill.models" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2023, Yoshitomo Matsubara.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script>
+    <!-- Theme Analytics -->
+    <script async src="https://www.googletagmanager.com/gtag/js?id=G-LYK8SSJ7R5"></script>
+    <script>
+      window.dataLayer = window.dataLayer || [];
+      function gtag(){dataLayer.push(arguments);}
+      gtag('js', new Date());
+
+      gtag('config', 'G-LYK8SSJ7R5', {
+          'anonymize_ip': false,
+      });
+    </script> 
+
+</body>
+</html>

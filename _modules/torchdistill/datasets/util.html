@@ -1,0 +1,267 @@
+<!DOCTYPE html>
+<html class="writer-html5" lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>torchdistill.datasets.util &mdash; torchdistill v1.1.1-dev documentation</title>
+      <link rel="stylesheet" type="text/css" href="../../../_static/pygments.css?v=80d5e7a1" />
+      <link rel="stylesheet" type="text/css" href="../../../_static/css/theme.css?v=19f00094" />
+
+  
+  <!--[if lt IE 9]>
+    <script src="../../../_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+        <script src="../../../_static/jquery.js?v=5d32c60e"></script>
+        <script src="../../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+        <script data-url_root="../../../" id="documentation_options" src="../../../_static/documentation_options.js?v=0b675245"></script>
+        <script src="../../../_static/doctools.js?v=888ff710"></script>
+        <script src="../../../_static/sphinx_highlight.js?v=4825356b"></script>
+    <script src="../../../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../search.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="../../../index.html">
+            
+              <img src="../../../_static/logo-white.png" class="logo" alt="Logo"/>
+          </a>
+              <div class="version">
+                v1.1.1-dev
+              </div>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">📚 Overview</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../usage.html">Usage</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../package.html">torchdistill API</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">🧑🏻‍💻 Research</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../benchmarks.html">Benchmarks</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../projects.html">Projects</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../../index.html">torchdistill</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content style-external-links">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../../../index.html" class="icon icon-home" aria-label="Home"></a></li>
+          <li class="breadcrumb-item"><a href="../../index.html">Module code</a></li>
+      <li class="breadcrumb-item active">torchdistill.datasets.util</li>
+      <li class="wy-breadcrumbs-aside">
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <h1>Source code for torchdistill.datasets.util</h1><div class="highlight"><pre>
+<span></span><span class="kn">import</span> <span class="nn">copy</span>
+
+<span class="kn">import</span> <span class="nn">torch</span>
+<span class="kn">from</span> <span class="nn">torch.utils.data</span> <span class="kn">import</span> <span class="n">DataLoader</span><span class="p">,</span> <span class="n">random_split</span>
+<span class="kn">from</span> <span class="nn">torch.utils.data.distributed</span> <span class="kn">import</span> <span class="n">DistributedSampler</span>
+
+<span class="kn">from</span> <span class="nn">..common.constant</span> <span class="kn">import</span> <span class="n">def_logger</span>
+<span class="kn">from</span> <span class="nn">..datasets.registry</span> <span class="kn">import</span> <span class="n">get_collate_func</span><span class="p">,</span> <span class="n">get_batch_sampler</span><span class="p">,</span> <span class="n">get_dataset_wrapper</span>
+<span class="kn">from</span> <span class="nn">..datasets.wrapper</span> <span class="kn">import</span> <span class="n">default_idx2subpath</span><span class="p">,</span> <span class="n">BaseDatasetWrapper</span><span class="p">,</span> <span class="n">CacheableDataset</span>
+
+<span class="n">logger</span> <span class="o">=</span> <span class="n">def_logger</span><span class="o">.</span><span class="n">getChild</span><span class="p">(</span><span class="vm">__name__</span><span class="p">)</span>
+
+
+<div class="viewcode-block" id="split_dataset"><a class="viewcode-back" href="../../../subpkgs/datasets.html#torchdistill.datasets.util.split_dataset">[docs]</a><span class="k">def</span> <span class="nf">split_dataset</span><span class="p">(</span><span class="n">dataset</span><span class="p">,</span> <span class="n">lengths</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">generator_seed</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">sub_splits_configs</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">dataset_id</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Randomly splits ``dataset`` into sub datasets.</span>
+
+<span class="sd">    :param dataset: dataset to be split.</span>
+<span class="sd">    :type dataset: torch.utils.data.Dataset</span>
+<span class="sd">    :param lengths: length ratios e.g., (9, 1) by default (if None).</span>
+<span class="sd">    :type lengths: list[int]</span>
+<span class="sd">    :param generator_seed: random seed for :meth:`torch.Generator().manual_seed`.</span>
+<span class="sd">    :type generator_seed: int or None</span>
+<span class="sd">    :param sub_splits_configs: sub-split configurations.</span>
+<span class="sd">    :type sub_splits_configs: list[dict] or None</span>
+<span class="sd">    :param dataset_id: dataset ID to be printed just for debugging purpose.</span>
+<span class="sd">    :type dataset_id: str or None</span>
+<span class="sd">    :return: sub-splits of ``dataset``.</span>
+<span class="sd">    :rtype: list[torch.utils.data.Subset]</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">org_dataset_length</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">dataset</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">dataset_id</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s1">&#39;Splitting `</span><span class="si">{}</span><span class="s1">` dataset (</span><span class="si">{}</span><span class="s1"> samples in total)&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">dataset_id</span><span class="p">,</span> <span class="n">org_dataset_length</span><span class="p">))</span>
+    <span class="k">if</span> <span class="n">lengths</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="n">lengths</span> <span class="o">=</span> <span class="p">(</span><span class="mi">9</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span>
+
+    <span class="n">total_length</span> <span class="o">=</span> <span class="nb">sum</span><span class="p">(</span><span class="n">lengths</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">total_length</span> <span class="o">!=</span> <span class="n">org_dataset_length</span><span class="p">:</span>
+        <span class="n">lengths</span> <span class="o">=</span> <span class="p">[</span><span class="nb">int</span><span class="p">((</span><span class="n">l</span> <span class="o">/</span> <span class="n">total_length</span><span class="p">)</span> <span class="o">*</span> <span class="n">org_dataset_length</span><span class="p">)</span> <span class="k">for</span> <span class="n">l</span> <span class="ow">in</span> <span class="n">lengths</span><span class="p">]</span>
+        <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">lengths</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">1</span> <span class="ow">and</span> <span class="nb">sum</span><span class="p">(</span><span class="n">lengths</span><span class="p">)</span> <span class="o">!=</span> <span class="n">org_dataset_length</span><span class="p">:</span>
+            <span class="n">lengths</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span> <span class="o">=</span> <span class="n">org_dataset_length</span> <span class="o">-</span> <span class="nb">sum</span><span class="p">(</span><span class="n">lengths</span><span class="p">[:</span><span class="o">-</span><span class="mi">1</span><span class="p">])</span>
+
+    <span class="n">sub_datasets</span> <span class="o">=</span> <span class="n">random_split</span><span class="p">(</span><span class="n">dataset</span><span class="p">,</span> <span class="n">lengths</span><span class="p">)</span> <span class="k">if</span> <span class="n">generator_seed</span> <span class="ow">is</span> <span class="kc">None</span> \
+        <span class="k">else</span> <span class="n">random_split</span><span class="p">(</span><span class="n">dataset</span><span class="p">,</span> <span class="n">lengths</span><span class="p">,</span> <span class="n">generator</span><span class="o">=</span><span class="n">torch</span><span class="o">.</span><span class="n">Generator</span><span class="p">()</span><span class="o">.</span><span class="n">manual_seed</span><span class="p">(</span><span class="n">generator_seed</span><span class="p">))</span>
+    <span class="k">if</span> <span class="n">sub_splits_configs</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">sub_datasets</span>
+
+    <span class="c1"># Deep-copy dataset to configure transforms independently as dataset in Subset class is shallow-copied</span>
+    <span class="k">for</span> <span class="n">sub_dataset</span> <span class="ow">in</span> <span class="n">sub_datasets</span><span class="p">:</span>
+        <span class="n">sub_dataset</span><span class="o">.</span><span class="n">dataset</span> <span class="o">=</span> <span class="n">copy</span><span class="o">.</span><span class="n">deepcopy</span><span class="p">(</span><span class="n">sub_dataset</span><span class="o">.</span><span class="n">dataset</span><span class="p">)</span>
+
+    <span class="k">assert</span> <span class="nb">len</span><span class="p">(</span><span class="n">sub_datasets</span><span class="p">)</span> <span class="o">==</span> <span class="nb">len</span><span class="p">(</span><span class="n">sub_splits_configs</span><span class="p">),</span> \
+        <span class="s1">&#39;len(lengths) `</span><span class="si">{}</span><span class="s1">` should be equal to len(sub_splits_configs) `</span><span class="si">{}</span><span class="s1">`&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">sub_datasets</span><span class="p">),</span>
+                                                                                   <span class="nb">len</span><span class="p">(</span><span class="n">sub_splits_configs</span><span class="p">))</span>
+    <span class="k">for</span> <span class="n">sub_dataset</span><span class="p">,</span> <span class="n">sub_split_kwargs</span> <span class="ow">in</span> <span class="nb">zip</span><span class="p">(</span><span class="n">sub_datasets</span><span class="p">,</span> <span class="n">sub_splits_configs</span><span class="p">):</span>
+        <span class="n">sub_split_kwargs</span> <span class="o">=</span> <span class="n">sub_split_kwargs</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span>
+        <span class="n">transform</span> <span class="o">=</span> <span class="n">sub_split_kwargs</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="s1">&#39;transform&#39;</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span>
+        <span class="n">target_transform</span> <span class="o">=</span> <span class="n">sub_split_kwargs</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="s1">&#39;target_transform&#39;</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span>
+        <span class="n">transforms</span> <span class="o">=</span> <span class="n">sub_split_kwargs</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="s1">&#39;transforms&#39;</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span>
+        <span class="k">if</span> <span class="nb">hasattr</span><span class="p">(</span><span class="n">sub_dataset</span><span class="o">.</span><span class="n">dataset</span><span class="p">,</span> <span class="s1">&#39;transform&#39;</span><span class="p">)</span> <span class="ow">and</span> <span class="n">transform</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">sub_dataset</span><span class="o">.</span><span class="n">dataset</span><span class="o">.</span><span class="n">transform</span> <span class="o">=</span> <span class="n">transform</span>
+        <span class="k">if</span> <span class="nb">hasattr</span><span class="p">(</span><span class="n">sub_dataset</span><span class="o">.</span><span class="n">dataset</span><span class="p">,</span> <span class="s1">&#39;target_transform&#39;</span><span class="p">)</span> <span class="ow">and</span> <span class="n">target_transform</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">sub_dataset</span><span class="o">.</span><span class="n">dataset</span><span class="o">.</span><span class="n">target_transform</span> <span class="o">=</span> <span class="n">target_transform</span>
+        <span class="k">if</span> <span class="nb">hasattr</span><span class="p">(</span><span class="n">sub_dataset</span><span class="o">.</span><span class="n">dataset</span><span class="p">,</span> <span class="s1">&#39;transforms&#39;</span><span class="p">)</span> <span class="ow">and</span> <span class="n">transforms</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">sub_dataset</span><span class="o">.</span><span class="n">dataset</span><span class="o">.</span><span class="n">transforms</span> <span class="o">=</span> <span class="n">transforms</span>
+    <span class="k">return</span> <span class="n">sub_datasets</span></div>
+
+
+<div class="viewcode-block" id="build_data_loader"><a class="viewcode-back" href="../../../subpkgs/datasets.html#torchdistill.datasets.util.build_data_loader">[docs]</a><span class="k">def</span> <span class="nf">build_data_loader</span><span class="p">(</span><span class="n">dataset</span><span class="p">,</span> <span class="n">data_loader_config</span><span class="p">,</span> <span class="n">distributed</span><span class="p">,</span> <span class="n">accelerator</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Builds a data loader for ``dataset``.</span>
+
+<span class="sd">    :param dataset: dataset.</span>
+<span class="sd">    :type dataset: torch.utils.data.Dataset</span>
+<span class="sd">    :param data_loader_config: data loader configuration.</span>
+<span class="sd">    :type data_loader_config: dict</span>
+<span class="sd">    :param distributed: whether to be in distributed training mode.</span>
+<span class="sd">    :type distributed: bool</span>
+<span class="sd">    :param accelerator: Hugging Face accelerator.</span>
+<span class="sd">    :type accelerator: accelerate.Accelerator or None</span>
+<span class="sd">    :return: data loader.</span>
+<span class="sd">    :rtype: torch.utils.data.DataLoader</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">cache_dir_path</span> <span class="o">=</span> <span class="n">data_loader_config</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;cache_output&#39;</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span>
+    <span class="n">dataset_wrapper_config</span> <span class="o">=</span> <span class="n">data_loader_config</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;dataset_wrapper&#39;</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span>
+    <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">dataset_wrapper_config</span><span class="p">,</span> <span class="nb">dict</span><span class="p">)</span> <span class="ow">and</span> <span class="nb">len</span><span class="p">(</span><span class="n">dataset_wrapper_config</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
+        <span class="n">dataset_wrapper_args</span> <span class="o">=</span> <span class="n">dataset_wrapper_config</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;args&#39;</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span>
+        <span class="n">dataset_wrapper_kwargs</span> <span class="o">=</span> <span class="n">dataset_wrapper_config</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;kwargs&#39;</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">dataset_wrapper_args</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">dataset_wrapper_args</span> <span class="o">=</span> <span class="nb">list</span><span class="p">()</span>
+        <span class="k">if</span> <span class="n">dataset_wrapper_kwargs</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">dataset_wrapper_kwargs</span> <span class="o">=</span> <span class="nb">dict</span><span class="p">()</span>
+        <span class="n">dataset_wrapper_cls_or_func</span> <span class="o">=</span> <span class="n">get_dataset_wrapper</span><span class="p">(</span><span class="n">dataset_wrapper_config</span><span class="p">[</span><span class="s1">&#39;key&#39;</span><span class="p">])</span>
+        <span class="n">dataset</span> <span class="o">=</span> <span class="n">dataset_wrapper_cls_or_func</span><span class="p">(</span><span class="n">dataset</span><span class="p">,</span> <span class="o">*</span><span class="n">dataset_wrapper_args</span><span class="p">,</span> <span class="o">**</span><span class="n">dataset_wrapper_kwargs</span><span class="p">)</span>
+    <span class="k">elif</span> <span class="n">cache_dir_path</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="n">dataset</span> <span class="o">=</span> <span class="n">CacheableDataset</span><span class="p">(</span><span class="n">dataset</span><span class="p">,</span> <span class="n">cache_dir_path</span><span class="p">,</span> <span class="n">idx2subpath_func</span><span class="o">=</span><span class="n">default_idx2subpath</span><span class="p">)</span>
+    <span class="k">elif</span> <span class="n">data_loader_config</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;requires_supp&#39;</span><span class="p">,</span> <span class="kc">False</span><span class="p">):</span>
+        <span class="n">dataset</span> <span class="o">=</span> <span class="n">BaseDatasetWrapper</span><span class="p">(</span><span class="n">dataset</span><span class="p">)</span>
+
+    <span class="n">sampler_config</span> <span class="o">=</span> <span class="n">data_loader_config</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;sampler&#39;</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span>
+    <span class="n">sampler_kwargs</span> <span class="o">=</span> <span class="n">sampler_config</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;kwargs&#39;</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">sampler_kwargs</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="n">sampler_kwargs</span> <span class="o">=</span> <span class="nb">dict</span><span class="p">()</span>
+
+    <span class="k">if</span> <span class="n">distributed</span> <span class="ow">and</span> <span class="n">accelerator</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="n">sampler</span> <span class="o">=</span> <span class="n">DistributedSampler</span><span class="p">(</span><span class="n">dataset</span><span class="p">,</span> <span class="o">**</span><span class="n">sampler_kwargs</span><span class="p">)</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">sampler_cls_or_func</span> <span class="o">=</span> <span class="n">sampler_config</span><span class="p">[</span><span class="s1">&#39;class_or_func&#39;</span><span class="p">]</span>
+        <span class="n">sampler</span> <span class="o">=</span> <span class="n">sampler_cls_or_func</span><span class="p">(</span><span class="n">dataset</span><span class="p">,</span> <span class="o">**</span><span class="n">sampler_kwargs</span><span class="p">)</span>
+
+    <span class="n">batch_sampler_config</span> <span class="o">=</span> <span class="n">data_loader_config</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;batch_sampler&#39;</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span>
+    <span class="n">batch_sampler_cls_or_func</span> <span class="o">=</span> <span class="kc">None</span> <span class="k">if</span> <span class="n">batch_sampler_config</span> <span class="ow">is</span> <span class="kc">None</span> <span class="k">else</span> <span class="n">get_batch_sampler</span><span class="p">(</span><span class="n">batch_sampler_config</span><span class="p">[</span><span class="s1">&#39;key&#39;</span><span class="p">])</span>
+    <span class="n">batch_sampler</span> <span class="o">=</span> <span class="kc">None</span> <span class="k">if</span> <span class="n">batch_sampler_cls_or_func</span> <span class="ow">is</span> <span class="kc">None</span> \
+        <span class="k">else</span> <span class="n">batch_sampler_cls_or_func</span><span class="p">(</span><span class="n">sampler</span><span class="p">,</span> <span class="o">**</span><span class="n">batch_sampler_config</span><span class="p">[</span><span class="s1">&#39;kwargs&#39;</span><span class="p">])</span>
+    <span class="n">collate_fn</span> <span class="o">=</span> <span class="n">get_collate_func</span><span class="p">(</span><span class="n">data_loader_config</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;collate_fn&#39;</span><span class="p">,</span> <span class="kc">None</span><span class="p">))</span>
+    <span class="n">data_loader_kwargs</span> <span class="o">=</span> <span class="n">data_loader_config</span><span class="p">[</span><span class="s1">&#39;kwargs&#39;</span><span class="p">]</span>
+    <span class="k">if</span> <span class="n">batch_sampler</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">DataLoader</span><span class="p">(</span><span class="n">dataset</span><span class="p">,</span> <span class="n">batch_sampler</span><span class="o">=</span><span class="n">batch_sampler</span><span class="p">,</span> <span class="n">collate_fn</span><span class="o">=</span><span class="n">collate_fn</span><span class="p">,</span> <span class="o">**</span><span class="n">data_loader_kwargs</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">DataLoader</span><span class="p">(</span><span class="n">dataset</span><span class="p">,</span> <span class="n">sampler</span><span class="o">=</span><span class="n">sampler</span><span class="p">,</span> <span class="n">collate_fn</span><span class="o">=</span><span class="n">collate_fn</span><span class="p">,</span> <span class="o">**</span><span class="n">data_loader_kwargs</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="build_data_loaders"><a class="viewcode-back" href="../../../subpkgs/datasets.html#torchdistill.datasets.util.build_data_loaders">[docs]</a><span class="k">def</span> <span class="nf">build_data_loaders</span><span class="p">(</span><span class="n">dataset_dict</span><span class="p">,</span> <span class="n">data_loader_configs</span><span class="p">,</span> <span class="n">distributed</span><span class="p">,</span> <span class="n">accelerator</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Builds data loaders for ``dataset_dict``.</span>
+
+<span class="sd">    :param dataset_dict: dict of dataset tied with dataset ID as a key.</span>
+<span class="sd">    :type dataset_dict: dict</span>
+<span class="sd">    :param data_loader_configs: data loader configurations.</span>
+<span class="sd">    :type data_loader_configs: list[dict]</span>
+<span class="sd">    :param distributed: whether to be in distributed training mode.</span>
+<span class="sd">    :type distributed: bool</span>
+<span class="sd">    :param accelerator: Hugging Face accelerator.</span>
+<span class="sd">    :type accelerator: accelerate.Accelerator or None</span>
+<span class="sd">    :return: data loaders.</span>
+<span class="sd">    :rtype: list[torch.utils.data.DataLoader]</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">data_loader_list</span> <span class="o">=</span> <span class="nb">list</span><span class="p">()</span>
+    <span class="k">for</span> <span class="n">data_loader_config</span> <span class="ow">in</span> <span class="n">data_loader_configs</span><span class="p">:</span>
+        <span class="n">dataset_id</span> <span class="o">=</span> <span class="n">data_loader_config</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;dataset_id&#39;</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span>
+        <span class="n">data_loader</span> <span class="o">=</span> <span class="kc">None</span> <span class="k">if</span> <span class="n">dataset_id</span> <span class="ow">is</span> <span class="kc">None</span> <span class="ow">or</span> <span class="n">dataset_id</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">dataset_dict</span> \
+            <span class="k">else</span> <span class="n">build_data_loader</span><span class="p">(</span><span class="n">dataset_dict</span><span class="p">[</span><span class="n">dataset_id</span><span class="p">],</span> <span class="n">data_loader_config</span><span class="p">,</span> <span class="n">distributed</span><span class="p">,</span> <span class="n">accelerator</span><span class="p">)</span>
+        <span class="n">data_loader_list</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">data_loader</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">data_loader_list</span></div>
+</pre></div>
+
+           </div>
+          </div>
+          <footer>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2023, Yoshitomo Matsubara.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script>
+    <!-- Theme Analytics -->
+    <script async src="https://www.googletagmanager.com/gtag/js?id=G-LYK8SSJ7R5"></script>
+    <script>
+      window.dataLayer = window.dataLayer || [];
+      function gtag(){dataLayer.push(arguments);}
+      gtag('js', new Date());
+
+      gtag('config', 'G-LYK8SSJ7R5', {
+          'anonymize_ip': false,
+      });
+    </script> 
+
+</body>
+</html>
