@@ -108,9 +108,9 @@ train:
           criterion:
             key: 'KDLoss'
             kwargs:
-              student_module_path: '.classifier'
+              student_module_path: 'classifier'
               student_module_io: 'output'
-              teacher_module_path: '.classifier'
+              teacher_module_path: 'classifier'
               teacher_module_io: 'output'
               temperature: 7.0
               alpha: 0.9
