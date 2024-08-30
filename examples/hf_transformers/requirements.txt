@@ -5,3 +5,4 @@ protobuf
 torch >= 1.8.1
 transformers >= 4.6.1
 pandas
+evaluate
