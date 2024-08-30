@@ -78,6 +78,9 @@ train:
     wrapper:
     requires_grad: False
     frozen_modules: []
+    forward_hook:
+      input: []
+      output: ['classifier']
   student:
     forward_proc: 'forward_batch_as_kwargs'
     adaptations:
@@ -85,6 +88,9 @@ train:
     wrapper:
     requires_grad: True
     frozen_modules: []
+    forward_hook:
+      input: []
+      output: ['classifier']
   optimizer:
     key: 'optimizer_no_decay'
     kwargs:
