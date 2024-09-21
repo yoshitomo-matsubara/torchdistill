@@ -287,7 +287,7 @@ def get_collate_func(key):
     Gets a registered collate function.
 
     :param key: unique key to identify the registered collate function.
-    :type key: str
+    :type key: str or None
     :return: registered collate function.
     :rtype: typing.Callable
     """

@@ -97,7 +97,7 @@ def build_data_loader(dataset, data_loader_config, distributed, accelerator=None
     elif data_loader_config.get('requires_supp', False):
         dataset = BaseDatasetWrapper(dataset)
 
-    sampler_config = data_loader_config.get('sampler', None)
+    sampler_config = data_loader_config.get('sampler', dict())
     sampler_kwargs = sampler_config.get('kwargs', None)
     if sampler_kwargs is None:
         sampler_kwargs = dict()
