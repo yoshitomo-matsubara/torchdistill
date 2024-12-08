@@ -15,7 +15,7 @@ datasets:
                   key: 'torchvision.transforms.RandomResizedCrop'
                   init:
                     kwargs:
-                      size: &input_size [224, 224]
+                      size: &input_size [299, 299]
                 - !import_call
                   key: 'torchvision.transforms.RandomHorizontalFlip'
                   init:
@@ -44,7 +44,7 @@ datasets:
                   key: 'torchvision.transforms.Resize'
                   init:
                     kwargs:
-                      size: 256
+                      size: 327
                 - !import_call
                   key: 'torchvision.transforms.CenterCrop'
                   init:
@@ -68,6 +68,7 @@ models:
       weights: !getattr [*teacher_weights, 'IMAGENET1K_V1']
     src_ckpt:
   student_model:
+    repo_or_dir: 'yoshitomo-matsubara/sc2-benchmark'
     key: &student_model_key 'custom_inception_v3'
     _weights: &student_weights !import_get
       key: 'torchvision.models.inception.Inception_V3_Weights'
@@ -131,11 +132,11 @@ train:
   student:
     forward_proc: 'forward_batch_only'
     adaptations:
-    sequential: ['bottleneck']
+    sequential: ['bottleneck_layer']
     frozen_modules: []
     forward_hook:
       input: []
-      output: ['bottleneck']
+      output: ['bottleneck_layer']
     wrapper: 'DistributedDataParallel'
     requires_grad: True
   optimizer:
@@ -161,7 +162,7 @@ train:
             kwargs:
               input:
                 is_from_teacher: False
-                module_path: 'bottleneck'
+                module_path: 'bottleneck_layer'
                 io: 'output'
               target:
                 is_from_teacher: True

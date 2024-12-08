@@ -15,7 +15,7 @@ datasets:
                   key: 'torchvision.transforms.RandomResizedCrop'
                   init:
                     kwargs:
-                      size: &input_size [224, 224]
+                      size: &input_size [299, 299]
                 - !import_call
                   key: 'torchvision.transforms.RandomHorizontalFlip'
                   init:
@@ -44,7 +44,7 @@ datasets:
                   key: 'torchvision.transforms.Resize'
                   init:
                     kwargs:
-                      size: 256
+                      size: 327
                 - !import_call
                   key: 'torchvision.transforms.CenterCrop'
                   init:
@@ -131,11 +131,11 @@ train:
   student:
     forward_proc: 'forward_batch_only'
     adaptations:
-    sequential: ['bottleneck', 'Mixed_5b', 'Mixed_5c', 'Mixed_5d', 'Mixed_6a', 'Mixed_6b', 'Mixed_6c', 'Mixed_6d', 'Mixed_6e', 'Mixed_7a', 'Mixed_7b', 'Mixed_7c']
+    sequential: ['bottleneck_layer', 'Mixed_5b', 'Mixed_5c', 'Mixed_5d', 'Mixed_6a', 'Mixed_6b', 'Mixed_6c', 'Mixed_6d', 'Mixed_6e', 'Mixed_7a', 'Mixed_7b', 'Mixed_7c']
     frozen_modules: ['Mixed_5b', 'Mixed_5c', 'Mixed_5d', 'Mixed_6a', 'Mixed_6b', 'Mixed_6c', 'Mixed_6d', 'Mixed_6e', 'Mixed_7a', 'Mixed_7b', 'Mixed_7c']
     forward_hook:
       input: []
-      output: ['bottleneck', 'Mixed_5d', 'Mixed_6e', 'Mixed_7c']
+      output: ['bottleneck_layer', 'Mixed_5d', 'Mixed_6e', 'Mixed_7c']
     wrapper: 'DistributedDataParallel'
     requires_grad: True
   optimizer:
@@ -161,7 +161,7 @@ train:
             kwargs:
               input:
                 is_from_teacher: False
-                module_path: 'bottleneck'
+                module_path: 'bottleneck_layer'
                 io: 'output'
               target:
                 is_from_teacher: True
