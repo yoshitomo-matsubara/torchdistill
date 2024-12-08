@@ -68,6 +68,7 @@ models:
       weights: !getattr [*teacher_weights, 'IMAGENET1K_V1']
     src_ckpt:
   student_model:
+    repo_or_dir: 'yoshitomo-matsubara/sc2-benchmark'
     key: &student_model_key 'custom_densenet169'
     _weights: &student_weights !import_get
       key: 'torchvision.models.densenet.DenseNet169_Weights'
@@ -120,11 +121,11 @@ train:
   student:
     forward_proc: 'forward_batch_only'
     adaptations:
-    sequential: ['features']
+    sequential: ['bottleneck_layer']
     frozen_modules: []
     forward_hook:
       input: []
-      output: ['features.bottleneck']
+      output: ['bottleneck_layer']
     wrapper: 'DistributedDataParallel'
     requires_grad: True
   optimizer:
@@ -150,7 +151,7 @@ train:
             kwargs:
               input:
                 is_from_teacher: False
-                module_path: 'features.bottleneck'
+                module_path: 'bottleneck_layer'
                 io: 'output'
               target:
                 is_from_teacher: True
