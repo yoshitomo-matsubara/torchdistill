@@ -92,7 +92,7 @@ in your declarative yaml config file.
 ```yaml
 models:
   teacher_model:
-    name: 'resnest50d'
+    key: 'resnest50d'
     repo_or_dir: 'huggingface/pytorch-image-models'
     kwargs:
       num_classes: 1000
