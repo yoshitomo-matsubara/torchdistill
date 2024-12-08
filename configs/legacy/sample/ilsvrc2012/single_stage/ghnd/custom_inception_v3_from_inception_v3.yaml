@@ -11,7 +11,7 @@ datasets:
           transform_params:
             - type: 'RandomResizedCrop'
               params:
-                size: &input_size [224, 224]
+                size: &input_size [299, 299]
             - type: 'RandomHorizontalFlip'
               params:
                 p: 0.5
@@ -30,7 +30,7 @@ datasets:
           transform_params:
             - type: 'Resize'
               params:
-                size: 256
+                size: 327
             - type: 'CenterCrop'
               params:
                 size: *input_size
