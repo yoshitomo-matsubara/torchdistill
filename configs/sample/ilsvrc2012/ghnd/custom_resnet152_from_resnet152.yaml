@@ -68,6 +68,7 @@ models:
       weights: !getattr [*teacher_weights, 'IMAGENET1K_V1']
     src_ckpt:
   student_model:
+    repo_or_dir: 'yoshitomo-matsubara/sc2-benchmark'
     key: &student_model_key 'custom_resnet152'
     _weights: &student_weights !import_get
       key: 'torchvision.models.resnet.ResNet152_Weights'
@@ -120,11 +121,11 @@ train:
   student:
     forward_proc: 'forward_batch_only'
     adaptations:
-    sequential: ['bottleneck', 'layer3', 'layer4']
+    sequential: ['bottleneck_layer', 'layer3', 'layer4']
     frozen_modules: ['layer3', 'layer4']
     forward_hook:
       input: []
-      output: ['bottleneck', 'layer3', 'layer4']
+      output: ['bottleneck_layer', 'layer3', 'layer4']
     wrapper: 'DistributedDataParallel'
     requires_grad: True
   optimizer:
@@ -150,7 +151,7 @@ train:
             kwargs:
               input:
                 is_from_teacher: False
-                module_path: 'bottleneck'
+                module_path: 'bottleneck_layer'
                 io: 'output'
               target:
                 is_from_teacher: True

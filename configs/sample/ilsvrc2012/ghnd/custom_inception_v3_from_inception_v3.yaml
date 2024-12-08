@@ -68,6 +68,7 @@ models:
       weights: !getattr [*teacher_weights, 'IMAGENET1K_V1']
     src_ckpt:
   student_model:
+    repo_or_dir: 'yoshitomo-matsubara/sc2-benchmark'
     key: &student_model_key 'custom_inception_v3'
     _weights: &student_weights !import_get
       key: 'torchvision.models.inception.Inception_V3_Weights'
@@ -131,11 +132,11 @@ train:
   student:
     forward_proc: 'forward_batch_only'
     adaptations:
-    sequential: ['bottleneck_layer', 'Mixed_5b', 'Mixed_5c', 'Mixed_5d', 'Mixed_6a', 'Mixed_6b', 'Mixed_6c', 'Mixed_6d', 'Mixed_6e', 'Mixed_7a', 'Mixed_7b', 'Mixed_7c']
-    frozen_modules: ['Mixed_5b', 'Mixed_5c', 'Mixed_5d', 'Mixed_6a', 'Mixed_6b', 'Mixed_6c', 'Mixed_6d', 'Mixed_6e', 'Mixed_7a', 'Mixed_7b', 'Mixed_7c']
+    sequential: ['bottleneck_layer', 'inception_modules']
+    frozen_modules: ['inception_modules.Mixed_5c', 'inception_modules.Mixed_5d', 'inception_modules.Mixed_6a', 'inception_modules.Mixed_6b', 'inception_modules.Mixed_6c', 'inception_modules.Mixed_6d', 'inception_modules.Mixed_6e', 'inception_modules.Mixed_7a', 'inception_modules.Mixed_7b', 'inception_modules.Mixed_7c']
     forward_hook:
       input: []
-      output: ['bottleneck_layer', 'Mixed_5d', 'Mixed_6e', 'Mixed_7c']
+      output: ['bottleneck_layer', 'inception_modules.Mixed_5d', 'inception_modules.Mixed_6e', 'inception_modules.Mixed_7c']
     wrapper: 'DistributedDataParallel'
     requires_grad: True
   optimizer:
@@ -178,7 +179,7 @@ train:
             kwargs:
               input:
                 is_from_teacher: False
-                module_path: 'Mixed_5d'
+                module_path: 'inception_modules.Mixed_5d'
                 io: 'output'
               target:
                 is_from_teacher: True
@@ -195,7 +196,7 @@ train:
             kwargs:
               input:
                 is_from_teacher: False
-                module_path: 'Mixed_6e'
+                module_path: 'inception_modules.Mixed_6e'
                 io: 'output'
               target:
                 is_from_teacher: True
@@ -212,7 +213,7 @@ train:
             kwargs:
               input:
                 is_from_teacher: False
-                module_path: 'Mixed_7c'
+                module_path: 'inception_modules.Mixed_7c'
                 io: 'output'
               target:
                 is_from_teacher: True
