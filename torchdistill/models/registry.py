@@ -148,7 +148,7 @@ def get_model(key, repo_or_dir=None, *args, **kwargs):
     :return: model.
     :rtype: nn.Module
     """
-    if key in MODEL_DICT:
+    if key in MODEL_DICT and repo_or_dir is None:
         return MODEL_DICT[key](*args, **kwargs)
     elif repo_or_dir is not None:
         return torch.hub.load(repo_or_dir, key, *args, **kwargs)
