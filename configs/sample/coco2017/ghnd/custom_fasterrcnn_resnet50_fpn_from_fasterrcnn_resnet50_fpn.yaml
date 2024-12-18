@@ -33,6 +33,7 @@ models:
       num_classes: 91
     src_ckpt:
   student_model:
+    repo_or_dir: 'yoshitomo-matsubara/sc2-benchmark'
     key: &student_model_key 'custom_fasterrcnn_resnet_fpn'
     _weights: &student_weights !import_get
       key: 'torchvision.models.detection.faster_rcnn.FasterRCNN_ResNet50_FPN_Weights'
