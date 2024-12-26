@@ -49,7 +49,7 @@ train_dataset = config['datasets']['cifar10/train']
 test_dataset = config['datasets']['cifar10/test']
 ```
 
-`test.yaml`
+**test.yaml**
 ```yaml
 datasets:
   cifar10/train: !import_call
