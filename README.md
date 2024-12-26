@@ -41,6 +41,72 @@ and in many cases, you will **NOT need to write Python code at all**.
 Take a look at some configurations available in [configs/](https://github.com/yoshitomo-matsubara/torchdistill/tree/main/configs/). 
 You'll see what modules are abstracted and how they are defined in a declarative PyYAML config file to design an experiment.  
 
+E.g., instantiate CIFAR-10 datasets with a declarative PyYAML config file
+```python
+from torchdistill.common import yaml_util
+config = yaml_util.load_yaml_file('./test.yaml')
+train_dataset = config['datasets']['cifar10/train']
+test_dataset = config['datasets']['cifar10/test']
+```
+
+`test.yaml`
+```yaml
+datasets:
+  cifar10/train: !import_call
+    _name: &dataset_name 'cifar10'
+    _root: &root_dir !join ['~/datasets/', *dataset_name]
+    key: 'torchvision.datasets.CIFAR10'
+    init:
+      kwargs:
+        root: *root_dir
+        train: True
+        download: True
+        transform: !import_call
+          key: 'torchvision.transforms.Compose'
+          init:
+            kwargs:
+              transforms:
+                - !import_call
+                  key: 'torchvision.transforms.RandomCrop'
+                  init:
+                    kwargs:
+                      size: 32
+                      padding: 4
+                - !import_call
+                  key: 'torchvision.transforms.RandomHorizontalFlip'
+                  init:
+                    kwargs:
+                      p: 0.5
+                - !import_call
+                  key: 'torchvision.transforms.ToTensor'
+                  init:
+                - !import_call
+                  key: 'torchvision.transforms.Normalize'
+                  init:
+                    kwargs: &normalize_kwargs
+                      mean: [0.49139968, 0.48215841, 0.44653091]
+                      std: [0.24703223, 0.24348513, 0.26158784]
+  cifar10/test: !import_call
+    key: 'torchvision.datasets.CIFAR10'
+    init:
+      kwargs:
+        root: *root_dir
+        train: False
+        download: True
+        transform: !import_call
+          key: 'torchvision.transforms.Compose'
+          init:
+            kwargs:
+              transforms:
+                - !import_call
+                  key: 'torchvision.transforms.ToTensor'
+                  init:
+                - !import_call
+                  key: 'torchvision.transforms.Normalize'
+                  init:
+                    kwargs: *normalize_kwargs
+```
+
 If you want to use your own modules (models, loss functions, datasets, etc) with this framework, 
 you can do so without editing code in the local package `torchdistill/`.  
 See [the official documentation](https://yoshitomo-matsubara.net/torchdistill/usage.html) and [Discussions](https://github.com/yoshitomo-matsubara/torchdistill/discussions) for more details. 
