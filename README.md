@@ -53,12 +53,10 @@ test_dataset = config['datasets']['cifar10/test']
 ```yaml
 datasets:
   cifar10/train: !import_call
-    _name: &dataset_name 'cifar10'
-    _root: &root_dir !join ['~/datasets/', *dataset_name]
     key: 'torchvision.datasets.CIFAR10'
     init:
       kwargs:
-        root: *root_dir
+        root: &root_dir '~/datasets/cifar10'
         train: True
         download: True
         transform: !import_call
