@@ -7,7 +7,6 @@
 [![DOI:10.1007/978-3-030-76423-4_3](https://zenodo.org/badge/DOI/10.1007/978-3-030-76423-4_3.svg)](https://doi.org/10.1007/978-3-030-76423-4_3)
 [![DOI:10.18653/v1/2023.nlposs-1.18](https://zenodo.org/badge/DOI/10.18653/v1/2023.nlposs-1.18.svg)](https://doi.org/10.18653/v1/2023.nlposs-1.18)
 
-
 ***torchdistill*** (formerly *kdkit*) offers various state-of-the-art knowledge distillation methods 
 and enables you to design (new) experiments simply by editing a declarative yaml config file instead of Python code. 
 Even when you need to extract intermediate representations in teacher/student models, 
@@ -18,6 +17,8 @@ In addition to knowledge distillation, this framework helps you design and perfo
 (**WITHOUT coding**) for reproducible deep learning studies. i.e., it enables you to train models without teachers 
 simply by excluding teacher entries from a declarative yaml config file. 
 You can find such examples below and in [configs/sample/](https://github.com/yoshitomo-matsubara/torchdistill/tree/main/configs/sample/).   
+
+In December 2023, ***torchdistill*** officially joined [PyTorch Ecosystem](https://pytorch.org/ecosystem/).
 
 When you refer to ***torchdistill*** in your paper, please cite [these papers](https://github.com/yoshitomo-matsubara/torchdistill#citation) 
 instead of this GitHub repository.  
