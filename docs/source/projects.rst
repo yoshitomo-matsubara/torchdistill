@@ -27,6 +27,25 @@ It is pip-installable and published as a PyPI package i.e., you can install it b
 Papers
 *****
 
+A Multi-task Supervised Compression Model for Split Computing
+----
+* Author(s): Yoshitomo Matsubara, Matteo Mendula, Marco Levorato
+* Venue: WACV 2025
+* PDF: `Paper <https://arxiv.org/abs/2501.01420>`_
+* Code: `GitHub <https://github.com/yoshitomo-matsubara/ladon-multi-task-sc2>`_
+
+Split computing (≠ split learning) is a promising approach to deep learning models for resource-constrained
+edge computing systems, where weak sensor (mobile) devices are wirelessly connected to stronger edge servers through
+channels with limited communication capacity. State-of-theart work on split computing presents methods for single tasks
+such as image classification, object detection, or semantic segmentation. The application of existing methods to
+multitask problems degrades model accuracy and/or significantly increase runtime latency. In this study, we propose Ladon,
+the first multi-task-head supervised compression model for multi-task split computing. Experimental results show that
+the multi-task supervised compression model either outperformed or rivaled strong lightweight baseline models in terms
+of predictive performance for ILSVRC 2012, COCO 2017, and PASCAL VOC 2012 datasets while learning compressed
+representations at its early layers. Furthermore, our models reduced end-to-end latency (by up to 95.4%) and
+energy consumption of mobile devices (by up to 88.2%) in multi-task split computing scenarios.
+
+
 Understanding the Role of the Projector in Knowledge Distillation
 ----
 * Author(s): Roy Miles, Krystian Mikolajczyk
@@ -34,7 +53,18 @@ Understanding the Role of the Projector in Knowledge Distillation
 * PDF: `Paper <https://ojs.aaai.org/index.php/AAAI/article/view/28219/28433/>`_
 * Code: `GitHub <https://github.com/roymiles/Simple-Recipe-Distillation>`_
 
-**Abstract**: In this paper we revisit the efficacy of knowledge distillation as a function matching and metric learning problem. In doing so we verify three important design decisions, namely the normalisation, soft maximum function, and projection layers as key ingredients. We theoretically show that the projector implicitly encodes information on past examples, enabling relational gradients for the student. We then show that the normalisation of representations is tightly coupled with the training dynamics of this projector, which can have a large impact on the students performance. Finally, we show that a simple soft maximum function can be used to address any significant capacity gap problems. Experimental results on various benchmark datasets demonstrate that using these insights can lead to superior or comparable performance to state-of-the-art knowledge distillation techniques, despite being much more computationally efficient. In particular, we obtain these results across image classification (CIFAR100 and ImageNet), object detection (COCO2017), and on more difficult distillation objectives, such as training data efficient transformers, whereby we attain a 77.2% top-1 accuracy with DeiT-Ti on ImageNet. Code and models are publicly available.
+**Abstract**: In this paper we revisit the efficacy of knowledge distillation as a function matching and metric learning
+problem. In doing so we verify three important design decisions, namely the normalisation, soft maximum function, and
+projection layers as key ingredients. We theoretically show that the projector implicitly encodes information on past
+examples, enabling relational gradients for the student. We then show that the normalisation of representations is tightly
+coupled with the training dynamics of this projector, which can have a large impact on the students performance.
+Finally, we show that a simple soft maximum function can be used to address any significant capacity gap problems.
+Experimental results on various benchmark datasets demonstrate that using these insights can lead to superior or
+comparable performance to state-of-the-art knowledge distillation techniques, despite being much more computationally
+efficient. In particular, we obtain these results across image classification (CIFAR100 and ImageNet), object detection
+(COCO2017), and on more difficult distillation objectives, such as training data efficient transformers, whereby
+we attain a 77.2% top-1 accuracy with DeiT-Ti on ImageNet. Code and models are publicly available.
+
 
 FrankenSplit: Efficient Neural Feature Compression With Shallow Variational Bottleneck Injection for Mobile Edge Computing
 ----
@@ -43,7 +73,16 @@ FrankenSplit: Efficient Neural Feature Compression With Shallow Variational Bott
 * PDF: `Paper <https://ieeexplore.ieee.org/document/10480247/>`_
 * Code: `GitHub <https://github.com/rezafuru/FrankenSplit>`_
 
-**Abstract**: The rise of mobile AI accelerators allows latency-sensitive applications to execute lightweight Deep Neural Networks (DNNs) on the client side. However, critical applications require powerful models that edge devices cannot host and must therefore offload requests, where the high-dimensional data will compete for limited bandwidth. Split Computing (SC) alleviates resource inefficiency by partitioning DNN layers across devices, but current methods are overly specific and only marginally reduce bandwidth consumption. This work proposes shifting away from focusing on executing shallow layers of partitioned DNNs. Instead, it advocates concentrating the local resources on variational compression optimized for machine interpretability. We introduce a novel framework for resource-conscious compression models and extensively evaluate our method in an environment reflecting the asymmetric resource distribution between edge devices and servers. Our method achieves 60% lower bitrate than a state-of-the-art SC method without decreasing accuracy and is up to 16x faster than offloading with existing codec standards.
+**Abstract**: The rise of mobile AI accelerators allows latency-sensitive applications to execute lightweight Deep
+Neural Networks (DNNs) on the client side. However, critical applications require powerful models that edge devices
+cannot host and must therefore offload requests, where the high-dimensional data will compete for limited bandwidth.
+Split Computing (SC) alleviates resource inefficiency by partitioning DNN layers across devices, but current methods
+are overly specific and only marginally reduce bandwidth consumption. This work proposes shifting away from focusing on
+executing shallow layers of partitioned DNNs. Instead, it advocates concentrating the local resources on variational
+compression optimized for machine interpretability. We introduce a novel framework for resource-conscious compression
+models and extensively evaluate our method in an environment reflecting the asymmetric resource distribution between
+edge devices and servers. Our method achieves 60% lower bitrate than a state-of-the-art SC method without decreasing
+accuracy and is up to 16x faster than offloading with existing codec standards.
 
 
 torchdistill Meets Hugging Face Libraries for Reproducible, Coding-Free Deep Learning Studies: A Case Study on NLP
