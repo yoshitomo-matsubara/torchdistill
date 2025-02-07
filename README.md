@@ -34,6 +34,34 @@ Using **ForwardHookManager**, you can extract intermediate representations in mo
 [This example notebook](https://github.com/yoshitomo-matsubara/torchdistill/tree/main/demo/extract_intermediate_representations.ipynb) [![Open In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/yoshitomo-matsubara/torchdistill/blob/main/demo/extract_intermediate_representations.ipynb) [![Open In Studio Lab](https://studiolab.sagemaker.aws/studiolab.svg)](https://studiolab.sagemaker.aws/import/github/yoshitomo-matsubara/torchdistill/blob/main/demo/extract_intermediate_representations.ipynb) 
 will give you a better idea of the usage such as knowledge distillation and analysis of intermediate representations.
 
+E.g., extract intermediate representations (feature map) of ResNet-18 for a random input batch
+```python
+import torch
+from torchvision import models
+from torchdistill.core.forward_hook import ForwardHookManager
+
+# Define a model and choose torch device
+model = models.resnet18(pretrained=False)
+device = torch.device('cpu')
+
+# Register forward hooks for modules of your interest
+forward_hook_manager = ForwardHookManager(device)
+forward_hook_manager.add_hook(model, 'conv1', requires_input=True, requires_output=False)
+forward_hook_manager.add_hook(model, 'layer1.0.bn2', requires_input=True, requires_output=True)
+forward_hook_manager.add_hook(model, 'fc', requires_input=False, requires_output=True)
+
+# Define a random input batch and run the model
+x = torch.rand(32, 3, 224, 224)
+y = model(x)
+
+# Extract input and/or output of the modules
+io_dict = forward_hook_manager.pop_io_dict()
+conv1_input = io_dict['conv1']['input']
+layer1_0_bn2_input = io_dict['layer1.0.bn2']['input']
+layer1_0_bn2_output = io_dict['layer1.0.bn2']['output']
+fc_output = io_dict['fc']['output']
+```
+
 
 ## 1 experiment → 1 declarative PyYAML config file
 In ***torchdistill***, many components and PyTorch modules are abstracted e.g., models, datasets, optimizers, losses, 
