@@ -49,7 +49,7 @@ logger = def_logger.getChild(__name__)
 
 
 def get_argparser():
-    parser = argparse.ArgumentParser(description='Knowledge distillation for a text classification task')
+    parser = argparse.ArgumentParser(description='Knowledge distillation for text classification models')
     parser.add_argument('--config', required=True, help='yaml file path')
     parser.add_argument('--run_log', help='log file path')
     parser.add_argument('--task_name', type=str, default=None, help='name of the glue task to train on.')
