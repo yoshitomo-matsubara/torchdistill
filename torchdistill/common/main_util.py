@@ -132,6 +132,35 @@ def import_call_method(package, class_name=None, method_name=None, init=None, **
     return method(*args, **kwargs)
 
 
+def call_method(obj, method_name, args=None, kwargs=None, returns_obj=False, **tmp_kwargs):
+    """
+    Calls a method of a given object.
+
+    :param obj: module name or package path separated by period(.).
+    :type obj: str
+    :param method_name: method name of ``obj``.
+    :type method_name: str
+    :param args: arguments to pass to the called method.
+    :type args: list
+    :param kwargs: keyword arguments to pass to the called method.
+    :type kwargs: dict
+    :param returns_obj: if true, returns ``obj``.
+    :type returns_obj: bool
+    :return: ``obj`` or output of ``method_name``.
+    :rtype: Any
+    """
+    logger.info(f'Calling `{method_name}` of `{obj}` with args={args} and kwargs={kwargs}')
+    if args is None:
+        args = list()
+
+    if kwargs is None:
+        kwargs = dict()
+
+    method = getattr(obj, method_name)
+    result = method(*args, **kwargs)
+    return obj if returns_obj else result
+
+
 def setup_for_distributed(is_master):
     """
     Disables logging when not in master process.
@@ -227,7 +256,7 @@ def save_on_master(*args, **kwargs):
 
 def init_distributed_mode(world_size=1, dist_url='env://'):
     """
-    Initialize the distributed mode.
+    Initializes the distributed mode.
 
     :param world_size: world size.
     :type world_size: int
@@ -259,7 +288,7 @@ def init_distributed_mode(world_size=1, dist_url='env://'):
 
 def load_ckpt(ckpt_file_path, model=None, optimizer=None, lr_scheduler=None, strict=True):
     """
-    Load a checkpoint file with model, optimizer, and/or lr_scheduler.
+    Loads a checkpoint file with model, optimizer, and/or lr_scheduler.
 
     :param ckpt_file_path: checkpoint file path.
     :type ckpt_file_path: str
@@ -322,7 +351,7 @@ def load_ckpt(ckpt_file_path, model=None, optimizer=None, lr_scheduler=None, str
 
 def save_ckpt(model, optimizer, lr_scheduler, best_value, args, output_file_path):
     """
-    Save a checkpoint file including model, optimizer, best value, parsed args, and learning rate scheduler.
+    Saves a checkpoint file including model, optimizer, best value, parsed args, and learning rate scheduler.
 
     :param model: model.
     :type model: nn.Module
