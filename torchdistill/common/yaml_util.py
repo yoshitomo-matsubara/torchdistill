@@ -3,7 +3,7 @@ import os
 import yaml
 
 from .constant import def_logger
-from .main_util import import_get, import_call, import_call_method
+from .main_util import import_get, import_call, import_call_method, call_method
 
 logger = def_logger.getChild(__name__)
 
@@ -111,6 +111,21 @@ def yaml_import_call_method(loader, node):
     """
     entry = loader.construct_mapping(node, deep=True)
     return import_call_method(**entry)
+
+
+def yaml_call_method(loader, node):
+    """
+    Calls an object's method.
+
+    :param loader: yaml loader.
+    :type loader: yaml.loader.FullLoader
+    :param node: node.
+    :type node: yaml.nodes.Node
+    :return: result of callable module or module itself.
+    :rtype: Any
+    """
+    entry = loader.construct_mapping(node, deep=True)
+    return call_method(**entry)
 
 
 def yaml_getattr(loader, node):
