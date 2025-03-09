@@ -3,7 +3,7 @@ import os
 import yaml
 
 from .constant import def_logger
-from .main_util import import_get, import_call, import_call_method
+from .main_util import import_get, import_call, import_call_method, call_method
 
 logger = def_logger.getChild(__name__)
 
@@ -113,6 +113,21 @@ def yaml_import_call_method(loader, node):
     return import_call_method(**entry)
 
 
+def yaml_call_method(loader, node):
+    """
+    Calls an object's method.
+
+    :param loader: yaml loader.
+    :type loader: yaml.loader.FullLoader
+    :param node: node.
+    :type node: yaml.nodes.Node
+    :return: result of callable module or module itself.
+    :rtype: Any
+    """
+    entry = loader.construct_mapping(node, deep=True)
+    return call_method(**entry)
+
+
 def yaml_getattr(loader, node):
     """
     Gets an attribute of the first argument.
@@ -180,6 +195,7 @@ def load_yaml_file(yaml_file_path, custom_mode=True):
         yaml.add_constructor('!import_get', yaml_import_get, Loader=yaml.FullLoader)
         yaml.add_constructor('!import_call', yaml_import_call, Loader=yaml.FullLoader)
         yaml.add_constructor('!import_call_method', yaml_import_call_method, Loader=yaml.FullLoader)
+        yaml.add_constructor('!call_method', yaml_call_method, Loader=yaml.FullLoader)
         yaml.add_constructor('!getattr', yaml_getattr, Loader=yaml.FullLoader)
         yaml.add_constructor('!setattr', yaml_getattr, Loader=yaml.FullLoader)
         yaml.add_constructor('!access_by_index_or_key', yaml_access_by_index_or_key, Loader=yaml.FullLoader)
