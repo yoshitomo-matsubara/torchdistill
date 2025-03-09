@@ -152,9 +152,11 @@ def call_method(obj, method_name, args=None, kwargs=None, returns_obj=False, **t
     logger.info(f'Calling `{method_name}` of `{obj}` with args={args} and kwargs={kwargs}')
     if args is None:
         args = list()
+    assert isinstance(args, (list, tuple)), f'args should be list or tuple, but {type(args)}'
 
     if kwargs is None:
         kwargs = dict()
+    assert isinstance(kwargs, dict), f'kwargs should be dict, but {type(kwargs)}'
 
     method = getattr(obj, method_name)
     result = method(*args, **kwargs)
