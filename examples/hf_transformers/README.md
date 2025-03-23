@@ -33,7 +33,7 @@ e.g., Fine-tuning BERT-Base (uncased)
 ```
 export TASK_NAME=cola
 
-accelerate launch examples/hf_transformers/text_classification.py \
+accelerate launch examples/hf_transformers/general_language_understanding.py \
   --config configs/sample/glue/${TASK_NAME}/ce/bert_base_uncased.yaml \
   --task ${TASK_NAME} \
   -disable_cudnn_benchmark
@@ -52,7 +52,7 @@ e.g., Write out test predictions after fine-tuning BERT-Base (uncased)
 export TASK_NAME=cola
 export TEST_DIR=submission/standard/bert_base_uncased/
 
-accelerate launch examples/hf_transformers/text_classification.py \
+accelerate launch examples/hf_transformers/general_language_understanding.py \
   --config configs/sample/glue/${TASK_NAME}/ce/bert_base_uncased.yaml \
   --task ${TASK_NAME} \
   --private_output ${TEST_DIR} \
