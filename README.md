@@ -148,7 +148,7 @@ Executable code can be found in [examples/](https://github.com/yoshitomo-matsuba
 - [Image classification](https://github.com/yoshitomo-matsubara/torchdistill/tree/main/examples/torchvision/image_classification.py): ImageNet (ILSVRC 2012), CIFAR-10, CIFAR-100, etc
 - [Object detection](https://github.com/yoshitomo-matsubara/torchdistill/tree/main/examples/torchvision/object_detection.py): COCO 2017, etc
 - [Semantic segmentation](https://github.com/yoshitomo-matsubara/torchdistill/tree/main/examples/torchvision/semantic_segmentation.py): COCO 2017, PASCAL VOC, etc
-- [Text classification](https://github.com/yoshitomo-matsubara/torchdistill/tree/main/examples/hf_transformers/text_classification.py): GLUE, etc
+- [GLUE](https://github.com/yoshitomo-matsubara/torchdistill/tree/main/examples/hf_transformers/general_language_understanding.py): CoLA, SST-2, MRPC, STS-B, QQP, MNLI, QNLI, RTE, WNLI, AX
 
 For CIFAR-10 and CIFAR-100, some models are reimplemented and available as pretrained models in ***torchdistill***. 
 More details can be found [here](https://github.com/yoshitomo-matsubara/torchdistill/releases/tag/v0.1.1).  
