@@ -42,7 +42,7 @@ models:
 
 train:
   log_freq: 50
-  num_epochs: 4
+  num_epochs: &num_epochs 4
   train_data_loader:
     dataset_id: *train_dataset_id
     sampler:
@@ -50,7 +50,7 @@ train:
         key: 'torch.utils.data.RandomSampler'
       kwargs:
     kwargs:
-      batch_size: 16
+      batch_size: &train_batch_size 16
       num_workers: 0
       pin_memory: True
       drop_last: False
@@ -85,12 +85,22 @@ train:
       weight_decay: 0.0
     filters_params: False
     max_grad_norm: 1.0
-    grad_accum_step: 1
+    grad_accum_step: &grad_accum_step 1
   scheduler:
     key: 'get_linear_schedule_with_warmup'
     kwargs:
       num_warmup_steps: 0
-      num_training_steps:
+      num_training_steps: !import_call
+        key: 'custom.optim.compute_num_training_steps'
+        init:
+          kwargs:
+            dataset: !access_by_index_or_key
+              data: *raw_datasets
+              index_or_key: 'train'
+            batch_size: *train_batch_size
+            num_epochs: *num_epochs
+            grad_accum_step: *grad_accum_step
+            world_size: 1
     scheduling_step: 1
   criterion:
     key: 'WeightedSumLoss'
@@ -103,13 +113,14 @@ metric: !import_call
   key: 'evaluate.load'
   init:
     kwargs:
-      path: 'roc_auc'
+      path: 'f1'
       config_name: 'multilabel'
 
 evaluate:
   argmax: False
+  thresholds: 0.5
   compute:
-    multi_class: 'ovr'
+    average: 'samples'
 
 test:
   test_data_loader:
