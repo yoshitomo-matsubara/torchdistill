@@ -10,6 +10,11 @@ for func in TYPE_TO_SCHEDULER_FUNCTION.values():
     register_scheduler(func)
 
 
+def compute_num_training_steps(dataset, batch_size, num_epochs, grad_accum_step=1, world_size=1):
+    num_iterations = math.ceil(len(dataset) / batch_size / grad_accum_step / world_size)
+    return num_iterations * num_epochs
+
+
 def update_num_iterations(train_config, dataset_dict, world_size):
     if 'scheduler' not in train_config or 'train_data_loader' not in train_config:
         return

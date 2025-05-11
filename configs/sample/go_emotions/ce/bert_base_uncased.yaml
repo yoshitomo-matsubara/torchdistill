@@ -1,0 +1,151 @@
+dependencies:
+  - name: 'custom'
+
+datasets: &raw_datasets !import_call
+    key: 'datasets.load_dataset'
+    init:
+      kwargs:
+        path: &dataset_name 'go_emotions'
+        name: 'simplified'
+        trust_remote_code: True
+
+preprocess:
+  pad_to_max_length: False
+  max_length: 128
+  base_split_name: 'train'
+  batched: True
+  text_keys: ['text']
+  label_key: 'labels'
+  try_original_type: False
+  dataset_id_map:
+    &train_dataset_id !join [*dataset_name, '/train']: train
+    &val_dataset_id !join [*dataset_name, '/validation']: validation
+    &test_dataset_id !join [*dataset_name, '/test']: test
+
+models:
+  student_model:
+    key: &student_model_key 'bert-base-uncased'
+    model_name_or_path: *student_model_key
+    config_kwargs:
+      pretrained_model_name_or_path: *student_model_key
+      num_labels: 28
+      problem_type: 'multi_label_classification'
+    tokenizer_kwargs:
+      pretrained_model_name_or_path: *student_model_key
+      do_lower: True
+      use_fast: True
+    model_kwargs:
+      pretrained_model_name_or_path: *student_model_key
+    _experiment: &student_experiment !join [*dataset_name, '-', *student_model_key]
+    src_ckpt:
+    dst_ckpt: !join ['./resource/ckpt/', *dataset_name, '/ce/', *student_experiment]
+
+train:
+  log_freq: 100
+  num_epochs: &num_epochs 10
+  train_data_loader:
+    dataset_id: *train_dataset_id
+    sampler:
+      class_or_func: !import_get
+        key: 'torch.utils.data.RandomSampler'
+      kwargs:
+    kwargs:
+      batch_size: &train_batch_size 16
+      num_workers: 0
+      pin_memory: True
+      drop_last: False
+    collate_fn: 'DataCollatorWithPadding'
+    requires_supp: False
+    cache_output:
+  val_data_loader:
+    dataset_id: *val_dataset_id
+    sampler: &val_sampler
+      class_or_func: !import_get
+        key: 'torch.utils.data.SequentialSampler'
+      kwargs:
+    kwargs:
+      batch_size: 32
+      num_workers: 0
+      pin_memory: True
+      drop_last: False
+    collate_fn: 'DataCollatorWithPadding'
+    requires_supp: False
+  model:
+    forward_proc: 'forward_batch_as_kwargs'
+    adaptations:
+    sequential: []
+    wrapper:
+    requires_grad: True
+    frozen_modules: []
+  optimizer:
+    key: 'optimizer_no_decay'
+    kwargs:
+      optimizer_key: 'Adam'
+      lr: 5.0e-5
+      weight_decay: 0.0
+    filters_params: False
+    grad_accum_step: &grad_accum_step 1
+  scheduler:
+    key: 'get_linear_schedule_with_warmup'
+    kwargs:
+      num_warmup_steps: 0
+      num_training_steps: !import_call
+        key: 'custom.optim.compute_num_training_steps'
+        init:
+          kwargs:
+            dataset: !access_by_index_or_key
+              data: *raw_datasets
+              index_or_key: 'train'
+            batch_size: *train_batch_size
+            num_epochs: *num_epochs
+            grad_accum_step: *grad_accum_step
+            world_size: 1
+    scheduling_step: 1
+  criterion:
+    key: 'WeightedSumLoss'
+    func2extract_model_loss: 'extract_transformers_loss'
+    kwargs:
+      model_term:
+        weight: 1.0
+
+metrics:
+  f1: !import_call
+    key: 'evaluate.load'
+    init:
+      kwargs:
+        path: 'f1'
+        config_name: 'multilabel'
+  precision: !import_call
+    key: 'evaluate.load'
+    init:
+      kwargs:
+        path: 'precision'
+        config_name: 'multilabel'
+  recall: !import_call
+    key: 'evaluate.load'
+    init:
+      kwargs:
+        path: 'recall'
+        config_name: 'multilabel'
+
+evaluate:
+  main_metric: 'f1'
+  metrics:
+    f1: &eval_config
+      argmax: False
+      thresholds: 0.5
+      compute:
+        average:
+    precision: *eval_config
+    recall: *eval_config
+
+test:
+  test_data_loader:
+    dataset_id: *test_dataset_id
+    sampler: *val_sampler
+    kwargs:
+      batch_size: 32
+      num_workers: 0
+      pin_memory: True
+      drop_last: False
+    collate_fn: 'DataCollatorWithPadding'

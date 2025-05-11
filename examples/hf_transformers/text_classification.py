@@ -1,11 +1,11 @@
 """
-Example code to fine-tuning the Transformer models for sequence classification on the GLUE benchmark
-at https://github.com/huggingface/transformers/blob/master/examples/pytorch/text-classification/run_glue_no_trainer.py
+Example code to fine-tuning the Transformer models for sequence classification
+at https://github.com/huggingface/transformers/blob/v4.49.0/examples/pytorch/text-classification/run_classification.py
 modified to collaborate with torchdistill.
 
-Original copyright of The HuggingFace Inc. code below, modifications by Yoshitomo Matsubara, Copyright 2021.
+Original copyright of The HuggingFace Inc. code below, modifications by Yoshitomo Matsubara, Copyright 2025.
 """
-# Copyright 2021 The HuggingFace Inc. team. All rights reserved.
+# Copyright 2020 The HuggingFace Inc. team. All rights reserved.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -23,18 +23,16 @@ import argparse
 import logging
 import os
 import time
+import numpy as np
 
 import datasets
-import evaluate as hf_evaluate
-import numpy as np
-import pandas as pd
 import torch
 import transformers
 from accelerate import Accelerator, DistributedType
 from torch.backends import cudnn
 from transformers import AutoConfig, AutoModelForSequenceClassification, AutoTokenizer, DataCollatorWithPadding
 
-from custom.dataset import load_raw_glue_datasets_and_misc, preprocess_glue_datasets
+from custom.dataset import preprocess_hf_text_datasets
 from custom.optim import customize_lr_config
 from torchdistill.common import file_util, yaml_util
 from torchdistill.common.constant import def_logger
@@ -52,8 +50,7 @@ def get_argparser():
     parser = argparse.ArgumentParser(description='Knowledge distillation for text classification models')
     parser.add_argument('--config', required=True, help='yaml file path')
     parser.add_argument('--run_log', help='log file path')
-    parser.add_argument('--task_name', type=str, default=None, help='name of the glue task to train on.')
-    parser.add_argument('--private_output', help='output dir path for private dataset(s)')
+    parser.add_argument('--task_name', type=str, default=None, help='name of the task for fine-tuning')
     parser.add_argument('--seed', type=int, default=None, help='a seed for reproducible training')
     parser.add_argument('-disable_cudnn_benchmark', action='store_true', help='disable torch.backend.cudnn.benchmark')
     parser.add_argument('-test_only', action='store_true', help='only test the models')
@@ -81,33 +78,6 @@ def load_tokenizer_and_model(model_config, task_name, prioritizes_dst_ckpt=False
     return tokenizer, model
 
 
-def get_all_datasets(datasets_config, task_name, student_tokenizer, student_model):
-    dataset_dict = dict()
-    label_names_dict = dict()
-    is_regression = None
-    for dataset_name in datasets_config.keys():
-        dataset_config = datasets_config[dataset_name]
-        raw_data_kwargs = dataset_config['raw_data_kwargs']
-        base_split_name = dataset_config.get('base_split_name', 'train')
-        sub_task_name = dataset_config.get('name', task_name)
-        raw_datasets, num_labels, label_names, is_regression = \
-            load_raw_glue_datasets_and_misc(sub_task_name, base_split_name=base_split_name, **raw_data_kwargs)
-        pad_to_max_length = dataset_config.get('pad_to_max_length', False)
-        max_length = dataset_config.get('pad_to_max_length', 128)
-        sub_dataset_dict = \
-            preprocess_glue_datasets(sub_task_name, raw_datasets, num_labels, label_names, is_regression,
-                                     pad_to_max_length, max_length, student_tokenizer, student_model, base_split_name)
-        for split_name, dataset_id in dataset_config['dataset_id_map'].items():
-            dataset_dict[dataset_id] = sub_dataset_dict[split_name]
-        label_names_dict[sub_task_name] = label_names
-    return dataset_dict, label_names_dict, is_regression
-
-
-def get_metrics(task_name):
-    metric = hf_evaluate.load('glue', task_name)
-    return metric
-
-
 def train_one_epoch(training_box, epoch, log_freq):
     metric_logger = MetricLogger(delimiter='  ')
     metric_logger.add_meter('lr', SmoothedValue(window_size=1, fmt='{value}'))
@@ -124,26 +94,62 @@ def train_one_epoch(training_box, epoch, log_freq):
 
 
 @torch.inference_mode()
-def evaluate(model, data_loader, metric, is_regression, accelerator, title=None, header='Test: '):
+def evaluate(model, data_loader, metric_dict, evaluate_config, accelerator, title=None, header='Test: '):
     if title is not None:
         logger.info(title)
 
     model.eval()
+    evaluate_metrics_config = evaluate_config.get('metrics', dict())
     for batch in data_loader:
+        labels = batch.pop('labels')
         outputs = model(**batch)
-        predictions = outputs.logits.argmax(dim=-1) if not is_regression else outputs.logits.squeeze()
-        metric.add_batch(
-            predictions=accelerator.gather(predictions),
-            references=accelerator.gather(batch['labels']),
-        )
+        for metric_key, metric in metric_dict.items():
+            sub_evaluate_metrics_config = evaluate_metrics_config.get(metric_key, dict())
+            uses_argmax = sub_evaluate_metrics_config.get('argmax', True)
+            thresholds = sub_evaluate_metrics_config.get('thresholds', None)
+            if isinstance(thresholds, (list, tuple)):
+                thresholds = torch.Tensor(thresholds)
 
-    eval_dict = metric.compute()
-    eval_desc = header + ', '.join([f'{key} = {eval_dict[key]}' for key in sorted(eval_dict.keys())])
-    logger.info(eval_desc)
-    return eval_dict
+            add_batch_kwargs = sub_evaluate_metrics_config.get('add_batch', dict())
+            if uses_argmax:
+                predictions = outputs.logits.argmax(dim=-1)
+                metric.add_batch(
+                    predictions=accelerator.gather(predictions),
+                    references=accelerator.gather(labels),
+                    **add_batch_kwargs
+                )
+            elif thresholds is not None:
+                predictions = (outputs.logits > thresholds).int()
+                metric.add_batch(
+                    predictions=accelerator.gather(predictions),
+                    references=accelerator.gather(labels),
+                    **add_batch_kwargs
+                )
+            else:
+                metric.add_batch(
+                    prediction_scores=accelerator.gather(outputs.logits),
+                    references=accelerator.gather(labels),
+                    **add_batch_kwargs
+                )
+
+    eval_dict = dict()
+    for metric_key, metric in metric_dict.items():
+        sub_evaluate_metrics_config = evaluate_metrics_config.get(metric_key, dict())
+        compute_kwargs = sub_evaluate_metrics_config.get('compute', dict())
+        sub_eval_dict = metric.compute(**compute_kwargs)
+        eval_desc = header + ', '.join([f'{key} = {sub_eval_dict[key]}' for key in sorted(sub_eval_dict.keys())])
+        logger.info(eval_desc)
+        for key, value in list(sub_eval_dict.items()):
+            if isinstance(value, (list, tuple, np.ndarray)):
+                mean_value = sum(value) / len(value)
+                sub_eval_dict[key] = mean_value
+                logger.info(f'Replacing the list of {key} values with the averaged value = {mean_value}')
+        eval_dict.update(sub_eval_dict)
+    main_value = eval_dict[evaluate_config['main_metric']]
+    return main_value, eval_dict
 
 
-def train(teacher_model, student_model, dataset_dict, is_regression, dst_ckpt_dir_path, metric,
+def train(teacher_model, student_model, dataset_dict, dst_ckpt_dir_path, metric_dict, evaluate_config,
           device, device_ids, distributed, config, args, accelerator):
     logger.info('Start training')
     train_config = config['train']
@@ -158,9 +164,9 @@ def train(teacher_model, student_model, dataset_dict, is_regression, dst_ckpt_di
     for epoch in range(training_box.num_epochs):
         training_box.pre_epoch_process(epoch=epoch)
         train_one_epoch(training_box, epoch, log_freq)
-        val_dict = evaluate(student_model, training_box.val_data_loader, metric, is_regression,
-                            accelerator, header='Validation: ')
-        val_value = sum(val_dict.values())
+        val_value, val_dict = evaluate(
+            student_model, training_box.val_data_loader, metric_dict, evaluate_config, accelerator, header='Validation: '
+        )
         if val_value > best_val_number:
             logger.info('Updating ckpt at {}'.format(dst_ckpt_dir_path))
             best_val_number = val_value
@@ -168,41 +174,6 @@ def train(teacher_model, student_model, dataset_dict, is_regression, dst_ckpt_di
             unwrapped_model = accelerator.unwrap_model(student_model)
             unwrapped_model.save_pretrained(dst_ckpt_dir_path, save_function=accelerator.save)
         training_box.post_epoch_process()
-
-
-@torch.inference_mode()
-def predict_private(model, dataset_dict, label_names_dict, is_regression, accelerator,
-                    private_configs, private_output_dir_path):
-    logger.info('Start prediction for private dataset(s)')
-    model.eval()
-    for private_config in private_configs:
-        # Dataset
-        private_data_loader_config = private_config['private_data_loader']
-        private_dataset_id = private_data_loader_config['dataset_id']
-        private_dataset = dataset_dict[private_dataset_id]
-        label_names = label_names_dict[private_data_loader_config['task_name']]
-        logger.info('{}: {} samples'.format(private_dataset_id, len(private_dataset)))
-
-        # Dataloader
-        private_data_loader = util.build_data_loader(private_dataset, private_data_loader_config, False)
-        private_data_loader = accelerator.prepare(private_data_loader)
-
-        # Prediction
-        private_output_file_path = os.path.join(private_output_dir_path, private_config['pred_output'])
-        file_util.make_parent_dirs(private_output_file_path)
-        np_preds = None
-        for batch in private_data_loader:
-            batch.pop('labels')
-            outputs = model(**batch)
-            predictions = outputs.logits.argmax(dim=-1) if not is_regression else outputs.logits.squeeze()
-            predictions = predictions.detach().cpu().numpy()
-            np_preds = predictions if np_preds is None else np.append(np_preds, predictions, axis=0)
-
-        df_output = pd.DataFrame({'prediction': np_preds})
-        # Map prediction index to label name
-        if not is_regression and private_config.get('idx2str', True):
-            df_output.prediction = df_output.prediction.apply(lambda pred_idx: label_names[pred_idx])
-        df_output.to_csv(private_output_file_path, sep='\t', index=True, index_label='index')
 
 
 def main(args):
@@ -250,23 +221,27 @@ def main(args):
         models_config['student_model'] if 'student_model' in models_config else models_config['model']
     student_tokenizer, student_model = load_tokenizer_and_model(student_model_config, task_name, False)
     dst_ckpt_dir_path = student_model_config['dst_ckpt']
-    # Get the datasets: you can either provide your own CSV/JSON training and evaluation files (see below)
-    # or specify a GLUE benchmark task (the dataset will be downloaded automatically from the datasets Hub).
-    dataset_dict, label_names_dict, is_regression = \
-        get_all_datasets(config['datasets'], task_name, student_tokenizer, student_model)
+
+    # Get datasets
+    dataset_dict = preprocess_hf_text_datasets(config['datasets'], tokenizer=student_tokenizer, **config['preprocess'])
 
     # Update config with dataset size len(data_loader)
     customize_lr_config(config, dataset_dict, world_size)
 
     # register collate function
-    register_collate_func(DataCollatorWithPadding(student_tokenizer,
-                                                  pad_to_multiple_of=(8 if accelerator.use_fp16 else None)))
+    register_collate_func(
+        DataCollatorWithPadding(
+            student_tokenizer,
+            pad_to_multiple_of=16 if accelerator.mixed_precision == 'fp8' else
+            8 if accelerator.mixed_precision != 'no' else None
+        )
+    )
 
     # Get the metric function
-    metric = get_metrics(task_name)
-
+    metric_dict = config['metrics']
+    evaluate_config = config['evaluate']
     if not args.test_only:
-        train(teacher_model, student_model, dataset_dict, is_regression, dst_ckpt_dir_path, metric,
+        train(teacher_model, student_model, dataset_dict, dst_ckpt_dir_path, metric_dict, evaluate_config,
               device, device_ids, distributed, config, args, accelerator)
         student_tokenizer.save_pretrained(dst_ckpt_dir_path)
 
@@ -279,21 +254,14 @@ def main(args):
     cudnn.deterministic = True
     if not args.student_only and teacher_model is not None:
         teacher_model = teacher_model.to(accelerator.device)
-        evaluate(teacher_model, test_data_loader, metric, is_regression, accelerator,
+        evaluate(teacher_model, test_data_loader, metric_dict, evaluate_config, accelerator,
                  title='[Teacher: {}]'.format(teacher_model_config['key']))
 
     # Reload the best checkpoint based on validation result
     student_tokenizer, student_model = load_tokenizer_and_model(student_model_config, task_name, True)
     student_model = accelerator.prepare(student_model)
-    evaluate(student_model, test_data_loader, metric, is_regression, accelerator,
+    evaluate(student_model, test_data_loader, metric_dict, evaluate_config, accelerator,
              title='[Student: {}]'.format(student_model_config['key']))
-
-    # Output prediction for private dataset(s) if both the config and output dir path are given
-    private_configs = config.get('private', None)
-    private_output_dir_path = args.private_output
-    if private_configs is not None and private_output_dir_path is not None and is_main_process():
-        predict_private(student_model, dataset_dict, label_names_dict, is_regression, accelerator,
-                        private_configs, private_output_dir_path)
 
 
 if __name__ == '__main__':
