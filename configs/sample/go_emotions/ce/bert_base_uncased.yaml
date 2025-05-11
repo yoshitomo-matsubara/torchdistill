@@ -20,7 +20,7 @@ preprocess:
   dataset_id_map:
     &train_dataset_id !join [*dataset_name, '/train']: train
     &val_dataset_id !join [*dataset_name, '/validation']: validation
-    &test_dataset_id !join [*dataset_name, '/validation']: validation
+    &test_dataset_id !join [*dataset_name, '/test']: test
 
 models:
   student_model:
@@ -38,11 +38,11 @@ models:
       pretrained_model_name_or_path: *student_model_key
     _experiment: &student_experiment !join [*dataset_name, '-', *student_model_key]
     src_ckpt:
-    dst_ckpt: !join ['./resource/ckpt/glue/', *dataset_name, '/ce/', *student_experiment]
+    dst_ckpt: !join ['./resource/ckpt/', *dataset_name, '/ce/', *student_experiment]
 
 train:
-  log_freq: 50
-  num_epochs: &num_epochs 4
+  log_freq: 100
+  num_epochs: &num_epochs 10
   train_data_loader:
     dataset_id: *train_dataset_id
     sampler:
@@ -80,11 +80,10 @@ train:
   optimizer:
     key: 'optimizer_no_decay'
     kwargs:
-      optimizer_key: 'AdamW'
+      optimizer_key: 'Adam'
       lr: 5.0e-5
       weight_decay: 0.0
     filters_params: False
-    max_grad_norm: 1.0
     grad_accum_step: &grad_accum_step 1
   scheduler:
     key: 'get_linear_schedule_with_warmup'
@@ -109,18 +108,36 @@ train:
       model_term:
         weight: 1.0
 
-metric: !import_call
-  key: 'evaluate.load'
-  init:
-    kwargs:
-      path: 'f1'
-      config_name: 'multilabel'
+metrics:
+  f1: !import_call
+    key: 'evaluate.load'
+    init:
+      kwargs:
+        path: 'f1'
+        config_name: 'multilabel'
+  precision: !import_call
+    key: 'evaluate.load'
+    init:
+      kwargs:
+        path: 'precision'
+        config_name: 'multilabel'
+  recall: !import_call
+    key: 'evaluate.load'
+    init:
+      kwargs:
+        path: 'recall'
+        config_name: 'multilabel'
 
 evaluate:
-  argmax: False
-  thresholds: 0.5
-  compute:
-    average: 'samples'
+  main_metric: 'f1'
+  metrics:
+    f1: &eval_config
+      argmax: False
+      thresholds: 0.5
+      compute:
+        average:
+    precision: *eval_config
+    recall: *eval_config
 
 test:
   test_data_loader:
