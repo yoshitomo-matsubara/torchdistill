@@ -1,0 +1,344 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" data-content_root="../../../../">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>torchdistill.models.classification.densenet &mdash; torchdistill v1.1.4-dev documentation</title>
+      <link rel="stylesheet" type="text/css" href="../../../../_static/pygments.css?v=b86133f3" />
+      <link rel="stylesheet" type="text/css" href="../../../../_static/css/theme.css?v=e59714d7" />
+
+  
+      <script src="../../../../_static/jquery.js?v=5d32c60e"></script>
+      <script src="../../../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+      <script src="../../../../_static/documentation_options.js?v=205dc2f2"></script>
+      <script src="../../../../_static/doctools.js?v=9bcbadda"></script>
+      <script src="../../../../_static/sphinx_highlight.js?v=dc90522c"></script>
+    <script src="../../../../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../../search.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="../../../../index.html">
+            
+              <img src="../../../../_static/logo-white.png" class="logo" alt="Logo"/>
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">📚 Overview</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../../usage.html">Usage</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../package.html">torchdistill API</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">🧑🏻‍💻 Research</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../../benchmarks.html">Benchmarks</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../projects.html">Projects</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../../../index.html">torchdistill</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content style-external-links">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../../../../index.html" class="icon icon-home" aria-label="Home"></a></li>
+          <li class="breadcrumb-item"><a href="../../../index.html">Module code</a></li>
+      <li class="breadcrumb-item active">torchdistill.models.classification.densenet</li>
+      <li class="wy-breadcrumbs-aside">
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <h1>Source code for torchdistill.models.classification.densenet</h1><div class="highlight"><pre>
+<span></span><span class="kn">from</span><span class="w"> </span><span class="nn">collections</span><span class="w"> </span><span class="kn">import</span> <span class="n">OrderedDict</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">typing</span><span class="w"> </span><span class="kn">import</span> <span class="n">Any</span><span class="p">,</span> <span class="n">Tuple</span>
+
+<span class="kn">import</span><span class="w"> </span><span class="nn">torch</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">torch.nn</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">nn</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">torch.nn.functional</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">F</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">torch</span><span class="w"> </span><span class="kn">import</span> <span class="n">Tensor</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">torchvision.models.densenet</span><span class="w"> </span><span class="kn">import</span> <span class="n">_DenseBlock</span><span class="p">,</span> <span class="n">_Transition</span>
+
+<span class="kn">from</span><span class="w"> </span><span class="nn">..registry</span><span class="w"> </span><span class="kn">import</span> <span class="n">register_model</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">...common.constant</span><span class="w"> </span><span class="kn">import</span> <span class="n">def_logger</span>
+
+<span class="n">logger</span> <span class="o">=</span> <span class="n">def_logger</span><span class="o">.</span><span class="n">getChild</span><span class="p">(</span><span class="vm">__name__</span><span class="p">)</span>
+<span class="n">ROOT_URL</span> <span class="o">=</span> <span class="s1">&#39;https://github.com/yoshitomo-matsubara/torchdistill/releases/download&#39;</span>
+<span class="n">MODEL_URL_DICT</span> <span class="o">=</span> <span class="p">{</span>
+    <span class="s1">&#39;cifar10-densenet_bc_k12_depth100&#39;</span><span class="p">:</span> <span class="n">ROOT_URL</span> <span class="o">+</span> <span class="s1">&#39;/v0.1.1/cifar10-densenet_bc_k12_depth100.pt&#39;</span><span class="p">,</span>
+    <span class="s1">&#39;cifar100-densenet_bc_k12_depth100&#39;</span><span class="p">:</span> <span class="n">ROOT_URL</span> <span class="o">+</span> <span class="s1">&#39;/v0.1.1/cifar100-densenet_bc_k12_depth100.pt&#39;</span>
+<span class="p">}</span>
+
+
+<div class="viewcode-block" id="DenseNet4Cifar">
+<a class="viewcode-back" href="../../../../subpkgs/models.html#torchdistill.models.classification.densenet.DenseNet4Cifar">[docs]</a>
+<span class="k">class</span><span class="w"> </span><span class="nc">DenseNet4Cifar</span><span class="p">(</span><span class="n">nn</span><span class="o">.</span><span class="n">Module</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    DenseNet-BC model for CIFAR datasets. Refactored https://github.com/pytorch/vision/blob/master/torchvision/models/densenet.py</span>
+<span class="sd">    for CIFAR datasets, referring to https://github.com/liuzhuang13/DenseNet</span>
+
+<span class="sd">    Gao Huang, Zhuang Liu, Laurens van der Maaten, Kilian Q. Weinberger: `&quot;Densely Connected Convolutional Networks&quot; &lt;https://openaccess.thecvf.com/content_cvpr_2017/html/Huang_Densely_Connected_Convolutional_CVPR_2017_paper.html&gt;`_ @ CVPR 2017 (2017).</span>
+
+<span class="sd">    :param growth_rate: number of filters to add each layer (`k` in paper).</span>
+<span class="sd">    :type growth_rate: int</span>
+<span class="sd">    :param block_config: three numbers of layers in each pooling block.</span>
+<span class="sd">    :type block_config: list[int]</span>
+<span class="sd">    :param num_init_features: number of filters to learn in the first convolution layer.</span>
+<span class="sd">    :type num_init_features: int</span>
+<span class="sd">    :param bn_size: multiplicative factor for number of bottleneck layers. (i.e. bn_size * k features in the bottleneck layer)</span>
+<span class="sd">    :type bn_size: int</span>
+<span class="sd">    :param drop_rate: dropout rate after each dense layer.</span>
+<span class="sd">    :type drop_rate: float</span>
+<span class="sd">    :param num_classes: number of classification classes.</span>
+<span class="sd">    :type num_classes: int</span>
+<span class="sd">    :param memory_efficient: if True, uses checkpointing. Much more memory efficient, but slower. Refer to `&quot;the paper&quot; &lt;https://openaccess.thecvf.com/content_cvpr_2017/html/Huang_Densely_Connected_Convolutional_CVPR_2017_paper.html&gt;`_ for details.</span>
+<span class="sd">    :type memory_efficient: bool</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span>
+        <span class="n">growth_rate</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">32</span><span class="p">,</span>
+        <span class="n">block_config</span><span class="p">:</span> <span class="n">Tuple</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="nb">int</span><span class="p">,</span> <span class="nb">int</span><span class="p">]</span> <span class="o">=</span> <span class="p">(</span><span class="mi">12</span><span class="p">,</span> <span class="mi">12</span><span class="p">,</span> <span class="mi">12</span><span class="p">),</span>
+        <span class="n">num_init_features</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">64</span><span class="p">,</span>
+        <span class="n">bn_size</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">4</span><span class="p">,</span>
+        <span class="n">drop_rate</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mi">0</span><span class="p">,</span>
+        <span class="n">num_classes</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">10</span><span class="p">,</span>
+        <span class="n">memory_efficient</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+
+        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">()</span>
+
+        <span class="c1"># First convolution</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">features</span> <span class="o">=</span> <span class="n">nn</span><span class="o">.</span><span class="n">Sequential</span><span class="p">(</span><span class="n">OrderedDict</span><span class="p">([</span>
+            <span class="p">(</span><span class="s1">&#39;conv0&#39;</span><span class="p">,</span> <span class="n">nn</span><span class="o">.</span><span class="n">Conv2d</span><span class="p">(</span><span class="mi">3</span><span class="p">,</span> <span class="n">num_init_features</span><span class="p">,</span> <span class="n">kernel_size</span><span class="o">=</span><span class="mi">3</span><span class="p">,</span> <span class="n">stride</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span>
+                                <span class="n">padding</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span> <span class="n">bias</span><span class="o">=</span><span class="kc">False</span><span class="p">))</span>
+        <span class="p">]))</span>
+
+        <span class="c1"># Each denseblock</span>
+        <span class="n">num_features</span> <span class="o">=</span> <span class="n">num_init_features</span>
+        <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="n">num_layers</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">block_config</span><span class="p">):</span>
+            <span class="n">block</span> <span class="o">=</span> <span class="n">_DenseBlock</span><span class="p">(</span>
+                <span class="n">num_layers</span><span class="o">=</span><span class="n">num_layers</span><span class="p">,</span>
+                <span class="n">num_input_features</span><span class="o">=</span><span class="n">num_features</span><span class="p">,</span>
+                <span class="n">bn_size</span><span class="o">=</span><span class="n">bn_size</span><span class="p">,</span>
+                <span class="n">growth_rate</span><span class="o">=</span><span class="n">growth_rate</span><span class="p">,</span>
+                <span class="n">drop_rate</span><span class="o">=</span><span class="n">drop_rate</span><span class="p">,</span>
+                <span class="n">memory_efficient</span><span class="o">=</span><span class="n">memory_efficient</span>
+            <span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">features</span><span class="o">.</span><span class="n">add_module</span><span class="p">(</span><span class="s1">&#39;denseblock</span><span class="si">%d</span><span class="s1">&#39;</span> <span class="o">%</span> <span class="p">(</span><span class="n">i</span> <span class="o">+</span> <span class="mi">1</span><span class="p">),</span> <span class="n">block</span><span class="p">)</span>
+            <span class="n">num_features</span> <span class="o">=</span> <span class="n">num_features</span> <span class="o">+</span> <span class="n">num_layers</span> <span class="o">*</span> <span class="n">growth_rate</span>
+            <span class="k">if</span> <span class="n">i</span> <span class="o">!=</span> <span class="nb">len</span><span class="p">(</span><span class="n">block_config</span><span class="p">)</span> <span class="o">-</span> <span class="mi">1</span><span class="p">:</span>
+                <span class="n">trans</span> <span class="o">=</span> <span class="n">_Transition</span><span class="p">(</span><span class="n">num_input_features</span><span class="o">=</span><span class="n">num_features</span><span class="p">,</span>
+                                    <span class="n">num_output_features</span><span class="o">=</span><span class="n">num_features</span> <span class="o">//</span> <span class="mi">2</span><span class="p">)</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">features</span><span class="o">.</span><span class="n">add_module</span><span class="p">(</span><span class="s1">&#39;transition</span><span class="si">%d</span><span class="s1">&#39;</span> <span class="o">%</span> <span class="p">(</span><span class="n">i</span> <span class="o">+</span> <span class="mi">1</span><span class="p">),</span> <span class="n">trans</span><span class="p">)</span>
+                <span class="n">num_features</span> <span class="o">=</span> <span class="n">num_features</span> <span class="o">//</span> <span class="mi">2</span>
+
+        <span class="c1"># Final batch norm</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">features</span><span class="o">.</span><span class="n">add_module</span><span class="p">(</span><span class="s1">&#39;norm5&#39;</span><span class="p">,</span> <span class="n">nn</span><span class="o">.</span><span class="n">BatchNorm2d</span><span class="p">(</span><span class="n">num_features</span><span class="p">))</span>
+
+        <span class="c1"># Linear layer</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">classifier</span> <span class="o">=</span> <span class="n">nn</span><span class="o">.</span><span class="n">Linear</span><span class="p">(</span><span class="n">num_features</span><span class="p">,</span> <span class="n">num_classes</span><span class="p">)</span>
+
+        <span class="c1"># Official init from torch repo.</span>
+        <span class="k">for</span> <span class="n">m</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">modules</span><span class="p">():</span>
+            <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">m</span><span class="p">,</span> <span class="n">nn</span><span class="o">.</span><span class="n">Conv2d</span><span class="p">):</span>
+                <span class="n">nn</span><span class="o">.</span><span class="n">init</span><span class="o">.</span><span class="n">kaiming_normal_</span><span class="p">(</span><span class="n">m</span><span class="o">.</span><span class="n">weight</span><span class="p">)</span>
+            <span class="k">elif</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">m</span><span class="p">,</span> <span class="n">nn</span><span class="o">.</span><span class="n">BatchNorm2d</span><span class="p">):</span>
+                <span class="n">nn</span><span class="o">.</span><span class="n">init</span><span class="o">.</span><span class="n">constant_</span><span class="p">(</span><span class="n">m</span><span class="o">.</span><span class="n">weight</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span>
+                <span class="n">nn</span><span class="o">.</span><span class="n">init</span><span class="o">.</span><span class="n">constant_</span><span class="p">(</span><span class="n">m</span><span class="o">.</span><span class="n">bias</span><span class="p">,</span> <span class="mi">0</span><span class="p">)</span>
+            <span class="k">elif</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">m</span><span class="p">,</span> <span class="n">nn</span><span class="o">.</span><span class="n">Linear</span><span class="p">):</span>
+                <span class="n">nn</span><span class="o">.</span><span class="n">init</span><span class="o">.</span><span class="n">constant_</span><span class="p">(</span><span class="n">m</span><span class="o">.</span><span class="n">bias</span><span class="p">,</span> <span class="mi">0</span><span class="p">)</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">forward</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">x</span><span class="p">:</span> <span class="n">Tensor</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Tensor</span><span class="p">:</span>
+        <span class="n">features</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">features</span><span class="p">(</span><span class="n">x</span><span class="p">)</span>
+        <span class="n">out</span> <span class="o">=</span> <span class="n">F</span><span class="o">.</span><span class="n">relu</span><span class="p">(</span><span class="n">features</span><span class="p">,</span> <span class="n">inplace</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+        <span class="n">out</span> <span class="o">=</span> <span class="n">F</span><span class="o">.</span><span class="n">adaptive_avg_pool2d</span><span class="p">(</span><span class="n">out</span><span class="p">,</span> <span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">))</span>
+        <span class="n">out</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">flatten</span><span class="p">(</span><span class="n">out</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span>
+        <span class="n">out</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">classifier</span><span class="p">(</span><span class="n">out</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">out</span></div>
+
+
+
+<div class="viewcode-block" id="densenet">
+<a class="viewcode-back" href="../../../../subpkgs/models.html#torchdistill.models.classification.densenet.densenet">[docs]</a>
+<span class="nd">@register_model</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">densenet</span><span class="p">(</span>
+    <span class="n">growth_rate</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span>
+    <span class="n">depth</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span>
+    <span class="n">num_init_features</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span>
+    <span class="n">bottleneck</span><span class="p">:</span> <span class="nb">bool</span><span class="p">,</span>
+    <span class="n">num_classes</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span>
+    <span class="n">pretrained</span><span class="p">:</span> <span class="nb">bool</span><span class="p">,</span>
+    <span class="n">progress</span><span class="p">:</span> <span class="nb">bool</span><span class="p">,</span>
+    <span class="o">**</span><span class="n">kwargs</span><span class="p">:</span> <span class="n">Any</span>
+<span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Instantiates a DenseNet model for CIFAR datasets.</span>
+
+<span class="sd">    Gao Huang, Zhuang Liu, Laurens van der Maaten, Kilian Q. Weinberger: `&quot;Densely Connected Convolutional Networks&quot; &lt;https://openaccess.thecvf.com/content_cvpr_2017/html/Huang_Densely_Connected_Convolutional_CVPR_2017_paper.html&gt;`_ @ CVPR 2017 (2017).</span>
+
+<span class="sd">    :param growth_rate: number of filters to add each layer (`k` in paper).</span>
+<span class="sd">    :type growth_rate: int</span>
+<span class="sd">    :param depth: depth.</span>
+<span class="sd">    :type depth: int</span>
+<span class="sd">    :param num_init_features: number of filters to learn in the first convolution layer.</span>
+<span class="sd">    :type num_init_features: int</span>
+<span class="sd">    :param bottleneck: if True, uses bottleneck.</span>
+<span class="sd">    :type bottleneck: bool</span>
+<span class="sd">    :param num_classes: 10 or 100 for CIFAR-10 or CIFAR-100, respectively.</span>
+<span class="sd">    :type num_classes: int</span>
+<span class="sd">    :param pretrained: if True, returns a model pre-trained on CIFAR dataset.</span>
+<span class="sd">    :type pretrained: bool</span>
+<span class="sd">    :param progress: if True, displays a progress bar of the download to stderr.</span>
+<span class="sd">    :type progress: bool</span>
+<span class="sd">    :return: DenseNet model.</span>
+<span class="sd">    :rtype: DenseNet4Cifar</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="n">n</span> <span class="o">=</span> <span class="p">(</span><span class="n">depth</span> <span class="o">-</span> <span class="mi">4</span><span class="p">)</span> <span class="o">//</span> <span class="mi">3</span>
+    <span class="k">if</span> <span class="n">bottleneck</span><span class="p">:</span>
+        <span class="n">n</span> <span class="o">//=</span> <span class="mi">2</span>
+        <span class="n">num_init_features</span> <span class="o">=</span> <span class="n">growth_rate</span> <span class="o">*</span> <span class="mi">2</span>
+    <span class="n">model</span> <span class="o">=</span> <span class="n">DenseNet4Cifar</span><span class="p">(</span><span class="n">growth_rate</span><span class="p">,</span> <span class="p">(</span><span class="n">n</span><span class="p">,</span> <span class="n">n</span><span class="p">,</span> <span class="n">n</span><span class="p">),</span> <span class="n">num_init_features</span><span class="p">,</span> <span class="n">num_classes</span><span class="o">=</span><span class="n">num_classes</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+    <span class="n">base_model_name</span> <span class="o">=</span> <span class="s1">&#39;densenet_bc&#39;</span> <span class="k">if</span> <span class="n">bottleneck</span> <span class="k">else</span> <span class="s1">&#39;densenet&#39;</span>
+    <span class="n">model_key</span> <span class="o">=</span> <span class="s1">&#39;cifar</span><span class="si">{}</span><span class="s1">-</span><span class="si">{}</span><span class="s1">_k</span><span class="si">{}</span><span class="s1">_depth</span><span class="si">{}</span><span class="s1">&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">num_classes</span><span class="p">,</span> <span class="n">base_model_name</span><span class="p">,</span> <span class="n">growth_rate</span><span class="p">,</span> <span class="n">depth</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">pretrained</span> <span class="ow">and</span> <span class="n">model_key</span> <span class="ow">in</span> <span class="n">MODEL_URL_DICT</span><span class="p">:</span>
+        <span class="n">state_dict</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">hub</span><span class="o">.</span><span class="n">load_state_dict_from_url</span><span class="p">(</span><span class="n">MODEL_URL_DICT</span><span class="p">[</span><span class="n">model_key</span><span class="p">],</span> <span class="n">progress</span><span class="o">=</span><span class="n">progress</span><span class="p">)</span>
+        <span class="n">model</span><span class="o">.</span><span class="n">load_state_dict</span><span class="p">(</span><span class="n">state_dict</span><span class="p">)</span>
+    <span class="k">elif</span> <span class="n">pretrained</span><span class="p">:</span>
+        <span class="n">logger</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span><span class="sa">f</span><span class="s1">&#39;`pretrained` = True, but pretrained </span><span class="si">{</span><span class="n">model_key</span><span class="si">}</span><span class="s1"> model is not available&#39;</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">model</span></div>
+
+
+
+<div class="viewcode-block" id="densenet_bc_k12_depth100">
+<a class="viewcode-back" href="../../../../subpkgs/models.html#torchdistill.models.classification.densenet.densenet_bc_k12_depth100">[docs]</a>
+<span class="nd">@register_model</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">densenet_bc_k12_depth100</span><span class="p">(</span><span class="n">num_classes</span><span class="o">=</span><span class="mi">10</span><span class="p">,</span> <span class="n">pretrained</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">progress</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">:</span> <span class="n">Any</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    DenseNet-BC (k=12, depth=100) model.</span>
+
+<span class="sd">    Gao Huang, Zhuang Liu, Laurens van der Maaten, Kilian Q. Weinberger: `&quot;Densely Connected Convolutional Networks&quot; &lt;https://openaccess.thecvf.com/content_cvpr_2017/html/Huang_Densely_Connected_Convolutional_CVPR_2017_paper.html&gt;`_ @ CVPR 2017 (2017).</span>
+
+<span class="sd">    :param num_classes: 10 or 100 for CIFAR-10 or CIFAR-100, respectively.</span>
+<span class="sd">    :type num_classes: int</span>
+<span class="sd">    :param pretrained: if True, returns a model pre-trained on CIFAR dataset.</span>
+<span class="sd">    :type pretrained: bool</span>
+<span class="sd">    :param progress: if True, displays a progress bar of the download to stderr.</span>
+<span class="sd">    :type progress: bool</span>
+<span class="sd">    :return: DenseNet-BC (k=12, depth=100) model.</span>
+<span class="sd">    :rtype: DenseNet4Cifar</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">return</span> <span class="n">densenet</span><span class="p">(</span><span class="mi">12</span><span class="p">,</span> <span class="mi">100</span><span class="p">,</span> <span class="mi">16</span><span class="p">,</span> <span class="kc">True</span><span class="p">,</span> <span class="n">num_classes</span><span class="p">,</span> <span class="n">pretrained</span><span class="p">,</span> <span class="n">progress</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span></div>
+
+
+
+<div class="viewcode-block" id="densenet_bc_k24_depth250">
+<a class="viewcode-back" href="../../../../subpkgs/models.html#torchdistill.models.classification.densenet.densenet_bc_k24_depth250">[docs]</a>
+<span class="nd">@register_model</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">densenet_bc_k24_depth250</span><span class="p">(</span><span class="n">num_classes</span><span class="o">=</span><span class="mi">10</span><span class="p">,</span> <span class="n">pretrained</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">progress</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">:</span> <span class="n">Any</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    DenseNet-BC (k=24, depth=250) model.</span>
+
+<span class="sd">    Gao Huang, Zhuang Liu, Laurens van der Maaten, Kilian Q. Weinberger: `&quot;Densely Connected Convolutional Networks&quot; &lt;https://openaccess.thecvf.com/content_cvpr_2017/html/Huang_Densely_Connected_Convolutional_CVPR_2017_paper.html&gt;`_ @ CVPR 2017 (2017).</span>
+
+<span class="sd">    :param num_classes: 10 or 100 for CIFAR-10 or CIFAR-100, respectively.</span>
+<span class="sd">    :type num_classes: int</span>
+<span class="sd">    :param pretrained: if True, returns a model pre-trained on CIFAR dataset.</span>
+<span class="sd">    :type pretrained: bool</span>
+<span class="sd">    :param progress: if True, displays a progress bar of the download to stderr.</span>
+<span class="sd">    :type progress: bool</span>
+<span class="sd">    :return: DenseNet-BC (k=24, depth=250) model.</span>
+<span class="sd">    :rtype: DenseNet4Cifar</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">return</span> <span class="n">densenet</span><span class="p">(</span><span class="mi">24</span><span class="p">,</span> <span class="mi">250</span><span class="p">,</span> <span class="mi">16</span><span class="p">,</span> <span class="kc">True</span><span class="p">,</span> <span class="n">num_classes</span><span class="p">,</span> <span class="n">pretrained</span><span class="p">,</span> <span class="n">progress</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span></div>
+
+
+
+<div class="viewcode-block" id="densenet_bc_k40_depth190">
+<a class="viewcode-back" href="../../../../subpkgs/models.html#torchdistill.models.classification.densenet.densenet_bc_k40_depth190">[docs]</a>
+<span class="nd">@register_model</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">densenet_bc_k40_depth190</span><span class="p">(</span><span class="n">num_classes</span><span class="o">=</span><span class="mi">10</span><span class="p">,</span> <span class="n">pretrained</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">progress</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">:</span> <span class="n">Any</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    DenseNet-BC (k=40, depth=190) model.</span>
+
+<span class="sd">    Gao Huang, Zhuang Liu, Laurens van der Maaten, Kilian Q. Weinberger: `&quot;Densely Connected Convolutional Networks&quot; &lt;https://openaccess.thecvf.com/content_cvpr_2017/html/Huang_Densely_Connected_Convolutional_CVPR_2017_paper.html&gt;`_ @ CVPR 2017 (2017).</span>
+
+<span class="sd">    :param num_classes: 10 or 100 for CIFAR-10 or CIFAR-100, respectively.</span>
+<span class="sd">    :type num_classes: int</span>
+<span class="sd">    :param pretrained: if True, returns a model pre-trained on CIFAR dataset.</span>
+<span class="sd">    :type pretrained: bool</span>
+<span class="sd">    :param progress: if True, displays a progress bar of the download to stderr.</span>
+<span class="sd">    :type progress: bool</span>
+<span class="sd">    :return: DenseNet-BC (k=40, depth=190) model.</span>
+<span class="sd">    :rtype: DenseNet4Cifar</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">return</span> <span class="n">densenet</span><span class="p">(</span><span class="mi">40</span><span class="p">,</span> <span class="mi">190</span><span class="p">,</span> <span class="mi">16</span><span class="p">,</span> <span class="kc">True</span><span class="p">,</span> <span class="n">num_classes</span><span class="p">,</span> <span class="n">pretrained</span><span class="p">,</span> <span class="n">progress</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span></div>
+
+</pre></div>
+
+           </div>
+          </div>
+          <footer>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2023, Yoshitomo Matsubara.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script>
+    <!-- Theme Analytics -->
+    <script async src="https://www.googletagmanager.com/gtag/js?id=G-LYK8SSJ7R5"></script>
+    <script>
+      window.dataLayer = window.dataLayer || [];
+      function gtag(){dataLayer.push(arguments);}
+      gtag('js', new Date());
+
+      gtag('config', 'G-LYK8SSJ7R5', {
+          'anonymize_ip': false,
+      });
+    </script> 
+
+</body>
+</html>
