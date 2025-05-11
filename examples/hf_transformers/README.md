@@ -23,7 +23,21 @@ accelerate config
 pipenv run accelerate config
 ```
 
-## 1. GLUE: Text classification
+## 1. Text classification tasks
+
+### Fine-tuning a Transformer model
+e.g., Fine-tuning BERT-Base (uncased) on GoEmotions dataset (multi-label classification)
+```
+accelerate launch examples/hf_transformers/text_classification.py \
+  --config configs/sample/go_emotions/ce/bert_base_uncased.yaml \
+  --run_log log/go_emotions/ce/bert_base_uncased.txt \
+  --seed 123 \
+  -disable_cudnn_benchmark
+  
+# use `pipenv run accelerate launch ...` if you're using pipenv
+```
+
+## 2. GLUE tasks
 GLUE consists of 9 different tasks: CoLA, SST-2, MRPC, STS-B (regression), QQP, MNLI, QNLI, RTE, and WNLI.  
 For these tasks, you can run experiments with `cola`, `sst2`, `mrpc`, `stsb`, `qqp`, `mnli`, `qnli`, `rte`, and `wnli`, respectively.  
 Note that STS-B (TASK_NAME=`stsb`) is a regression task, and the sample config file is under `mse/` instead of `ce/`.
