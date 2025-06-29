@@ -1574,12 +1574,15 @@ class DISTLoss(nn.Module):
     :param teacher_module_path: teacher model's logit module path.
     :type teacher_module_path: str
     :param teacher_module_io: 'input' or 'output' of the module in the teacher model.
+    :type teacher_module_io: str
     :param beta: balancing factor for inter-loss.
     :type beta: float
     :param gamma: balancing factor for intra-loss.
     :type gamma: float
     :param tau: hyperparameter :math:`\\tau` to soften class-probability distributions.
     :type tau: float
+    :param eps: small value to avoid division by zero in cosine simularity.
+    :type eps: float
     """
 
     def __init__(self, student_module_path, student_module_io, teacher_module_path, teacher_module_io,
@@ -1732,3 +1735,80 @@ class LogitStdKDLoss(nn.KLDivLoss):
 
         hard_loss = self.cross_entropy_loss(student_logits, targets)
         return self.alpha * hard_loss + self.beta * (self.temperature ** 2) * soft_loss
+
+
+@register_mid_level_loss
+class DISTPlusLoss(DISTLoss):
+    """
+    A loss module for DIST+.
+
+    Tao Huang, Shan You, Fei Wang, Chen Qian, Chang Xu: `"DIST+: Knowledge Distillation From a Stronger Adaptive Teacher" <https://ieeexplore.ieee.org/document/10938241>`_ @ TPAMI (2025)
+
+    :param student_logit_module_path: student model's logit module path.
+    :type student_logit_module_path: str
+    :param student_logit_module_io: 'input' or 'output' of the module in the student model.
+    :type student_logit_module_io: str
+    :param teacher_logit_module_path: teacher model's logit module path.
+    :type teacher_logit_module_path: str
+    :param teacher_logit_module_io: 'input' or 'output' of the module in the teacher model.
+    :type teacher_logit_module_io: str
+    :param student_feature_module_path: student model's feature map module path.
+    :type student_feature_module_path: str
+    :param student_feature_module_io: 'input' or 'output' of the module in the student model.
+    :type student_feature_module_io: str
+    :param teacher_feature_module_path: teacher model's feature map module path.
+    :type teacher_feature_module_path: str
+    :param teacher_feature_module_io: 'input' or 'output' of the module in the teacher model.
+    :type teacher_feature_module_io: str
+    :param beta: balancing factor for inter-loss.
+    :type beta: float
+    :param iota: balancing factor for intra-loss.
+    :type iota: float
+    :param kappa: balancing factor for channel relation loss.
+    :type kappa: float
+    :param gamma: balancing factor for spatial relation loss.
+    :type gamma: float
+    :param tau: hyperparameter :math:`\\tau` to soften class-probability distributions.
+    :type tau: float
+    :param eps: small value to avoid division by zero in cosine simularity.
+    :type eps: float
+    """
+
+    def __init__(self, student_logit_module_path, student_logit_module_io,
+                 teacher_logit_module_path, teacher_logit_module_io,
+                 student_feature_module_path, student_feature_module_io,
+                 teacher_feature_module_path, teacher_feature_module_io,
+                 beta=1.0, gamma=1.0, iota=1.0, kappa=1.0, tau=1.0, eps=1e-8, **kwargs):
+        super().__init__(
+            student_logit_module_path, student_logit_module_io, teacher_logit_module_path, teacher_logit_module_io,
+            beta=beta, gamma=gamma, tau=tau, eps=eps
+        )
+        self.student_feature_module_path = student_feature_module_path
+        self.student_feature_module_io = student_feature_module_io
+        self.teacher_feature_module_path = teacher_feature_module_path
+        self.teacher_feature_module_io = teacher_feature_module_io
+        self.iota = iota
+        self.kappa = kappa
+
+    def channel_relation(self, f_s, f_t):
+        c_mean_f_s = torch.mean(f_s, dim=1, keepdim=True)
+        c_mean_f_t = torch.mean(f_t, dim=1, keepdim=True)
+        c_centered_f_s = f_s - c_mean_f_s
+        c_centered_f_t = f_t - c_mean_f_t
+        numerator = torch.sum(c_centered_f_s * c_centered_f_t, dim=1)
+        denominator = torch.sqrt(torch.sum(c_centered_f_s ** 2, dim=1) * torch.sum(c_centered_f_t ** 2, dim=1))
+        return (numerator / (denominator + self.eps)).mean()
+
+    def spatial_relation(self, f_s, f_t):
+        aggregated_f_s = torch.sum(f_s, dim=1).flatten(1)
+        aggregated_f_t = torch.sum(f_t, dim=1).flatten(1)
+        return self.inter_class_relation(aggregated_f_s.transpose(0, 1), aggregated_f_t.transpose(0, 1))
+
+    def forward(self, student_io_dict, teacher_io_dict, *args, **kwargs):
+        dist_loss = super().forward(student_io_dict, teacher_io_dict, *args, **kwargs)
+        student_features = student_io_dict[self.student_feature_module_path][self.student_feature_module_io]
+        teacher_features = teacher_io_dict[self.teacher_feature_module_path][self.teacher_feature_module_io]
+        channel_relation_loss = self.channel_relation(student_features, teacher_features)
+        spatial_relation_loss = self.spatial_relation(student_features, teacher_features)
+        loss = dist_loss + self.iota * channel_relation_loss + self.kappa * spatial_relation_loss
+        return loss
