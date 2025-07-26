@@ -13,3 +13,4 @@ ICKD  	72.19	68.34	`torchdistill/configs/sample/ <https://github.com/yoshitomo-m
 DIST  	72.07	71.95	`torchdistill/configs/sample/ <https://github.com/yoshitomo-matsubara/torchdistill/tree/main/configs/sample/ilsvrc2012/dist/>`_
 SRD  	71.63	71.92	`torchdistill/configs/official/ <https://github.com/yoshitomo-matsubara/torchdistill/tree/main/configs/official/ilsvrc2012/roymiles/aaai2024/>`_
 KD w/ LS  	71.42	71.23	`torchdistill/configs/sample/ <https://github.com/yoshitomo-matsubara/torchdistill/blob/main/configs/sample/ilsvrc2012/kd_w_ls/>`_
+DIST+  	72.39	71.37	`torchdistill/configs/sample/ <https://github.com/yoshitomo-matsubara/torchdistill/tree/main/configs/sample/ilsvrc2012/dist_plus/>`_

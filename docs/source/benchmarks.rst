@@ -44,6 +44,7 @@ Original work
 * DIST: `"Knowledge Distillation from A Stronger Teacher" <https://proceedings.neurips.cc/paper_files/paper/2022/hash/da669dfd3c36c93905a17ddba01eef06-Abstract-Conference.html>`_
 * SRD: `"Understanding the Role of the Projector in Knowledge Distillation" <https://ojs.aaai.org/index.php/AAAI/article/view/28219>`_
 * KD w/ LS: `"Logit Standardization in Knowledge Distillation" <https://openaccess.thecvf.com/content/CVPR2024/html/Sun_Logit_Standardization_in_Knowledge_Distillation_CVPR_2024_paper.html>`_
+* DIST+: `"DIST+: Knowledge Distillation From a Stronger Adaptive Teacher" <https://ieeexplore.ieee.org/document/10938241>`_
 
 References
 ^^^^
