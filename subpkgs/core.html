@@ -1,0 +1,1451 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" data-content_root="../">
+<head>
+  <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>torchdistill.core &mdash; torchdistill v1.1.4-dev documentation</title>
+      <link rel="stylesheet" type="text/css" href="../_static/pygments.css?v=b86133f3" />
+      <link rel="stylesheet" type="text/css" href="../_static/css/theme.css?v=e59714d7" />
+
+  
+      <script src="../_static/jquery.js?v=5d32c60e"></script>
+      <script src="../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+      <script src="../_static/documentation_options.js?v=205dc2f2"></script>
+      <script src="../_static/doctools.js?v=9bcbadda"></script>
+      <script src="../_static/sphinx_highlight.js?v=dc90522c"></script>
+    <script src="../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" />
+    <link rel="next" title="torchdistill.datasets" href="datasets.html" />
+    <link rel="prev" title="torchdistill API" href="../package.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="../index.html">
+            
+              <img src="../_static/logo-white.png" class="logo" alt="Logo"/>
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">📚 Overview</span></p>
+<ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="../usage.html">Usage</a></li>
+<li class="toctree-l1 current"><a class="reference internal" href="../package.html">torchdistill API</a><ul class="current">
+<li class="toctree-l2 current"><a class="current reference internal" href="#">torchdistill.core</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#torchdistill-core-forward-hook">torchdistill.core.forward_hook</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#torchdistill.core.forward_hook.get_device_index"><code class="docutils literal notranslate"><span class="pre">get_device_index()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#torchdistill.core.forward_hook.register_forward_hook_with_dict"><code class="docutils literal notranslate"><span class="pre">register_forward_hook_with_dict()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#torchdistill.core.forward_hook.ForwardHookManager"><code class="docutils literal notranslate"><span class="pre">ForwardHookManager</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="#torchdistill-core-interfaces">torchdistill.core.interfaces</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#torchdistill-core-interfaces-forward-proc">torchdistill.core.interfaces.forward_proc</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#torchdistill-core-interfaces-pre-epoch-proc">torchdistill.core.interfaces.pre_epoch_proc</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#torchdistill-core-interfaces-pre-forward-proc">torchdistill.core.interfaces.pre_forward_proc</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#torchdistill-core-interfaces-post-forward-proc">torchdistill.core.interfaces.post_forward_proc</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#torchdistill-core-interfaces-post-epoch-proc">torchdistill.core.interfaces.post_epoch_proc</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#torchdistill-core-interfaces-registry">torchdistill.core.interfaces.registry</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="#torchdistill-core-training">torchdistill.core.training</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#torchdistill.core.training.TrainingBox"><code class="docutils literal notranslate"><span class="pre">TrainingBox</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#torchdistill.core.training.MultiStagesTrainingBox"><code class="docutils literal notranslate"><span class="pre">MultiStagesTrainingBox</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#torchdistill.core.training.get_training_box"><code class="docutils literal notranslate"><span class="pre">get_training_box()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="#torchdistill-core-distillation">torchdistill.core.distillation</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#torchdistill.core.distillation.DistillationBox"><code class="docutils literal notranslate"><span class="pre">DistillationBox</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#torchdistill.core.distillation.MultiStagesDistillationBox"><code class="docutils literal notranslate"><span class="pre">MultiStagesDistillationBox</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#torchdistill.core.distillation.get_distillation_box"><code class="docutils literal notranslate"><span class="pre">get_distillation_box()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="#torchdistill-core-util">torchdistill.core.util</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#torchdistill.core.util.add_kwargs_to_io_dict"><code class="docutils literal notranslate"><span class="pre">add_kwargs_to_io_dict()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#torchdistill.core.util.set_hooks"><code class="docutils literal notranslate"><span class="pre">set_hooks()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#torchdistill.core.util.wrap_model"><code class="docutils literal notranslate"><span class="pre">wrap_model()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#torchdistill.core.util.change_device"><code class="docutils literal notranslate"><span class="pre">change_device()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#torchdistill.core.util.tensor2numpy2tensor"><code class="docutils literal notranslate"><span class="pre">tensor2numpy2tensor()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#torchdistill.core.util.clear_io_dict"><code class="docutils literal notranslate"><span class="pre">clear_io_dict()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#torchdistill.core.util.extract_io_dict"><code class="docutils literal notranslate"><span class="pre">extract_io_dict()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#torchdistill.core.util.update_io_dict"><code class="docutils literal notranslate"><span class="pre">update_io_dict()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#torchdistill.core.util.extract_sub_model_io_dict"><code class="docutils literal notranslate"><span class="pre">extract_sub_model_io_dict()</span></code></a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="datasets.html">torchdistill.datasets</a></li>
+<li class="toctree-l2"><a class="reference internal" href="models.html">torchdistill.models</a></li>
+<li class="toctree-l2"><a class="reference internal" href="losses.html">torchdistill.losses</a></li>
+<li class="toctree-l2"><a class="reference internal" href="optim.html">torchdistill.optim</a></li>
+<li class="toctree-l2"><a class="reference internal" href="common.html">torchdistill.common</a></li>
+<li class="toctree-l2"><a class="reference internal" href="misc.html">torchdistill.misc</a></li>
+</ul>
+</li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">🧑🏻‍💻 Research</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../benchmarks.html">Benchmarks</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../projects.html">Projects</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../index.html">torchdistill</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content style-external-links">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../index.html" class="icon icon-home" aria-label="Home"></a></li>
+          <li class="breadcrumb-item"><a href="../package.html">torchdistill API</a></li>
+      <li class="breadcrumb-item active">torchdistill.core</li>
+      <li class="wy-breadcrumbs-aside">
+              <a href="https://github.com/yoshitomo-matsubara/torchdistill/blob/main/docs/source/subpkgs/core.rst" class="fa fa-github"> Edit on GitHub</a>
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <section id="torchdistill-core">
+<h1>torchdistill.core<a class="headerlink" href="#torchdistill-core" title="Link to this heading"></a></h1>
+<div class="toctree-wrapper compound">
+</div>
+<hr class="docutils" />
+<section id="torchdistill-core-forward-hook">
+<h2>torchdistill.core.forward_hook<a class="headerlink" href="#torchdistill-core-forward-hook" title="Link to this heading"></a></h2>
+<hr class="docutils" />
+<dl class="py function" id="module-torchdistill.core.forward_hook">
+<dt class="sig sig-object py" id="torchdistill.core.forward_hook.get_device_index">
+<span class="sig-prename descclassname"><span class="pre">torchdistill.core.forward_hook.</span></span><span class="sig-name descname"><span class="pre">get_device_index</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">data</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/torchdistill/core/forward_hook.html#get_device_index"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#torchdistill.core.forward_hook.get_device_index" title="Link to this definition"></a></dt>
+<dd><p>Gets device index of tensor in given data.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>data</strong> (<em>torch.Tensor</em><em> or </em><em>abc.Mapping</em><em> or </em><em>tuple</em><em> or </em><em>list</em>) – tensor or data structure containing tensor.</p>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>device index.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>int or str or None</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="torchdistill.core.forward_hook.register_forward_hook_with_dict">
+<span class="sig-prename descclassname"><span class="pre">torchdistill.core.forward_hook.</span></span><span class="sig-name descname"><span class="pre">register_forward_hook_with_dict</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">root_module</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">module_path</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">requires_input</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">requires_output</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">io_dict</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/torchdistill/core/forward_hook.html#register_forward_hook_with_dict"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#torchdistill.core.forward_hook.register_forward_hook_with_dict" title="Link to this definition"></a></dt>
+<dd><p>Registers a forward hook for a child module to store its input and/or output in <cite>io_dict</cite>.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>root_module</strong> (<em>nn.Module</em>) – root module (e.g., model).</p></li>
+<li><p><strong>module_path</strong> (<em>str</em>) – path to target child module.</p></li>
+<li><p><strong>requires_input</strong> (<em>bool</em>) – if True, stores input to the target child module.</p></li>
+<li><p><strong>requires_output</strong> (<em>bool</em>) – if True, stores output from the target child module.</p></li>
+<li><p><strong>io_dict</strong> (<em>dict</em>) – dict to store the target child module’s input and/or output.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>removable forward hook handle.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>torch.utils.hook.RemovableHandle</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="torchdistill.core.forward_hook.ForwardHookManager">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">torchdistill.core.forward_hook.</span></span><span class="sig-name descname"><span class="pre">ForwardHookManager</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">target_device</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/torchdistill/core/forward_hook.html#ForwardHookManager"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#torchdistill.core.forward_hook.ForwardHookManager" title="Link to this definition"></a></dt>
+<dd><p>A forward hook manager for PyTorch modules.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>target_device</strong> (<em>torch.device</em><em> or </em><em>str</em>) – target device.</p>
+</dd>
+</dl>
+<dl>
+<dt>Example:</dt><dd><div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">import</span><span class="w"> </span><span class="nn">torch</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span><span class="w"> </span><span class="nn">torchvision</span><span class="w"> </span><span class="kn">import</span> <span class="n">models</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span><span class="w"> </span><span class="nn">torchdistill.core.forward_hook</span><span class="w"> </span><span class="kn">import</span> <span class="n">ForwardHookManager</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">device</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">device</span><span class="p">(</span><span class="s1">&#39;cpu&#39;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">forward_hook_manager</span> <span class="o">=</span> <span class="n">ForwardHookManager</span><span class="p">(</span><span class="n">device</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">model</span> <span class="o">=</span> <span class="n">models</span><span class="o">.</span><span class="n">resnet18</span><span class="p">()</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">forward_hook_manager</span><span class="o">.</span><span class="n">add_hook</span><span class="p">(</span><span class="n">model</span><span class="p">,</span> <span class="s1">&#39;layer2&#39;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">x</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">rand</span><span class="p">(</span><span class="mi">16</span><span class="p">,</span> <span class="mi">3</span><span class="p">,</span> <span class="mi">224</span><span class="p">,</span> <span class="mi">224</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">y</span> <span class="o">=</span> <span class="n">model</span><span class="p">(</span><span class="n">x</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">io_dict</span> <span class="o">=</span> <span class="n">forward_hook_manager</span><span class="o">.</span><span class="n">pop_io_dict</span><span class="p">()</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">layer2_input_tensor</span> <span class="o">=</span> <span class="n">io_dict</span><span class="p">[</span><span class="s1">&#39;layer2&#39;</span><span class="p">][</span><span class="s1">&#39;input&#39;</span><span class="p">]</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">layer2_output_tensor</span> <span class="o">=</span> <span class="n">io_dict</span><span class="p">[</span><span class="s1">&#39;layer2&#39;</span><span class="p">][</span><span class="s1">&#39;output&#39;</span><span class="p">]</span>
+</pre></div>
+</div>
+</dd>
+</dl>
+<dl class="py method">
+<dt class="sig sig-object py" id="torchdistill.core.forward_hook.ForwardHookManager.add_hook">
+<span class="sig-name descname"><span class="pre">add_hook</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">root_module</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">module_path</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">requires_input</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">requires_output</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/torchdistill/core/forward_hook.html#ForwardHookManager.add_hook"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#torchdistill.core.forward_hook.ForwardHookManager.add_hook" title="Link to this definition"></a></dt>
+<dd><p>Registers a forward hook for a child module to store its input and/or output.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>root_module</strong> (<em>nn.Module</em>) – root module (e.g., model).</p></li>
+<li><p><strong>module_path</strong> (<em>str</em>) – path to target child module.</p></li>
+<li><p><strong>requires_input</strong> (<em>bool</em>) – if True, stores input to the target child module.</p></li>
+<li><p><strong>requires_output</strong> (<em>bool</em>) – if True, stores output from the target child module.</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="torchdistill.core.forward_hook.ForwardHookManager.pop_io_dict">
+<span class="sig-name descname"><span class="pre">pop_io_dict</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/torchdistill/core/forward_hook.html#ForwardHookManager.pop_io_dict"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#torchdistill.core.forward_hook.ForwardHookManager.pop_io_dict" title="Link to this definition"></a></dt>
+<dd><p>Pops I/O dict after gathering tensors on <code class="docutils literal notranslate"><span class="pre">self.target_device</span></code>.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><p>I/O dict that contains input and/or output tensors with a module path as a key.</p>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p>dict</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="torchdistill.core.forward_hook.ForwardHookManager.pop_io_dict_from_device">
+<span class="sig-name descname"><span class="pre">pop_io_dict_from_device</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">device</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/torchdistill/core/forward_hook.html#ForwardHookManager.pop_io_dict_from_device"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#torchdistill.core.forward_hook.ForwardHookManager.pop_io_dict_from_device" title="Link to this definition"></a></dt>
+<dd><p>Pops I/O dict for a specified <code class="docutils literal notranslate"><span class="pre">device</span></code>.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>device</strong> (<em>torch.device</em>) – device to pop I/O dict.</p>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>I/O dict that contains input and/or output tensors with a module path as a key.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>dict</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="torchdistill.core.forward_hook.ForwardHookManager.change_target_device">
+<span class="sig-name descname"><span class="pre">change_target_device</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">target_device</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/torchdistill/core/forward_hook.html#ForwardHookManager.change_target_device"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#torchdistill.core.forward_hook.ForwardHookManager.change_target_device" title="Link to this definition"></a></dt>
+<dd><p>Updates the target device with a new <code class="docutils literal notranslate"><span class="pre">target_device</span></code>.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>target_device</strong> (<em>torch.device</em><em> or </em><em>str</em>) – new target device.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="torchdistill.core.forward_hook.ForwardHookManager.clear">
+<span class="sig-name descname"><span class="pre">clear</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/torchdistill/core/forward_hook.html#ForwardHookManager.clear"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#torchdistill.core.forward_hook.ForwardHookManager.clear" title="Link to this definition"></a></dt>
+<dd><p>Clears I/O dict and forward hooks registered in the instance.</p>
+</dd></dl>
+
+</dd></dl>
+
+</section>
+<section id="torchdistill-core-interfaces">
+<h2>torchdistill.core.interfaces<a class="headerlink" href="#torchdistill-core-interfaces" title="Link to this heading"></a></h2>
+<hr class="docutils" />
+<section id="torchdistill-core-interfaces-forward-proc">
+<h3>torchdistill.core.interfaces.forward_proc<a class="headerlink" href="#torchdistill-core-interfaces-forward-proc" title="Link to this heading"></a></h3>
+<dl class="py function" id="module-torchdistill.core.interfaces.forward_proc">
+<dt class="sig sig-object py" id="torchdistill.core.interfaces.forward_proc.forward_all">
+<span class="sig-prename descclassname"><span class="pre">torchdistill.core.interfaces.forward_proc.</span></span><span class="sig-name descname"><span class="pre">forward_all</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">model</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">*</span></span><span class="n"><span class="pre">args</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/torchdistill/core/interfaces/forward_proc.html#forward_all"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#torchdistill.core.interfaces.forward_proc.forward_all" title="Link to this definition"></a></dt>
+<dd><p>Performs forward computation using <cite>*args</cite> and <cite>**kwargs</cite>.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>model</strong> (<em>nn.Module</em>) – model.</p></li>
+<li><p><strong>args</strong> (<em>tuple</em>) – variable-length arguments for forward.</p></li>
+<li><p><strong>kwargs</strong> (<em>dict</em>) – kwargs for forward.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>model’s forward output.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>Any</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="torchdistill.core.interfaces.forward_proc.forward_batch_only">
+<span class="sig-prename descclassname"><span class="pre">torchdistill.core.interfaces.forward_proc.</span></span><span class="sig-name descname"><span class="pre">forward_batch_only</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">model</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">sample_batch</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">targets</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">supp_dict</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/torchdistill/core/interfaces/forward_proc.html#forward_batch_only"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#torchdistill.core.interfaces.forward_proc.forward_batch_only" title="Link to this definition"></a></dt>
+<dd><p>Performs forward computation using <cite>sample_batch</cite> only.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>model</strong> (<em>nn.Module</em>) – model.</p></li>
+<li><p><strong>sample_batch</strong> (<em>Any</em>) – sample batch.</p></li>
+<li><p><strong>targets</strong> (<em>Any</em>) – training targets (won’t be passed to forward).</p></li>
+<li><p><strong>supp_dict</strong> (<em>dict</em>) – supplementary dict (won’t be passed to forward).</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>model’s forward output.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>Any</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="torchdistill.core.interfaces.forward_proc.forward_batch_only_as_kwargs">
+<span class="sig-prename descclassname"><span class="pre">torchdistill.core.interfaces.forward_proc.</span></span><span class="sig-name descname"><span class="pre">forward_batch_only_as_kwargs</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">model</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">sample_batch</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">targets</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">supp_dict</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/torchdistill/core/interfaces/forward_proc.html#forward_batch_only_as_kwargs"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#torchdistill.core.interfaces.forward_proc.forward_batch_only_as_kwargs" title="Link to this definition"></a></dt>
+<dd><p>Performs forward computation using <cite>sample_batch</cite> only.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>model</strong> (<em>nn.Module</em>) – model.</p></li>
+<li><p><strong>sample_batch</strong> (<em>dict</em>) – sample batch.</p></li>
+<li><p><strong>targets</strong> (<em>Any</em>) – training targets (won’t be passed to forward).</p></li>
+<li><p><strong>supp_dict</strong> (<em>dict</em>) – supplementary dict (won’t be passed to forward).</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>model’s forward output.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>Any</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="torchdistill.core.interfaces.forward_proc.forward_batch_target">
+<span class="sig-prename descclassname"><span class="pre">torchdistill.core.interfaces.forward_proc.</span></span><span class="sig-name descname"><span class="pre">forward_batch_target</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">model</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">sample_batch</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">targets</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">supp_dict</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/torchdistill/core/interfaces/forward_proc.html#forward_batch_target"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#torchdistill.core.interfaces.forward_proc.forward_batch_target" title="Link to this definition"></a></dt>
+<dd><p>Performs forward computation using <cite>sample_batch</cite> and <cite>targets</cite> only.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>model</strong> (<em>nn.Module</em>) – model.</p></li>
+<li><p><strong>sample_batch</strong> (<em>Any</em>) – sample batch.</p></li>
+<li><p><strong>targets</strong> (<em>Any</em>) – training targets.</p></li>
+<li><p><strong>supp_dict</strong> (<em>dict</em>) – supplementary dict (won’t be passed to forward).</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>model’s forward output.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>Any</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="torchdistill.core.interfaces.forward_proc.forward_batch_supp_dict">
+<span class="sig-prename descclassname"><span class="pre">torchdistill.core.interfaces.forward_proc.</span></span><span class="sig-name descname"><span class="pre">forward_batch_supp_dict</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">model</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">sample_batch</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">targets</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">supp_dict</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/torchdistill/core/interfaces/forward_proc.html#forward_batch_supp_dict"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#torchdistill.core.interfaces.forward_proc.forward_batch_supp_dict" title="Link to this definition"></a></dt>
+<dd><p>Performs forward computation using <cite>sample_batch</cite> and <cite>supp_dict</cite> only.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>model</strong> (<em>nn.Module</em>) – model.</p></li>
+<li><p><strong>sample_batch</strong> (<em>Any</em>) – sample batch.</p></li>
+<li><p><strong>targets</strong> (<em>Any</em>) – training targets (won’t be passed to forward).</p></li>
+<li><p><strong>supp_dict</strong> (<em>dict</em>) – supplementary dict.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>model’s forward output.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>Any</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="torchdistill.core.interfaces.forward_proc.forward_batch4sskd">
+<span class="sig-prename descclassname"><span class="pre">torchdistill.core.interfaces.forward_proc.</span></span><span class="sig-name descname"><span class="pre">forward_batch4sskd</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">model</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">sample_batch</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">targets</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">supp_dict</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/torchdistill/core/interfaces/forward_proc.html#forward_batch4sskd"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#torchdistill.core.interfaces.forward_proc.forward_batch4sskd" title="Link to this definition"></a></dt>
+<dd><p>Performs forward computation using <cite>sample_batch</cite> only for the SSKD method.</p>
+<p>Guodong Xu, Ziwei Liu, Xiaoxiao Li, Chen Change Loy: <a class="reference external" href="https://www.ecva.net/papers/eccv_2020/papers_ECCV/html/898_ECCV_2020_paper.php">“Knowledge Distillation Meets Self-Supervision”</a> &#64; ECCV 2020 (2020)</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>model</strong> (<em>nn.Module</em>) – model.</p></li>
+<li><p><strong>sample_batch</strong> (<em>Any</em>) – sample batch.</p></li>
+<li><p><strong>targets</strong> (<em>Any</em>) – training targets (won’t be passed to forward).</p></li>
+<li><p><strong>supp_dict</strong> (<em>dict</em>) – supplementary dict (won’t be passed to forward).</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>model’s forward output.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>Any</p>
+</dd>
+</dl>
+</dd></dl>
+
+</section>
+<hr class="docutils" />
+<section id="torchdistill-core-interfaces-pre-epoch-proc">
+<h3>torchdistill.core.interfaces.pre_epoch_proc<a class="headerlink" href="#torchdistill-core-interfaces-pre-epoch-proc" title="Link to this heading"></a></h3>
+<dl class="py function" id="module-torchdistill.core.interfaces.pre_epoch_proc">
+<dt class="sig sig-object py" id="torchdistill.core.interfaces.pre_epoch_proc.default_pre_epoch_process_with_teacher">
+<span class="sig-prename descclassname"><span class="pre">torchdistill.core.interfaces.pre_epoch_proc.</span></span><span class="sig-name descname"><span class="pre">default_pre_epoch_process_with_teacher</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">self</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">epoch</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/torchdistill/core/interfaces/pre_epoch_proc.html#default_pre_epoch_process_with_teacher"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#torchdistill.core.interfaces.pre_epoch_proc.default_pre_epoch_process_with_teacher" title="Link to this definition"></a></dt>
+<dd><p>Performs pre-epoch process for distillation box.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>self</strong> (<a class="reference internal" href="#torchdistill.core.distillation.DistillationBox" title="torchdistill.core.distillation.DistillationBox"><em>torchdistill.core.distillation.DistillationBox</em></a><em> or </em><a class="reference internal" href="#torchdistill.core.training.TrainingBox" title="torchdistill.core.training.TrainingBox"><em>torchdistill.core.training.TrainingBox</em></a>) – distillation box.</p></li>
+<li><p><strong>epoch</strong> (<em>int</em>) – <code class="docutils literal notranslate"><span class="pre">epoch</span></code> for DistributedSampler.</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="torchdistill.core.interfaces.pre_epoch_proc.default_pre_epoch_process_without_teacher">
+<span class="sig-prename descclassname"><span class="pre">torchdistill.core.interfaces.pre_epoch_proc.</span></span><span class="sig-name descname"><span class="pre">default_pre_epoch_process_without_teacher</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">self</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">epoch</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/torchdistill/core/interfaces/pre_epoch_proc.html#default_pre_epoch_process_without_teacher"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#torchdistill.core.interfaces.pre_epoch_proc.default_pre_epoch_process_without_teacher" title="Link to this definition"></a></dt>
+<dd><p>Performs pre-epoch process for training box.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>self</strong> (<a class="reference internal" href="#torchdistill.core.distillation.DistillationBox" title="torchdistill.core.distillation.DistillationBox"><em>torchdistill.core.distillation.DistillationBox</em></a><em> or </em><a class="reference internal" href="#torchdistill.core.training.TrainingBox" title="torchdistill.core.training.TrainingBox"><em>torchdistill.core.training.TrainingBox</em></a>) – distillation box.</p></li>
+<li><p><strong>epoch</strong> (<em>int</em>) – <code class="docutils literal notranslate"><span class="pre">epoch</span></code> for DistributedSampler.</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+</section>
+<hr class="docutils" />
+<section id="torchdistill-core-interfaces-pre-forward-proc">
+<h3>torchdistill.core.interfaces.pre_forward_proc<a class="headerlink" href="#torchdistill-core-interfaces-pre-forward-proc" title="Link to this heading"></a></h3>
+</section>
+<hr class="docutils" id="module-torchdistill.core.interfaces.pre_forward_proc" />
+<section id="torchdistill-core-interfaces-post-forward-proc">
+<h3>torchdistill.core.interfaces.post_forward_proc<a class="headerlink" href="#torchdistill-core-interfaces-post-forward-proc" title="Link to this heading"></a></h3>
+<dl class="py function" id="module-torchdistill.core.interfaces.post_forward_proc">
+<dt class="sig sig-object py" id="torchdistill.core.interfaces.post_forward_proc.default_post_forward_process">
+<span class="sig-prename descclassname"><span class="pre">torchdistill.core.interfaces.post_forward_proc.</span></span><span class="sig-name descname"><span class="pre">default_post_forward_process</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">self</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">loss</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">metrics</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/torchdistill/core/interfaces/post_forward_proc.html#default_post_forward_process"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#torchdistill.core.interfaces.post_forward_proc.default_post_forward_process" title="Link to this definition"></a></dt>
+<dd><p>Performs post-forward process for distillation box.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>self</strong> (<a class="reference internal" href="#torchdistill.core.distillation.DistillationBox" title="torchdistill.core.distillation.DistillationBox"><em>torchdistill.core.distillation.DistillationBox</em></a><em> or </em><a class="reference internal" href="#torchdistill.core.training.TrainingBox" title="torchdistill.core.training.TrainingBox"><em>torchdistill.core.training.TrainingBox</em></a>) – distillation box.</p></li>
+<li><p><strong>loss</strong> (<em>torch.Tensor</em>) – loss tensor.</p></li>
+<li><p><strong>metrics</strong> (<em>Any</em>) – <code class="docutils literal notranslate"><span class="pre">metric</span></code> for ReduceLROnPlateau.step.</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+</section>
+<hr class="docutils" />
+<section id="torchdistill-core-interfaces-post-epoch-proc">
+<h3>torchdistill.core.interfaces.post_epoch_proc<a class="headerlink" href="#torchdistill-core-interfaces-post-epoch-proc" title="Link to this heading"></a></h3>
+<dl class="py function" id="module-torchdistill.core.interfaces.post_epoch_proc">
+<dt class="sig sig-object py" id="torchdistill.core.interfaces.post_epoch_proc.default_post_epoch_process_with_teacher">
+<span class="sig-prename descclassname"><span class="pre">torchdistill.core.interfaces.post_epoch_proc.</span></span><span class="sig-name descname"><span class="pre">default_post_epoch_process_with_teacher</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">self</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">metrics</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/torchdistill/core/interfaces/post_epoch_proc.html#default_post_epoch_process_with_teacher"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#torchdistill.core.interfaces.post_epoch_proc.default_post_epoch_process_with_teacher" title="Link to this definition"></a></dt>
+<dd><p>Performs post-epoch process for distillation box.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>self</strong> (<a class="reference internal" href="#torchdistill.core.distillation.DistillationBox" title="torchdistill.core.distillation.DistillationBox"><em>torchdistill.core.distillation.DistillationBox</em></a>) – distillation box.</p></li>
+<li><p><strong>metrics</strong> (<em>Any</em>) – <code class="docutils literal notranslate"><span class="pre">metric</span></code> for ReduceLROnPlateau.step.</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="torchdistill.core.interfaces.post_epoch_proc.default_post_epoch_process_without_teacher">
+<span class="sig-prename descclassname"><span class="pre">torchdistill.core.interfaces.post_epoch_proc.</span></span><span class="sig-name descname"><span class="pre">default_post_epoch_process_without_teacher</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">self</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">metrics</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/torchdistill/core/interfaces/post_epoch_proc.html#default_post_epoch_process_without_teacher"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#torchdistill.core.interfaces.post_epoch_proc.default_post_epoch_process_without_teacher" title="Link to this definition"></a></dt>
+<dd><p>Performs post-epoch process for training box.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>self</strong> (<a class="reference internal" href="#torchdistill.core.training.TrainingBox" title="torchdistill.core.training.TrainingBox"><em>torchdistill.core.training.TrainingBox</em></a>) – training box.</p></li>
+<li><p><strong>metrics</strong> (<em>Any</em>) – <code class="docutils literal notranslate"><span class="pre">metric</span></code> for ReduceLROnPlateau.step.</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+</section>
+<hr class="docutils" />
+<section id="torchdistill-core-interfaces-registry">
+<h3>torchdistill.core.interfaces.registry<a class="headerlink" href="#torchdistill-core-interfaces-registry" title="Link to this heading"></a></h3>
+<dl class="py function" id="module-torchdistill.core.interfaces.registry">
+<dt class="sig sig-object py" id="torchdistill.core.interfaces.registry.register_pre_epoch_proc_func">
+<span class="sig-prename descclassname"><span class="pre">torchdistill.core.interfaces.registry.</span></span><span class="sig-name descname"><span class="pre">register_pre_epoch_proc_func</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">arg</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/torchdistill/core/interfaces/registry.html#register_pre_epoch_proc_func"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#torchdistill.core.interfaces.registry.register_pre_epoch_proc_func" title="Link to this definition"></a></dt>
+<dd><p>Registers a pre-epoch process function for <a class="reference internal" href="#torchdistill.core.distillation.DistillationBox" title="torchdistill.core.distillation.DistillationBox"><code class="xref py py-class docutils literal notranslate"><span class="pre">torchdistill.core.distillation.DistillationBox</span></code></a> and
+<a class="reference internal" href="#torchdistill.core.training.TrainingBox" title="torchdistill.core.training.TrainingBox"><code class="xref py py-class docutils literal notranslate"><span class="pre">torchdistill.core.training.TrainingBox</span></code></a>.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>arg</strong> (<em>Callable</em><em> or </em><em>None</em>) – function to be registered as a pre-epoch process function.</p>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>registered pre-epoch process function.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><em>Callable</em></p>
+</dd>
+</dl>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>The function will be registered as an option of the pre-epoch process function.
+You can choose the registered function by specifying the name of the function or <code class="docutils literal notranslate"><span class="pre">key</span></code>
+you used for the registration, in a training configuration used for
+<a class="reference internal" href="#torchdistill.core.distillation.DistillationBox" title="torchdistill.core.distillation.DistillationBox"><code class="xref py py-class docutils literal notranslate"><span class="pre">torchdistill.core.distillation.DistillationBox</span></code></a> or <a class="reference internal" href="#torchdistill.core.training.TrainingBox" title="torchdistill.core.training.TrainingBox"><code class="xref py py-class docutils literal notranslate"><span class="pre">torchdistill.core.training.TrainingBox</span></code></a>.</p>
+<p>If you want to register the function with a key of your choice, add <code class="docutils literal notranslate"><span class="pre">key</span></code> to the decorator as below:</p>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span><span class="w"> </span><span class="nn">torchdistill.core.interfaces.registry</span><span class="w"> </span><span class="kn">import</span> <span class="n">register_pre_epoch_proc_func</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="nd">@register_pre_epoch_proc_func</span><span class="p">(</span><span class="n">key</span><span class="o">=</span><span class="s1">&#39;my_custom_pre_epoch_proc_func&#39;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="k">def</span><span class="w"> </span><span class="nf">new_pre_epoch_proc</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">epoch</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+<span class="gp">&gt;&gt;&gt; </span>    <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;This is my custom pre-epoch process function&#39;</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>In the example, <code class="docutils literal notranslate"><span class="pre">new_pre_epoch_proc</span></code> function is registered with a key “my_custom_pre_epoch_proc_func”.
+When you configure <a class="reference internal" href="#torchdistill.core.distillation.DistillationBox" title="torchdistill.core.distillation.DistillationBox"><code class="xref py py-class docutils literal notranslate"><span class="pre">torchdistill.core.distillation.DistillationBox</span></code></a> or
+<a class="reference internal" href="#torchdistill.core.training.TrainingBox" title="torchdistill.core.training.TrainingBox"><code class="xref py py-class docutils literal notranslate"><span class="pre">torchdistill.core.training.TrainingBox</span></code></a>, you can choose the <code class="docutils literal notranslate"><span class="pre">new_pre_epoch_proc</span></code> function by
+“my_custom_pre_epoch_proc_func”.</p>
+</div>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="torchdistill.core.interfaces.registry.register_pre_forward_proc_func">
+<span class="sig-prename descclassname"><span class="pre">torchdistill.core.interfaces.registry.</span></span><span class="sig-name descname"><span class="pre">register_pre_forward_proc_func</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">arg</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/torchdistill/core/interfaces/registry.html#register_pre_forward_proc_func"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#torchdistill.core.interfaces.registry.register_pre_forward_proc_func" title="Link to this definition"></a></dt>
+<dd><p>Registers a pre-forward process function for <a class="reference internal" href="#torchdistill.core.distillation.DistillationBox" title="torchdistill.core.distillation.DistillationBox"><code class="xref py py-class docutils literal notranslate"><span class="pre">torchdistill.core.distillation.DistillationBox</span></code></a> and
+<a class="reference internal" href="#torchdistill.core.training.TrainingBox" title="torchdistill.core.training.TrainingBox"><code class="xref py py-class docutils literal notranslate"><span class="pre">torchdistill.core.training.TrainingBox</span></code></a>.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>arg</strong> (<em>Callable</em><em> or </em><em>None</em>) – function to be registered as a pre-forward process function.</p>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>registered pre-forward process function.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><em>Callable</em></p>
+</dd>
+</dl>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>The function will be registered as an option of the pre-forward process function.
+You can choose the registered function by specifying the name of the function or <code class="docutils literal notranslate"><span class="pre">key</span></code>
+you used for the registration, in a training configuration used for
+<a class="reference internal" href="#torchdistill.core.distillation.DistillationBox" title="torchdistill.core.distillation.DistillationBox"><code class="xref py py-class docutils literal notranslate"><span class="pre">torchdistill.core.distillation.DistillationBox</span></code></a> or <a class="reference internal" href="#torchdistill.core.training.TrainingBox" title="torchdistill.core.training.TrainingBox"><code class="xref py py-class docutils literal notranslate"><span class="pre">torchdistill.core.training.TrainingBox</span></code></a>.</p>
+<p>If you want to register the function with a key of your choice, add <code class="docutils literal notranslate"><span class="pre">key</span></code> to the decorator as below:</p>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span><span class="w"> </span><span class="nn">torchdistill.core.interfaces.registry</span><span class="w"> </span><span class="kn">import</span> <span class="n">register_pre_forward_proc_func</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="nd">@register_pre_forward_proc_func</span><span class="p">(</span><span class="n">key</span><span class="o">=</span><span class="s1">&#39;my_custom_pre_forward_proc_func&#39;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="k">def</span><span class="w"> </span><span class="nf">new_pre_forward_proc</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+<span class="gp">&gt;&gt;&gt; </span>    <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;This is my custom pre-forward process function&#39;</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>In the example, <code class="docutils literal notranslate"><span class="pre">new_pre_forward_proc</span></code> function is registered with a key “my_custom_pre_forward_proc_func”.
+When you configure <a class="reference internal" href="#torchdistill.core.distillation.DistillationBox" title="torchdistill.core.distillation.DistillationBox"><code class="xref py py-class docutils literal notranslate"><span class="pre">torchdistill.core.distillation.DistillationBox</span></code></a> or
+<a class="reference internal" href="#torchdistill.core.training.TrainingBox" title="torchdistill.core.training.TrainingBox"><code class="xref py py-class docutils literal notranslate"><span class="pre">torchdistill.core.training.TrainingBox</span></code></a>, you can choose the <code class="docutils literal notranslate"><span class="pre">new_pre_forward_proc</span></code> function by
+“my_custom_pre_forward_proc_func”.</p>
+</div>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="torchdistill.core.interfaces.registry.register_forward_proc_func">
+<span class="sig-prename descclassname"><span class="pre">torchdistill.core.interfaces.registry.</span></span><span class="sig-name descname"><span class="pre">register_forward_proc_func</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">arg</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/torchdistill/core/interfaces/registry.html#register_forward_proc_func"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#torchdistill.core.interfaces.registry.register_forward_proc_func" title="Link to this definition"></a></dt>
+<dd><p>Registers a forward process function for <a class="reference internal" href="#torchdistill.core.distillation.DistillationBox" title="torchdistill.core.distillation.DistillationBox"><code class="xref py py-class docutils literal notranslate"><span class="pre">torchdistill.core.distillation.DistillationBox</span></code></a> and
+<a class="reference internal" href="#torchdistill.core.training.TrainingBox" title="torchdistill.core.training.TrainingBox"><code class="xref py py-class docutils literal notranslate"><span class="pre">torchdistill.core.training.TrainingBox</span></code></a>.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>arg</strong> (<em>Callable</em><em> or </em><em>None</em>) – function to be registered as a forward process function.</p>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>registered forward process function.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><em>Callable</em></p>
+</dd>
+</dl>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>The function will be registered as an option of the forward process function.
+You can choose the registered function by specifying the name of the function or <code class="docutils literal notranslate"><span class="pre">key</span></code>
+you used for the registration, in a training configuration used for
+<a class="reference internal" href="#torchdistill.core.distillation.DistillationBox" title="torchdistill.core.distillation.DistillationBox"><code class="xref py py-class docutils literal notranslate"><span class="pre">torchdistill.core.distillation.DistillationBox</span></code></a> or <a class="reference internal" href="#torchdistill.core.training.TrainingBox" title="torchdistill.core.training.TrainingBox"><code class="xref py py-class docutils literal notranslate"><span class="pre">torchdistill.core.training.TrainingBox</span></code></a>.</p>
+<p>If you want to register the function with a key of your choice, add <code class="docutils literal notranslate"><span class="pre">key</span></code> to the decorator as below:</p>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span><span class="w"> </span><span class="nn">torchdistill.core.interfaces.registry</span><span class="w"> </span><span class="kn">import</span> <span class="n">register_forward_proc_func</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="nd">@register_forward_proc_func</span><span class="p">(</span><span class="n">key</span><span class="o">=</span><span class="s1">&#39;my_custom_forward_proc_func&#39;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="k">def</span><span class="w"> </span><span class="nf">new_forward_proc</span><span class="p">(</span><span class="n">model</span><span class="p">,</span> <span class="n">sample_batch</span><span class="p">,</span> <span class="n">targets</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">supp_dict</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+<span class="gp">&gt;&gt;&gt; </span>    <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;This is my custom forward process function&#39;</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>In the example, <code class="docutils literal notranslate"><span class="pre">new_forward_proc</span></code> function is registered with a key “my_custom_forward_proc_func”.
+When you configure <a class="reference internal" href="#torchdistill.core.distillation.DistillationBox" title="torchdistill.core.distillation.DistillationBox"><code class="xref py py-class docutils literal notranslate"><span class="pre">torchdistill.core.distillation.DistillationBox</span></code></a> or
+<a class="reference internal" href="#torchdistill.core.training.TrainingBox" title="torchdistill.core.training.TrainingBox"><code class="xref py py-class docutils literal notranslate"><span class="pre">torchdistill.core.training.TrainingBox</span></code></a>, you can choose the <code class="docutils literal notranslate"><span class="pre">new_forward_proc</span></code> function by
+“my_custom_forward_proc_func”.</p>
+</div>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="torchdistill.core.interfaces.registry.register_post_forward_proc_func">
+<span class="sig-prename descclassname"><span class="pre">torchdistill.core.interfaces.registry.</span></span><span class="sig-name descname"><span class="pre">register_post_forward_proc_func</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">arg</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/torchdistill/core/interfaces/registry.html#register_post_forward_proc_func"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#torchdistill.core.interfaces.registry.register_post_forward_proc_func" title="Link to this definition"></a></dt>
+<dd><p>Registers a post-forward process function for <a class="reference internal" href="#torchdistill.core.distillation.DistillationBox" title="torchdistill.core.distillation.DistillationBox"><code class="xref py py-class docutils literal notranslate"><span class="pre">torchdistill.core.distillation.DistillationBox</span></code></a> and
+<a class="reference internal" href="#torchdistill.core.training.TrainingBox" title="torchdistill.core.training.TrainingBox"><code class="xref py py-class docutils literal notranslate"><span class="pre">torchdistill.core.training.TrainingBox</span></code></a>.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>arg</strong> (<em>Callable</em><em> or </em><em>None</em>) – function to be registered as a post-forward process function.</p>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>registered post-forward process function.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><em>Callable</em></p>
+</dd>
+</dl>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>The function will be registered as an option of the post-forward process function.
+You can choose the registered function by specifying the name of the function or <code class="docutils literal notranslate"><span class="pre">key</span></code>
+you used for the registration, in a training configuration used for
+<a class="reference internal" href="#torchdistill.core.distillation.DistillationBox" title="torchdistill.core.distillation.DistillationBox"><code class="xref py py-class docutils literal notranslate"><span class="pre">torchdistill.core.distillation.DistillationBox</span></code></a> or <a class="reference internal" href="#torchdistill.core.training.TrainingBox" title="torchdistill.core.training.TrainingBox"><code class="xref py py-class docutils literal notranslate"><span class="pre">torchdistill.core.training.TrainingBox</span></code></a>.</p>
+<p>If you want to register the function with a key of your choice, add <code class="docutils literal notranslate"><span class="pre">key</span></code> to the decorator as below:</p>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span><span class="w"> </span><span class="nn">torchdistill.core.interfaces.registry</span><span class="w"> </span><span class="kn">import</span> <span class="n">register_post_forward_proc_func</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="nd">@register_post_forward_proc_func</span><span class="p">(</span><span class="n">key</span><span class="o">=</span><span class="s1">&#39;my_custom_post_forward_proc_func&#39;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="k">def</span><span class="w"> </span><span class="nf">new_post_forward_proc</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">loss</span><span class="p">,</span> <span class="n">metrics</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+<span class="gp">&gt;&gt;&gt; </span>    <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;This is my custom post-forward process function&#39;</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>In the example, <code class="docutils literal notranslate"><span class="pre">new_post_forward_proc</span></code> function is registered with a key “my_custom_post_forward_proc_func”.
+When you configure <a class="reference internal" href="#torchdistill.core.distillation.DistillationBox" title="torchdistill.core.distillation.DistillationBox"><code class="xref py py-class docutils literal notranslate"><span class="pre">torchdistill.core.distillation.DistillationBox</span></code></a> or
+<a class="reference internal" href="#torchdistill.core.training.TrainingBox" title="torchdistill.core.training.TrainingBox"><code class="xref py py-class docutils literal notranslate"><span class="pre">torchdistill.core.training.TrainingBox</span></code></a>, you can choose the <code class="docutils literal notranslate"><span class="pre">new_post_forward_proc</span></code> function by
+“my_custom_post_forward_proc_func”.</p>
+</div>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="torchdistill.core.interfaces.registry.register_post_epoch_proc_func">
+<span class="sig-prename descclassname"><span class="pre">torchdistill.core.interfaces.registry.</span></span><span class="sig-name descname"><span class="pre">register_post_epoch_proc_func</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">arg</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/torchdistill/core/interfaces/registry.html#register_post_epoch_proc_func"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#torchdistill.core.interfaces.registry.register_post_epoch_proc_func" title="Link to this definition"></a></dt>
+<dd><p>Registers a post-epoch process function for <a class="reference internal" href="#torchdistill.core.distillation.DistillationBox" title="torchdistill.core.distillation.DistillationBox"><code class="xref py py-class docutils literal notranslate"><span class="pre">torchdistill.core.distillation.DistillationBox</span></code></a> and
+<a class="reference internal" href="#torchdistill.core.training.TrainingBox" title="torchdistill.core.training.TrainingBox"><code class="xref py py-class docutils literal notranslate"><span class="pre">torchdistill.core.training.TrainingBox</span></code></a>.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>arg</strong> (<em>Callable</em><em> or </em><em>None</em>) – function to be registered as a post-epoch process function.</p>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>registered post-epoch process function.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><em>Callable</em></p>
+</dd>
+</dl>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>The function will be registered as an option of the post-epoch process function.
+You can choose the registered function by specifying the name of the function or <code class="docutils literal notranslate"><span class="pre">key</span></code>
+you used for the registration, in a training configuration used for
+<a class="reference internal" href="#torchdistill.core.distillation.DistillationBox" title="torchdistill.core.distillation.DistillationBox"><code class="xref py py-class docutils literal notranslate"><span class="pre">torchdistill.core.distillation.DistillationBox</span></code></a> or <a class="reference internal" href="#torchdistill.core.training.TrainingBox" title="torchdistill.core.training.TrainingBox"><code class="xref py py-class docutils literal notranslate"><span class="pre">torchdistill.core.training.TrainingBox</span></code></a>.</p>
+<p>If you want to register the function with a key of your choice, add <code class="docutils literal notranslate"><span class="pre">key</span></code> to the decorator as below:</p>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span><span class="w"> </span><span class="nn">torchdistill.core.interfaces.registry</span><span class="w"> </span><span class="kn">import</span> <span class="n">register_post_epoch_proc_func</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="nd">@register_post_epoch_proc_func</span><span class="p">(</span><span class="n">key</span><span class="o">=</span><span class="s1">&#39;my_custom_post_epoch_proc_func&#39;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="k">def</span><span class="w"> </span><span class="nf">new_post_epoch_proc</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">metrics</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+<span class="gp">&gt;&gt;&gt; </span>    <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;This is my custom post-epoch process function&#39;</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>In the example, <code class="docutils literal notranslate"><span class="pre">new_post_epoch_proc</span></code> function is registered with a key “my_custom_post_epoch_proc_func”.
+When you configure <a class="reference internal" href="#torchdistill.core.distillation.DistillationBox" title="torchdistill.core.distillation.DistillationBox"><code class="xref py py-class docutils literal notranslate"><span class="pre">torchdistill.core.distillation.DistillationBox</span></code></a> or
+<a class="reference internal" href="#torchdistill.core.training.TrainingBox" title="torchdistill.core.training.TrainingBox"><code class="xref py py-class docutils literal notranslate"><span class="pre">torchdistill.core.training.TrainingBox</span></code></a>, you can choose the <code class="docutils literal notranslate"><span class="pre">new_post_epoch_proc</span></code> function by
+“my_custom_post_epoch_proc_func”.</p>
+</div>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="torchdistill.core.interfaces.registry.get_pre_epoch_proc_func">
+<span class="sig-prename descclassname"><span class="pre">torchdistill.core.interfaces.registry.</span></span><span class="sig-name descname"><span class="pre">get_pre_epoch_proc_func</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">key</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/torchdistill/core/interfaces/registry.html#get_pre_epoch_proc_func"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#torchdistill.core.interfaces.registry.get_pre_epoch_proc_func" title="Link to this definition"></a></dt>
+<dd><p>Gets a registered pre-epoch process function.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>key</strong> (<em>str</em>) – unique key to identify the registered pre-epoch process function.</p>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>registered pre-epoch process function.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><em>Callable</em></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="torchdistill.core.interfaces.registry.get_pre_forward_proc_func">
+<span class="sig-prename descclassname"><span class="pre">torchdistill.core.interfaces.registry.</span></span><span class="sig-name descname"><span class="pre">get_pre_forward_proc_func</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">key</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/torchdistill/core/interfaces/registry.html#get_pre_forward_proc_func"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#torchdistill.core.interfaces.registry.get_pre_forward_proc_func" title="Link to this definition"></a></dt>
+<dd><p>Gets a registered pre-forward process function.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>key</strong> (<em>str</em>) – unique key to identify the registered pre-forward process function.</p>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>registered pre-forward process function.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><em>Callable</em></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="torchdistill.core.interfaces.registry.get_forward_proc_func">
+<span class="sig-prename descclassname"><span class="pre">torchdistill.core.interfaces.registry.</span></span><span class="sig-name descname"><span class="pre">get_forward_proc_func</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">key</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/torchdistill/core/interfaces/registry.html#get_forward_proc_func"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#torchdistill.core.interfaces.registry.get_forward_proc_func" title="Link to this definition"></a></dt>
+<dd><p>Gets a registered forward process function.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>key</strong> (<em>str</em>) – unique key to identify the registered forward process function.</p>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>registered forward process function.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><em>Callable</em></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="torchdistill.core.interfaces.registry.get_post_forward_proc_func">
+<span class="sig-prename descclassname"><span class="pre">torchdistill.core.interfaces.registry.</span></span><span class="sig-name descname"><span class="pre">get_post_forward_proc_func</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">key</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/torchdistill/core/interfaces/registry.html#get_post_forward_proc_func"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#torchdistill.core.interfaces.registry.get_post_forward_proc_func" title="Link to this definition"></a></dt>
+<dd><p>Gets a registered post-forward process function.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>key</strong> (<em>str</em>) – unique key to identify the registered post-forward process function.</p>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>registered post-forward process function.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><em>Callable</em></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="torchdistill.core.interfaces.registry.get_post_epoch_proc_func">
+<span class="sig-prename descclassname"><span class="pre">torchdistill.core.interfaces.registry.</span></span><span class="sig-name descname"><span class="pre">get_post_epoch_proc_func</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">key</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/torchdistill/core/interfaces/registry.html#get_post_epoch_proc_func"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#torchdistill.core.interfaces.registry.get_post_epoch_proc_func" title="Link to this definition"></a></dt>
+<dd><p>Gets a registered post-epoch process function.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>key</strong> (<em>str</em>) – unique key to identify the registered post-epoch process function.</p>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>registered post-epoch process function.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><em>Callable</em></p>
+</dd>
+</dl>
+</dd></dl>
+
+</section>
+</section>
+<hr class="docutils" />
+<section id="torchdistill-core-training">
+<h2>torchdistill.core.training<a class="headerlink" href="#torchdistill-core-training" title="Link to this heading"></a></h2>
+<hr class="docutils" />
+<dl class="py class" id="module-torchdistill.core.training">
+<dt class="sig sig-object py" id="torchdistill.core.training.TrainingBox">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">torchdistill.core.training.</span></span><span class="sig-name descname"><span class="pre">TrainingBox</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">model</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">dataset_dict</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">train_config</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">device</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">device_ids</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">distributed</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">lr_factor</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">accelerator</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/torchdistill/core/training.html#TrainingBox"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#torchdistill.core.training.TrainingBox" title="Link to this definition"></a></dt>
+<dd><p>A single-stage training framework.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>model</strong> (<em>nn.Module</em>) – model.</p></li>
+<li><p><strong>dataset_dict</strong> (<em>dict</em>) – dict that contains datasets with IDs of your choice.</p></li>
+<li><p><strong>train_config</strong> (<em>dict</em>) – training configuration.</p></li>
+<li><p><strong>device</strong> (<em>torch.device</em>) – target device.</p></li>
+<li><p><strong>device_ids</strong> (<em>list</em><em>[</em><em>int</em><em>]</em>) – target device IDs.</p></li>
+<li><p><strong>distributed</strong> (<em>bool</em>) – whether to be in distributed training mode.</p></li>
+<li><p><strong>lr_factor</strong> (<em>float</em><em> or </em><em>int</em>) – multiplier for learning rate.</p></li>
+<li><p><strong>accelerator</strong> (<em>accelerate.Accelerator</em><em> or </em><em>None</em>) – Hugging Face accelerator.</p></li>
+</ul>
+</dd>
+</dl>
+<dl class="py method">
+<dt class="sig sig-object py" id="torchdistill.core.training.TrainingBox.setup_data_loaders">
+<span class="sig-name descname"><span class="pre">setup_data_loaders</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">train_config</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/torchdistill/core/training.html#TrainingBox.setup_data_loaders"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#torchdistill.core.training.TrainingBox.setup_data_loaders" title="Link to this definition"></a></dt>
+<dd><p>Sets up training and validation data loaders for the current training stage.
+This method will be internally called when instantiating this class and when calling
+<a class="reference internal" href="#torchdistill.core.training.MultiStagesTrainingBox.advance_to_next_stage" title="torchdistill.core.training.MultiStagesTrainingBox.advance_to_next_stage"><code class="xref py py-meth docutils literal notranslate"><span class="pre">MultiStagesTrainingBox.advance_to_next_stage()</span></code></a>.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>train_config</strong> (<em>dict</em>) – training configuration.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="torchdistill.core.training.TrainingBox.setup_model">
+<span class="sig-name descname"><span class="pre">setup_model</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">model_config</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/torchdistill/core/training.html#TrainingBox.setup_model"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#torchdistill.core.training.TrainingBox.setup_model" title="Link to this definition"></a></dt>
+<dd><p>Sets up a model for the current training stage.
+This method will be internally called when instantiating this class and when calling
+<a class="reference internal" href="#torchdistill.core.training.MultiStagesTrainingBox.advance_to_next_stage" title="torchdistill.core.training.MultiStagesTrainingBox.advance_to_next_stage"><code class="xref py py-meth docutils literal notranslate"><span class="pre">MultiStagesTrainingBox.advance_to_next_stage()</span></code></a>.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>model_config</strong> (<em>dict</em>) – model configuration.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="torchdistill.core.training.TrainingBox.setup_loss">
+<span class="sig-name descname"><span class="pre">setup_loss</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">train_config</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/torchdistill/core/training.html#TrainingBox.setup_loss"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#torchdistill.core.training.TrainingBox.setup_loss" title="Link to this definition"></a></dt>
+<dd><p>Sets up a training loss module for the current training stage.
+This method will be internally called when instantiating this class and when calling
+<a class="reference internal" href="#torchdistill.core.training.MultiStagesTrainingBox.advance_to_next_stage" title="torchdistill.core.training.MultiStagesTrainingBox.advance_to_next_stage"><code class="xref py py-meth docutils literal notranslate"><span class="pre">MultiStagesTrainingBox.advance_to_next_stage()</span></code></a>.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>train_config</strong> (<em>dict</em>) – training configuration.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="torchdistill.core.training.TrainingBox.setup_pre_post_processes">
+<span class="sig-name descname"><span class="pre">setup_pre_post_processes</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">train_config</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/torchdistill/core/training.html#TrainingBox.setup_pre_post_processes"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#torchdistill.core.training.TrainingBox.setup_pre_post_processes" title="Link to this definition"></a></dt>
+<dd><p>Sets up pre/post-epoch/forward processes for the current training stage.
+This method will be internally called when instantiating this class and when calling
+<a class="reference internal" href="#torchdistill.core.training.MultiStagesTrainingBox.advance_to_next_stage" title="torchdistill.core.training.MultiStagesTrainingBox.advance_to_next_stage"><code class="xref py py-meth docutils literal notranslate"><span class="pre">MultiStagesTrainingBox.advance_to_next_stage()</span></code></a>.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>train_config</strong> (<em>dict</em>) – training configuration.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="torchdistill.core.training.TrainingBox.setup">
+<span class="sig-name descname"><span class="pre">setup</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">train_config</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/torchdistill/core/training.html#TrainingBox.setup"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#torchdistill.core.training.TrainingBox.setup" title="Link to this definition"></a></dt>
+<dd><p>Configures a <a class="reference internal" href="#torchdistill.core.training.TrainingBox" title="torchdistill.core.training.TrainingBox"><code class="xref py py-class docutils literal notranslate"><span class="pre">TrainingBox</span></code></a>/<a class="reference internal" href="#torchdistill.core.training.MultiStagesTrainingBox" title="torchdistill.core.training.MultiStagesTrainingBox"><code class="xref py py-class docutils literal notranslate"><span class="pre">MultiStagesTrainingBox</span></code></a> for the current training stage.
+This method will be internally called when instantiating this class and when calling
+<a class="reference internal" href="#torchdistill.core.training.MultiStagesTrainingBox.advance_to_next_stage" title="torchdistill.core.training.MultiStagesTrainingBox.advance_to_next_stage"><code class="xref py py-meth docutils literal notranslate"><span class="pre">MultiStagesTrainingBox.advance_to_next_stage()</span></code></a>.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>train_config</strong> (<em>dict</em>) – training configuration.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="torchdistill.core.training.TrainingBox.pre_epoch_process">
+<span class="sig-name descname"><span class="pre">pre_epoch_process</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">*</span></span><span class="n"><span class="pre">args</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/torchdistill/core/training.html#TrainingBox.pre_epoch_process"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#torchdistill.core.training.TrainingBox.pre_epoch_process" title="Link to this definition"></a></dt>
+<dd><p>Performs a pre-epoch process Shows the summary of results.</p>
+<p>This should be overridden by all subclasses or defined through <a class="reference internal" href="#torchdistill.core.training.TrainingBox.setup_pre_post_processes" title="torchdistill.core.training.TrainingBox.setup_pre_post_processes"><code class="xref py py-meth docutils literal notranslate"><span class="pre">setup_pre_post_processes()</span></code></a>.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="torchdistill.core.training.TrainingBox.pre_forward_process">
+<span class="sig-name descname"><span class="pre">pre_forward_process</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">*</span></span><span class="n"><span class="pre">args</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/torchdistill/core/training.html#TrainingBox.pre_forward_process"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#torchdistill.core.training.TrainingBox.pre_forward_process" title="Link to this definition"></a></dt>
+<dd><p>Performs a pre-forward process Shows the summary of results.</p>
+<p>This should be overridden by all subclasses or defined through <a class="reference internal" href="#torchdistill.core.training.TrainingBox.setup_pre_post_processes" title="torchdistill.core.training.TrainingBox.setup_pre_post_processes"><code class="xref py py-meth docutils literal notranslate"><span class="pre">setup_pre_post_processes()</span></code></a>.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="torchdistill.core.training.TrainingBox.forward_process">
+<span class="sig-name descname"><span class="pre">forward_process</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">sample_batch</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">targets</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">supp_dict</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/torchdistill/core/training.html#TrainingBox.forward_process"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#torchdistill.core.training.TrainingBox.forward_process" title="Link to this definition"></a></dt>
+<dd><p>Performs forward computations for a model.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>sample_batch</strong> (<em>Any</em>) – sample batch.</p></li>
+<li><p><strong>targets</strong> (<em>Any</em>) – training targets.</p></li>
+<li><p><strong>supp_dict</strong> (<em>dict</em>) – supplementary dict.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>loss tensor.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>torch.Tensor</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="torchdistill.core.training.TrainingBox.post_forward_process">
+<span class="sig-name descname"><span class="pre">post_forward_process</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">*</span></span><span class="n"><span class="pre">args</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/torchdistill/core/training.html#TrainingBox.post_forward_process"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#torchdistill.core.training.TrainingBox.post_forward_process" title="Link to this definition"></a></dt>
+<dd><p>Performs a post-forward process.</p>
+<p>This should be overridden by all subclasses or defined through <a class="reference internal" href="#torchdistill.core.training.TrainingBox.setup_pre_post_processes" title="torchdistill.core.training.TrainingBox.setup_pre_post_processes"><code class="xref py py-meth docutils literal notranslate"><span class="pre">setup_pre_post_processes()</span></code></a>.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="torchdistill.core.training.TrainingBox.post_epoch_process">
+<span class="sig-name descname"><span class="pre">post_epoch_process</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">*</span></span><span class="n"><span class="pre">args</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/torchdistill/core/training.html#TrainingBox.post_epoch_process"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#torchdistill.core.training.TrainingBox.post_epoch_process" title="Link to this definition"></a></dt>
+<dd><p>Performs a post-epoch process.</p>
+<p>This should be overridden by all subclasses or defined through <a class="reference internal" href="#torchdistill.core.training.TrainingBox.setup_pre_post_processes" title="torchdistill.core.training.TrainingBox.setup_pre_post_processes"><code class="xref py py-meth docutils literal notranslate"><span class="pre">setup_pre_post_processes()</span></code></a>.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="torchdistill.core.training.TrainingBox.clean_modules">
+<span class="sig-name descname"><span class="pre">clean_modules</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/torchdistill/core/training.html#TrainingBox.clean_modules"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#torchdistill.core.training.TrainingBox.clean_modules" title="Link to this definition"></a></dt>
+<dd><p>Unfreezes all the modules, clears an I/O dict, unregisters forward hook handles,
+and clears the handle lists.</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="torchdistill.core.training.MultiStagesTrainingBox">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">torchdistill.core.training.</span></span><span class="sig-name descname"><span class="pre">MultiStagesTrainingBox</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">model</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">dataset_dict</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">train_config</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">device</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">device_ids</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">distributed</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">lr_factor</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">accelerator</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/torchdistill/core/training.html#MultiStagesTrainingBox"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#torchdistill.core.training.MultiStagesTrainingBox" title="Link to this definition"></a></dt>
+<dd><p>A multi-stage training framework. This is a subclass of <a class="reference internal" href="#torchdistill.core.training.TrainingBox" title="torchdistill.core.training.TrainingBox"><code class="xref py py-class docutils literal notranslate"><span class="pre">TrainingBox</span></code></a>.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>model</strong> (<em>nn.Module</em>) – model.</p></li>
+<li><p><strong>dataset_dict</strong> (<em>dict</em>) – dict that contains datasets with IDs of your choice.</p></li>
+<li><p><strong>train_config</strong> (<em>dict</em>) – training configuration.</p></li>
+<li><p><strong>device</strong> (<em>torch.device</em>) – target device.</p></li>
+<li><p><strong>device_ids</strong> (<em>list</em><em>[</em><em>int</em><em>]</em>) – target device IDs.</p></li>
+<li><p><strong>distributed</strong> (<em>bool</em>) – whether to be in distributed training mode.</p></li>
+<li><p><strong>lr_factor</strong> (<em>float</em><em> or </em><em>int</em>) – multiplier for learning rate.</p></li>
+<li><p><strong>accelerator</strong> (<em>accelerate.Accelerator</em><em> or </em><em>None</em>) – Hugging Face accelerator.</p></li>
+</ul>
+</dd>
+</dl>
+<dl class="py method">
+<dt class="sig sig-object py" id="torchdistill.core.training.MultiStagesTrainingBox.save_stage_ckpt">
+<span class="sig-name descname"><span class="pre">save_stage_ckpt</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">model</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">local_model_config</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/torchdistill/core/training.html#MultiStagesTrainingBox.save_stage_ckpt"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#torchdistill.core.training.MultiStagesTrainingBox.save_stage_ckpt" title="Link to this definition"></a></dt>
+<dd><p>Saves the checkpoint of <code class="docutils literal notranslate"><span class="pre">model</span></code> for the current training stage.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>model</strong> (<em>nn.Module</em>) – model to be saved.</p></li>
+<li><p><strong>local_model_config</strong> (<em>dict</em>) – model configuration at the current training stage.</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="torchdistill.core.training.MultiStagesTrainingBox.advance_to_next_stage">
+<span class="sig-name descname"><span class="pre">advance_to_next_stage</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/torchdistill/core/training.html#MultiStagesTrainingBox.advance_to_next_stage"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#torchdistill.core.training.MultiStagesTrainingBox.advance_to_next_stage" title="Link to this definition"></a></dt>
+<dd><p>Reads the next training stage’s configuration in <code class="docutils literal notranslate"><span class="pre">train_config</span></code> and advances to the next training stage.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="torchdistill.core.training.MultiStagesTrainingBox.post_epoch_process">
+<span class="sig-name descname"><span class="pre">post_epoch_process</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">*</span></span><span class="n"><span class="pre">args</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/torchdistill/core/training.html#MultiStagesTrainingBox.post_epoch_process"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#torchdistill.core.training.MultiStagesTrainingBox.post_epoch_process" title="Link to this definition"></a></dt>
+<dd><p>Performs a post-epoch process.</p>
+<p>The superclass’s post_epoch_process should be overridden by all subclasses or
+defined through <a class="reference internal" href="#torchdistill.core.training.TrainingBox.setup_pre_post_processes" title="torchdistill.core.training.TrainingBox.setup_pre_post_processes"><code class="xref py py-meth docutils literal notranslate"><span class="pre">TrainingBox.setup_pre_post_processes()</span></code></a>.</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="torchdistill.core.training.get_training_box">
+<span class="sig-prename descclassname"><span class="pre">torchdistill.core.training.</span></span><span class="sig-name descname"><span class="pre">get_training_box</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">model</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">dataset_dict</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">train_config</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">device</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">device_ids</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">distributed</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">lr_factor</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">accelerator</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/torchdistill/core/training.html#get_training_box"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#torchdistill.core.training.get_training_box" title="Link to this definition"></a></dt>
+<dd><p>Gets a training box.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>model</strong> (<em>nn.Module</em>) – model.</p></li>
+<li><p><strong>dataset_dict</strong> (<em>dict</em>) – dict that contains datasets with IDs of your choice.</p></li>
+<li><p><strong>train_config</strong> (<em>dict</em>) – training configuration.</p></li>
+<li><p><strong>device</strong> (<em>torch.device</em>) – target device.</p></li>
+<li><p><strong>device_ids</strong> (<em>list</em><em>[</em><em>int</em><em>]</em>) – target device IDs.</p></li>
+<li><p><strong>distributed</strong> (<em>bool</em>) – whether to be in distributed training mode.</p></li>
+<li><p><strong>lr_factor</strong> (<em>float</em><em> or </em><em>int</em>) – multiplier for learning rate.</p></li>
+<li><p><strong>accelerator</strong> (<em>accelerate.Accelerator</em><em> or </em><em>None</em>) – Hugging Face accelerator.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>training box.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><a class="reference internal" href="#torchdistill.core.training.TrainingBox" title="torchdistill.core.training.TrainingBox">TrainingBox</a> or <a class="reference internal" href="#torchdistill.core.training.MultiStagesTrainingBox" title="torchdistill.core.training.MultiStagesTrainingBox">MultiStagesTrainingBox</a></p>
+</dd>
+</dl>
+</dd></dl>
+
+</section>
+<hr class="docutils" />
+<section id="torchdistill-core-distillation">
+<h2>torchdistill.core.distillation<a class="headerlink" href="#torchdistill-core-distillation" title="Link to this heading"></a></h2>
+<hr class="docutils" />
+<dl class="py class" id="module-torchdistill.core.distillation">
+<dt class="sig sig-object py" id="torchdistill.core.distillation.DistillationBox">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">torchdistill.core.distillation.</span></span><span class="sig-name descname"><span class="pre">DistillationBox</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">teacher_model</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">student_model</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">dataset_dict</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">train_config</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">device</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">device_ids</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">distributed</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">lr_factor</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">accelerator</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/torchdistill/core/distillation.html#DistillationBox"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#torchdistill.core.distillation.DistillationBox" title="Link to this definition"></a></dt>
+<dd><p>A single-stage knowledge distillation framework.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>teacher_model</strong> (<em>nn.Module</em>) – teacher model.</p></li>
+<li><p><strong>student_model</strong> (<em>nn.Module</em>) – student model.</p></li>
+<li><p><strong>dataset_dict</strong> (<em>dict</em>) – dict that contains datasets with IDs of your choice.</p></li>
+<li><p><strong>train_config</strong> (<em>dict</em>) – training configuration.</p></li>
+<li><p><strong>device</strong> (<em>torch.device</em>) – target device.</p></li>
+<li><p><strong>device_ids</strong> (<em>list</em><em>[</em><em>int</em><em>]</em>) – target device IDs.</p></li>
+<li><p><strong>distributed</strong> (<em>bool</em>) – whether to be in distributed training mode.</p></li>
+<li><p><strong>lr_factor</strong> (<em>float</em><em> or </em><em>int</em>) – multiplier for learning rate.</p></li>
+<li><p><strong>accelerator</strong> (<em>accelerate.Accelerator</em><em> or </em><em>None</em>) – Hugging Face accelerator.</p></li>
+</ul>
+</dd>
+</dl>
+<dl class="py method">
+<dt class="sig sig-object py" id="torchdistill.core.distillation.DistillationBox.setup_data_loaders">
+<span class="sig-name descname"><span class="pre">setup_data_loaders</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">train_config</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/torchdistill/core/distillation.html#DistillationBox.setup_data_loaders"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#torchdistill.core.distillation.DistillationBox.setup_data_loaders" title="Link to this definition"></a></dt>
+<dd><p>Sets up training and validation data loaders for the current training stage.
+This method will be internally called when instantiating this class and when calling
+<a class="reference internal" href="#torchdistill.core.distillation.MultiStagesDistillationBox.advance_to_next_stage" title="torchdistill.core.distillation.MultiStagesDistillationBox.advance_to_next_stage"><code class="xref py py-meth docutils literal notranslate"><span class="pre">MultiStagesDistillationBox.advance_to_next_stage()</span></code></a>.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>train_config</strong> (<em>dict</em>) – training configuration.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="torchdistill.core.distillation.DistillationBox.setup_teacher_student_models">
+<span class="sig-name descname"><span class="pre">setup_teacher_student_models</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">teacher_config</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">student_config</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/torchdistill/core/distillation.html#DistillationBox.setup_teacher_student_models"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#torchdistill.core.distillation.DistillationBox.setup_teacher_student_models" title="Link to this definition"></a></dt>
+<dd><p>Sets up teacher and student models for the current training stage.
+This method will be internally called when instantiating this class and when calling
+<a class="reference internal" href="#torchdistill.core.distillation.MultiStagesDistillationBox.advance_to_next_stage" title="torchdistill.core.distillation.MultiStagesDistillationBox.advance_to_next_stage"><code class="xref py py-meth docutils literal notranslate"><span class="pre">MultiStagesDistillationBox.advance_to_next_stage()</span></code></a>.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>teacher_config</strong> (<em>dict</em>) – teacher configuration.</p></li>
+<li><p><strong>student_config</strong> (<em>dict</em>) – student configuration.</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="torchdistill.core.distillation.DistillationBox.setup_loss">
+<span class="sig-name descname"><span class="pre">setup_loss</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">train_config</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/torchdistill/core/distillation.html#DistillationBox.setup_loss"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#torchdistill.core.distillation.DistillationBox.setup_loss" title="Link to this definition"></a></dt>
+<dd><p>Sets up a training loss module for the current training stage.
+This method will be internally called when instantiating this class and when calling
+<a class="reference internal" href="#torchdistill.core.distillation.MultiStagesDistillationBox.advance_to_next_stage" title="torchdistill.core.distillation.MultiStagesDistillationBox.advance_to_next_stage"><code class="xref py py-meth docutils literal notranslate"><span class="pre">MultiStagesDistillationBox.advance_to_next_stage()</span></code></a>.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>train_config</strong> (<em>dict</em>) – training configuration.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="torchdistill.core.distillation.DistillationBox.setup_pre_post_processes">
+<span class="sig-name descname"><span class="pre">setup_pre_post_processes</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">train_config</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/torchdistill/core/distillation.html#DistillationBox.setup_pre_post_processes"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#torchdistill.core.distillation.DistillationBox.setup_pre_post_processes" title="Link to this definition"></a></dt>
+<dd><p>Sets up pre/post-epoch/forward processes for the current training stage.
+This method will be internally called when instantiating this class and when calling
+<a class="reference internal" href="#torchdistill.core.distillation.MultiStagesDistillationBox.advance_to_next_stage" title="torchdistill.core.distillation.MultiStagesDistillationBox.advance_to_next_stage"><code class="xref py py-meth docutils literal notranslate"><span class="pre">MultiStagesDistillationBox.advance_to_next_stage()</span></code></a>.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>train_config</strong> (<em>dict</em>) – training configuration.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="torchdistill.core.distillation.DistillationBox.setup">
+<span class="sig-name descname"><span class="pre">setup</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">train_config</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/torchdistill/core/distillation.html#DistillationBox.setup"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#torchdistill.core.distillation.DistillationBox.setup" title="Link to this definition"></a></dt>
+<dd><p>Configures a <a class="reference internal" href="#torchdistill.core.distillation.DistillationBox" title="torchdistill.core.distillation.DistillationBox"><code class="xref py py-class docutils literal notranslate"><span class="pre">DistillationBox</span></code></a>/<a class="reference internal" href="#torchdistill.core.distillation.MultiStagesDistillationBox" title="torchdistill.core.distillation.MultiStagesDistillationBox"><code class="xref py py-class docutils literal notranslate"><span class="pre">MultiStagesDistillationBox</span></code></a> for the current training stage.
+This method will be internally called when instantiating this class and when calling
+<a class="reference internal" href="#torchdistill.core.distillation.MultiStagesDistillationBox.advance_to_next_stage" title="torchdistill.core.distillation.MultiStagesDistillationBox.advance_to_next_stage"><code class="xref py py-meth docutils literal notranslate"><span class="pre">MultiStagesDistillationBox.advance_to_next_stage()</span></code></a>.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>train_config</strong> (<em>dict</em>) – training configuration.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="torchdistill.core.distillation.DistillationBox.pre_epoch_process">
+<span class="sig-name descname"><span class="pre">pre_epoch_process</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">*</span></span><span class="n"><span class="pre">args</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/torchdistill/core/distillation.html#DistillationBox.pre_epoch_process"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#torchdistill.core.distillation.DistillationBox.pre_epoch_process" title="Link to this definition"></a></dt>
+<dd><p>Performs a pre-epoch process Shows the summary of results.</p>
+<p>This should be overridden by all subclasses or defined through <a class="reference internal" href="#torchdistill.core.distillation.DistillationBox.setup_pre_post_processes" title="torchdistill.core.distillation.DistillationBox.setup_pre_post_processes"><code class="xref py py-meth docutils literal notranslate"><span class="pre">setup_pre_post_processes()</span></code></a>.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="torchdistill.core.distillation.DistillationBox.pre_forward_process">
+<span class="sig-name descname"><span class="pre">pre_forward_process</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">*</span></span><span class="n"><span class="pre">args</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/torchdistill/core/distillation.html#DistillationBox.pre_forward_process"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#torchdistill.core.distillation.DistillationBox.pre_forward_process" title="Link to this definition"></a></dt>
+<dd><p>Performs a pre-forward process Shows the summary of results.</p>
+<p>This should be overridden by all subclasses or defined through <a class="reference internal" href="#torchdistill.core.distillation.DistillationBox.setup_pre_post_processes" title="torchdistill.core.distillation.DistillationBox.setup_pre_post_processes"><code class="xref py py-meth docutils literal notranslate"><span class="pre">setup_pre_post_processes()</span></code></a>.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="torchdistill.core.distillation.DistillationBox.get_teacher_output">
+<span class="sig-name descname"><span class="pre">get_teacher_output</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">sample_batch</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">targets</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">supp_dict</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/torchdistill/core/distillation.html#DistillationBox.get_teacher_output"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#torchdistill.core.distillation.DistillationBox.get_teacher_output" title="Link to this definition"></a></dt>
+<dd><p>Gets teacher model’s output.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>sample_batch</strong> (<em>Any</em>) – sample batch.</p></li>
+<li><p><strong>targets</strong> (<em>Any</em>) – training targets.</p></li>
+<li><p><strong>supp_dict</strong> (<em>dict</em>) – supplementary dict.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>teacher’s outputs and teacher’s I/O dict.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>(Any, dict)</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="torchdistill.core.distillation.DistillationBox.forward_process">
+<span class="sig-name descname"><span class="pre">forward_process</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">sample_batch</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">targets</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">supp_dict</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/torchdistill/core/distillation.html#DistillationBox.forward_process"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#torchdistill.core.distillation.DistillationBox.forward_process" title="Link to this definition"></a></dt>
+<dd><p>Performs forward computations for teacher and student models.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>sample_batch</strong> (<em>Any</em>) – sample batch.</p></li>
+<li><p><strong>targets</strong> (<em>Any</em>) – training targets.</p></li>
+<li><p><strong>supp_dict</strong> (<em>dict</em>) – supplementary dict.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>loss tensor.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>torch.Tensor</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="torchdistill.core.distillation.DistillationBox.post_forward_process">
+<span class="sig-name descname"><span class="pre">post_forward_process</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">*</span></span><span class="n"><span class="pre">args</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/torchdistill/core/distillation.html#DistillationBox.post_forward_process"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#torchdistill.core.distillation.DistillationBox.post_forward_process" title="Link to this definition"></a></dt>
+<dd><p>Performs a post-forward process.</p>
+<p>This should be overridden by all subclasses or defined through <a class="reference internal" href="#torchdistill.core.distillation.DistillationBox.setup_pre_post_processes" title="torchdistill.core.distillation.DistillationBox.setup_pre_post_processes"><code class="xref py py-meth docutils literal notranslate"><span class="pre">setup_pre_post_processes()</span></code></a>.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="torchdistill.core.distillation.DistillationBox.post_epoch_process">
+<span class="sig-name descname"><span class="pre">post_epoch_process</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">*</span></span><span class="n"><span class="pre">args</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/torchdistill/core/distillation.html#DistillationBox.post_epoch_process"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#torchdistill.core.distillation.DistillationBox.post_epoch_process" title="Link to this definition"></a></dt>
+<dd><p>Performs a post-epoch process.</p>
+<p>This should be overridden by all subclasses or defined through <a class="reference internal" href="#torchdistill.core.distillation.DistillationBox.setup_pre_post_processes" title="torchdistill.core.distillation.DistillationBox.setup_pre_post_processes"><code class="xref py py-meth docutils literal notranslate"><span class="pre">setup_pre_post_processes()</span></code></a>.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="torchdistill.core.distillation.DistillationBox.clean_modules">
+<span class="sig-name descname"><span class="pre">clean_modules</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/torchdistill/core/distillation.html#DistillationBox.clean_modules"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#torchdistill.core.distillation.DistillationBox.clean_modules" title="Link to this definition"></a></dt>
+<dd><p>Unfreezes all the teacher and student modules, clears I/O dicts, unregisters forward hook handles,
+and clears the handle lists.</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="torchdistill.core.distillation.MultiStagesDistillationBox">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">torchdistill.core.distillation.</span></span><span class="sig-name descname"><span class="pre">MultiStagesDistillationBox</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">teacher_model</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">student_model</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">dataset_dict</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">train_config</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">device</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">device_ids</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">distributed</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">lr_factor</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">accelerator</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/torchdistill/core/distillation.html#MultiStagesDistillationBox"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#torchdistill.core.distillation.MultiStagesDistillationBox" title="Link to this definition"></a></dt>
+<dd><p>A multi-stage knowledge distillation framework. This is a subclass of <a class="reference internal" href="#torchdistill.core.distillation.DistillationBox" title="torchdistill.core.distillation.DistillationBox"><code class="xref py py-class docutils literal notranslate"><span class="pre">DistillationBox</span></code></a>.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>teacher_model</strong> (<em>nn.Module</em>) – teacher model.</p></li>
+<li><p><strong>student_model</strong> (<em>nn.Module</em>) – student model.</p></li>
+<li><p><strong>dataset_dict</strong> (<em>dict</em>) – dict that contains datasets with IDs of your choice.</p></li>
+<li><p><strong>train_config</strong> (<em>dict</em>) – training configuration.</p></li>
+<li><p><strong>device</strong> (<em>torch.device</em>) – target device.</p></li>
+<li><p><strong>device_ids</strong> (<em>list</em><em>[</em><em>int</em><em>]</em>) – target device IDs.</p></li>
+<li><p><strong>distributed</strong> (<em>bool</em>) – whether to be in distributed training mode.</p></li>
+<li><p><strong>lr_factor</strong> (<em>float</em><em> or </em><em>int</em>) – multiplier for learning rate.</p></li>
+<li><p><strong>accelerator</strong> (<em>accelerate.Accelerator</em><em> or </em><em>None</em>) – Hugging Face accelerator.</p></li>
+</ul>
+</dd>
+</dl>
+<dl class="py method">
+<dt class="sig sig-object py" id="torchdistill.core.distillation.MultiStagesDistillationBox.save_stage_ckpt">
+<span class="sig-name descname"><span class="pre">save_stage_ckpt</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">model</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">local_model_config</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/torchdistill/core/distillation.html#MultiStagesDistillationBox.save_stage_ckpt"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#torchdistill.core.distillation.MultiStagesDistillationBox.save_stage_ckpt" title="Link to this definition"></a></dt>
+<dd><p>Saves the checkpoint of <code class="docutils literal notranslate"><span class="pre">model</span></code> for the current training stage.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>model</strong> (<em>nn.Module</em>) – model to be saved.</p></li>
+<li><p><strong>local_model_config</strong> (<em>dict</em>) – model configuration at the current training stage.</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="torchdistill.core.distillation.MultiStagesDistillationBox.advance_to_next_stage">
+<span class="sig-name descname"><span class="pre">advance_to_next_stage</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/torchdistill/core/distillation.html#MultiStagesDistillationBox.advance_to_next_stage"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#torchdistill.core.distillation.MultiStagesDistillationBox.advance_to_next_stage" title="Link to this definition"></a></dt>
+<dd><p>Reads the next training stage’s configuration in <code class="docutils literal notranslate"><span class="pre">train_config</span></code> and advances to the next training stage.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="torchdistill.core.distillation.MultiStagesDistillationBox.post_epoch_process">
+<span class="sig-name descname"><span class="pre">post_epoch_process</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">*</span></span><span class="n"><span class="pre">args</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/torchdistill/core/distillation.html#MultiStagesDistillationBox.post_epoch_process"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#torchdistill.core.distillation.MultiStagesDistillationBox.post_epoch_process" title="Link to this definition"></a></dt>
+<dd><p>Performs a post-epoch process.</p>
+<p>The superclass’s post_epoch_process should be overridden by all subclasses or
+defined through <a class="reference internal" href="#torchdistill.core.distillation.DistillationBox.setup_pre_post_processes" title="torchdistill.core.distillation.DistillationBox.setup_pre_post_processes"><code class="xref py py-meth docutils literal notranslate"><span class="pre">DistillationBox.setup_pre_post_processes()</span></code></a>.</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="torchdistill.core.distillation.get_distillation_box">
+<span class="sig-prename descclassname"><span class="pre">torchdistill.core.distillation.</span></span><span class="sig-name descname"><span class="pre">get_distillation_box</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">teacher_model</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">student_model</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">dataset_dict</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">train_config</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">device</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">device_ids</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">distributed</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">lr_factor</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">accelerator</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/torchdistill/core/distillation.html#get_distillation_box"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#torchdistill.core.distillation.get_distillation_box" title="Link to this definition"></a></dt>
+<dd><p>Gets a distillation box.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>teacher_model</strong> (<em>nn.Module</em>) – teacher model.</p></li>
+<li><p><strong>student_model</strong> (<em>nn.Module</em>) – student model.</p></li>
+<li><p><strong>dataset_dict</strong> (<em>dict</em>) – dict that contains datasets with IDs of your choice.</p></li>
+<li><p><strong>train_config</strong> (<em>dict</em>) – training configuration.</p></li>
+<li><p><strong>device</strong> (<em>torch.device</em>) – target device.</p></li>
+<li><p><strong>device_ids</strong> (<em>list</em><em>[</em><em>int</em><em>]</em>) – target device IDs.</p></li>
+<li><p><strong>distributed</strong> (<em>bool</em>) – whether to be in distributed training mode.</p></li>
+<li><p><strong>lr_factor</strong> (<em>float</em><em> or </em><em>int</em>) – multiplier for learning rate.</p></li>
+<li><p><strong>accelerator</strong> (<em>accelerate.Accelerator</em><em> or </em><em>None</em>) – Hugging Face accelerator.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>distillation box.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><a class="reference internal" href="#torchdistill.core.distillation.DistillationBox" title="torchdistill.core.distillation.DistillationBox">DistillationBox</a> or <a class="reference internal" href="#torchdistill.core.distillation.MultiStagesDistillationBox" title="torchdistill.core.distillation.MultiStagesDistillationBox">MultiStagesDistillationBox</a></p>
+</dd>
+</dl>
+</dd></dl>
+
+</section>
+<hr class="docutils" />
+<section id="torchdistill-core-util">
+<h2>torchdistill.core.util<a class="headerlink" href="#torchdistill-core-util" title="Link to this heading"></a></h2>
+<hr class="docutils" />
+<dl class="py function" id="module-torchdistill.core.util">
+<dt class="sig sig-object py" id="torchdistill.core.util.add_kwargs_to_io_dict">
+<span class="sig-prename descclassname"><span class="pre">torchdistill.core.util.</span></span><span class="sig-name descname"><span class="pre">add_kwargs_to_io_dict</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">io_dict</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">module_path</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/torchdistill/core/util.html#add_kwargs_to_io_dict"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#torchdistill.core.util.add_kwargs_to_io_dict" title="Link to this definition"></a></dt>
+<dd><p>Adds kwargs to an I/O dict.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>io_dict</strong> (<em>dict</em>) – I/O dict.</p></li>
+<li><p><strong>module_path</strong> (<em>str</em>) – module path.</p></li>
+<li><p><strong>kwargs</strong> (<em>dict</em>) – kwargs to be stored in <code class="docutils literal notranslate"><span class="pre">io_dict</span></code>.</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="torchdistill.core.util.set_hooks">
+<span class="sig-prename descclassname"><span class="pre">torchdistill.core.util.</span></span><span class="sig-name descname"><span class="pre">set_hooks</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">model</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">unwrapped_org_model</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">model_config</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">io_dict</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/torchdistill/core/util.html#set_hooks"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#torchdistill.core.util.set_hooks" title="Link to this definition"></a></dt>
+<dd><p>Sets forward hooks for target modules in model.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>model</strong> (<em>nn.Module</em>) – model.</p></li>
+<li><p><strong>unwrapped_org_model</strong> (<em>nn.Module</em>) – unwrapped original model.</p></li>
+<li><p><strong>model_config</strong> (<em>dict</em>) – model configuration.</p></li>
+<li><p><strong>io_dict</strong> (<em>dict</em>) – I/O dict.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>list of pairs of module path and removable forward hook handle.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>list[(str, torch.utils.hook.RemovableHandle)]</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="torchdistill.core.util.wrap_model">
+<span class="sig-prename descclassname"><span class="pre">torchdistill.core.util.</span></span><span class="sig-name descname"><span class="pre">wrap_model</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">model</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">model_config</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">device</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">device_ids</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">distributed</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">find_unused_parameters</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">any_updatable</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/torchdistill/core/util.html#wrap_model"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#torchdistill.core.util.wrap_model" title="Link to this definition"></a></dt>
+<dd><p>Wraps <code class="docutils literal notranslate"><span class="pre">model</span></code> with either DataParallel or DistributedDataParallel if specified.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>model</strong> (<em>nn.Module</em>) – model.</p></li>
+<li><p><strong>model_config</strong> (<em>dict</em>) – model configuration.</p></li>
+<li><p><strong>device</strong> (<em>torch.device</em>) – target device.</p></li>
+<li><p><strong>device_ids</strong> (<em>list</em><em>[</em><em>int</em><em>]</em>) – target device IDs.</p></li>
+<li><p><strong>distributed</strong> (<em>bool</em>) – whether to be in distributed training mode.</p></li>
+<li><p><strong>find_unused_parameters</strong> (<em>bool</em>) – <code class="docutils literal notranslate"><span class="pre">find_unused_parameters</span></code> for DistributedDataParallel.</p></li>
+<li><p><strong>any_updatable</strong> (<em>bool</em>) – True if <code class="docutils literal notranslate"><span class="pre">model</span></code> contains any updatable parameters.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>wrapped model (or <code class="docutils literal notranslate"><span class="pre">model</span></code> if wrapper is not specified).</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>nn.Module</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="torchdistill.core.util.change_device">
+<span class="sig-prename descclassname"><span class="pre">torchdistill.core.util.</span></span><span class="sig-name descname"><span class="pre">change_device</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">data</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">device</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/torchdistill/core/util.html#change_device"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#torchdistill.core.util.change_device" title="Link to this definition"></a></dt>
+<dd><p>Updates the device of tensor(s) stored in <code class="docutils literal notranslate"><span class="pre">data</span></code>  with a new <code class="docutils literal notranslate"><span class="pre">device</span></code>.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>data</strong> (<em>Any</em>) – data that contain tensor(s).</p></li>
+<li><p><strong>device</strong> (<em>torch.device</em><em> or </em><em>str</em>) – new device.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p><code class="docutils literal notranslate"><span class="pre">data</span></code> on the new <code class="docutils literal notranslate"><span class="pre">device</span></code>.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>Any</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="torchdistill.core.util.tensor2numpy2tensor">
+<span class="sig-prename descclassname"><span class="pre">torchdistill.core.util.</span></span><span class="sig-name descname"><span class="pre">tensor2numpy2tensor</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">data</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">device</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/torchdistill/core/util.html#tensor2numpy2tensor"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#torchdistill.core.util.tensor2numpy2tensor" title="Link to this definition"></a></dt>
+<dd><p>Converts tensor to numpy data and re-converts the numpy data to tensor.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>data</strong> (<em>Any</em>) – data that contain tensor(s).</p></li>
+<li><p><strong>device</strong> (<em>torch.device</em><em> or </em><em>str</em>) – new device.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>data that contain recreated tensor(s).</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>Any</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="torchdistill.core.util.clear_io_dict">
+<span class="sig-prename descclassname"><span class="pre">torchdistill.core.util.</span></span><span class="sig-name descname"><span class="pre">clear_io_dict</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">model_io_dict</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/torchdistill/core/util.html#clear_io_dict"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#torchdistill.core.util.clear_io_dict" title="Link to this definition"></a></dt>
+<dd><p>Clears a model I/O dict’s sub dict(s).</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>model_io_dict</strong> (<em>dict</em>) – model I/O dict.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="torchdistill.core.util.extract_io_dict">
+<span class="sig-prename descclassname"><span class="pre">torchdistill.core.util.</span></span><span class="sig-name descname"><span class="pre">extract_io_dict</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">model_io_dict</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">target_device</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/torchdistill/core/util.html#extract_io_dict"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#torchdistill.core.util.extract_io_dict" title="Link to this definition"></a></dt>
+<dd><p>Extracts I/O dict, gathering tensors on <code class="docutils literal notranslate"><span class="pre">target_device</span></code>.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>model_io_dict</strong> (<em>dict</em>) – model I/O dict.</p></li>
+<li><p><strong>target_device</strong> (<em>torch.device</em><em> or </em><em>str</em>) – target device.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>extracted I/O dict.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>dict</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="torchdistill.core.util.update_io_dict">
+<span class="sig-prename descclassname"><span class="pre">torchdistill.core.util.</span></span><span class="sig-name descname"><span class="pre">update_io_dict</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">main_io_dict</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">sub_io_dict</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/torchdistill/core/util.html#update_io_dict"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#torchdistill.core.util.update_io_dict" title="Link to this definition"></a></dt>
+<dd><p>Updates an I/O dict with a sub I/O dict.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>main_io_dict</strong> (<em>dict</em>) – main I/O dict to be updated.</p></li>
+<li><p><strong>sub_io_dict</strong> (<em>dict</em>) – sub I/O dict.</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="torchdistill.core.util.extract_sub_model_io_dict">
+<span class="sig-prename descclassname"><span class="pre">torchdistill.core.util.</span></span><span class="sig-name descname"><span class="pre">extract_sub_model_io_dict</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">model_io_dict</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">index</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/torchdistill/core/util.html#extract_sub_model_io_dict"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#torchdistill.core.util.extract_sub_model_io_dict" title="Link to this definition"></a></dt>
+<dd><p>Extracts sub I/O dict from <code class="docutils literal notranslate"><span class="pre">model_io_dict</span></code>.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>model_io_dict</strong> (<em>dict</em>) – model I/O dict.</p></li>
+<li><p><strong>index</strong> (<em>int</em>) – sample index.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>extracted sub I/O dict.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>dict</p>
+</dd>
+</dl>
+</dd></dl>
+
+</section>
+</section>
+
+
+           </div>
+          </div>
+          <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
+        <a href="../package.html" class="btn btn-neutral float-left" title="torchdistill API" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="datasets.html" class="btn btn-neutral float-right" title="torchdistill.datasets" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2023, Yoshitomo Matsubara.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script>
+    <!-- Theme Analytics -->
+    <script async src="https://www.googletagmanager.com/gtag/js?id=G-LYK8SSJ7R5"></script>
+    <script>
+      window.dataLayer = window.dataLayer || [];
+      function gtag(){dataLayer.push(arguments);}
+      gtag('js', new Date());
+
+      gtag('config', 'G-LYK8SSJ7R5', {
+          'anonymize_ip': false,
+      });
+    </script> 
+
+</body>
+</html>
