@@ -27,6 +27,17 @@ It is pip-installable and published as a PyPI package i.e., you can install it b
 Papers
 *****
 
+FOOL: Addressing the Downlink Bottleneck in Satellite Computing With Neural Feature Compression
+----
+* Author(s): Alireza Furutanpey, Qiyang Zhang, Philipp Raith, Tobias Pfandzelter, Shangguang Wang, Schahram Dustdar
+* Venue: IEEE Transactions on Mobile Computing
+* PDF: `Paper <https://ieeexplore.ieee.org/document/10897922/>`_
+* Code: `GitHub <https://github.com/rezafuru/the-fool>`_
+
+**Abstract**: Nanosatellite constellations equipped with sensors capturing large geographic regions provide unprecedented opportunities for Earth observation.
+As constellation sizes increase, network contention poses a downlink bottleneck. Orbital Edge Computing (OEC) leverages limited onboard compute resources to reduce transfer costs by processing the raw captures at the source. However, current solutions have limited practicality due to reliance on crude filtering methods or over-prioritizing particular downstream tasks. This work presents an OEC-native and task-agnostic feature compression method that preserves prediction performance and partitions high-resolution satellite imagery to maximize throughput. Further, it embeds context and leverages inter-tile dependencies to lower transfer costs with negligible overhead. While the encoding prioritizes features for downstream tasks, we can reliably recover images with competitive scores on quality measures at lower bitrates. We extensively evaluate transfer cost reduction by including the peculiarity of intermittently available network connections in low earth orbit. Lastly, we test the feasibility of our system for standardized nanosatellite form factors. We demonstrate that the proposed approach permits downlinking over 100$\times$ the data volume without relying on prior information on the downstream tasks.
+
+
 A Multi-task Supervised Compression Model for Split Computing
 ----
 * Author(s): Yoshitomo Matsubara, Matteo Mendula, Marco Levorato
@@ -36,7 +47,7 @@ A Multi-task Supervised Compression Model for Split Computing
 
 Split computing (≠ split learning) is a promising approach to deep learning models for resource-constrained
 edge computing systems, where weak sensor (mobile) devices are wirelessly connected to stronger edge servers through
-channels with limited communication capacity. State-of-theart work on split computing presents methods for single tasks
+channels with limited communication capacity. State-of-the-art work on split computing presents methods for single tasks
 such as image classification, object detection, or semantic segmentation. The application of existing methods to
 multitask problems degrades model accuracy and/or significantly increase runtime latency. In this study, we propose Ladon,
 the first multi-task-head supervised compression model for multi-task split computing. Experimental results show that
