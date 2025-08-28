@@ -1,0 +1,209 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" data-content_root="./">
+<head>
+  <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>torchdistill documentation &mdash; torchdistill v1.1.4-dev documentation</title>
+      <link rel="stylesheet" type="text/css" href="_static/pygments.css?v=b86133f3" />
+      <link rel="stylesheet" type="text/css" href="_static/css/theme.css?v=e59714d7" />
+
+  
+      <script src="_static/jquery.js?v=5d32c60e"></script>
+      <script src="_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+      <script src="_static/documentation_options.js?v=205dc2f2"></script>
+      <script src="_static/doctools.js?v=9bcbadda"></script>
+      <script src="_static/sphinx_highlight.js?v=dc90522c"></script>
+      <script async="async" src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
+    <script src="_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="next" title="Usage" href="usage.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="#">
+            
+              <img src="_static/logo-white.png" class="logo" alt="Logo"/>
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">📚 Overview</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="usage.html">Usage</a></li>
+<li class="toctree-l1"><a class="reference internal" href="package.html">torchdistill API</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">🧑🏻‍💻 Research</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="benchmarks.html">Benchmarks</a></li>
+<li class="toctree-l1"><a class="reference internal" href="projects.html">Projects</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="#">torchdistill</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content style-external-links">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="#" class="icon icon-home" aria-label="Home"></a></li>
+      <li class="breadcrumb-item active">torchdistill documentation</li>
+      <li class="wy-breadcrumbs-aside">
+              <a href="https://github.com/yoshitomo-matsubara/torchdistill/blob/main/docs/source/index.rst" class="fa fa-github"> Edit on GitHub</a>
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <img alt="torchdistill logo" src="_images/logo-color.png" />
+<section id="torchdistill-documentation">
+<h1>torchdistill documentation<a class="headerlink" href="#torchdistill-documentation" title="Link to this heading"></a></h1>
+<p><strong>torchdistill</strong> (formerly <em>kdkit</em>) offers various state-of-the-art knowledge distillation methods
+and enables you to design (new) experiments simply by editing a declarative yaml config file instead of Python code.
+Even when you need to extract intermediate representations in teacher/student models,
+you will <strong>NOT</strong> need to reimplement the models, that often change the interface of the forward, but instead
+specify the module path(s) in the yaml file.</p>
+<p>In addition to knowledge distillation, this framework helps you design and perform general deep learning experiments
+(<strong>WITHOUT coding</strong>) for reproducible deep learning studies. i.e., it enables you to train models without teachers
+simply by excluding teacher entries from a declarative yaml config file.
+You can find such examples in <a class="reference external" href="https://github.com/yoshitomo-matsubara/torchdistill/tree/main/configs/sample/">configs/sample/ of the official repository</a>.</p>
+<p>When you refer to <strong>torchdistill</strong> in your paper, please cite <a class="reference external" href="https://github.com/yoshitomo-matsubara/torchdistill#citation">these papers</a>
+instead of this GitHub repository.
+<strong>If you use torchdistill as part of your work, your citation is appreciated and motivates me to maintain and upgrade this framework!</strong></p>
+<div class="toctree-wrapper compound">
+<p class="caption" role="heading"><span class="caption-text">📚 Overview</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="usage.html">Usage</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="usage.html#installation">Installation</a></li>
+<li class="toctree-l2"><a class="reference internal" href="usage.html#examples">Examples</a></li>
+<li class="toctree-l2"><a class="reference internal" href="usage.html#how-to-add-your-modules">How to Add Your Modules</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="package.html">torchdistill API</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="subpkgs/core.html">torchdistill.core</a></li>
+<li class="toctree-l2"><a class="reference internal" href="subpkgs/datasets.html">torchdistill.datasets</a></li>
+<li class="toctree-l2"><a class="reference internal" href="subpkgs/models.html">torchdistill.models</a></li>
+<li class="toctree-l2"><a class="reference internal" href="subpkgs/losses.html">torchdistill.losses</a></li>
+<li class="toctree-l2"><a class="reference internal" href="subpkgs/optim.html">torchdistill.optim</a></li>
+<li class="toctree-l2"><a class="reference internal" href="subpkgs/common.html">torchdistill.common</a></li>
+<li class="toctree-l2"><a class="reference internal" href="subpkgs/misc.html">torchdistill.misc</a></li>
+</ul>
+</li>
+</ul>
+</div>
+<div class="toctree-wrapper compound">
+<p class="caption" role="heading"><span class="caption-text">🧑🏻‍💻 Research</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="benchmarks.html">Benchmarks</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="benchmarks.html#imagenet-ilsvrc-2012">ImageNet (ILSVRC 2012)</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="projects.html">Projects</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="projects.html#oss">OSS</a></li>
+<li class="toctree-l2"><a class="reference internal" href="projects.html#papers">Papers</a></li>
+</ul>
+</li>
+</ul>
+</div>
+<section id="references">
+<h2>References<a class="headerlink" href="#references" title="Link to this heading"></a></h2>
+<div class="highlight-bibtex notranslate"><div class="highlight"><pre><span></span><span class="nc">@inproceedings</span><span class="p">{</span><span class="nl">matsubara2021torchdistill</span><span class="p">,</span>
+<span class="w">  </span><span class="na">title</span><span class="p">=</span><span class="s">{{torchdistill: A Modular, Configuration-Driven Framework for Knowledge Distillation}}</span><span class="p">,</span>
+<span class="w">  </span><span class="na">author</span><span class="p">=</span><span class="s">{Matsubara, Yoshitomo}</span><span class="p">,</span>
+<span class="w">  </span><span class="na">booktitle</span><span class="p">=</span><span class="s">{International Workshop on Reproducible Research in Pattern Recognition}</span><span class="p">,</span>
+<span class="w">  </span><span class="na">pages</span><span class="p">=</span><span class="s">{24--44}</span><span class="p">,</span>
+<span class="w">  </span><span class="na">year</span><span class="p">=</span><span class="s">{2021}</span><span class="p">,</span>
+<span class="w">  </span><span class="na">organization</span><span class="p">=</span><span class="s">{Springer}</span>
+<span class="p">}</span>
+
+<span class="nc">@inproceedings</span><span class="p">{</span><span class="nl">matsubara2023torchdistill</span><span class="p">,</span>
+<span class="w">  </span><span class="na">title</span><span class="p">=</span><span class="s">{{torchdistill Meets Hugging Face Libraries for Reproducible, Coding-Free Deep Learning Studies: A Case Study on NLP}}</span><span class="p">,</span>
+<span class="w">  </span><span class="na">author</span><span class="p">=</span><span class="s">{Matsubara, Yoshitomo}</span><span class="p">,</span>
+<span class="w">  </span><span class="na">booktitle</span><span class="p">=</span><span class="s">{Proceedings of the 3rd Workshop for Natural Language Processing Open Source Software (NLP-OSS 2023)}</span><span class="p">,</span>
+<span class="w">  </span><span class="na">publisher</span><span class="p">=</span><span class="s">{Empirical Methods in Natural Language Processing}</span><span class="p">,</span>
+<span class="w">  </span><span class="na">pages</span><span class="p">=</span><span class="s">{153--164}</span><span class="p">,</span>
+<span class="w">  </span><span class="na">year</span><span class="p">=</span><span class="s">{2023}</span>
+<span class="p">}</span>
+</pre></div>
+</div>
+</section>
+</section>
+<section id="questions-requests">
+<h1>Questions / Requests<a class="headerlink" href="#questions-requests" title="Link to this heading"></a></h1>
+<p>If you have either a question or feature request, start <a class="reference external" href="https://github.com/yoshitomo-matsubara/torchdistill/discussions">a new “Q&amp;A” discussion at GitHub</a> instead of a GitHub issue.
+Please make sure the issue/question/request has not been addressed yet by searching through the open/closed issues and discussions.</p>
+</section>
+<section id="indices-and-tables">
+<h1>Indices and Tables<a class="headerlink" href="#indices-and-tables" title="Link to this heading"></a></h1>
+<ul class="simple">
+<li><p><a class="reference internal" href="genindex.html"><span class="std std-ref">Index</span></a></p></li>
+<li><p><a class="reference internal" href="py-modindex.html"><span class="std std-ref">Module Index</span></a></p></li>
+<li><p><a class="reference internal" href="search.html"><span class="std std-ref">Search Page</span></a></p></li>
+</ul>
+</section>
+
+
+           </div>
+          </div>
+          <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
+        <a href="usage.html" class="btn btn-neutral float-right" title="Usage" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2023, Yoshitomo Matsubara.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script>
+    <!-- Theme Analytics -->
+    <script async src="https://www.googletagmanager.com/gtag/js?id=G-LYK8SSJ7R5"></script>
+    <script>
+      window.dataLayer = window.dataLayer || [];
+      function gtag(){dataLayer.push(arguments);}
+      gtag('js', new Date());
+
+      gtag('config', 'G-LYK8SSJ7R5', {
+          'anonymize_ip': false,
+      });
+    </script> 
+
+</body>
+</html>
