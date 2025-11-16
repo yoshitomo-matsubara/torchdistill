@@ -1,0 +1,292 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" data-content_root="../../../">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>torchdistill.datasets.wrapper &mdash; torchdistill v1.1.4-dev documentation</title>
+      <link rel="stylesheet" type="text/css" href="../../../_static/pygments.css?v=b86133f3" />
+      <link rel="stylesheet" type="text/css" href="../../../_static/css/theme.css?v=e59714d7" />
+
+  
+      <script src="../../../_static/jquery.js?v=5d32c60e"></script>
+      <script src="../../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+      <script src="../../../_static/documentation_options.js?v=205dc2f2"></script>
+      <script src="../../../_static/doctools.js?v=9bcbadda"></script>
+      <script src="../../../_static/sphinx_highlight.js?v=dc90522c"></script>
+    <script src="../../../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../search.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="../../../index.html">
+            
+              <img src="../../../_static/logo-white.png" class="logo" alt="Logo"/>
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">📚 Overview</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../usage.html">Usage</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../package.html">torchdistill API</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">🧑🏻‍💻 Research</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../benchmarks.html">Benchmarks</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../projects.html">Projects</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../../index.html">torchdistill</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content style-external-links">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../../../index.html" class="icon icon-home" aria-label="Home"></a></li>
+          <li class="breadcrumb-item"><a href="../../index.html">Module code</a></li>
+      <li class="breadcrumb-item active">torchdistill.datasets.wrapper</li>
+      <li class="wy-breadcrumbs-aside">
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <h1>Source code for torchdistill.datasets.wrapper</h1><div class="highlight"><pre>
+<span></span><span class="kn">import</span><span class="w"> </span><span class="nn">os</span>
+
+<span class="kn">import</span><span class="w"> </span><span class="nn">numpy</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">np</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">torch</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">torch.utils.data</span><span class="w"> </span><span class="kn">import</span> <span class="n">Dataset</span>
+
+<span class="kn">from</span><span class="w"> </span><span class="nn">.registry</span><span class="w"> </span><span class="kn">import</span> <span class="n">register_dataset_wrapper</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">..common</span><span class="w"> </span><span class="kn">import</span> <span class="n">file_util</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">..common.constant</span><span class="w"> </span><span class="kn">import</span> <span class="n">def_logger</span>
+
+<span class="n">logger</span> <span class="o">=</span> <span class="n">def_logger</span><span class="o">.</span><span class="n">getChild</span><span class="p">(</span><span class="vm">__name__</span><span class="p">)</span>
+
+
+<div class="viewcode-block" id="default_idx2subpath">
+<a class="viewcode-back" href="../../../subpkgs/datasets.html#torchdistill.datasets.wrapper.default_idx2subpath">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">default_idx2subpath</span><span class="p">(</span><span class="n">index</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Converts index to a file path including a parent dir name, which consists of the last four digits of the index.</span>
+
+<span class="sd">    :param index: index.</span>
+<span class="sd">    :type index: int</span>
+<span class="sd">    :return: file path with a parent directory.</span>
+<span class="sd">    :rtype: str</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">digits_str</span> <span class="o">=</span> <span class="s1">&#39;</span><span class="si">{:04d}</span><span class="s1">&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">index</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">digits_str</span><span class="p">[</span><span class="o">-</span><span class="mi">4</span><span class="p">:],</span> <span class="n">digits_str</span><span class="p">)</span></div>
+
+
+
+<div class="viewcode-block" id="BaseDatasetWrapper">
+<a class="viewcode-back" href="../../../subpkgs/datasets.html#torchdistill.datasets.wrapper.BaseDatasetWrapper">[docs]</a>
+<span class="k">class</span><span class="w"> </span><span class="nc">BaseDatasetWrapper</span><span class="p">(</span><span class="n">Dataset</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    A base dataset wrapper. This is a subclass of :class:`torch.utils.data.Dataset`.</span>
+
+<span class="sd">    :param org_dataset: original dataset to be wrapped.</span>
+<span class="sd">    :type org_dataset: torch.utils.data.Dataset</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">org_dataset</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">org_dataset</span> <span class="o">=</span> <span class="n">org_dataset</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="fm">__getitem__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">index</span><span class="p">):</span>
+        <span class="n">sample</span><span class="p">,</span> <span class="n">target</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">org_dataset</span><span class="o">.</span><span class="fm">__getitem__</span><span class="p">(</span><span class="n">index</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">sample</span><span class="p">,</span> <span class="n">target</span><span class="p">,</span> <span class="nb">dict</span><span class="p">()</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="fm">__len__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">org_dataset</span><span class="p">)</span></div>
+
+
+
+<div class="viewcode-block" id="CacheableDataset">
+<a class="viewcode-back" href="../../../subpkgs/datasets.html#torchdistill.datasets.wrapper.CacheableDataset">[docs]</a>
+<span class="k">class</span><span class="w"> </span><span class="nc">CacheableDataset</span><span class="p">(</span><span class="n">BaseDatasetWrapper</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    A dataset wrapper that additionally loads cached files in ``cache_dir_path`` if exists.</span>
+
+<span class="sd">    :param org_dataset: original dataset to be wrapped.</span>
+<span class="sd">    :type org_dataset: torch.utils.data.Dataset</span>
+<span class="sd">    :param cache_dir_path: cache directory path.</span>
+<span class="sd">    :type cache_dir_path: str</span>
+<span class="sd">    :param idx2subpath_func: function to convert a sample index to a file path.</span>
+<span class="sd">    :type idx2subpath_func: typing.Callable or None</span>
+<span class="sd">    :param ext: cache file extension.</span>
+<span class="sd">    :type ext: str</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">org_dataset</span><span class="p">,</span> <span class="n">cache_dir_path</span><span class="p">,</span> <span class="n">idx2subpath_func</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">ext</span><span class="o">=</span><span class="s1">&#39;.pt&#39;</span><span class="p">):</span>
+        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="n">org_dataset</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">cache_dir_path</span> <span class="o">=</span> <span class="n">cache_dir_path</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">idx2subath_func</span> <span class="o">=</span> <span class="nb">str</span> <span class="k">if</span> <span class="n">idx2subpath_func</span> <span class="ow">is</span> <span class="kc">None</span> <span class="k">else</span> <span class="n">idx2subpath_func</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">ext</span> <span class="o">=</span> <span class="n">ext</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="fm">__getitem__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">index</span><span class="p">):</span>
+        <span class="n">sample</span><span class="p">,</span> <span class="n">target</span><span class="p">,</span> <span class="n">supp_dict</span> <span class="o">=</span> <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__getitem__</span><span class="p">(</span><span class="n">index</span><span class="p">)</span>
+        <span class="n">cache_file_path</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">cache_dir_path</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">idx2subath_func</span><span class="p">(</span><span class="n">index</span><span class="p">)</span> <span class="o">+</span> <span class="bp">self</span><span class="o">.</span><span class="n">ext</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">file_util</span><span class="o">.</span><span class="n">check_if_exists</span><span class="p">(</span><span class="n">cache_file_path</span><span class="p">):</span>
+            <span class="n">cached_data</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">load</span><span class="p">(</span><span class="n">cache_file_path</span><span class="p">,</span> <span class="n">weights_only</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
+            <span class="n">supp_dict</span><span class="p">[</span><span class="s1">&#39;cached_data&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">cached_data</span>
+
+        <span class="n">supp_dict</span><span class="p">[</span><span class="s1">&#39;cache_file_path&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">cache_file_path</span>
+        <span class="k">return</span> <span class="n">sample</span><span class="p">,</span> <span class="n">target</span><span class="p">,</span> <span class="n">supp_dict</span></div>
+
+
+
+<div class="viewcode-block" id="CRDDatasetWrapper">
+<a class="viewcode-back" href="../../../subpkgs/datasets.html#torchdistill.datasets.wrapper.CRDDatasetWrapper">[docs]</a>
+<span class="nd">@register_dataset_wrapper</span>
+<span class="k">class</span><span class="w"> </span><span class="nc">CRDDatasetWrapper</span><span class="p">(</span><span class="n">BaseDatasetWrapper</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    A dataset wrapper for Contrastive Representation Distillation (CRD).</span>
+
+<span class="sd">    Yonglong Tian, Dilip Krishnan, Phillip Isola: `&quot;Contrastive Representation Distillation&quot; &lt;https://openreview.net/forum?id=SkgpBJrtvS&gt;`_ @ ICLR 2020 (2020)</span>
+
+<span class="sd">    :param org_dataset: original dataset to be wrapped.</span>
+<span class="sd">    :type org_dataset: torch.utils.data.Dataset</span>
+<span class="sd">    :param num_negative_samples: number of negative samples for CRD.</span>
+<span class="sd">    :type num_negative_samples: int</span>
+<span class="sd">    :param mode: either &#39;exact&#39; or &#39;relax&#39;.</span>
+<span class="sd">    :type mode: str</span>
+<span class="sd">    :param ratio: ratio of class-wise negative samples.</span>
+<span class="sd">    :type ratio: float</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">org_dataset</span><span class="p">,</span> <span class="n">num_negative_samples</span><span class="p">,</span> <span class="n">mode</span><span class="p">,</span> <span class="n">ratio</span><span class="p">):</span>
+        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="n">org_dataset</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">num_negative_samples</span> <span class="o">=</span> <span class="n">num_negative_samples</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">mode</span> <span class="o">=</span> <span class="n">mode</span>
+        <span class="n">num_classes</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">org_dataset</span><span class="o">.</span><span class="n">classes</span><span class="p">)</span>
+        <span class="n">num_samples</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">org_dataset</span><span class="p">)</span>
+        <span class="n">labels</span> <span class="o">=</span> <span class="n">org_dataset</span><span class="o">.</span><span class="n">targets</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">cls_positives</span> <span class="o">=</span> <span class="p">[[]</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">num_classes</span><span class="p">)]</span>
+        <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">num_samples</span><span class="p">):</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">cls_positives</span><span class="p">[</span><span class="n">labels</span><span class="p">[</span><span class="n">i</span><span class="p">]]</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">i</span><span class="p">)</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">cls_negatives</span> <span class="o">=</span> <span class="p">[[]</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">num_classes</span><span class="p">)]</span>
+        <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">num_classes</span><span class="p">):</span>
+            <span class="k">for</span> <span class="n">j</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">num_classes</span><span class="p">):</span>
+                <span class="k">if</span> <span class="n">j</span> <span class="o">==</span> <span class="n">i</span><span class="p">:</span>
+                    <span class="k">continue</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">cls_negatives</span><span class="p">[</span><span class="n">i</span><span class="p">]</span><span class="o">.</span><span class="n">extend</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">cls_positives</span><span class="p">[</span><span class="n">j</span><span class="p">])</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">cls_positives</span> <span class="o">=</span> <span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">cls_positives</span><span class="p">[</span><span class="n">i</span><span class="p">])</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">num_classes</span><span class="p">)]</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">cls_negatives</span> <span class="o">=</span> <span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">cls_negatives</span><span class="p">[</span><span class="n">i</span><span class="p">])</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">num_classes</span><span class="p">)]</span>
+        <span class="k">if</span> <span class="mi">0</span> <span class="o">&lt;</span> <span class="n">ratio</span> <span class="o">&lt;</span> <span class="mi">1</span><span class="p">:</span>
+            <span class="n">n</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">cls_negatives</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span> <span class="o">*</span> <span class="n">ratio</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">cls_negatives</span> <span class="o">=</span> <span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">permutation</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">cls_negatives</span><span class="p">[</span><span class="n">i</span><span class="p">])[</span><span class="mi">0</span><span class="p">:</span><span class="n">n</span><span class="p">]</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">num_classes</span><span class="p">)]</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">cls_positives</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">cls_positives</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">cls_negatives</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">cls_negatives</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="fm">__getitem__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">index</span><span class="p">):</span>
+        <span class="n">sample</span><span class="p">,</span> <span class="n">target</span><span class="p">,</span> <span class="n">supp_dict</span> <span class="o">=</span> <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__getitem__</span><span class="p">(</span><span class="n">index</span><span class="p">)</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">mode</span> <span class="o">==</span> <span class="s1">&#39;exact&#39;</span><span class="p">:</span>
+            <span class="n">pos_idx</span> <span class="o">=</span> <span class="n">index</span>
+        <span class="k">elif</span> <span class="bp">self</span><span class="o">.</span><span class="n">mode</span> <span class="o">==</span> <span class="s1">&#39;relax&#39;</span><span class="p">:</span>
+            <span class="n">pos_idx</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">choice</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">cls_positives</span><span class="p">[</span><span class="n">target</span><span class="p">],</span> <span class="mi">1</span><span class="p">)</span>
+            <span class="n">pos_idx</span> <span class="o">=</span> <span class="n">pos_idx</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">NotImplementedError</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">mode</span><span class="p">)</span>
+
+        <span class="n">replace</span> <span class="o">=</span> <span class="kc">True</span> <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">num_negative_samples</span> <span class="o">&gt;</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">cls_negatives</span><span class="p">[</span><span class="n">target</span><span class="p">])</span> <span class="k">else</span> <span class="kc">False</span>
+        <span class="n">neg_idx</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">choice</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">cls_negatives</span><span class="p">[</span><span class="n">target</span><span class="p">],</span> <span class="bp">self</span><span class="o">.</span><span class="n">num_negative_samples</span><span class="p">,</span> <span class="n">replace</span><span class="o">=</span><span class="n">replace</span><span class="p">)</span>
+        <span class="n">contrast_idx</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">hstack</span><span class="p">((</span><span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">([</span><span class="n">pos_idx</span><span class="p">]),</span> <span class="n">neg_idx</span><span class="p">))</span>
+        <span class="n">supp_dict</span><span class="p">[</span><span class="s1">&#39;pos_idx&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">index</span>
+        <span class="n">supp_dict</span><span class="p">[</span><span class="s1">&#39;contrast_idx&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">contrast_idx</span>
+        <span class="k">return</span> <span class="n">sample</span><span class="p">,</span> <span class="n">target</span><span class="p">,</span> <span class="n">supp_dict</span></div>
+
+
+
+<div class="viewcode-block" id="SSKDDatasetWrapper">
+<a class="viewcode-back" href="../../../subpkgs/datasets.html#torchdistill.datasets.wrapper.SSKDDatasetWrapper">[docs]</a>
+<span class="nd">@register_dataset_wrapper</span>
+<span class="k">class</span><span class="w"> </span><span class="nc">SSKDDatasetWrapper</span><span class="p">(</span><span class="n">BaseDatasetWrapper</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    A dataset wrapper for Self-Supervised Knowledge Distillation (SSKD).</span>
+
+<span class="sd">    Guodong Xu, Ziwei Liu, Xiaoxiao Li, Chen Change Loy: `&quot;Knowledge Distillation Meets Self-Supervision&quot; &lt;https://www.ecva.net/papers/eccv_2020/papers_ECCV/html/898_ECCV_2020_paper.php&gt;`_ @ ECCV 2020 (2020)</span>
+
+<span class="sd">    :param org_dataset: original dataset to be wrapped.</span>
+<span class="sd">    :type org_dataset: torch.utils.data.Dataset</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">org_dataset</span><span class="p">):</span>
+        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="n">org_dataset</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">transform</span> <span class="o">=</span> <span class="n">org_dataset</span><span class="o">.</span><span class="n">transform</span>
+        <span class="n">org_dataset</span><span class="o">.</span><span class="n">transform</span> <span class="o">=</span> <span class="kc">None</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="fm">__getitem__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">index</span><span class="p">):</span>
+        <span class="c1"># Assume sample is a PIL Image</span>
+        <span class="n">sample</span><span class="p">,</span> <span class="n">target</span><span class="p">,</span> <span class="n">supp_dict</span> <span class="o">=</span> <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__getitem__</span><span class="p">(</span><span class="n">index</span><span class="p">)</span>
+        <span class="n">sample</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">stack</span><span class="p">([</span><span class="bp">self</span><span class="o">.</span><span class="n">transform</span><span class="p">(</span><span class="n">sample</span><span class="p">)</span><span class="o">.</span><span class="n">detach</span><span class="p">(),</span>
+                              <span class="bp">self</span><span class="o">.</span><span class="n">transform</span><span class="p">(</span><span class="n">sample</span><span class="o">.</span><span class="n">rotate</span><span class="p">(</span><span class="mi">90</span><span class="p">,</span> <span class="n">expand</span><span class="o">=</span><span class="kc">True</span><span class="p">))</span><span class="o">.</span><span class="n">detach</span><span class="p">(),</span>
+                              <span class="bp">self</span><span class="o">.</span><span class="n">transform</span><span class="p">(</span><span class="n">sample</span><span class="o">.</span><span class="n">rotate</span><span class="p">(</span><span class="mi">180</span><span class="p">,</span> <span class="n">expand</span><span class="o">=</span><span class="kc">True</span><span class="p">))</span><span class="o">.</span><span class="n">detach</span><span class="p">(),</span>
+                              <span class="bp">self</span><span class="o">.</span><span class="n">transform</span><span class="p">(</span><span class="n">sample</span><span class="o">.</span><span class="n">rotate</span><span class="p">(</span><span class="mi">270</span><span class="p">,</span> <span class="n">expand</span><span class="o">=</span><span class="kc">True</span><span class="p">))</span><span class="o">.</span><span class="n">detach</span><span class="p">()])</span>
+        <span class="k">return</span> <span class="n">sample</span><span class="p">,</span> <span class="n">target</span><span class="p">,</span> <span class="n">supp_dict</span></div>
+
+</pre></div>
+
+           </div>
+          </div>
+          <footer>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2023, Yoshitomo Matsubara.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script>
+    <!-- Theme Analytics -->
+    <script async src="https://www.googletagmanager.com/gtag/js?id=G-LYK8SSJ7R5"></script>
+    <script>
+      window.dataLayer = window.dataLayer || [];
+      function gtag(){dataLayer.push(arguments);}
+      gtag('js', new Date());
+
+      gtag('config', 'G-LYK8SSJ7R5', {
+          'anonymize_ip': false,
+      });
+    </script> 
+
+</body>
+</html>

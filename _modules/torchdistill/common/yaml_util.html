@@ -1,0 +1,358 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" data-content_root="../../../">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>torchdistill.common.yaml_util &mdash; torchdistill v1.1.4-dev documentation</title>
+      <link rel="stylesheet" type="text/css" href="../../../_static/pygments.css?v=b86133f3" />
+      <link rel="stylesheet" type="text/css" href="../../../_static/css/theme.css?v=e59714d7" />
+
+  
+      <script src="../../../_static/jquery.js?v=5d32c60e"></script>
+      <script src="../../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+      <script src="../../../_static/documentation_options.js?v=205dc2f2"></script>
+      <script src="../../../_static/doctools.js?v=9bcbadda"></script>
+      <script src="../../../_static/sphinx_highlight.js?v=dc90522c"></script>
+    <script src="../../../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../search.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="../../../index.html">
+            
+              <img src="../../../_static/logo-white.png" class="logo" alt="Logo"/>
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">📚 Overview</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../usage.html">Usage</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../package.html">torchdistill API</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">🧑🏻‍💻 Research</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../benchmarks.html">Benchmarks</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../projects.html">Projects</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../../index.html">torchdistill</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content style-external-links">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../../../index.html" class="icon icon-home" aria-label="Home"></a></li>
+          <li class="breadcrumb-item"><a href="../../index.html">Module code</a></li>
+      <li class="breadcrumb-item active">torchdistill.common.yaml_util</li>
+      <li class="wy-breadcrumbs-aside">
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <h1>Source code for torchdistill.common.yaml_util</h1><div class="highlight"><pre>
+<span></span><span class="kn">import</span><span class="w"> </span><span class="nn">os</span>
+
+<span class="kn">import</span><span class="w"> </span><span class="nn">yaml</span>
+
+<span class="kn">from</span><span class="w"> </span><span class="nn">.constant</span><span class="w"> </span><span class="kn">import</span> <span class="n">def_logger</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">.main_util</span><span class="w"> </span><span class="kn">import</span> <span class="n">import_get</span><span class="p">,</span> <span class="n">import_call</span><span class="p">,</span> <span class="n">import_call_method</span><span class="p">,</span> <span class="n">call_method</span>
+
+<span class="n">logger</span> <span class="o">=</span> <span class="n">def_logger</span><span class="o">.</span><span class="n">getChild</span><span class="p">(</span><span class="vm">__name__</span><span class="p">)</span>
+
+
+<div class="viewcode-block" id="yaml_join">
+<a class="viewcode-back" href="../../../subpkgs/common.html#torchdistill.common.yaml_util.yaml_join">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">yaml_join</span><span class="p">(</span><span class="n">loader</span><span class="p">,</span> <span class="n">node</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Joins a sequence of strings.</span>
+
+<span class="sd">    :param loader: yaml loader.</span>
+<span class="sd">    :type loader: yaml.loader.FullLoader</span>
+<span class="sd">    :param node: node.</span>
+<span class="sd">    :type node: yaml.nodes.Node</span>
+<span class="sd">    :return: joined string.</span>
+<span class="sd">    :rtype: str</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">seq</span> <span class="o">=</span> <span class="n">loader</span><span class="o">.</span><span class="n">construct_sequence</span><span class="p">(</span><span class="n">node</span><span class="p">,</span> <span class="n">deep</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+    <span class="k">return</span> <span class="s1">&#39;&#39;</span><span class="o">.</span><span class="n">join</span><span class="p">([</span><span class="nb">str</span><span class="p">(</span><span class="n">i</span><span class="p">)</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="n">seq</span><span class="p">])</span></div>
+
+
+
+<div class="viewcode-block" id="yaml_pathjoin">
+<a class="viewcode-back" href="../../../subpkgs/common.html#torchdistill.common.yaml_util.yaml_pathjoin">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">yaml_pathjoin</span><span class="p">(</span><span class="n">loader</span><span class="p">,</span> <span class="n">node</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Joins a sequence of strings as a (file) path.</span>
+
+<span class="sd">    :param loader: yaml loader.</span>
+<span class="sd">    :type loader: yaml.loader.FullLoader</span>
+<span class="sd">    :param node: node.</span>
+<span class="sd">    :type node: yaml.nodes.Node</span>
+<span class="sd">    :return: joined (file) path.</span>
+<span class="sd">    :rtype: str</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">seq</span> <span class="o">=</span> <span class="n">loader</span><span class="o">.</span><span class="n">construct_sequence</span><span class="p">(</span><span class="n">node</span><span class="p">,</span> <span class="n">deep</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">expanduser</span><span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="o">*</span><span class="p">[</span><span class="nb">str</span><span class="p">(</span><span class="n">i</span><span class="p">)</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="n">seq</span><span class="p">]))</span></div>
+
+
+
+<div class="viewcode-block" id="yaml_expanduser">
+<a class="viewcode-back" href="../../../subpkgs/common.html#torchdistill.common.yaml_util.yaml_expanduser">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">yaml_expanduser</span><span class="p">(</span><span class="n">loader</span><span class="p">,</span> <span class="n">node</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Applies os.path.expanduser to a (file) path.</span>
+
+<span class="sd">    :param loader: yaml loader.</span>
+<span class="sd">    :type loader: yaml.loader.FullLoader</span>
+<span class="sd">    :param node: node.</span>
+<span class="sd">    :type node: yaml.nodes.Node</span>
+<span class="sd">    :return: (file) path.</span>
+<span class="sd">    :rtype: str</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">path</span> <span class="o">=</span> <span class="n">loader</span><span class="o">.</span><span class="n">construct_python_str</span><span class="p">(</span><span class="n">node</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">expanduser</span><span class="p">(</span><span class="n">path</span><span class="p">)</span></div>
+
+
+
+<div class="viewcode-block" id="yaml_abspath">
+<a class="viewcode-back" href="../../../subpkgs/common.html#torchdistill.common.yaml_util.yaml_abspath">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">yaml_abspath</span><span class="p">(</span><span class="n">loader</span><span class="p">,</span> <span class="n">node</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Applies os.path.abspath to a (file) path.</span>
+
+<span class="sd">    :param loader: yaml loader.</span>
+<span class="sd">    :type loader: yaml.loader.FullLoader</span>
+<span class="sd">    :param node: node.</span>
+<span class="sd">    :type node: yaml.nodes.Node</span>
+<span class="sd">    :return: (file) path.</span>
+<span class="sd">    :rtype: str</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">path</span> <span class="o">=</span> <span class="n">loader</span><span class="o">.</span><span class="n">construct_python_str</span><span class="p">(</span><span class="n">node</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">abspath</span><span class="p">(</span><span class="n">path</span><span class="p">)</span></div>
+
+
+
+<div class="viewcode-block" id="yaml_import_get">
+<a class="viewcode-back" href="../../../subpkgs/common.html#torchdistill.common.yaml_util.yaml_import_get">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">yaml_import_get</span><span class="p">(</span><span class="n">loader</span><span class="p">,</span> <span class="n">node</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Imports module and get its attribute.</span>
+
+<span class="sd">    :param loader: yaml loader.</span>
+<span class="sd">    :type loader: yaml.loader.FullLoader</span>
+<span class="sd">    :param node: node.</span>
+<span class="sd">    :type node: yaml.nodes.Node</span>
+<span class="sd">    :return: module attribute.</span>
+<span class="sd">    :rtype: Any</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">entry</span> <span class="o">=</span> <span class="n">loader</span><span class="o">.</span><span class="n">construct_mapping</span><span class="p">(</span><span class="n">node</span><span class="p">,</span> <span class="n">deep</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">import_get</span><span class="p">(</span><span class="o">**</span><span class="n">entry</span><span class="p">)</span></div>
+
+
+
+<div class="viewcode-block" id="yaml_import_call">
+<a class="viewcode-back" href="../../../subpkgs/common.html#torchdistill.common.yaml_util.yaml_import_call">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">yaml_import_call</span><span class="p">(</span><span class="n">loader</span><span class="p">,</span> <span class="n">node</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Imports module and call the module/function e.g., instantiation.</span>
+
+<span class="sd">    :param loader: yaml loader.</span>
+<span class="sd">    :type loader: yaml.loader.FullLoader</span>
+<span class="sd">    :param node: node.</span>
+<span class="sd">    :type node: yaml.nodes.Node</span>
+<span class="sd">    :return: result of callable module.</span>
+<span class="sd">    :rtype: Any</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">entry</span> <span class="o">=</span> <span class="n">loader</span><span class="o">.</span><span class="n">construct_mapping</span><span class="p">(</span><span class="n">node</span><span class="p">,</span> <span class="n">deep</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">import_call</span><span class="p">(</span><span class="o">**</span><span class="n">entry</span><span class="p">)</span></div>
+
+
+
+<div class="viewcode-block" id="yaml_import_call_method">
+<a class="viewcode-back" href="../../../subpkgs/common.html#torchdistill.common.yaml_util.yaml_import_call_method">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">yaml_import_call_method</span><span class="p">(</span><span class="n">loader</span><span class="p">,</span> <span class="n">node</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Imports module and call its method.</span>
+
+<span class="sd">    :param loader: yaml loader.</span>
+<span class="sd">    :type loader: yaml.loader.FullLoader</span>
+<span class="sd">    :param node: node.</span>
+<span class="sd">    :type node: yaml.nodes.Node</span>
+<span class="sd">    :return: result of callable module.</span>
+<span class="sd">    :rtype: Any</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">entry</span> <span class="o">=</span> <span class="n">loader</span><span class="o">.</span><span class="n">construct_mapping</span><span class="p">(</span><span class="n">node</span><span class="p">,</span> <span class="n">deep</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">import_call_method</span><span class="p">(</span><span class="o">**</span><span class="n">entry</span><span class="p">)</span></div>
+
+
+
+<div class="viewcode-block" id="yaml_call_method">
+<a class="viewcode-back" href="../../../subpkgs/common.html#torchdistill.common.yaml_util.yaml_call_method">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">yaml_call_method</span><span class="p">(</span><span class="n">loader</span><span class="p">,</span> <span class="n">node</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Calls an object&#39;s method.</span>
+
+<span class="sd">    :param loader: yaml loader.</span>
+<span class="sd">    :type loader: yaml.loader.FullLoader</span>
+<span class="sd">    :param node: node.</span>
+<span class="sd">    :type node: yaml.nodes.Node</span>
+<span class="sd">    :return: result of callable module or module itself.</span>
+<span class="sd">    :rtype: Any</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">entry</span> <span class="o">=</span> <span class="n">loader</span><span class="o">.</span><span class="n">construct_mapping</span><span class="p">(</span><span class="n">node</span><span class="p">,</span> <span class="n">deep</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">call_method</span><span class="p">(</span><span class="o">**</span><span class="n">entry</span><span class="p">)</span></div>
+
+
+
+<div class="viewcode-block" id="yaml_getattr">
+<a class="viewcode-back" href="../../../subpkgs/common.html#torchdistill.common.yaml_util.yaml_getattr">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">yaml_getattr</span><span class="p">(</span><span class="n">loader</span><span class="p">,</span> <span class="n">node</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Gets an attribute of the first argument.</span>
+
+<span class="sd">    :param loader: yaml loader.</span>
+<span class="sd">    :type loader: yaml.loader.FullLoader</span>
+<span class="sd">    :param node: node.</span>
+<span class="sd">    :type node: yaml.nodes.Node</span>
+<span class="sd">    :return: module attribute.</span>
+<span class="sd">    :rtype: Any</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">args</span> <span class="o">=</span> <span class="n">loader</span><span class="o">.</span><span class="n">construct_sequence</span><span class="p">(</span><span class="n">node</span><span class="p">,</span> <span class="n">deep</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+    <span class="k">return</span> <span class="nb">getattr</span><span class="p">(</span><span class="o">*</span><span class="n">args</span><span class="p">)</span></div>
+
+
+
+<div class="viewcode-block" id="yaml_setattr">
+<a class="viewcode-back" href="../../../subpkgs/common.html#torchdistill.common.yaml_util.yaml_setattr">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">yaml_setattr</span><span class="p">(</span><span class="n">loader</span><span class="p">,</span> <span class="n">node</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Sets an attribute to the first argument.</span>
+
+<span class="sd">    :param loader: yaml loader.</span>
+<span class="sd">    :type loader: yaml.loader.FullLoader</span>
+<span class="sd">    :param node: node.</span>
+<span class="sd">    :type node: yaml.nodes.Node</span>
+<span class="sd">    :return: module attribute.</span>
+<span class="sd">    :rtype: Any</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">args</span> <span class="o">=</span> <span class="n">loader</span><span class="o">.</span><span class="n">construct_sequence</span><span class="p">(</span><span class="n">node</span><span class="p">,</span> <span class="n">deep</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+    <span class="nb">setattr</span><span class="p">(</span><span class="o">*</span><span class="n">args</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">args</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span></div>
+
+
+
+<div class="viewcode-block" id="yaml_access_by_index_or_key">
+<a class="viewcode-back" href="../../../subpkgs/common.html#torchdistill.common.yaml_util.yaml_access_by_index_or_key">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">yaml_access_by_index_or_key</span><span class="p">(</span><span class="n">loader</span><span class="p">,</span> <span class="n">node</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Obtains a value from a specified data</span>
+
+<span class="sd">    :param loader: yaml loader.</span>
+<span class="sd">    :type loader: yaml.loader.FullLoader</span>
+<span class="sd">    :param node: node.</span>
+<span class="sd">    :type node: yaml.nodes.Node</span>
+<span class="sd">    :return: accessed object.</span>
+<span class="sd">    :rtype: Any</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">entry</span> <span class="o">=</span> <span class="n">loader</span><span class="o">.</span><span class="n">construct_mapping</span><span class="p">(</span><span class="n">node</span><span class="p">,</span> <span class="n">deep</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+    <span class="n">data</span> <span class="o">=</span> <span class="n">entry</span><span class="p">[</span><span class="s1">&#39;data&#39;</span><span class="p">]</span>
+    <span class="n">index_or_key</span> <span class="o">=</span> <span class="n">entry</span><span class="p">[</span><span class="s1">&#39;index_or_key&#39;</span><span class="p">]</span>
+    <span class="k">return</span> <span class="n">data</span><span class="p">[</span><span class="n">index_or_key</span><span class="p">]</span></div>
+
+
+
+<div class="viewcode-block" id="load_yaml_file">
+<a class="viewcode-back" href="../../../subpkgs/common.html#torchdistill.common.yaml_util.load_yaml_file">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">load_yaml_file</span><span class="p">(</span><span class="n">yaml_file_path</span><span class="p">,</span> <span class="n">custom_mode</span><span class="o">=</span><span class="kc">True</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Loads a yaml file optionally with convenient constructors.</span>
+
+<span class="sd">    :param yaml_file_path: yaml file path.</span>
+<span class="sd">    :type yaml_file_path: str</span>
+<span class="sd">    :param custom_mode: if True, uses convenient constructors.</span>
+<span class="sd">    :type custom_mode: bool</span>
+<span class="sd">    :return: loaded PyYAML object.</span>
+<span class="sd">    :rtype: Any</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="n">custom_mode</span><span class="p">:</span>
+        <span class="n">yaml</span><span class="o">.</span><span class="n">add_constructor</span><span class="p">(</span><span class="s1">&#39;!join&#39;</span><span class="p">,</span> <span class="n">yaml_join</span><span class="p">,</span> <span class="n">Loader</span><span class="o">=</span><span class="n">yaml</span><span class="o">.</span><span class="n">FullLoader</span><span class="p">)</span>
+        <span class="n">yaml</span><span class="o">.</span><span class="n">add_constructor</span><span class="p">(</span><span class="s1">&#39;!pathjoin&#39;</span><span class="p">,</span> <span class="n">yaml_pathjoin</span><span class="p">,</span> <span class="n">Loader</span><span class="o">=</span><span class="n">yaml</span><span class="o">.</span><span class="n">FullLoader</span><span class="p">)</span>
+        <span class="n">yaml</span><span class="o">.</span><span class="n">add_constructor</span><span class="p">(</span><span class="s1">&#39;!expanduser&#39;</span><span class="p">,</span> <span class="n">yaml_expanduser</span><span class="p">,</span> <span class="n">Loader</span><span class="o">=</span><span class="n">yaml</span><span class="o">.</span><span class="n">FullLoader</span><span class="p">)</span>
+        <span class="n">yaml</span><span class="o">.</span><span class="n">add_constructor</span><span class="p">(</span><span class="s1">&#39;!abspath&#39;</span><span class="p">,</span> <span class="n">yaml_abspath</span><span class="p">,</span> <span class="n">Loader</span><span class="o">=</span><span class="n">yaml</span><span class="o">.</span><span class="n">FullLoader</span><span class="p">)</span>
+        <span class="n">yaml</span><span class="o">.</span><span class="n">add_constructor</span><span class="p">(</span><span class="s1">&#39;!import_get&#39;</span><span class="p">,</span> <span class="n">yaml_import_get</span><span class="p">,</span> <span class="n">Loader</span><span class="o">=</span><span class="n">yaml</span><span class="o">.</span><span class="n">FullLoader</span><span class="p">)</span>
+        <span class="n">yaml</span><span class="o">.</span><span class="n">add_constructor</span><span class="p">(</span><span class="s1">&#39;!import_call&#39;</span><span class="p">,</span> <span class="n">yaml_import_call</span><span class="p">,</span> <span class="n">Loader</span><span class="o">=</span><span class="n">yaml</span><span class="o">.</span><span class="n">FullLoader</span><span class="p">)</span>
+        <span class="n">yaml</span><span class="o">.</span><span class="n">add_constructor</span><span class="p">(</span><span class="s1">&#39;!import_call_method&#39;</span><span class="p">,</span> <span class="n">yaml_import_call_method</span><span class="p">,</span> <span class="n">Loader</span><span class="o">=</span><span class="n">yaml</span><span class="o">.</span><span class="n">FullLoader</span><span class="p">)</span>
+        <span class="n">yaml</span><span class="o">.</span><span class="n">add_constructor</span><span class="p">(</span><span class="s1">&#39;!call_method&#39;</span><span class="p">,</span> <span class="n">yaml_call_method</span><span class="p">,</span> <span class="n">Loader</span><span class="o">=</span><span class="n">yaml</span><span class="o">.</span><span class="n">FullLoader</span><span class="p">)</span>
+        <span class="n">yaml</span><span class="o">.</span><span class="n">add_constructor</span><span class="p">(</span><span class="s1">&#39;!getattr&#39;</span><span class="p">,</span> <span class="n">yaml_getattr</span><span class="p">,</span> <span class="n">Loader</span><span class="o">=</span><span class="n">yaml</span><span class="o">.</span><span class="n">FullLoader</span><span class="p">)</span>
+        <span class="n">yaml</span><span class="o">.</span><span class="n">add_constructor</span><span class="p">(</span><span class="s1">&#39;!setattr&#39;</span><span class="p">,</span> <span class="n">yaml_setattr</span><span class="p">,</span> <span class="n">Loader</span><span class="o">=</span><span class="n">yaml</span><span class="o">.</span><span class="n">FullLoader</span><span class="p">)</span>
+        <span class="n">yaml</span><span class="o">.</span><span class="n">add_constructor</span><span class="p">(</span><span class="s1">&#39;!access_by_index_or_key&#39;</span><span class="p">,</span> <span class="n">yaml_access_by_index_or_key</span><span class="p">,</span> <span class="n">Loader</span><span class="o">=</span><span class="n">yaml</span><span class="o">.</span><span class="n">FullLoader</span><span class="p">)</span>
+    <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="n">yaml_file_path</span><span class="p">,</span> <span class="s1">&#39;r&#39;</span><span class="p">)</span> <span class="k">as</span> <span class="n">fp</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">yaml</span><span class="o">.</span><span class="n">load</span><span class="p">(</span><span class="n">fp</span><span class="p">,</span> <span class="n">Loader</span><span class="o">=</span><span class="n">yaml</span><span class="o">.</span><span class="n">FullLoader</span><span class="p">)</span></div>
+
+</pre></div>
+
+           </div>
+          </div>
+          <footer>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2023, Yoshitomo Matsubara.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script>
+    <!-- Theme Analytics -->
+    <script async src="https://www.googletagmanager.com/gtag/js?id=G-LYK8SSJ7R5"></script>
+    <script>
+      window.dataLayer = window.dataLayer || [];
+      function gtag(){dataLayer.push(arguments);}
+      gtag('js', new Date());
+
+      gtag('config', 'G-LYK8SSJ7R5', {
+          'anonymize_ip': false,
+      });
+    </script> 
+
+</body>
+</html>

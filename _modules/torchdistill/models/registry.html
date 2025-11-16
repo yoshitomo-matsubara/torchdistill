@@ -1,0 +1,322 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" data-content_root="../../../">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>torchdistill.models.registry &mdash; torchdistill v1.1.4-dev documentation</title>
+      <link rel="stylesheet" type="text/css" href="../../../_static/pygments.css?v=b86133f3" />
+      <link rel="stylesheet" type="text/css" href="../../../_static/css/theme.css?v=e59714d7" />
+
+  
+      <script src="../../../_static/jquery.js?v=5d32c60e"></script>
+      <script src="../../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+      <script src="../../../_static/documentation_options.js?v=205dc2f2"></script>
+      <script src="../../../_static/doctools.js?v=9bcbadda"></script>
+      <script src="../../../_static/sphinx_highlight.js?v=dc90522c"></script>
+    <script src="../../../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../search.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="../../../index.html">
+            
+              <img src="../../../_static/logo-white.png" class="logo" alt="Logo"/>
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">📚 Overview</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../usage.html">Usage</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../package.html">torchdistill API</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">🧑🏻‍💻 Research</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../benchmarks.html">Benchmarks</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../projects.html">Projects</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../../index.html">torchdistill</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content style-external-links">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../../../index.html" class="icon icon-home" aria-label="Home"></a></li>
+          <li class="breadcrumb-item"><a href="../../index.html">Module code</a></li>
+      <li class="breadcrumb-item active">torchdistill.models.registry</li>
+      <li class="wy-breadcrumbs-aside">
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <h1>Source code for torchdistill.models.registry</h1><div class="highlight"><pre>
+<span></span><span class="kn">import</span><span class="w"> </span><span class="nn">torch</span>
+
+<span class="kn">from</span><span class="w"> </span><span class="nn">..common</span><span class="w"> </span><span class="kn">import</span> <span class="n">misc_util</span>
+
+<span class="n">MODEL_DICT</span> <span class="o">=</span> <span class="nb">dict</span><span class="p">()</span>
+<span class="n">ADAPTATION_MODULE_DICT</span> <span class="o">=</span> <span class="nb">dict</span><span class="p">()</span>
+<span class="n">AUXILIARY_MODEL_WRAPPER_DICT</span> <span class="o">=</span> <span class="nb">dict</span><span class="p">()</span>
+<span class="n">MODULE_DICT</span> <span class="o">=</span> <span class="n">misc_util</span><span class="o">.</span><span class="n">get_classes_as_dict</span><span class="p">(</span><span class="s1">&#39;torch.nn&#39;</span><span class="p">)</span>
+
+
+<div class="viewcode-block" id="register_model">
+<a class="viewcode-back" href="../../../subpkgs/models.html#torchdistill.models.registry.register_model">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">register_model</span><span class="p">(</span><span class="n">arg</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Registers a model class or function to instantiate it.</span>
+
+<span class="sd">    :param arg: class or function to be registered as a model.</span>
+<span class="sd">    :type arg: class or typing.Callable or None</span>
+<span class="sd">    :return: registered model class or function to instantiate it.</span>
+<span class="sd">    :rtype: class or typing.Callable</span>
+
+<span class="sd">    .. note::</span>
+<span class="sd">        The model will be registered as an option.</span>
+<span class="sd">        You can choose the registered class/function by specifying the name of the class/function or ``key``</span>
+<span class="sd">        you used for the registration, in a training configuration used for</span>
+<span class="sd">        :class:`torchdistill.core.distillation.DistillationBox` or :class:`torchdistill.core.training.TrainingBox`.</span>
+
+<span class="sd">        If you want to register the class/function with a key of your choice, add ``key`` to the decorator as below:</span>
+
+<span class="sd">        &gt;&gt;&gt; from torch import nn</span>
+<span class="sd">        &gt;&gt;&gt; from torchdistill.models.registry import register_model</span>
+<span class="sd">        &gt;&gt;&gt;</span>
+<span class="sd">        &gt;&gt;&gt; @register_model(key=&#39;my_custom_model&#39;)</span>
+<span class="sd">        &gt;&gt;&gt; class CustomModel(nn.Module):</span>
+<span class="sd">        &gt;&gt;&gt;     def __init__(self, **kwargs):</span>
+<span class="sd">        &gt;&gt;&gt;         print(&#39;This is my custom model class&#39;)</span>
+
+<span class="sd">        In the example, ``CustomModel`` class is registered with a key &quot;my_custom_model&quot;.</span>
+<span class="sd">        When you configure :class:`torchdistill.core.distillation.DistillationBox` or</span>
+<span class="sd">        :class:`torchdistill.core.training.TrainingBox`, you can choose the ``CustomModel`` class by</span>
+<span class="sd">        &quot;my_custom_model&quot;.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">_register_model</span><span class="p">(</span><span class="bp">cls</span><span class="p">):</span>
+        <span class="n">key</span> <span class="o">=</span> <span class="n">kwargs</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;key&#39;</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">key</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">key</span> <span class="o">=</span> <span class="bp">cls</span><span class="o">.</span><span class="vm">__name__</span>
+
+        <span class="n">MODEL_DICT</span><span class="p">[</span><span class="n">key</span><span class="p">]</span> <span class="o">=</span> <span class="bp">cls</span>
+        <span class="k">return</span> <span class="bp">cls</span>
+
+    <span class="k">if</span> <span class="nb">callable</span><span class="p">(</span><span class="n">arg</span><span class="p">):</span>
+        <span class="k">return</span> <span class="n">_register_model</span><span class="p">(</span><span class="n">arg</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">_register_model</span></div>
+
+
+
+<div class="viewcode-block" id="register_adaptation_module">
+<a class="viewcode-back" href="../../../subpkgs/models.html#torchdistill.models.registry.register_adaptation_module">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">register_adaptation_module</span><span class="p">(</span><span class="n">arg</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Registers an adaptation module class or function to instantiate it.</span>
+
+<span class="sd">    :param arg: class or function to be registered as an adaptation module.</span>
+<span class="sd">    :type arg: class or typing.Callable or None</span>
+<span class="sd">    :return: registered adaptation module class or function to instantiate it.</span>
+<span class="sd">    :rtype: class or typing.Callable</span>
+
+<span class="sd">    .. note::</span>
+<span class="sd">        The adaptation module will be registered as an option.</span>
+<span class="sd">        You can choose the registered class/function by specifying the name of the class/function or ``key``</span>
+<span class="sd">        you used for the registration, in a training configuration used for</span>
+<span class="sd">        :class:`torchdistill.core.distillation.DistillationBox` or :class:`torchdistill.core.training.TrainingBox`.</span>
+
+<span class="sd">        If you want to register the class/function with a key of your choice, add ``key`` to the decorator as below:</span>
+
+<span class="sd">        &gt;&gt;&gt; from torch import nn</span>
+<span class="sd">        &gt;&gt;&gt; from torchdistill.models.registry import register_adaptation_module</span>
+<span class="sd">        &gt;&gt;&gt;</span>
+<span class="sd">        &gt;&gt;&gt; @register_adaptation_module(key=&#39;my_custom_adaptation_module&#39;)</span>
+<span class="sd">        &gt;&gt;&gt; class CustomAdaptationModule(nn.Module):</span>
+<span class="sd">        &gt;&gt;&gt;     def __init__(self, **kwargs):</span>
+<span class="sd">        &gt;&gt;&gt;         print(&#39;This is my custom adaptation module class&#39;)</span>
+
+<span class="sd">        In the example, ``CustomAdaptationModule`` class is registered with a key &quot;my_custom_adaptation_module&quot;.</span>
+<span class="sd">        When you configure :class:`torchdistill.core.distillation.DistillationBox` or</span>
+<span class="sd">        :class:`torchdistill.core.training.TrainingBox`, you can choose the ``CustomAdaptationModule`` class by</span>
+<span class="sd">        &quot;my_custom_adaptation_module&quot;.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">_register_adaptation_module</span><span class="p">(</span><span class="n">cls_or_func</span><span class="p">):</span>
+        <span class="n">key</span> <span class="o">=</span> <span class="n">kwargs</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;key&#39;</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">key</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">key</span> <span class="o">=</span> <span class="n">cls_or_func</span><span class="o">.</span><span class="vm">__name__</span>
+
+        <span class="n">ADAPTATION_MODULE_DICT</span><span class="p">[</span><span class="n">key</span><span class="p">]</span> <span class="o">=</span> <span class="n">cls_or_func</span>
+        <span class="k">return</span> <span class="n">cls_or_func</span>
+
+    <span class="k">if</span> <span class="nb">callable</span><span class="p">(</span><span class="n">arg</span><span class="p">):</span>
+        <span class="k">return</span> <span class="n">_register_adaptation_module</span><span class="p">(</span><span class="n">arg</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">_register_adaptation_module</span></div>
+
+
+
+<div class="viewcode-block" id="register_auxiliary_model_wrapper">
+<a class="viewcode-back" href="../../../subpkgs/models.html#torchdistill.models.registry.register_auxiliary_model_wrapper">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">register_auxiliary_model_wrapper</span><span class="p">(</span><span class="n">arg</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Registers an auxiliary model wrapper class or function to instantiate it.</span>
+
+<span class="sd">    :param arg: class or function to be registered as an auxiliary model wrapper.</span>
+<span class="sd">    :type arg: class or typing.Callable or None</span>
+<span class="sd">    :return: registered auxiliary model wrapper class or function to instantiate it.</span>
+<span class="sd">    :rtype: class or typing.Callable</span>
+
+<span class="sd">    .. note::</span>
+<span class="sd">        The auxiliary model wrapper will be registered as an option.</span>
+<span class="sd">        You can choose the registered class/function by specifying the name of the class/function or ``key``</span>
+<span class="sd">        you used for the registration, in a training configuration used for</span>
+<span class="sd">        :class:`torchdistill.core.distillation.DistillationBox` or :class:`torchdistill.core.training.TrainingBox`.</span>
+
+<span class="sd">        If you want to register the class/function with a key of your choice, add ``key`` to the decorator as below:</span>
+
+<span class="sd">        &gt;&gt;&gt; from torch import nn</span>
+<span class="sd">        &gt;&gt;&gt; from torchdistill.models.registry import register_auxiliary_model_wrapper</span>
+<span class="sd">        &gt;&gt;&gt;</span>
+<span class="sd">        &gt;&gt;&gt; @register_auxiliary_model_wrapper(key=&#39;my_custom_auxiliary_model_wrapper&#39;)</span>
+<span class="sd">        &gt;&gt;&gt; class CustomAuxiliaryModelWrapper(nn.Module):</span>
+<span class="sd">        &gt;&gt;&gt;     def __init__(self, **kwargs):</span>
+<span class="sd">        &gt;&gt;&gt;         print(&#39;This is my custom auxiliary model wrapper class&#39;)</span>
+
+<span class="sd">        In the example, ``CustomAuxiliaryModelWrapper`` class is registered with a key &quot;my_custom_auxiliary_model_wrapper&quot;.</span>
+<span class="sd">        When you configure :class:`torchdistill.core.distillation.DistillationBox` or</span>
+<span class="sd">        :class:`torchdistill.core.training.TrainingBox`, you can choose the ``CustomAuxiliaryModelWrapper`` class by</span>
+<span class="sd">        &quot;my_custom_auxiliary_model_wrapper&quot;.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">_register_auxiliary_model_wrapper</span><span class="p">(</span><span class="n">cls_or_func</span><span class="p">):</span>
+        <span class="n">key</span> <span class="o">=</span> <span class="n">kwargs</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;key&#39;</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">key</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">key</span> <span class="o">=</span> <span class="n">cls_or_func</span><span class="o">.</span><span class="vm">__name__</span>
+
+        <span class="n">AUXILIARY_MODEL_WRAPPER_DICT</span><span class="p">[</span><span class="n">key</span><span class="p">]</span> <span class="o">=</span> <span class="n">cls_or_func</span>
+        <span class="k">return</span> <span class="n">cls_or_func</span>
+
+    <span class="k">if</span> <span class="nb">callable</span><span class="p">(</span><span class="n">arg</span><span class="p">):</span>
+        <span class="k">return</span> <span class="n">_register_auxiliary_model_wrapper</span><span class="p">(</span><span class="n">arg</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">_register_auxiliary_model_wrapper</span></div>
+
+
+
+<div class="viewcode-block" id="get_model">
+<a class="viewcode-back" href="../../../subpkgs/models.html#torchdistill.models.registry.get_model">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">get_model</span><span class="p">(</span><span class="n">key</span><span class="p">,</span> <span class="n">repo_or_dir</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Gets a model from the model registry.</span>
+
+<span class="sd">    :param key: model key.</span>
+<span class="sd">    :type key: str</span>
+<span class="sd">    :param repo_or_dir: ``repo_or_dir`` for torch.hub.load.</span>
+<span class="sd">    :type repo_or_dir: str or None</span>
+<span class="sd">    :return: model.</span>
+<span class="sd">    :rtype: nn.Module</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="n">key</span> <span class="ow">in</span> <span class="n">MODEL_DICT</span> <span class="ow">and</span> <span class="n">repo_or_dir</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">MODEL_DICT</span><span class="p">[</span><span class="n">key</span><span class="p">](</span><span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+    <span class="k">elif</span> <span class="n">repo_or_dir</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">torch</span><span class="o">.</span><span class="n">hub</span><span class="o">.</span><span class="n">load</span><span class="p">(</span><span class="n">repo_or_dir</span><span class="p">,</span> <span class="n">key</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+    <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s1">&#39;model_name `</span><span class="si">{}</span><span class="s1">` is not expected&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">key</span><span class="p">))</span></div>
+
+
+
+<div class="viewcode-block" id="get_adaptation_module">
+<a class="viewcode-back" href="../../../subpkgs/models.html#torchdistill.models.registry.get_adaptation_module">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">get_adaptation_module</span><span class="p">(</span><span class="n">key</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Gets an adaptation module from the adaptation module registry.</span>
+
+<span class="sd">    :param key: model key.</span>
+<span class="sd">    :type key: str</span>
+<span class="sd">    :return: adaptation module.</span>
+<span class="sd">    :rtype: nn.Module</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="n">key</span> <span class="ow">in</span> <span class="n">ADAPTATION_MODULE_DICT</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">ADAPTATION_MODULE_DICT</span><span class="p">[</span><span class="n">key</span><span class="p">](</span><span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+    <span class="k">elif</span> <span class="n">key</span> <span class="ow">in</span> <span class="n">MODULE_DICT</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">MODULE_DICT</span><span class="p">[</span><span class="n">key</span><span class="p">](</span><span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+    <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s1">&#39;No adaptation module `</span><span class="si">{}</span><span class="s1">` registered&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">key</span><span class="p">))</span></div>
+
+
+
+<div class="viewcode-block" id="get_auxiliary_model_wrapper">
+<a class="viewcode-back" href="../../../subpkgs/models.html#torchdistill.models.registry.get_auxiliary_model_wrapper">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">get_auxiliary_model_wrapper</span><span class="p">(</span><span class="n">key</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Gets an auxiliary model wrapper from the auxiliary model wrapper registry.</span>
+
+<span class="sd">    :param key: model key.</span>
+<span class="sd">    :type key: str</span>
+<span class="sd">    :return: auxiliary model wrapper.</span>
+<span class="sd">    :rtype: nn.Module</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="n">key</span> <span class="ow">in</span> <span class="n">AUXILIARY_MODEL_WRAPPER_DICT</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">AUXILIARY_MODEL_WRAPPER_DICT</span><span class="p">[</span><span class="n">key</span><span class="p">](</span><span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+    <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s1">&#39;No auxiliary model wrapper `</span><span class="si">{}</span><span class="s1">` registered&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">key</span><span class="p">))</span></div>
+
+</pre></div>
+
+           </div>
+          </div>
+          <footer>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2023, Yoshitomo Matsubara.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script>
+    <!-- Theme Analytics -->
+    <script async src="https://www.googletagmanager.com/gtag/js?id=G-LYK8SSJ7R5"></script>
+    <script>
+      window.dataLayer = window.dataLayer || [];
+      function gtag(){dataLayer.push(arguments);}
+      gtag('js', new Date());
+
+      gtag('config', 'G-LYK8SSJ7R5', {
+          'anonymize_ip': false,
+      });
+    </script> 
+
+</body>
+</html>

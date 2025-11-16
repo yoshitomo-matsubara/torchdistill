@@ -1,0 +1,263 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" data-content_root="./">
+<head>
+  <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Benchmarks &mdash; torchdistill v1.1.4-dev documentation</title>
+      <link rel="stylesheet" type="text/css" href="_static/pygments.css?v=b86133f3" />
+      <link rel="stylesheet" type="text/css" href="_static/css/theme.css?v=e59714d7" />
+
+  
+      <script src="_static/jquery.js?v=5d32c60e"></script>
+      <script src="_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+      <script src="_static/documentation_options.js?v=205dc2f2"></script>
+      <script src="_static/doctools.js?v=9bcbadda"></script>
+      <script src="_static/sphinx_highlight.js?v=dc90522c"></script>
+      <script async="async" src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
+    <script src="_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="next" title="Projects" href="projects.html" />
+    <link rel="prev" title="torchdistill.misc" href="subpkgs/misc.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="index.html">
+            
+              <img src="_static/logo-white.png" class="logo" alt="Logo"/>
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">📚 Overview</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="usage.html">Usage</a></li>
+<li class="toctree-l1"><a class="reference internal" href="package.html">torchdistill API</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">🧑🏻‍💻 Research</span></p>
+<ul class="current">
+<li class="toctree-l1 current"><a class="current reference internal" href="#">Benchmarks</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#imagenet-ilsvrc-2012">ImageNet (ILSVRC 2012)</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#student-resnet-18">Student: ResNet-18</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#original-work">Original work</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#references">References</a></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="projects.html">Projects</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="index.html">torchdistill</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content style-external-links">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="index.html" class="icon icon-home" aria-label="Home"></a></li>
+      <li class="breadcrumb-item active">Benchmarks</li>
+      <li class="wy-breadcrumbs-aside">
+              <a href="https://github.com/yoshitomo-matsubara/torchdistill/blob/main/docs/source/benchmarks.rst" class="fa fa-github"> Edit on GitHub</a>
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <section id="benchmarks">
+<h1>Benchmarks<a class="headerlink" href="#benchmarks" title="Link to this heading"></a></h1>
+<div class="toctree-wrapper compound">
+</div>
+<p>This page summarizes reproducible experimental results that <a class="reference external" href="https://github.com/yoshitomo-matsubara/torchdistill/tree/main/configs/official">torchdistill official repository</a> supports.</p>
+<section id="imagenet-ilsvrc-2012">
+<h2>ImageNet (ILSVRC 2012)<a class="headerlink" href="#imagenet-ilsvrc-2012" title="Link to this heading"></a></h2>
+<p><a class="reference external" href="https://www.image-net.org/challenges/LSVRC/2012/">ImageNet Large Scale Visual Recognition Challenge 2012 (ILSVRC2012)</a></p>
+<hr class="docutils" />
+<section id="student-resnet-18">
+<h3>Student: ResNet-18<a class="headerlink" href="#student-resnet-18" title="Link to this heading"></a></h3>
+<table class="docutils align-center" id="id13">
+<caption><span class="caption-text">Top-1 validation accuracy of ResNet-18 for ILSVRC 2012 (ImageNet)</span><a class="headerlink" href="#id13" title="Link to this table"></a></caption>
+<thead>
+<tr class="row-odd"><th class="head"><p>Method</p></th>
+<th class="head"><p>Original work</p></th>
+<th class="head"><p>torchdistill</p></th>
+<th class="head"><p>Config</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p>Pretrained</p></td>
+<td><p>N/A</p></td>
+<td><p>69.76*</p></td>
+<td><p><a class="reference external" href="https://pytorch.org/vision/stable/models.html#table-of-all-available-classification-weights">torchvision</a></p></td>
+</tr>
+<tr class="row-odd"><td><p>KD</p></td>
+<td><p>N/A</p></td>
+<td><p>71.37</p></td>
+<td><p><a class="reference external" href="https://github.com/yoshitomo-matsubara/torchdistill/tree/main/configs/official/ilsvrc2012/yoshitomo-matsubara/rrpr2020/">torchdistill/configs/official/</a></p></td>
+</tr>
+<tr class="row-even"><td><p>AT</p></td>
+<td><p>70.70</p></td>
+<td><p>70.90</p></td>
+<td><p><a class="reference external" href="https://github.com/yoshitomo-matsubara/torchdistill/tree/main/configs/official/ilsvrc2012/yoshitomo-matsubara/rrpr2020/">torchdistill/configs/official/</a></p></td>
+</tr>
+<tr class="row-odd"><td><p>FT</p></td>
+<td><p>71.43**</p></td>
+<td><p>71.56</p></td>
+<td><p><a class="reference external" href="https://github.com/yoshitomo-matsubara/torchdistill/tree/main/configs/official/ilsvrc2012/yoshitomo-matsubara/rrpr2020/">torchdistill/configs/official/</a></p></td>
+</tr>
+<tr class="row-even"><td><p>CRD</p></td>
+<td><p>71.17</p></td>
+<td><p>70.93</p></td>
+<td><p><a class="reference external" href="https://github.com/yoshitomo-matsubara/torchdistill/tree/main/configs/official/ilsvrc2012/yoshitomo-matsubara/rrpr2020/">torchdistill/configs/official/</a></p></td>
+</tr>
+<tr class="row-odd"><td><p>Tf-KD</p></td>
+<td><p>70.42</p></td>
+<td><p>70.52</p></td>
+<td><p><a class="reference external" href="https://github.com/yoshitomo-matsubara/torchdistill/tree/main/configs/official/ilsvrc2012/yoshitomo-matsubara/rrpr2020/">torchdistill/configs/official/</a></p></td>
+</tr>
+<tr class="row-even"><td><p>SSKD</p></td>
+<td><p>71.62</p></td>
+<td><p>70.09</p></td>
+<td><p><a class="reference external" href="https://github.com/yoshitomo-matsubara/torchdistill/tree/main/configs/official/ilsvrc2012/yoshitomo-matsubara/rrpr2020/">torchdistill/configs/official/</a></p></td>
+</tr>
+<tr class="row-odd"><td><p><span class="math notranslate nohighlight">\(L_2\)</span></p></td>
+<td><p>70.90</p></td>
+<td><p>71.08</p></td>
+<td><p><a class="reference external" href="https://github.com/yoshitomo-matsubara/torchdistill/tree/main/configs/official/ilsvrc2012/yoshitomo-matsubara/rrpr2020/">torchdistill/configs/official/</a></p></td>
+</tr>
+<tr class="row-even"><td><p>PAD-<span class="math notranslate nohighlight">\(L_2\)</span></p></td>
+<td><p>71.71</p></td>
+<td><p>71.71</p></td>
+<td><p><a class="reference external" href="https://github.com/yoshitomo-matsubara/torchdistill/tree/main/configs/official/ilsvrc2012/yoshitomo-matsubara/rrpr2020/">torchdistill/configs/official/</a></p></td>
+</tr>
+<tr class="row-odd"><td><p>KR</p></td>
+<td><p>71.61</p></td>
+<td><p>71.64</p></td>
+<td><p><a class="reference external" href="https://github.com/yoshitomo-matsubara/torchdistill/blob/main/configs/official/ilsvrc2012/yoshitomo-matsubara/nlp-oss2023/">torchdistill/configs/official/</a></p></td>
+</tr>
+<tr class="row-even"><td><p>ICKD</p></td>
+<td><p>72.19</p></td>
+<td><p>68.34</p></td>
+<td><p><a class="reference external" href="https://github.com/yoshitomo-matsubara/torchdistill/tree/main/configs/sample/ilsvrc2012/ickd/">torchdistill/configs/sample/</a></p></td>
+</tr>
+<tr class="row-odd"><td><p>DIST</p></td>
+<td><p>72.07</p></td>
+<td><p>71.95</p></td>
+<td><p><a class="reference external" href="https://github.com/yoshitomo-matsubara/torchdistill/tree/main/configs/sample/ilsvrc2012/dist/">torchdistill/configs/sample/</a></p></td>
+</tr>
+<tr class="row-even"><td><p>SRD</p></td>
+<td><p>71.63</p></td>
+<td><p>71.92</p></td>
+<td><p><a class="reference external" href="https://github.com/yoshitomo-matsubara/torchdistill/tree/main/configs/official/ilsvrc2012/roymiles/aaai2024/">torchdistill/configs/official/</a></p></td>
+</tr>
+<tr class="row-odd"><td><p>KD w/ LS</p></td>
+<td><p>71.42</p></td>
+<td><p>71.23</p></td>
+<td><p><a class="reference external" href="https://github.com/yoshitomo-matsubara/torchdistill/blob/main/configs/sample/ilsvrc2012/kd_w_ls/">torchdistill/configs/sample/</a></p></td>
+</tr>
+<tr class="row-even"><td><p>DIST+</p></td>
+<td><p>72.39</p></td>
+<td><p>71.37</p></td>
+<td><p><a class="reference external" href="https://github.com/yoshitomo-matsubara/torchdistill/tree/main/configs/sample/ilsvrc2012/dist_plus/">torchdistill/configs/sample/</a></p></td>
+</tr>
+</tbody>
+</table>
+<p>* The pretrained ResNet-34 and ResNet-18 are provided by torchvision.</p>
+<p>** FT is assessed with ILSVRC 2015 in the original work.</p>
+<section id="original-work">
+<h4>Original work<a class="headerlink" href="#original-work" title="Link to this heading"></a></h4>
+<ul class="simple">
+<li><p>KD: <a class="reference external" href="https://arxiv.org/abs/1503.02531">“Distilling the Knowledge in a Neural Network”</a></p></li>
+<li><p>AT: <a class="reference external" href="https://openreview.net/forum?id=Sks9_ajex">“Paying More Attention to Attention: Improving the Performance of Convolutional Neural Networks via Attention Transfer”</a></p></li>
+<li><p>FT: <a class="reference external" href="http://papers.neurips.cc/paper/7541-paraphrasing-complex-network-network-compression-via-factor-transfer">“Paraphrasing Complex Network: Network Compression via Factor Transfer”</a></p></li>
+<li><p>CRD: <a class="reference external" href="https://openreview.net/forum?id=SkgpBJrtvS">“Contrastive Representation Distillation”</a></p></li>
+<li><p>Tf-KD: <a class="reference external" href="https://openaccess.thecvf.com/content_CVPR_2020/papers/Yuan_Revisiting_Knowledge_Distillation_via_Label_Smoothing_Regularization_CVPR_2020_paper.pdf">“Revisiting Knowledge Distillation via Label Smoothing Regularization”</a></p></li>
+<li><p>SSDK: <a class="reference external" href="http://www.ecva.net/papers/eccv_2020/papers_ECCV/html/898_ECCV_2020_paper.php">“Knowledge Distillation Meets Self-Supervision”</a></p></li>
+<li><p><span class="math notranslate nohighlight">\(L_2\)</span>, PAD-<span class="math notranslate nohighlight">\(L_2\)</span>: <a class="reference external" href="http://www.ecva.net/papers/eccv_2020/papers_ECCV/html/3317_ECCV_2020_paper.php">“Prime-Aware Adaptive Distillation”</a></p></li>
+<li><p>KR: <a class="reference external" href="https://openaccess.thecvf.com/content/CVPR2021/html/Chen_Distilling_Knowledge_via_Knowledge_Review_CVPR_2021_paper.html">“Distilling Knowledge via Knowledge Review”</a></p></li>
+<li><p>ICKD: <a class="reference external" href="https://openaccess.thecvf.com/content/ICCV2021/html/Liu_Exploring_Inter-Channel_Correlation_for_Diversity-Preserved_Knowledge_Distillation_ICCV_2021_paper.html">“Exploring Inter-Channel Correlation for Diversity-Preserved Knowledge Distillation”</a></p></li>
+<li><p>DIST: <a class="reference external" href="https://proceedings.neurips.cc/paper_files/paper/2022/hash/da669dfd3c36c93905a17ddba01eef06-Abstract-Conference.html">“Knowledge Distillation from A Stronger Teacher”</a></p></li>
+<li><p>SRD: <a class="reference external" href="https://ojs.aaai.org/index.php/AAAI/article/view/28219">“Understanding the Role of the Projector in Knowledge Distillation”</a></p></li>
+<li><p>KD w/ LS: <a class="reference external" href="https://openaccess.thecvf.com/content/CVPR2024/html/Sun_Logit_Standardization_in_Knowledge_Distillation_CVPR_2024_paper.html">“Logit Standardization in Knowledge Distillation”</a></p></li>
+<li><p>DIST+: <a class="reference external" href="https://ieeexplore.ieee.org/document/10938241">“DIST+: Knowledge Distillation From a Stronger Adaptive Teacher”</a></p></li>
+</ul>
+</section>
+<section id="references">
+<h4>References<a class="headerlink" href="#references" title="Link to this heading"></a></h4>
+<ul class="simple">
+<li><p>Yoshitomo Matsubara: <a class="reference external" href="https://link.springer.com/chapter/10.1007/978-3-030-76423-4_3">“torchdistill: A Modular, Configuration-Driven Framework for Knowledge Distillation”</a></p></li>
+<li><p>Yoshitomo Matsubara: <a class="reference external" href="https://aclanthology.org/2023.nlposs-1.18/">“torchdistill Meets Hugging Face Libraries for Reproducible, Coding-Free Deep Learning Studies: A Case Study on NLP”</a></p></li>
+</ul>
+</section>
+</section>
+</section>
+</section>
+
+
+           </div>
+          </div>
+          <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
+        <a href="subpkgs/misc.html" class="btn btn-neutral float-left" title="torchdistill.misc" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="projects.html" class="btn btn-neutral float-right" title="Projects" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2023, Yoshitomo Matsubara.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script>
+    <!-- Theme Analytics -->
+    <script async src="https://www.googletagmanager.com/gtag/js?id=G-LYK8SSJ7R5"></script>
+    <script>
+      window.dataLayer = window.dataLayer || [];
+      function gtag(){dataLayer.push(arguments);}
+      gtag('js', new Date());
+
+      gtag('config', 'G-LYK8SSJ7R5', {
+          'anonymize_ip': false,
+      });
+    </script> 
+
+</body>
+</html>

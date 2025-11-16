@@ -1,0 +1,1206 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" data-content_root="../">
+<head>
+  <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>torchdistill.common &mdash; torchdistill v1.1.4-dev documentation</title>
+      <link rel="stylesheet" type="text/css" href="../_static/pygments.css?v=b86133f3" />
+      <link rel="stylesheet" type="text/css" href="../_static/css/theme.css?v=e59714d7" />
+
+  
+      <script src="../_static/jquery.js?v=5d32c60e"></script>
+      <script src="../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+      <script src="../_static/documentation_options.js?v=205dc2f2"></script>
+      <script src="../_static/doctools.js?v=9bcbadda"></script>
+      <script src="../_static/sphinx_highlight.js?v=dc90522c"></script>
+    <script src="../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" />
+    <link rel="next" title="torchdistill.misc" href="misc.html" />
+    <link rel="prev" title="torchdistill.optim" href="optim.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="../index.html">
+            
+              <img src="../_static/logo-white.png" class="logo" alt="Logo"/>
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">📚 Overview</span></p>
+<ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="../usage.html">Usage</a></li>
+<li class="toctree-l1 current"><a class="reference internal" href="../package.html">torchdistill API</a><ul class="current">
+<li class="toctree-l2"><a class="reference internal" href="core.html">torchdistill.core</a></li>
+<li class="toctree-l2"><a class="reference internal" href="datasets.html">torchdistill.datasets</a></li>
+<li class="toctree-l2"><a class="reference internal" href="models.html">torchdistill.models</a></li>
+<li class="toctree-l2"><a class="reference internal" href="losses.html">torchdistill.losses</a></li>
+<li class="toctree-l2"><a class="reference internal" href="optim.html">torchdistill.optim</a></li>
+<li class="toctree-l2 current"><a class="current reference internal" href="#">torchdistill.common</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#torchdistill-common-file-util">torchdistill.common.file_util</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#torchdistill.common.file_util.check_if_exists"><code class="docutils literal notranslate"><span class="pre">check_if_exists()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#torchdistill.common.file_util.get_file_path_list"><code class="docutils literal notranslate"><span class="pre">get_file_path_list()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#torchdistill.common.file_util.get_dir_path_list"><code class="docutils literal notranslate"><span class="pre">get_dir_path_list()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#torchdistill.common.file_util.make_dirs"><code class="docutils literal notranslate"><span class="pre">make_dirs()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#torchdistill.common.file_util.make_parent_dirs"><code class="docutils literal notranslate"><span class="pre">make_parent_dirs()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#torchdistill.common.file_util.save_pickle"><code class="docutils literal notranslate"><span class="pre">save_pickle()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#torchdistill.common.file_util.load_pickle"><code class="docutils literal notranslate"><span class="pre">load_pickle()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#torchdistill.common.file_util.get_binary_object_size"><code class="docutils literal notranslate"><span class="pre">get_binary_object_size()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="#torchdistill-common-main-util">torchdistill.common.main_util</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#torchdistill.common.main_util.import_dependencies"><code class="docutils literal notranslate"><span class="pre">import_dependencies()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#torchdistill.common.main_util.import_get"><code class="docutils literal notranslate"><span class="pre">import_get()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#torchdistill.common.main_util.import_call"><code class="docutils literal notranslate"><span class="pre">import_call()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#torchdistill.common.main_util.import_call_method"><code class="docutils literal notranslate"><span class="pre">import_call_method()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#torchdistill.common.main_util.call_method"><code class="docutils literal notranslate"><span class="pre">call_method()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#torchdistill.common.main_util.setup_for_distributed"><code class="docutils literal notranslate"><span class="pre">setup_for_distributed()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#torchdistill.common.main_util.set_seed"><code class="docutils literal notranslate"><span class="pre">set_seed()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#torchdistill.common.main_util.is_dist_avail_and_initialized"><code class="docutils literal notranslate"><span class="pre">is_dist_avail_and_initialized()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#torchdistill.common.main_util.get_world_size"><code class="docutils literal notranslate"><span class="pre">get_world_size()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#torchdistill.common.main_util.get_rank"><code class="docutils literal notranslate"><span class="pre">get_rank()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#torchdistill.common.main_util.is_main_process"><code class="docutils literal notranslate"><span class="pre">is_main_process()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#torchdistill.common.main_util.save_on_master"><code class="docutils literal notranslate"><span class="pre">save_on_master()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#torchdistill.common.main_util.init_distributed_mode"><code class="docutils literal notranslate"><span class="pre">init_distributed_mode()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#torchdistill.common.main_util.load_ckpt"><code class="docutils literal notranslate"><span class="pre">load_ckpt()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#torchdistill.common.main_util.save_ckpt"><code class="docutils literal notranslate"><span class="pre">save_ckpt()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="#torchdistill-common-misc-util">torchdistill.common.misc_util</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#torchdistill.common.misc_util.check_if_plottable"><code class="docutils literal notranslate"><span class="pre">check_if_plottable()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#torchdistill.common.misc_util.get_classes"><code class="docutils literal notranslate"><span class="pre">get_classes()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#torchdistill.common.misc_util.get_classes_as_dict"><code class="docutils literal notranslate"><span class="pre">get_classes_as_dict()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#torchdistill.common.misc_util.get_functions"><code class="docutils literal notranslate"><span class="pre">get_functions()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#torchdistill.common.misc_util.get_functions_as_dict"><code class="docutils literal notranslate"><span class="pre">get_functions_as_dict()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="#torchdistill-common-module-util">torchdistill.common.module_util</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#torchdistill.common.module_util.check_if_wrapped"><code class="docutils literal notranslate"><span class="pre">check_if_wrapped()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#torchdistill.common.module_util.count_params"><code class="docutils literal notranslate"><span class="pre">count_params()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#torchdistill.common.module_util.freeze_module_params"><code class="docutils literal notranslate"><span class="pre">freeze_module_params()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#torchdistill.common.module_util.unfreeze_module_params"><code class="docutils literal notranslate"><span class="pre">unfreeze_module_params()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#torchdistill.common.module_util.get_updatable_param_names"><code class="docutils literal notranslate"><span class="pre">get_updatable_param_names()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#torchdistill.common.module_util.get_frozen_param_names"><code class="docutils literal notranslate"><span class="pre">get_frozen_param_names()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#torchdistill.common.module_util.get_module"><code class="docutils literal notranslate"><span class="pre">get_module()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#torchdistill.common.module_util.get_hierarchized_dict"><code class="docutils literal notranslate"><span class="pre">get_hierarchized_dict()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#torchdistill.common.module_util.decompose"><code class="docutils literal notranslate"><span class="pre">decompose()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#torchdistill.common.module_util.get_components"><code class="docutils literal notranslate"><span class="pre">get_components()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#torchdistill.common.module_util.extract_target_modules"><code class="docutils literal notranslate"><span class="pre">extract_target_modules()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#torchdistill.common.module_util.extract_all_child_modules"><code class="docutils literal notranslate"><span class="pre">extract_all_child_modules()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="#torchdistill-common-tensor-util">torchdistill.common.tensor_util</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#torchdistill.common.tensor_util.QuantizedTensor"><code class="docutils literal notranslate"><span class="pre">QuantizedTensor</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#torchdistill.common.tensor_util.quantize_tensor"><code class="docutils literal notranslate"><span class="pre">quantize_tensor()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#torchdistill.common.tensor_util.dequantize_tensor"><code class="docutils literal notranslate"><span class="pre">dequantize_tensor()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="#torchdistill-common-yaml-util">torchdistill.common.yaml_util</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#torchdistill.common.yaml_util.yaml_join"><code class="docutils literal notranslate"><span class="pre">yaml_join()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#torchdistill.common.yaml_util.yaml_pathjoin"><code class="docutils literal notranslate"><span class="pre">yaml_pathjoin()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#torchdistill.common.yaml_util.yaml_expanduser"><code class="docutils literal notranslate"><span class="pre">yaml_expanduser()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#torchdistill.common.yaml_util.yaml_abspath"><code class="docutils literal notranslate"><span class="pre">yaml_abspath()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#torchdistill.common.yaml_util.yaml_import_get"><code class="docutils literal notranslate"><span class="pre">yaml_import_get()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#torchdistill.common.yaml_util.yaml_import_call"><code class="docutils literal notranslate"><span class="pre">yaml_import_call()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#torchdistill.common.yaml_util.yaml_import_call_method"><code class="docutils literal notranslate"><span class="pre">yaml_import_call_method()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#torchdistill.common.yaml_util.yaml_call_method"><code class="docutils literal notranslate"><span class="pre">yaml_call_method()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#torchdistill.common.yaml_util.yaml_getattr"><code class="docutils literal notranslate"><span class="pre">yaml_getattr()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#torchdistill.common.yaml_util.yaml_setattr"><code class="docutils literal notranslate"><span class="pre">yaml_setattr()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#torchdistill.common.yaml_util.yaml_access_by_index_or_key"><code class="docutils literal notranslate"><span class="pre">yaml_access_by_index_or_key()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#torchdistill.common.yaml_util.load_yaml_file"><code class="docutils literal notranslate"><span class="pre">load_yaml_file()</span></code></a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="misc.html">torchdistill.misc</a></li>
+</ul>
+</li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">🧑🏻‍💻 Research</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../benchmarks.html">Benchmarks</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../projects.html">Projects</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../index.html">torchdistill</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content style-external-links">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../index.html" class="icon icon-home" aria-label="Home"></a></li>
+          <li class="breadcrumb-item"><a href="../package.html">torchdistill API</a></li>
+      <li class="breadcrumb-item active">torchdistill.common</li>
+      <li class="wy-breadcrumbs-aside">
+              <a href="https://github.com/yoshitomo-matsubara/torchdistill/blob/main/docs/source/subpkgs/common.rst" class="fa fa-github"> Edit on GitHub</a>
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <section id="torchdistill-common">
+<h1>torchdistill.common<a class="headerlink" href="#torchdistill-common" title="Link to this heading"></a></h1>
+<div class="toctree-wrapper compound">
+</div>
+<hr class="docutils" />
+<section id="torchdistill-common-file-util">
+<h2>torchdistill.common.file_util<a class="headerlink" href="#torchdistill-common-file-util" title="Link to this heading"></a></h2>
+<dl class="py function" id="module-torchdistill.common.file_util">
+<dt class="sig sig-object py" id="torchdistill.common.file_util.check_if_exists">
+<span class="sig-prename descclassname"><span class="pre">torchdistill.common.file_util.</span></span><span class="sig-name descname"><span class="pre">check_if_exists</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">file_path</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/torchdistill/common/file_util.html#check_if_exists"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#torchdistill.common.file_util.check_if_exists" title="Link to this definition"></a></dt>
+<dd><p>Checks if a file/dir exists.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>file_path</strong> (<em>str</em>) – file/dir path</p>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>True if the given file exists</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>bool</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="torchdistill.common.file_util.get_file_path_list">
+<span class="sig-prename descclassname"><span class="pre">torchdistill.common.file_util.</span></span><span class="sig-name descname"><span class="pre">get_file_path_list</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">dir_path</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">is_recursive</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">is_sorted</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/torchdistill/common/file_util.html#get_file_path_list"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#torchdistill.common.file_util.get_file_path_list" title="Link to this definition"></a></dt>
+<dd><p>Gets file paths for a given dir path.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>dir_path</strong> (<em>str</em>) – dir path</p></li>
+<li><p><strong>is_recursive</strong> (<em>bool</em>) – if True, get file paths recursively</p></li>
+<li><p><strong>is_sorted</strong> (<em>bool</em>) – if True, sort file paths in ascending order</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>list of file paths</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>list[str]</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="torchdistill.common.file_util.get_dir_path_list">
+<span class="sig-prename descclassname"><span class="pre">torchdistill.common.file_util.</span></span><span class="sig-name descname"><span class="pre">get_dir_path_list</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">dir_path</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">is_recursive</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">is_sorted</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/torchdistill/common/file_util.html#get_dir_path_list"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#torchdistill.common.file_util.get_dir_path_list" title="Link to this definition"></a></dt>
+<dd><p>Gets dir paths for a given dir path.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>dir_path</strong> (<em>str</em>) – dir path</p></li>
+<li><p><strong>is_recursive</strong> (<em>bool</em>) – if True, get dir paths recursively</p></li>
+<li><p><strong>is_sorted</strong> (<em>bool</em>) – if True, sort dir paths in ascending order</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>list of dir paths</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>list[str]</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="torchdistill.common.file_util.make_dirs">
+<span class="sig-prename descclassname"><span class="pre">torchdistill.common.file_util.</span></span><span class="sig-name descname"><span class="pre">make_dirs</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">dir_path</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/torchdistill/common/file_util.html#make_dirs"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#torchdistill.common.file_util.make_dirs" title="Link to this definition"></a></dt>
+<dd><p>Makes a directory and its parent directories.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>dir_path</strong> (<em>str</em>) – dir path</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="torchdistill.common.file_util.make_parent_dirs">
+<span class="sig-prename descclassname"><span class="pre">torchdistill.common.file_util.</span></span><span class="sig-name descname"><span class="pre">make_parent_dirs</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">file_path</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/torchdistill/common/file_util.html#make_parent_dirs"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#torchdistill.common.file_util.make_parent_dirs" title="Link to this definition"></a></dt>
+<dd><p>Makes parent directories.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>file_path</strong> (<em>str</em>) – file path</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="torchdistill.common.file_util.save_pickle">
+<span class="sig-prename descclassname"><span class="pre">torchdistill.common.file_util.</span></span><span class="sig-name descname"><span class="pre">save_pickle</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">obj</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">file_path</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/torchdistill/common/file_util.html#save_pickle"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#torchdistill.common.file_util.save_pickle" title="Link to this definition"></a></dt>
+<dd><p>Saves a serialized object as a file.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>obj</strong> (<em>Any</em>) – object to be serialized</p></li>
+<li><p><strong>file_path</strong> (<em>str</em>) – output file path</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="torchdistill.common.file_util.load_pickle">
+<span class="sig-prename descclassname"><span class="pre">torchdistill.common.file_util.</span></span><span class="sig-name descname"><span class="pre">load_pickle</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">file_path</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/torchdistill/common/file_util.html#load_pickle"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#torchdistill.common.file_util.load_pickle" title="Link to this definition"></a></dt>
+<dd><p>Loads a deserialized object from a file.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>file_path</strong> (<em>str</em>) – serialized file path</p>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>deserialized object</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>Any</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="torchdistill.common.file_util.get_binary_object_size">
+<span class="sig-prename descclassname"><span class="pre">torchdistill.common.file_util.</span></span><span class="sig-name descname"><span class="pre">get_binary_object_size</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">obj</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">unit_size</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1024</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/torchdistill/common/file_util.html#get_binary_object_size"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#torchdistill.common.file_util.get_binary_object_size" title="Link to this definition"></a></dt>
+<dd><p>Computes the size of object in bytes after serialization.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>obj</strong> (<em>Any</em>) – object</p></li>
+<li><p><strong>unit_size</strong> (<em>int</em><em> or </em><em>float</em>) – unit file size</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>size of object in bytes, divided by the <code class="docutils literal notranslate"><span class="pre">unit_size</span></code></p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>float</p>
+</dd>
+</dl>
+</dd></dl>
+
+</section>
+<hr class="docutils" />
+<section id="torchdistill-common-main-util">
+<h2>torchdistill.common.main_util<a class="headerlink" href="#torchdistill-common-main-util" title="Link to this heading"></a></h2>
+<dl class="py function" id="module-torchdistill.common.main_util">
+<dt class="sig sig-object py" id="torchdistill.common.main_util.import_dependencies">
+<span class="sig-prename descclassname"><span class="pre">torchdistill.common.main_util.</span></span><span class="sig-name descname"><span class="pre">import_dependencies</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">dependencies</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/torchdistill/common/main_util.html#import_dependencies"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#torchdistill.common.main_util.import_dependencies" title="Link to this definition"></a></dt>
+<dd><p>Imports specified packages.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>dependencies</strong> (<em>list</em><em>[</em><em>dict</em><em> or </em><em>list</em><em>[</em><em>str</em><em>] or </em><em>(</em><em>str</em><em>, </em><em>str</em><em>) or </em><em>str</em><em>] or </em><em>str</em><em> or </em><em>None</em>) – package names.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="torchdistill.common.main_util.import_get">
+<span class="sig-prename descclassname"><span class="pre">torchdistill.common.main_util.</span></span><span class="sig-name descname"><span class="pre">import_get</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">key</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">package</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/torchdistill/common/main_util.html#import_get"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#torchdistill.common.main_util.import_get" title="Link to this definition"></a></dt>
+<dd><p>Imports module and get its attribute.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>key</strong> (<em>str</em>) – attribute name or package path separated by period(.).</p></li>
+<li><p><strong>package</strong> (<em>str</em><em> or </em><em>None</em>) – package path if <code class="docutils literal notranslate"><span class="pre">key</span></code> is just an attribute name.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>attribute of the imported module.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>Any</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="torchdistill.common.main_util.import_call">
+<span class="sig-prename descclassname"><span class="pre">torchdistill.common.main_util.</span></span><span class="sig-name descname"><span class="pre">import_call</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">key</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">package</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">init</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/torchdistill/common/main_util.html#import_call"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#torchdistill.common.main_util.import_call" title="Link to this definition"></a></dt>
+<dd><p>Imports module and call the module/function e.g., instantiation.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>key</strong> (<em>str</em>) – module name or package path separated by period(.).</p></li>
+<li><p><strong>package</strong> (<em>str</em><em> or </em><em>None</em>) – package path if <code class="docutils literal notranslate"><span class="pre">key</span></code> is just an attribute name.</p></li>
+<li><p><strong>init</strong> (<em>dict</em>) – dict of arguments and/or keyword arguments to instantiate the imported module.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>object imported and called.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>Any</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="torchdistill.common.main_util.import_call_method">
+<span class="sig-prename descclassname"><span class="pre">torchdistill.common.main_util.</span></span><span class="sig-name descname"><span class="pre">import_call_method</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">package</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">class_name</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">method_name</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">init</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/torchdistill/common/main_util.html#import_call_method"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#torchdistill.common.main_util.import_call_method" title="Link to this definition"></a></dt>
+<dd><p>Imports module and call its method.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>package</strong> (<em>str</em>) – package path.</p></li>
+<li><p><strong>class_name</strong> (<em>str</em>) – class name under <code class="docutils literal notranslate"><span class="pre">package</span></code>.</p></li>
+<li><p><strong>method_name</strong> (<em>str</em>) – method name of <code class="docutils literal notranslate"><span class="pre">class_name</span></code> class under <code class="docutils literal notranslate"><span class="pre">package</span></code>.</p></li>
+<li><p><strong>init</strong> (<em>dict</em>) – dict of arguments and/or keyword arguments to instantiate the imported module.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>object imported and called.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>Any</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="torchdistill.common.main_util.call_method">
+<span class="sig-prename descclassname"><span class="pre">torchdistill.common.main_util.</span></span><span class="sig-name descname"><span class="pre">call_method</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">obj</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">method_name</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">args</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">kwargs</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">returns_obj</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">tmp_kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/torchdistill/common/main_util.html#call_method"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#torchdistill.common.main_util.call_method" title="Link to this definition"></a></dt>
+<dd><p>Calls a method of a given object.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>obj</strong> (<em>str</em>) – module name or package path separated by period(.).</p></li>
+<li><p><strong>method_name</strong> (<em>str</em>) – method name of <code class="docutils literal notranslate"><span class="pre">obj</span></code>.</p></li>
+<li><p><strong>args</strong> (<em>list</em>) – arguments to pass to the called method.</p></li>
+<li><p><strong>kwargs</strong> (<em>dict</em>) – keyword arguments to pass to the called method.</p></li>
+<li><p><strong>returns_obj</strong> (<em>bool</em>) – if true, returns <code class="docutils literal notranslate"><span class="pre">obj</span></code>.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p><code class="docutils literal notranslate"><span class="pre">obj</span></code> or output of <code class="docutils literal notranslate"><span class="pre">method_name</span></code>.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>Any</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="torchdistill.common.main_util.setup_for_distributed">
+<span class="sig-prename descclassname"><span class="pre">torchdistill.common.main_util.</span></span><span class="sig-name descname"><span class="pre">setup_for_distributed</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">is_master</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/torchdistill/common/main_util.html#setup_for_distributed"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#torchdistill.common.main_util.setup_for_distributed" title="Link to this definition"></a></dt>
+<dd><p>Disables logging when not in master process.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>is_master</strong> (<em>bool</em>) – True if it is the master process.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="torchdistill.common.main_util.set_seed">
+<span class="sig-prename descclassname"><span class="pre">torchdistill.common.main_util.</span></span><span class="sig-name descname"><span class="pre">set_seed</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">seed</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/torchdistill/common/main_util.html#set_seed"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#torchdistill.common.main_util.set_seed" title="Link to this definition"></a></dt>
+<dd><p>Sets a random seed for <cite>random</cite>, <cite>numpy</cite>, and <cite>torch</cite> (torch.manual_seed, torch.cuda.manual_seed_all).</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>seed</strong> (<em>int</em>) – random seed.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="torchdistill.common.main_util.is_dist_avail_and_initialized">
+<span class="sig-prename descclassname"><span class="pre">torchdistill.common.main_util.</span></span><span class="sig-name descname"><span class="pre">is_dist_avail_and_initialized</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/torchdistill/common/main_util.html#is_dist_avail_and_initialized"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#torchdistill.common.main_util.is_dist_avail_and_initialized" title="Link to this definition"></a></dt>
+<dd><p>Checks if distributed model is available and initialized.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><p>True if distributed mode is available and initialized.</p>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p>bool</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="torchdistill.common.main_util.get_world_size">
+<span class="sig-prename descclassname"><span class="pre">torchdistill.common.main_util.</span></span><span class="sig-name descname"><span class="pre">get_world_size</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/torchdistill/common/main_util.html#get_world_size"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#torchdistill.common.main_util.get_world_size" title="Link to this definition"></a></dt>
+<dd><p>Gets world size.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><p>world size.</p>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p>int</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="torchdistill.common.main_util.get_rank">
+<span class="sig-prename descclassname"><span class="pre">torchdistill.common.main_util.</span></span><span class="sig-name descname"><span class="pre">get_rank</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/torchdistill/common/main_util.html#get_rank"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#torchdistill.common.main_util.get_rank" title="Link to this definition"></a></dt>
+<dd><p>Gets the rank of the current process in the provided <code class="docutils literal notranslate"><span class="pre">group</span></code> or the default group if none was provided.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><p>rank of the current process in the provided <code class="docutils literal notranslate"><span class="pre">group</span></code> or the default group if none was provided.</p>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p>int</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="torchdistill.common.main_util.is_main_process">
+<span class="sig-prename descclassname"><span class="pre">torchdistill.common.main_util.</span></span><span class="sig-name descname"><span class="pre">is_main_process</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/torchdistill/common/main_util.html#is_main_process"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#torchdistill.common.main_util.is_main_process" title="Link to this definition"></a></dt>
+<dd><p>Checks if this is the main process.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><p>True if this is the main process.</p>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p>bool</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="torchdistill.common.main_util.save_on_master">
+<span class="sig-prename descclassname"><span class="pre">torchdistill.common.main_util.</span></span><span class="sig-name descname"><span class="pre">save_on_master</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">*</span></span><span class="n"><span class="pre">args</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/torchdistill/common/main_util.html#save_on_master"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#torchdistill.common.main_util.save_on_master" title="Link to this definition"></a></dt>
+<dd><p>Use <cite>torch.save</cite> for <cite>args</cite> if this is the main process.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><p>True if this is the main process.</p>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p>bool</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="torchdistill.common.main_util.init_distributed_mode">
+<span class="sig-prename descclassname"><span class="pre">torchdistill.common.main_util.</span></span><span class="sig-name descname"><span class="pre">init_distributed_mode</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">world_size</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">dist_url</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'env://'</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/torchdistill/common/main_util.html#init_distributed_mode"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#torchdistill.common.main_util.init_distributed_mode" title="Link to this definition"></a></dt>
+<dd><p>Initializes the distributed mode.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>world_size</strong> (<em>int</em>) – world size.</p></li>
+<li><p><strong>dist_url</strong> (<em>str</em>) – URL specifying how to initialize the process group.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>tuple of 1) whether distributed mode is initialized, 2) world size, and 3) list of device IDs.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>(bool, int, list[int] or None)</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="torchdistill.common.main_util.load_ckpt">
+<span class="sig-prename descclassname"><span class="pre">torchdistill.common.main_util.</span></span><span class="sig-name descname"><span class="pre">load_ckpt</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">ckpt_file_path</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">model</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">optimizer</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">lr_scheduler</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">strict</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/torchdistill/common/main_util.html#load_ckpt"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#torchdistill.common.main_util.load_ckpt" title="Link to this definition"></a></dt>
+<dd><p>Loads a checkpoint file with model, optimizer, and/or lr_scheduler.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>ckpt_file_path</strong> (<em>str</em>) – checkpoint file path.</p></li>
+<li><p><strong>model</strong> (<em>nn.Module</em>) – model.</p></li>
+<li><p><strong>optimizer</strong> (<em>nn.Module</em>) – optimizer.</p></li>
+<li><p><strong>lr_scheduler</strong> (<em>nn.Module</em>) – learning rate scheduler.</p></li>
+<li><p><strong>strict</strong> (<em>bool</em>) – <code class="docutils literal notranslate"><span class="pre">strict</span></code> as a keyword argument of <code class="docutils literal notranslate"><span class="pre">load_state_dict</span></code>.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>tuple of best value (e.g., best validation result) and parsed args.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>(float or None, argparse.Namespace or None)</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="torchdistill.common.main_util.save_ckpt">
+<span class="sig-prename descclassname"><span class="pre">torchdistill.common.main_util.</span></span><span class="sig-name descname"><span class="pre">save_ckpt</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">model</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">optimizer</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">lr_scheduler</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">best_value</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">args</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">output_file_path</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/torchdistill/common/main_util.html#save_ckpt"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#torchdistill.common.main_util.save_ckpt" title="Link to this definition"></a></dt>
+<dd><p>Saves a checkpoint file including model, optimizer, best value, parsed args, and learning rate scheduler.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>model</strong> (<em>nn.Module</em>) – model.</p></li>
+<li><p><strong>optimizer</strong> (<em>nn.Module</em>) – optimizer.</p></li>
+<li><p><strong>lr_scheduler</strong> (<em>nn.Module</em>) – learning rate scheduler.</p></li>
+<li><p><strong>best_value</strong> (<em>float</em>) – best value e.g., best validation result.</p></li>
+<li><p><strong>args</strong> (<em>argparse.Namespace</em>) – parsed args.</p></li>
+<li><p><strong>output_file_path</strong> (<em>str</em>) – output file path.</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+</section>
+<hr class="docutils" />
+<section id="torchdistill-common-misc-util">
+<h2>torchdistill.common.misc_util<a class="headerlink" href="#torchdistill-common-misc-util" title="Link to this heading"></a></h2>
+<dl class="py function" id="module-torchdistill.common.misc_util">
+<dt class="sig sig-object py" id="torchdistill.common.misc_util.check_if_plottable">
+<span class="sig-prename descclassname"><span class="pre">torchdistill.common.misc_util.</span></span><span class="sig-name descname"><span class="pre">check_if_plottable</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/torchdistill/common/misc_util.html#check_if_plottable"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#torchdistill.common.misc_util.check_if_plottable" title="Link to this definition"></a></dt>
+<dd><p>Checks if DISPLAY environmental variable is valid.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><p>True if DISPLAY variable is valid.</p>
+</dd>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
+<dd class="field-even"><p>bool</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="torchdistill.common.misc_util.get_classes">
+<span class="sig-prename descclassname"><span class="pre">torchdistill.common.misc_util.</span></span><span class="sig-name descname"><span class="pre">get_classes</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">package_name</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">require_names</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/torchdistill/common/misc_util.html#get_classes"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#torchdistill.common.misc_util.get_classes" title="Link to this definition"></a></dt>
+<dd><p>Gets classes in a given package.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>package_name</strong> (<em>str</em>) – package name.</p></li>
+<li><p><strong>require_names</strong> (<em>bool</em>) – whether to preserve member names.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>collection of classes defined in the given package.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>list[(str, class)] or list[class]</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="torchdistill.common.misc_util.get_classes_as_dict">
+<span class="sig-prename descclassname"><span class="pre">torchdistill.common.misc_util.</span></span><span class="sig-name descname"><span class="pre">get_classes_as_dict</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">package_name</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">is_lower</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/torchdistill/common/misc_util.html#get_classes_as_dict"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#torchdistill.common.misc_util.get_classes_as_dict" title="Link to this definition"></a></dt>
+<dd><p>Gets classes in a given package as dict.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>package_name</strong> (<em>str</em>) – package name.</p></li>
+<li><p><strong>is_lower</strong> (<em>bool</em>) – if True, use lowercase module names.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>dict of classes defined in the given package.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>dict</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="torchdistill.common.misc_util.get_functions">
+<span class="sig-prename descclassname"><span class="pre">torchdistill.common.misc_util.</span></span><span class="sig-name descname"><span class="pre">get_functions</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">package_name</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">require_names</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/torchdistill/common/misc_util.html#get_functions"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#torchdistill.common.misc_util.get_functions" title="Link to this definition"></a></dt>
+<dd><p>Gets functions in a given package.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>package_name</strong> (<em>str</em>) – package name.</p></li>
+<li><p><strong>require_names</strong> (<em>bool</em>) – whether to preserve function names.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>collection of functions defined in the given package.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>list[(str, <em>Callable</em>)] or list[<em>Callable</em>]</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="torchdistill.common.misc_util.get_functions_as_dict">
+<span class="sig-prename descclassname"><span class="pre">torchdistill.common.misc_util.</span></span><span class="sig-name descname"><span class="pre">get_functions_as_dict</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">package_name</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">is_lower</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/torchdistill/common/misc_util.html#get_functions_as_dict"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#torchdistill.common.misc_util.get_functions_as_dict" title="Link to this definition"></a></dt>
+<dd><p>Gets function in a given package as dict.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>package_name</strong> (<em>str</em>) – package name.</p></li>
+<li><p><strong>is_lower</strong> (<em>bool</em>) – if True, use lowercase module names.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>dict of classes defined in the given package.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>dict</p>
+</dd>
+</dl>
+</dd></dl>
+
+</section>
+<hr class="docutils" />
+<section id="torchdistill-common-module-util">
+<h2>torchdistill.common.module_util<a class="headerlink" href="#torchdistill-common-module-util" title="Link to this heading"></a></h2>
+<dl class="py function" id="module-torchdistill.common.module_util">
+<dt class="sig sig-object py" id="torchdistill.common.module_util.check_if_wrapped">
+<span class="sig-prename descclassname"><span class="pre">torchdistill.common.module_util.</span></span><span class="sig-name descname"><span class="pre">check_if_wrapped</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">model</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/torchdistill/common/module_util.html#check_if_wrapped"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#torchdistill.common.module_util.check_if_wrapped" title="Link to this definition"></a></dt>
+<dd><p>Checks if a given model is wrapped by DataParallel or DistributedDataParallel.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>model</strong> (<em>nn.Module</em>) – model.</p>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>True if <cite>model</cite> is wrapped by either DataParallel or DistributedDataParallel.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>bool</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="torchdistill.common.module_util.count_params">
+<span class="sig-prename descclassname"><span class="pre">torchdistill.common.module_util.</span></span><span class="sig-name descname"><span class="pre">count_params</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">module</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/torchdistill/common/module_util.html#count_params"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#torchdistill.common.module_util.count_params" title="Link to this definition"></a></dt>
+<dd><p>Returns the number of module parameters.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>module</strong> (<em>nn.Module</em>) – module.</p>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>number of model parameters.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>int</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="torchdistill.common.module_util.freeze_module_params">
+<span class="sig-prename descclassname"><span class="pre">torchdistill.common.module_util.</span></span><span class="sig-name descname"><span class="pre">freeze_module_params</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">module</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/torchdistill/common/module_util.html#freeze_module_params"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#torchdistill.common.module_util.freeze_module_params" title="Link to this definition"></a></dt>
+<dd><p>Freezes parameters by setting requires_grad=False for all the parameters.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>module</strong> (<em>nn.Module</em>) – module.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="torchdistill.common.module_util.unfreeze_module_params">
+<span class="sig-prename descclassname"><span class="pre">torchdistill.common.module_util.</span></span><span class="sig-name descname"><span class="pre">unfreeze_module_params</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">module</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/torchdistill/common/module_util.html#unfreeze_module_params"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#torchdistill.common.module_util.unfreeze_module_params" title="Link to this definition"></a></dt>
+<dd><p>Unfreezes parameters by setting requires_grad=True for all the parameters.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>module</strong> (<em>nn.Module</em>) – module.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="torchdistill.common.module_util.get_updatable_param_names">
+<span class="sig-prename descclassname"><span class="pre">torchdistill.common.module_util.</span></span><span class="sig-name descname"><span class="pre">get_updatable_param_names</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">module</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/torchdistill/common/module_util.html#get_updatable_param_names"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#torchdistill.common.module_util.get_updatable_param_names" title="Link to this definition"></a></dt>
+<dd><p>Gets collection of updatable parameter names.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>module</strong> (<em>nn.Module</em>) – module.</p>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>names of updatable parameters.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>list[str]</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="torchdistill.common.module_util.get_frozen_param_names">
+<span class="sig-prename descclassname"><span class="pre">torchdistill.common.module_util.</span></span><span class="sig-name descname"><span class="pre">get_frozen_param_names</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">module</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/torchdistill/common/module_util.html#get_frozen_param_names"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#torchdistill.common.module_util.get_frozen_param_names" title="Link to this definition"></a></dt>
+<dd><p>Gets collection of frozen parameter names.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>module</strong> (<em>nn.Module</em>) – module.</p>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>names of frozen parameters.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>list[str]</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="torchdistill.common.module_util.get_module">
+<span class="sig-prename descclassname"><span class="pre">torchdistill.common.module_util.</span></span><span class="sig-name descname"><span class="pre">get_module</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">root_module</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">module_path</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/torchdistill/common/module_util.html#get_module"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#torchdistill.common.module_util.get_module" title="Link to this definition"></a></dt>
+<dd><p>Gets a module specified by <code class="docutils literal notranslate"><span class="pre">module_path</span></code>.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>root_module</strong> (<em>nn.Module</em>) – module.</p></li>
+<li><p><strong>module_path</strong> (<em>str</em>) – module path for extracting the module from <code class="docutils literal notranslate"><span class="pre">root_module</span></code>.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>module extracted from <code class="docutils literal notranslate"><span class="pre">root_module</span></code> if exists.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>nn.Module or None</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="torchdistill.common.module_util.get_hierarchized_dict">
+<span class="sig-prename descclassname"><span class="pre">torchdistill.common.module_util.</span></span><span class="sig-name descname"><span class="pre">get_hierarchized_dict</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">module_paths</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/torchdistill/common/module_util.html#get_hierarchized_dict"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#torchdistill.common.module_util.get_hierarchized_dict" title="Link to this definition"></a></dt>
+<dd><p>Gets a hierarchical structure from module paths.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>module_paths</strong> (<em>list</em><em>[</em><em>str</em><em>]</em>) – module paths.</p>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>module extracted from <code class="docutils literal notranslate"><span class="pre">root_module</span></code> if exists.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>dict</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="torchdistill.common.module_util.decompose">
+<span class="sig-prename descclassname"><span class="pre">torchdistill.common.module_util.</span></span><span class="sig-name descname"><span class="pre">decompose</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">ordered_dict</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/torchdistill/common/module_util.html#decompose"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#torchdistill.common.module_util.decompose" title="Link to this definition"></a></dt>
+<dd><p>Converts an ordered dict into a list of key-value pairs.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>ordered_dict</strong> (<em>collections.OrderedDict</em>) – ordered dict.</p>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>list of key-value pairs.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>list[(str, Any)]</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="torchdistill.common.module_util.get_components">
+<span class="sig-prename descclassname"><span class="pre">torchdistill.common.module_util.</span></span><span class="sig-name descname"><span class="pre">get_components</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">module_paths</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/torchdistill/common/module_util.html#get_components"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#torchdistill.common.module_util.get_components" title="Link to this definition"></a></dt>
+<dd><p>Converts module paths into a list of pairs of parent module and child module names.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>module_paths</strong> (<em>list</em><em>[</em><em>str</em><em>]</em>) – module paths.</p>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>list of pairs of parent module and child module names.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>list[(str, str)]</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="torchdistill.common.module_util.extract_target_modules">
+<span class="sig-prename descclassname"><span class="pre">torchdistill.common.module_util.</span></span><span class="sig-name descname"><span class="pre">extract_target_modules</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">parent_module</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">target_class</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">module_list</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/torchdistill/common/module_util.html#extract_target_modules"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#torchdistill.common.module_util.extract_target_modules" title="Link to this definition"></a></dt>
+<dd><p>Extracts modules that are instance of <code class="docutils literal notranslate"><span class="pre">target_class</span></code> and update <code class="docutils literal notranslate"><span class="pre">module_list</span></code> with the extracted modules.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>parent_module</strong> (<em>nn.Module</em>) – parent module.</p></li>
+<li><p><strong>target_class</strong> (<em>class</em>) – target class.</p></li>
+<li><p><strong>module_list</strong> (<em>list</em><em>[</em><em>nn.Module</em><em>]</em>) – (empty) list to be filled with modules that are instances of <code class="docutils literal notranslate"><span class="pre">target_class</span></code>.</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="torchdistill.common.module_util.extract_all_child_modules">
+<span class="sig-prename descclassname"><span class="pre">torchdistill.common.module_util.</span></span><span class="sig-name descname"><span class="pre">extract_all_child_modules</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">parent_module</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">module_list</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/torchdistill/common/module_util.html#extract_all_child_modules"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#torchdistill.common.module_util.extract_all_child_modules" title="Link to this definition"></a></dt>
+<dd><p>Extracts all the child modules and update <code class="docutils literal notranslate"><span class="pre">module_list</span></code> with the extracted modules.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>parent_module</strong> (<em>nn.Module</em>) – parent module.</p></li>
+<li><p><strong>module_list</strong> (<em>list</em><em>[</em><em>nn.Module</em><em>]</em>) – (empty) list to be filled with child modules.</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+</section>
+<hr class="docutils" />
+<section id="torchdistill-common-tensor-util">
+<h2>torchdistill.common.tensor_util<a class="headerlink" href="#torchdistill-common-tensor-util" title="Link to this heading"></a></h2>
+<dl class="py class" id="module-torchdistill.common.tensor_util">
+<dt class="sig sig-object py" id="torchdistill.common.tensor_util.QuantizedTensor">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">torchdistill.common.tensor_util.</span></span><span class="sig-name descname"><span class="pre">QuantizedTensor</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">tensor</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">scale</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">zero_point</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#torchdistill.common.tensor_util.QuantizedTensor" title="Link to this definition"></a></dt>
+<dd><dl class="py attribute">
+<dt class="sig sig-object py" id="torchdistill.common.tensor_util.QuantizedTensor.scale">
+<span class="sig-name descname"><span class="pre">scale</span></span><a class="headerlink" href="#torchdistill.common.tensor_util.QuantizedTensor.scale" title="Link to this definition"></a></dt>
+<dd><p>Alias for field number 1</p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="torchdistill.common.tensor_util.QuantizedTensor.tensor">
+<span class="sig-name descname"><span class="pre">tensor</span></span><a class="headerlink" href="#torchdistill.common.tensor_util.QuantizedTensor.tensor" title="Link to this definition"></a></dt>
+<dd><p>Alias for field number 0</p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="torchdistill.common.tensor_util.QuantizedTensor.zero_point">
+<span class="sig-name descname"><span class="pre">zero_point</span></span><a class="headerlink" href="#torchdistill.common.tensor_util.QuantizedTensor.zero_point" title="Link to this definition"></a></dt>
+<dd><p>Alias for field number 2</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="torchdistill.common.tensor_util.quantize_tensor">
+<span class="sig-prename descclassname"><span class="pre">torchdistill.common.tensor_util.</span></span><span class="sig-name descname"><span class="pre">quantize_tensor</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">x</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">num_bits</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">8</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/torchdistill/common/tensor_util.html#quantize_tensor"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#torchdistill.common.tensor_util.quantize_tensor" title="Link to this definition"></a></dt>
+<dd><p>Quantizes a tensor using <cite>num_bits</cite> int and float.</p>
+<p>Benoit Jacob, Skirmantas Kligys, Bo Chen, Menglong Zhu, Matthew Tang, Andrew Howard, Hartwig Adam, Dmitry Kalenichenko: <a class="reference external" href="https://openaccess.thecvf.com/content_cvpr_2018/html/Jacob_Quantization_and_Training_CVPR_2018_paper.html">“Quantization and Training of Neural Networks for Efficient Integer-Arithmetic-Only Inference”</a> &#64; CVPR 2018 (2018)</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>x</strong> (<em>torch.Tensor</em>) – tensor to be quantized.</p></li>
+<li><p><strong>num_bits</strong> (<em>int</em>) – the number of bits for quantization.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>quantized tensor.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><a class="reference internal" href="#torchdistill.common.tensor_util.QuantizedTensor" title="torchdistill.common.tensor_util.QuantizedTensor">QuantizedTensor</a></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="torchdistill.common.tensor_util.dequantize_tensor">
+<span class="sig-prename descclassname"><span class="pre">torchdistill.common.tensor_util.</span></span><span class="sig-name descname"><span class="pre">dequantize_tensor</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">q_x</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/torchdistill/common/tensor_util.html#dequantize_tensor"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#torchdistill.common.tensor_util.dequantize_tensor" title="Link to this definition"></a></dt>
+<dd><p>Dequantizes a quantized tensor.</p>
+<p>Benoit Jacob, Skirmantas Kligys, Bo Chen, Menglong Zhu, Matthew Tang, Andrew Howard, Hartwig Adam, Dmitry Kalenichenko: <a class="reference external" href="https://openaccess.thecvf.com/content_cvpr_2018/html/Jacob_Quantization_and_Training_CVPR_2018_paper.html">“Quantization and Training of Neural Networks for Efficient Integer-Arithmetic-Only Inference”</a> &#64; CVPR 2018 (2018)</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>q_x</strong> (<a class="reference internal" href="#torchdistill.common.tensor_util.QuantizedTensor" title="torchdistill.common.tensor_util.QuantizedTensor"><em>QuantizedTensor</em></a>) – quantized tensor to be dequantized.</p>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>dequantized tensor.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>torch.Tensor</p>
+</dd>
+</dl>
+</dd></dl>
+
+</section>
+<hr class="docutils" />
+<section id="torchdistill-common-yaml-util">
+<h2>torchdistill.common.yaml_util<a class="headerlink" href="#torchdistill-common-yaml-util" title="Link to this heading"></a></h2>
+<dl class="py function" id="module-torchdistill.common.yaml_util">
+<dt class="sig sig-object py" id="torchdistill.common.yaml_util.yaml_join">
+<span class="sig-prename descclassname"><span class="pre">torchdistill.common.yaml_util.</span></span><span class="sig-name descname"><span class="pre">yaml_join</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">loader</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">node</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/torchdistill/common/yaml_util.html#yaml_join"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#torchdistill.common.yaml_util.yaml_join" title="Link to this definition"></a></dt>
+<dd><p>Joins a sequence of strings.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>loader</strong> (<em>yaml.loader.FullLoader</em>) – yaml loader.</p></li>
+<li><p><strong>node</strong> (<em>yaml.nodes.Node</em>) – node.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>joined string.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>str</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="torchdistill.common.yaml_util.yaml_pathjoin">
+<span class="sig-prename descclassname"><span class="pre">torchdistill.common.yaml_util.</span></span><span class="sig-name descname"><span class="pre">yaml_pathjoin</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">loader</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">node</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/torchdistill/common/yaml_util.html#yaml_pathjoin"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#torchdistill.common.yaml_util.yaml_pathjoin" title="Link to this definition"></a></dt>
+<dd><p>Joins a sequence of strings as a (file) path.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>loader</strong> (<em>yaml.loader.FullLoader</em>) – yaml loader.</p></li>
+<li><p><strong>node</strong> (<em>yaml.nodes.Node</em>) – node.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>joined (file) path.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>str</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="torchdistill.common.yaml_util.yaml_expanduser">
+<span class="sig-prename descclassname"><span class="pre">torchdistill.common.yaml_util.</span></span><span class="sig-name descname"><span class="pre">yaml_expanduser</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">loader</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">node</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/torchdistill/common/yaml_util.html#yaml_expanduser"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#torchdistill.common.yaml_util.yaml_expanduser" title="Link to this definition"></a></dt>
+<dd><p>Applies os.path.expanduser to a (file) path.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>loader</strong> (<em>yaml.loader.FullLoader</em>) – yaml loader.</p></li>
+<li><p><strong>node</strong> (<em>yaml.nodes.Node</em>) – node.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>(file) path.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>str</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="torchdistill.common.yaml_util.yaml_abspath">
+<span class="sig-prename descclassname"><span class="pre">torchdistill.common.yaml_util.</span></span><span class="sig-name descname"><span class="pre">yaml_abspath</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">loader</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">node</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/torchdistill/common/yaml_util.html#yaml_abspath"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#torchdistill.common.yaml_util.yaml_abspath" title="Link to this definition"></a></dt>
+<dd><p>Applies os.path.abspath to a (file) path.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>loader</strong> (<em>yaml.loader.FullLoader</em>) – yaml loader.</p></li>
+<li><p><strong>node</strong> (<em>yaml.nodes.Node</em>) – node.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>(file) path.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>str</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="torchdistill.common.yaml_util.yaml_import_get">
+<span class="sig-prename descclassname"><span class="pre">torchdistill.common.yaml_util.</span></span><span class="sig-name descname"><span class="pre">yaml_import_get</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">loader</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">node</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/torchdistill/common/yaml_util.html#yaml_import_get"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#torchdistill.common.yaml_util.yaml_import_get" title="Link to this definition"></a></dt>
+<dd><p>Imports module and get its attribute.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>loader</strong> (<em>yaml.loader.FullLoader</em>) – yaml loader.</p></li>
+<li><p><strong>node</strong> (<em>yaml.nodes.Node</em>) – node.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>module attribute.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>Any</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="torchdistill.common.yaml_util.yaml_import_call">
+<span class="sig-prename descclassname"><span class="pre">torchdistill.common.yaml_util.</span></span><span class="sig-name descname"><span class="pre">yaml_import_call</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">loader</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">node</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/torchdistill/common/yaml_util.html#yaml_import_call"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#torchdistill.common.yaml_util.yaml_import_call" title="Link to this definition"></a></dt>
+<dd><p>Imports module and call the module/function e.g., instantiation.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>loader</strong> (<em>yaml.loader.FullLoader</em>) – yaml loader.</p></li>
+<li><p><strong>node</strong> (<em>yaml.nodes.Node</em>) – node.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>result of callable module.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>Any</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="torchdistill.common.yaml_util.yaml_import_call_method">
+<span class="sig-prename descclassname"><span class="pre">torchdistill.common.yaml_util.</span></span><span class="sig-name descname"><span class="pre">yaml_import_call_method</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">loader</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">node</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/torchdistill/common/yaml_util.html#yaml_import_call_method"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#torchdistill.common.yaml_util.yaml_import_call_method" title="Link to this definition"></a></dt>
+<dd><p>Imports module and call its method.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>loader</strong> (<em>yaml.loader.FullLoader</em>) – yaml loader.</p></li>
+<li><p><strong>node</strong> (<em>yaml.nodes.Node</em>) – node.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>result of callable module.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>Any</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="torchdistill.common.yaml_util.yaml_call_method">
+<span class="sig-prename descclassname"><span class="pre">torchdistill.common.yaml_util.</span></span><span class="sig-name descname"><span class="pre">yaml_call_method</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">loader</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">node</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/torchdistill/common/yaml_util.html#yaml_call_method"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#torchdistill.common.yaml_util.yaml_call_method" title="Link to this definition"></a></dt>
+<dd><p>Calls an object’s method.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>loader</strong> (<em>yaml.loader.FullLoader</em>) – yaml loader.</p></li>
+<li><p><strong>node</strong> (<em>yaml.nodes.Node</em>) – node.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>result of callable module or module itself.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>Any</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="torchdistill.common.yaml_util.yaml_getattr">
+<span class="sig-prename descclassname"><span class="pre">torchdistill.common.yaml_util.</span></span><span class="sig-name descname"><span class="pre">yaml_getattr</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">loader</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">node</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/torchdistill/common/yaml_util.html#yaml_getattr"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#torchdistill.common.yaml_util.yaml_getattr" title="Link to this definition"></a></dt>
+<dd><p>Gets an attribute of the first argument.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>loader</strong> (<em>yaml.loader.FullLoader</em>) – yaml loader.</p></li>
+<li><p><strong>node</strong> (<em>yaml.nodes.Node</em>) – node.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>module attribute.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>Any</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="torchdistill.common.yaml_util.yaml_setattr">
+<span class="sig-prename descclassname"><span class="pre">torchdistill.common.yaml_util.</span></span><span class="sig-name descname"><span class="pre">yaml_setattr</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">loader</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">node</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/torchdistill/common/yaml_util.html#yaml_setattr"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#torchdistill.common.yaml_util.yaml_setattr" title="Link to this definition"></a></dt>
+<dd><p>Sets an attribute to the first argument.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>loader</strong> (<em>yaml.loader.FullLoader</em>) – yaml loader.</p></li>
+<li><p><strong>node</strong> (<em>yaml.nodes.Node</em>) – node.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>module attribute.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>Any</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="torchdistill.common.yaml_util.yaml_access_by_index_or_key">
+<span class="sig-prename descclassname"><span class="pre">torchdistill.common.yaml_util.</span></span><span class="sig-name descname"><span class="pre">yaml_access_by_index_or_key</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">loader</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">node</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/torchdistill/common/yaml_util.html#yaml_access_by_index_or_key"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#torchdistill.common.yaml_util.yaml_access_by_index_or_key" title="Link to this definition"></a></dt>
+<dd><p>Obtains a value from a specified data</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>loader</strong> (<em>yaml.loader.FullLoader</em>) – yaml loader.</p></li>
+<li><p><strong>node</strong> (<em>yaml.nodes.Node</em>) – node.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>accessed object.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>Any</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="torchdistill.common.yaml_util.load_yaml_file">
+<span class="sig-prename descclassname"><span class="pre">torchdistill.common.yaml_util.</span></span><span class="sig-name descname"><span class="pre">load_yaml_file</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">yaml_file_path</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">custom_mode</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/torchdistill/common/yaml_util.html#load_yaml_file"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#torchdistill.common.yaml_util.load_yaml_file" title="Link to this definition"></a></dt>
+<dd><p>Loads a yaml file optionally with convenient constructors.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>yaml_file_path</strong> (<em>str</em>) – yaml file path.</p></li>
+<li><p><strong>custom_mode</strong> (<em>bool</em>) – if True, uses convenient constructors.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>loaded PyYAML object.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>Any</p>
+</dd>
+</dl>
+</dd></dl>
+
+</section>
+</section>
+
+
+           </div>
+          </div>
+          <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
+        <a href="optim.html" class="btn btn-neutral float-left" title="torchdistill.optim" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="misc.html" class="btn btn-neutral float-right" title="torchdistill.misc" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2023, Yoshitomo Matsubara.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script>
+    <!-- Theme Analytics -->
+    <script async src="https://www.googletagmanager.com/gtag/js?id=G-LYK8SSJ7R5"></script>
+    <script>
+      window.dataLayer = window.dataLayer || [];
+      function gtag(){dataLayer.push(arguments);}
+      gtag('js', new Date());
+
+      gtag('config', 'G-LYK8SSJ7R5', {
+          'anonymize_ip': false,
+      });
+    </script> 
+
+</body>
+</html>
