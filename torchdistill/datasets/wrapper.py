@@ -65,7 +65,7 @@ class CacheableDataset(BaseDatasetWrapper):
         sample, target, supp_dict = super().__getitem__(index)
         cache_file_path = os.path.join(self.cache_dir_path, self.idx2subath_func(index) + self.ext)
         if file_util.check_if_exists(cache_file_path):
-            cached_data = torch.load(cache_file_path)
+            cached_data = torch.load(cache_file_path, weights_only=False)
             supp_dict['cached_data'] = cached_data
 
         supp_dict['cache_file_path'] = cache_file_path
