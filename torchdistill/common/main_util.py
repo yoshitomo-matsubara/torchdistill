@@ -306,7 +306,7 @@ def load_ckpt(ckpt_file_path, model=None, optimizer=None, lr_scheduler=None, str
     :rtype: (float or None, argparse.Namespace or None)
     """
     if check_if_exists(ckpt_file_path):
-        ckpt = torch.load(ckpt_file_path, map_location='cpu')
+        ckpt = torch.load(ckpt_file_path, weights_only=False, map_location='cpu')
     elif isinstance(ckpt_file_path, str) and \
             (ckpt_file_path.startswith('https://') or ckpt_file_path.startswith('http://')):
         ckpt = torch.hub.load_state_dict_from_url(ckpt_file_path, map_location='cpu', progress=True)
