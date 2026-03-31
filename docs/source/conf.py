@@ -19,7 +19,7 @@ sys.path.insert(0, pathlib.Path(__file__).parents[2].resolve().as_posix())
 # -- Project information -----------------------------------------------------
 
 project = 'torchdistill'
-copyright = '2023, Yoshitomo Matsubara'
+copyright = '2023-2026, Yoshitomo Matsubara'
 author = 'Yoshitomo Matsubara'
 
 # The full version, including alpha/beta/rc tags
