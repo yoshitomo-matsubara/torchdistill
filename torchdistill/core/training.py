@@ -56,9 +56,10 @@ class TrainingBox(object):
             train_data_loader_config['requires_supp'] = True
 
         val_data_loader_config = train_config.get('val_data_loader', dict())
-        train_data_loader, val_data_loader =\
-            build_data_loaders(self.dataset_dict, [train_data_loader_config, val_data_loader_config],
-                               self.distributed, self.accelerator)
+        train_data_loader, val_data_loader = build_data_loaders(
+            self.dataset_dict, [train_data_loader_config, val_data_loader_config],
+            self.distributed, self.accelerator
+        )
         if train_data_loader is not None:
             self.train_data_loader = train_data_loader
         if val_data_loader is not None:
@@ -73,16 +74,16 @@ class TrainingBox(object):
         :param model_config: model configuration.
         :type model_config: dict
         """
-        unwrapped_org_model = \
-            self.org_model.module if check_if_wrapped(self.org_model) else self.org_model
+        unwrapped_org_model = self.org_model.module if check_if_wrapped(self.org_model) else self.org_model
         self.target_model_pairs.clear()
         ref_model = unwrapped_org_model
         if len(model_config) > 0 or (len(model_config) == 0 and self.model is None):
             logger.info('[student model]')
             model_type = 'original'
-            auxiliary_model_wrapper = \
-                build_auxiliary_model_wrapper(model_config, student_model=unwrapped_org_model, device=self.device,
-                                              device_ids=self.device_ids, distributed=self.distributed)
+            auxiliary_model_wrapper = build_auxiliary_model_wrapper(
+                model_config, student_model=unwrapped_org_model, device=self.device,
+                device_ids=self.device_ids, distributed=self.distributed
+            )
             if auxiliary_model_wrapper is not None:
                 ref_model = auxiliary_model_wrapper
                 model_type = type(ref_model).__name__
@@ -164,9 +165,10 @@ class TrainingBox(object):
 
         # Wrap models if necessary
         any_updatable = len(get_updatable_param_names(self.model)) > 0
-        self.model =\
-            wrap_model(self.model, model_config, self.device, self.device_ids, self.distributed,
-                       self.model_any_frozen, any_updatable)
+        self.model = wrap_model(
+            self.model, model_config, self.device, self.device_ids, self.distributed,
+            self.model_any_frozen, any_updatable
+        )
 
         # Set up optimizer and scheduler
         optim_config = train_config.get('optimizer', dict())
@@ -194,9 +196,9 @@ class TrainingBox(object):
                 trainable_module_list = nn.ModuleList([self.model])
 
             filters_params = optim_config.get('filters_params', True)
-            self.optimizer = \
-                get_optimizer(trainable_module_list, optim_config['key'],
-                              **optim_kwargs, filters_params=filters_params)
+            self.optimizer = get_optimizer(
+                trainable_module_list, optim_config['key'], **optim_kwargs, filters_params=filters_params
+            )
             self.optimizer.zero_grad()
             self.max_grad_norm = optim_config.get('max_grad_norm', None)
             self.grad_accum_step = optim_config.get('grad_accum_step', 1)
@@ -212,8 +214,9 @@ class TrainingBox(object):
 
         # Set up accelerator if necessary
         if self.accelerator is not None:
-            self.model, self.optimizer, self.train_data_loader, self.val_data_loader = \
-                self.accelerator.prepare(self.model, self.optimizer, self.train_data_loader, self.val_data_loader)
+            self.model, self.optimizer, self.train_data_loader, self.val_data_loader = self.accelerator.prepare(
+                self.model, self.optimizer, self.train_data_loader, self.val_data_loader
+            )
 
         # Set up {pre,post}-{epoch,forward} processes
         self.setup_pre_post_processes(train_config)
@@ -332,11 +335,11 @@ class MultiStagesTrainingBox(TrainingBox):
     :param accelerator: Hugging Face accelerator.
     :type accelerator: accelerate.Accelerator or None
     """
-    def __init__(self, model, dataset_dict, train_config,
-                 device, device_ids, distributed, lr_factor, accelerator=None):
+    def __init__(
+            self, model, dataset_dict, train_config, device, device_ids, distributed, lr_factor, accelerator=None
+    ):
         stage1_config = train_config['stage1']
-        super().__init__(model, dataset_dict,
-                         stage1_config, device, device_ids, distributed, lr_factor, accelerator)
+        super().__init__(model, dataset_dict, stage1_config, device, device_ids, distributed, lr_factor, accelerator)
         self.train_config = train_config
         self.stage_number = 1
         self.stage_end_epoch = stage1_config['num_epochs']
@@ -385,8 +388,9 @@ class MultiStagesTrainingBox(TrainingBox):
             self.advance_to_next_stage()
 
 
-def get_training_box(model, dataset_dict, train_config, device, device_ids, distributed,
-                     lr_factor, accelerator=None):
+def get_training_box(
+        model, dataset_dict, train_config, device, device_ids, distributed, lr_factor, accelerator=None
+):
     """
     Gets a training box.
 
@@ -410,6 +414,7 @@ def get_training_box(model, dataset_dict, train_config, device, device_ids, dist
     :rtype: TrainingBox or MultiStagesTrainingBox
     """
     if 'stage1' in train_config:
-        return MultiStagesTrainingBox(model, dataset_dict,
-                                      train_config, device, device_ids, distributed, lr_factor, accelerator)
+        return MultiStagesTrainingBox(
+            model, dataset_dict, train_config, device, device_ids, distributed, lr_factor, accelerator
+        )
     return TrainingBox(model, dataset_dict, train_config, device, device_ids, distributed, lr_factor, accelerator)

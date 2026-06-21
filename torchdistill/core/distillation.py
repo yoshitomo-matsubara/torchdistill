@@ -62,9 +62,9 @@ class DistillationBox(object):
             train_data_loader_config['requires_supp'] = True
 
         val_data_loader_config = train_config.get('val_data_loader', dict())
-        train_data_loader, val_data_loader =\
-            build_data_loaders(self.dataset_dict, [train_data_loader_config, val_data_loader_config],
-                               self.distributed, self.accelerator)
+        train_data_loader, val_data_loader = build_data_loaders(
+            self.dataset_dict, [train_data_loader_config, val_data_loader_config], self.distributed, self.accelerator
+        )
         if train_data_loader is not None:
             self.train_data_loader = train_data_loader
         if val_data_loader is not None:
@@ -81,10 +81,10 @@ class DistillationBox(object):
         :param student_config: student configuration.
         :type student_config: dict
         """
-        unwrapped_org_teacher_model =\
-            self.org_teacher_model.module if check_if_wrapped(self.org_teacher_model) else self.org_teacher_model
-        unwrapped_org_student_model = \
-            self.org_student_model.module if check_if_wrapped(self.org_student_model) else self.org_student_model
+        unwrapped_org_teacher_model = self.org_teacher_model.module if check_if_wrapped(self.org_teacher_model) \
+            else self.org_teacher_model
+        unwrapped_org_student_model = self.org_student_model.module if check_if_wrapped(self.org_student_model) \
+            else self.org_student_model
         self.target_teacher_pairs.clear()
         self.target_student_pairs.clear()
         teacher_ref_model = unwrapped_org_teacher_model
@@ -92,10 +92,10 @@ class DistillationBox(object):
         if len(teacher_config) > 0 or (len(teacher_config) == 0 and self.teacher_model is None):
             logger.info('[teacher model]')
             model_type = 'original'
-            auxiliary_teacher_model_wrapper = \
-                build_auxiliary_model_wrapper(teacher_config, teacher_model=unwrapped_org_teacher_model,
-                                              device=self.device, device_ids=self.device_ids,
-                                              distributed=self.distributed)
+            auxiliary_teacher_model_wrapper = build_auxiliary_model_wrapper(
+                teacher_config, teacher_model=unwrapped_org_teacher_model,
+                device=self.device, device_ids=self.device_ids, distributed=self.distributed
+            )
             if auxiliary_teacher_model_wrapper is not None:
                 teacher_ref_model = auxiliary_teacher_model_wrapper
                 model_type = type(teacher_ref_model).__name__
@@ -108,10 +108,10 @@ class DistillationBox(object):
         if len(student_config) > 0 or (len(student_config) == 0 and self.student_model is None):
             logger.info('[student model]')
             model_type = 'original'
-            auxiliary_student_model_wrapper = \
-                build_auxiliary_model_wrapper(student_config, student_model=unwrapped_org_student_model,
-                                              device=self.device, device_ids=self.device_ids,
-                                              distributed=self.distributed)
+            auxiliary_student_model_wrapper = build_auxiliary_model_wrapper(
+                student_config, student_model=unwrapped_org_student_model,
+                device=self.device, device_ids=self.device_ids, distributed=self.distributed
+            )
             if auxiliary_student_model_wrapper is not None:
                 student_ref_model = auxiliary_student_model_wrapper
                 model_type = type(student_ref_model).__name__
@@ -125,10 +125,12 @@ class DistillationBox(object):
             len(teacher_config.get('frozen_modules', list())) > 0 or not teacher_config.get('requires_grad', True)
         self.student_any_frozen = \
             len(student_config.get('frozen_modules', list())) > 0 or not student_config.get('requires_grad', True)
-        self.target_teacher_pairs.extend(set_hooks(self.teacher_model, teacher_ref_model,
-                                                   teacher_config, self.teacher_io_dict))
-        self.target_student_pairs.extend(set_hooks(self.student_model, student_ref_model,
-                                                   student_config, self.student_io_dict))
+        self.target_teacher_pairs.extend(
+            set_hooks(self.teacher_model, teacher_ref_model, teacher_config, self.teacher_io_dict)
+        )
+        self.target_student_pairs.extend(
+            set_hooks(self.student_model, student_ref_model, student_config, self.student_io_dict)
+        )
         self.teacher_forward_proc = get_forward_proc_func(teacher_config.get('forward_proc', None))
         self.student_forward_proc = get_forward_proc_func(student_config.get('forward_proc', None))
 
@@ -206,13 +208,15 @@ class DistillationBox(object):
 
         # Wrap models if necessary
         teacher_any_updatable = len(get_updatable_param_names(self.teacher_model)) > 0
-        self.teacher_model =\
-            wrap_model(self.teacher_model, teacher_config, self.device, self.device_ids, self.distributed,
-                       self.teacher_any_frozen, teacher_any_updatable)
+        self.teacher_model = wrap_model(
+            self.teacher_model, teacher_config, self.device, self.device_ids, self.distributed,
+            self.teacher_any_frozen, teacher_any_updatable
+        )
         student_any_updatable = len(get_updatable_param_names(self.student_model)) > 0
-        self.student_model =\
-            wrap_model(self.student_model, student_config, self.device, self.device_ids, self.distributed,
-                       self.student_any_frozen, student_any_updatable)
+        self.student_model = wrap_model(
+            self.student_model, student_config, self.device, self.device_ids, self.distributed,
+            self.student_any_frozen, student_any_updatable
+        )
 
         # Set up optimizer and scheduler
         optim_config = train_config.get('optimizer', dict())
@@ -233,8 +237,8 @@ class DistillationBox(object):
                     if 'lr' in module_wise_kwargs:
                         module_wise_kwargs['lr'] *= self.lr_factor
 
-                    target_model = \
-                        self.teacher_model if module_wise_config.get('is_teacher', False) else self.student_model
+                    target_model = self.teacher_model if module_wise_config.get('is_teacher', False) \
+                        else self.student_model
                     module = get_module(target_model, module_wise_config['module'])
                     module_wise_kwargs['params'] = module.parameters() if isinstance(module, nn.Module) else [module]
                     trainable_module_list.append(module_wise_kwargs)
@@ -245,9 +249,9 @@ class DistillationBox(object):
                     trainable_module_list.append(self.teacher_model)
 
             filters_params = optim_config.get('filters_params', True)
-            self.optimizer = \
-                get_optimizer(trainable_module_list, optim_config['key'],
-                              **optim_kwargs, filters_params=filters_params)
+            self.optimizer = get_optimizer(
+                trainable_module_list, optim_config['key'], **optim_kwargs, filters_params=filters_params
+            )
 
             self.optimizer.zero_grad()
             self.max_grad_norm = optim_config.get('max_grad_norm', None)
@@ -266,22 +270,26 @@ class DistillationBox(object):
         if self.accelerator is not None:
             if self.teacher_updatable:
                 self.teacher_model, self.student_model, self.optimizer, self.train_data_loader, self.val_data_loader = \
-                    self.accelerator.prepare(self.teacher_model, self.student_model, self.optimizer,
-                                             self.train_data_loader, self.val_data_loader)
+                    self.accelerator.prepare(
+                        self.teacher_model, self.student_model, self.optimizer,
+                        self.train_data_loader, self.val_data_loader
+                    )
             else:
                 self.teacher_model = self.teacher_model.to(self.accelerator.device)
                 if self.accelerator.state.use_fp16:
                     self.teacher_model = self.teacher_model.half()
 
                 self.student_model, self.optimizer, self.train_data_loader, self.val_data_loader = \
-                    self.accelerator.prepare(self.student_model, self.optimizer,
-                                             self.train_data_loader, self.val_data_loader)
+                    self.accelerator.prepare(
+                        self.student_model, self.optimizer, self.train_data_loader, self.val_data_loader
+                    )
 
         # Set up {pre,post}-{epoch,forward} processes
         self.setup_pre_post_processes(train_config)
 
-    def __init__(self, teacher_model, student_model, dataset_dict,
-                 train_config, device, device_ids, distributed, lr_factor, accelerator=None):
+    def __init__(
+            self, teacher_model, student_model, dataset_dict, train_config, device, device_ids, distributed, lr_factor, accelerator=None
+    ):
         # Key attributes (should not be modified)
         self.org_teacher_model = teacher_model
         self.org_student_model = student_model
@@ -356,12 +364,14 @@ class DistillationBox(object):
         # If no cached data
         if teacher_outputs is None:
             if self.teacher_updatable:
-                teacher_outputs = self.teacher_forward_proc(self.teacher_model, sample_batch,
-                                                            targets, supp_dict, **kwargs)
+                teacher_outputs = self.teacher_forward_proc(
+                    self.teacher_model, sample_batch, targets, supp_dict, **kwargs
+                )
             else:
                 with torch.no_grad():
-                    teacher_outputs = self.teacher_forward_proc(self.teacher_model, sample_batch,
-                                                                targets, supp_dict, **kwargs)
+                    teacher_outputs = self.teacher_forward_proc(
+                        self.teacher_model, sample_batch, targets, supp_dict, **kwargs
+                    )
 
         if cached_extracted_teacher_output_dict is not None:
             if isinstance(self.teacher_model, AuxiliaryModelWrapper) or \
@@ -410,8 +420,9 @@ class DistillationBox(object):
         :return: loss tensor.
         :rtype: torch.Tensor
         """
-        teacher_outputs, extracted_teacher_io_dict =\
-            self.get_teacher_output(sample_batch=sample_batch, targets=targets, supp_dict=supp_dict, **kwargs)
+        teacher_outputs, extracted_teacher_io_dict = self.get_teacher_output(
+            sample_batch=sample_batch, targets=targets, supp_dict=supp_dict, **kwargs
+        )
         student_outputs = self.student_forward_proc(self.student_model, sample_batch, targets, supp_dict, **kwargs)
         extracted_student_io_dict = extract_io_dict(self.student_io_dict, self.device)
         extracted_student_io_dict[SELF_MODULE_PATH]['output'] = student_outputs
@@ -479,11 +490,14 @@ class MultiStagesDistillationBox(DistillationBox):
     :param accelerator: Hugging Face accelerator.
     :type accelerator: accelerate.Accelerator or None
     """
-    def __init__(self, teacher_model, student_model, dataset_dict,
-                 train_config, device, device_ids, distributed, lr_factor, accelerator=None):
+    def __init__(
+            self, teacher_model, student_model, dataset_dict, train_config, device, device_ids, distributed, lr_factor, accelerator=None
+    ):
         stage1_config = train_config['stage1']
-        super().__init__(teacher_model, student_model, dataset_dict,
-                         stage1_config, device, device_ids, distributed, lr_factor, accelerator)
+        super().__init__(
+            teacher_model, student_model, dataset_dict, stage1_config, device, device_ids, distributed,
+            lr_factor, accelerator
+        )
         self.train_config = train_config
         self.stage_number = 1
         self.stage_end_epoch = stage1_config['num_epochs']
@@ -533,8 +547,9 @@ class MultiStagesDistillationBox(DistillationBox):
             self.advance_to_next_stage()
 
 
-def get_distillation_box(teacher_model, student_model, dataset_dict,
-                         train_config, device, device_ids, distributed, lr_factor, accelerator=None):
+def get_distillation_box(
+        teacher_model, student_model, dataset_dict, train_config, device, device_ids, distributed, lr_factor, accelerator=None
+):
     """
     Gets a distillation box.
 
@@ -560,7 +575,11 @@ def get_distillation_box(teacher_model, student_model, dataset_dict,
     :rtype: DistillationBox or MultiStagesDistillationBox
     """
     if 'stage1' in train_config:
-        return MultiStagesDistillationBox(teacher_model, student_model, dataset_dict,
-                                          train_config, device, device_ids, distributed, lr_factor, accelerator)
-    return DistillationBox(teacher_model, student_model, dataset_dict, train_config,
-                           device, device_ids, distributed, lr_factor, accelerator)
+        return MultiStagesDistillationBox(
+            teacher_model, student_model, dataset_dict, train_config, device, device_ids, distributed,
+            lr_factor, accelerator
+        )
+    return DistillationBox(
+        teacher_model, student_model, dataset_dict, train_config, device, device_ids, distributed,
+        lr_factor, accelerator
+    )
