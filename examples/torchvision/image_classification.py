@@ -23,7 +23,7 @@ from torchdistill.models.registry import get_model
 logger = def_logger.getChild(__name__)
 
 
-def get_argparser():
+def get_args():
     parser = argparse.ArgumentParser(description='Knowledge distillation for image classification models')
     parser.add_argument('--config', required=True, help='yaml file path')
     parser.add_argument('--device', default='cuda', help='device')
@@ -37,9 +37,11 @@ def get_argparser():
     # distributed training parameters
     parser.add_argument('--world_size', default=1, type=int, help='number of distributed processes')
     parser.add_argument('--dist_url', default='env://', help='url used to set up distributed training')
-    parser.add_argument('-adjust_lr', action='store_true',
-                        help='multiply learning rate by number of distributed processes (world_size)')
-    return parser
+    parser.add_argument(
+        '-adjust_lr', action='store_true',
+        help='multiply learning rate by number of distributed processes (world_size)'
+    )
+    return parser.parse_args()
 
 
 def load_model(model_config, device, distributed):
@@ -58,8 +60,9 @@ def train_one_epoch(training_box, device, epoch, log_freq):
     metric_logger.add_meter('lr', SmoothedValue(window_size=1, fmt='{value}'))
     metric_logger.add_meter('img/s', SmoothedValue(window_size=10, fmt='{value}'))
     header = 'Epoch: [{}]'.format(epoch)
-    for sample_batch, targets, supp_dict in \
-            metric_logger.log_every(training_box.train_data_loader, log_freq, header):
+    for sample_batch, targets, supp_dict in metric_logger.log_every(
+            training_box.train_data_loader, log_freq, header
+    ):
         start_time = time.time()
         sample_batch, targets = sample_batch.to(device), targets.to(device)
         loss = training_box.forward_process(sample_batch, targets, supp_dict)
@@ -118,15 +121,18 @@ def evaluate(model, data_loader, device, device_ids, distributed, log_freq=1000,
     return metric_logger.acc1.global_avg
 
 
-def train(teacher_model, student_model, dataset_dict, src_ckpt_file_path, dst_ckpt_file_path,
-          device, device_ids, distributed, world_size, config, args):
+def train(
+        teacher_model, student_model, dataset_dict, src_ckpt_file_path, dst_ckpt_file_path,
+        device, device_ids, distributed, world_size, config, args
+):
     logger.info('Start training')
     train_config = config['train']
     lr_factor = world_size if distributed and args.adjust_lr else 1
-    training_box = get_training_box(student_model, dataset_dict, train_config,
-                                    device, device_ids, distributed, lr_factor) if teacher_model is None \
-        else get_distillation_box(teacher_model, student_model, dataset_dict, train_config,
-                                  device, device_ids, distributed, lr_factor)
+    training_box = get_training_box(
+        student_model, dataset_dict, train_config, device, device_ids, distributed, lr_factor
+    ) if teacher_model is None else get_distillation_box(
+        teacher_model, student_model, dataset_dict, train_config, device, device_ids, distributed, lr_factor
+    )
     best_val_top1_accuracy = 0.0
     optimizer, lr_scheduler = training_box.optimizer, training_box.lr_scheduler
     if file_util.check_if_exists(src_ckpt_file_path):
@@ -138,14 +144,17 @@ def train(teacher_model, student_model, dataset_dict, src_ckpt_file_path, dst_ck
     for epoch in range(args.start_epoch, training_box.num_epochs):
         training_box.pre_epoch_process(epoch=epoch)
         train_one_epoch(training_box, device, epoch, log_freq)
-        val_top1_accuracy = evaluate(student_model, training_box.val_data_loader, device, device_ids, distributed,
-                                     log_freq=log_freq, header='Validation:')
+        val_top1_accuracy = evaluate(
+            student_model, training_box.val_data_loader, device, device_ids, distributed,
+            log_freq=log_freq, header='Validation:'
+        )
         if val_top1_accuracy > best_val_top1_accuracy and is_main_process():
             logger.info('Best top-1 accuracy: {:.4f} -> {:.4f}'.format(best_val_top1_accuracy, val_top1_accuracy))
             logger.info('Updating ckpt at {}'.format(dst_ckpt_file_path))
             best_val_top1_accuracy = val_top1_accuracy
-            save_ckpt(student_model_without_ddp, optimizer, lr_scheduler,
-                      best_val_top1_accuracy, args, dst_ckpt_file_path)
+            save_ckpt(
+                student_model_without_ddp, optimizer, lr_scheduler, best_val_top1_accuracy, args, dst_ckpt_file_path
+            )
         training_box.post_epoch_process()
 
     if distributed:
@@ -175,10 +184,8 @@ def main(args):
     dataset_dict = config['datasets']
     models_config = config['models']
     teacher_model_config = models_config.get('teacher_model', None)
-    teacher_model =\
-        load_model(teacher_model_config, device, distributed) if teacher_model_config is not None else None
-    student_model_config =\
-        models_config['student_model'] if 'student_model' in models_config else models_config['model']
+    teacher_model = load_model(teacher_model_config, device, distributed) if teacher_model_config is not None else None
+    student_model_config = models_config['student_model'] if 'student_model' in models_config else models_config['model']
     src_ckpt_file_path = student_model_config.get('src_ckpt', None)
     dst_ckpt_file_path = student_model_config['dst_ckpt']
     student_model = load_model(student_model_config, device, distributed)
@@ -186,26 +193,31 @@ def main(args):
         logger.info(config)
 
     if not args.test_only:
-        train(teacher_model, student_model, dataset_dict, src_ckpt_file_path, dst_ckpt_file_path,
-              device, device_ids, distributed, world_size, config, args)
+        train(
+            teacher_model, student_model, dataset_dict, src_ckpt_file_path, dst_ckpt_file_path,
+            device, device_ids, distributed, world_size, config, args
+        )
 
-    student_model_without_ddp =\
-        student_model.module if module_util.check_if_wrapped(student_model) else student_model
+    student_model_without_ddp = student_model.module if module_util.check_if_wrapped(student_model) else student_model
     load_ckpt(dst_ckpt_file_path, model=student_model_without_ddp, strict=True)
     test_config = config['test']
     test_data_loader_config = test_config['test_data_loader']
-    test_data_loader = build_data_loader(dataset_dict[test_data_loader_config['dataset_id']],
-                                         test_data_loader_config, distributed)
+    test_data_loader = build_data_loader(
+        dataset_dict[test_data_loader_config['dataset_id']], test_data_loader_config, distributed
+    )
     log_freq = test_config.get('log_freq', 1000)
     cudnn.benchmark = False
     cudnn.deterministic = True
     if not args.student_only and teacher_model is not None:
-        evaluate(teacher_model, test_data_loader, device, device_ids, distributed, log_freq=log_freq,
-                 title='[Teacher: {}]'.format(teacher_model_config['key']))
-    evaluate(student_model, test_data_loader, device, device_ids, distributed, log_freq=log_freq,
-             title='[Student: {}]'.format(student_model_config['key']))
+        evaluate(
+            teacher_model, test_data_loader, device, device_ids, distributed,
+            log_freq=log_freq, title='[Teacher: {}]'.format(teacher_model_config['key'])
+        )
+    evaluate(
+        student_model, test_data_loader, device, device_ids, distributed,
+        log_freq=log_freq, title='[Student: {}]'.format(student_model_config['key'])
+    )
 
 
 if __name__ == '__main__':
-    argparser = get_argparser()
-    main(argparser.parse_args())
+    main(get_args())
