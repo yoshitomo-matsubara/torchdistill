@@ -22,8 +22,11 @@ jobs:
         run: npm install -g @github/copilot
       - name: Generate Review via Copilot CLI
         env:
-          GITHUB_TOKEN: ${{ secrets.COPILOT_GITHUB_TOKEN }}
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
+          # Authenticate the GitHub CLI using the workflow token
+          echo "$GH_TOKEN" | gh auth login --with-token
+          
           # Fetch the diff between the PR branch and the base branch
           git diff origin/${{ github.base_ref }}...HEAD > pr_diff.txt
           
