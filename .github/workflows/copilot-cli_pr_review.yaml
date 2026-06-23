@@ -15,7 +15,7 @@ jobs:
         with:
           fetch-depth: 0
       - name: Install GitHub Copilot CLI
-        run: npm install -g @github/copilot-cli
+        run: npm install -g @github/copilot
       - name: Generate Review via Copilot CLI
         env:
           GITHUB_TOKEN: ${{ secrets.COPILOT_GITHUB_TOKEN }}
