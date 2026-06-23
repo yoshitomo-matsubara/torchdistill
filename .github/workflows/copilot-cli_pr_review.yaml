@@ -18,11 +18,11 @@ jobs:
         uses: actions/checkout@v4
         with:
           fetch-depth: 0
-      - name: Install GitHub Copilot CLI
+      - name: Install GitHub Copilot
         run: npm install -g @github/copilot
-      - name: Generate Review via Copilot CLI
+      - name: Generate Review via Copilot
         env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
           # Authenticate the GitHub CLI using the workflow token
           echo "$GH_TOKEN" | gh auth login --with-token
