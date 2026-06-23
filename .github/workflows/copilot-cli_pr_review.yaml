@@ -10,6 +10,10 @@ jobs:
       pull-requests: write
       contents: read
     steps:
+      - name: Set up Node.js environment
+        uses: actions/setup-node@v4
+        with:
+          node-version: '26'
       - name: Checkout Code
         uses: actions/checkout@v4
         with:
