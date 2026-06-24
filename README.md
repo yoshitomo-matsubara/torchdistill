@@ -252,7 +252,7 @@ If you use ***torchdistill*** in your research, please cite the following papers
 
 ## Acknowledgments
 
-This project has been supported by Travis CI's OSS credits since November 2021. [JetBrain's Free License Programs (Open Source)](https://www.jetbrains.com/community/opensource/?utm_campaign=opensource&utm_content=approved&utm_medium=email&utm_source=newsletter&utm_term=jblogo#support) supported the project from June 2022 until June 2026.  
+This project has been supported by Travis CI's OSS credits since November 2021. [JetBrain's Free License Programs (Open Source)](https://www.jetbrains.com/community/opensource/?utm_campaign=opensource&utm_content=approved&utm_medium=email&utm_source=newsletter&utm_term=jblogo#support) has supported the project since June 2022.  
 ![PyCharm logo](https://resources.jetbrains.com/storage/products/company/brand/logos/PyCharm.svg)
 
 
