@@ -24,13 +24,28 @@ jobs:
         env:
           COPILOT_GITHUB_TOKEN: ${{ secrets.COPILOT_GITHUB_TOKEN }}
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          REVIEW_INSTRUCTIONS: .github/instructions/copilot-pr_review.md
         run: |
           # Fetch the diff between the PR branch and the base branch
           git diff origin/${{ github.base_ref }}...HEAD > pr_diff.txt
-          
-          # Run Copilot CLI programmatically using a custom prompt
-          copilot -p "Review the following git diff for security flaws, bugs, or logic errors: $(cat pr_diff.txt)" --no-ask-user > review_output.md
+
+          # Build prompt: strip YAML frontmatter from instructions, then append the diff
+          awk '/^---/{found++; next} found>=2' "$REVIEW_INSTRUCTIONS" > prompt.txt
+          printf '\nReview the following git diff:\n\n' >> prompt.txt
+          cat pr_diff.txt >> prompt.txt
+
+          # Run Copilot CLI with the assembled prompt
+          copilot -p "$(cat prompt.txt)" --no-ask-user > review_output.md
+      - name: Check for critical issues
+        id: check_issues
+        run: |
+          if grep -qF "NO_CRITICAL_ISSUES" review_output.md; then
+            echo "found=false" >> "$GITHUB_OUTPUT"
+          else
+            echo "found=true" >> "$GITHUB_OUTPUT"
+          fi
       - name: Comment Review on PR
+        if: steps.check_issues.outputs.found == 'true'
         uses: thollander/actions-comment-pull-request@v2
         with:
           filePath: review_output.md
