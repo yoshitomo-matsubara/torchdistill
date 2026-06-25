@@ -102,23 +102,22 @@ def evaluate(model, data_loader, device, device_ids, distributed, log_freq=1000,
 
     model.eval()
     metric_logger = MetricLogger(delimiter='  ')
+    num_samples = len(data_loader.dataset)
     for image, target in metric_logger.log_every(data_loader, log_freq, header):
         image = image.to(device, non_blocking=True)
         target = target.to(device, non_blocking=True)
         output = model(image)
         acc1, acc5 = compute_accuracy(output, target, topk=(1, 5))
-        # FIXME need to take into account that the datasets
-        # could have been padded in distributed setup
         batch_size = image.shape[0]
         metric_logger.meters['acc1'].update(acc1.item(), n=batch_size)
         metric_logger.meters['acc5'].update(acc5.item(), n=batch_size)
 
     # gather the stats from all processes
     metric_logger.synchronize_between_processes()
-    top1_accuracy = metric_logger.acc1.global_avg
-    top5_accuracy = metric_logger.acc5.global_avg
+    top1_accuracy = metric_logger.acc1.total / num_samples
+    top5_accuracy = metric_logger.acc5.total / num_samples
     logger.info(' * Acc@1 {:.4f}\tAcc@5 {:.4f}\n'.format(top1_accuracy, top5_accuracy))
-    return metric_logger.acc1.global_avg
+    return top1_accuracy
 
 
 def train(
