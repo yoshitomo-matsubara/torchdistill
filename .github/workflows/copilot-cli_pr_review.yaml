@@ -25,13 +25,21 @@ jobs:
           COPILOT_GITHUB_TOKEN: ${{ secrets.COPILOT_GITHUB_TOKEN }}
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           REVIEW_INSTRUCTIONS: .github/instructions/copilot-pr_review.md
+          BASE_SHA: ${{ github.event.pull_request.base.sha }}
+          HEAD_SHA: ${{ github.event.pull_request.head.sha }}
         run: |
-          # Fetch the diff between the PR branch and the base branch
-          git diff origin/${{ github.base_ref }}...HEAD > pr_diff.txt
+          # Get the diff using exact PR SHAs from the event payload
+          git diff "$BASE_SHA" "$HEAD_SHA" > pr_diff.txt
+
+          # Skip Copilot if the diff is empty (no changes to review)
+          if [ ! -s pr_diff.txt ]; then
+            echo "NO_CRITICAL_ISSUES" > review_output.md
+            exit 0
+          fi
 
           # Build prompt: strip YAML frontmatter from instructions, then append the diff
           awk '/^---/{found++; next} found>=2' "$REVIEW_INSTRUCTIONS" > prompt.txt
-          printf '\nReview the following git diff:\n\n' >> prompt.txt
+          printf '\nThe full PR diff is provided below. Do not run any commands or use any tools — base your review solely on this diff.\n\n' >> prompt.txt
           cat pr_diff.txt >> prompt.txt
 
           # Run Copilot CLI with the assembled prompt
