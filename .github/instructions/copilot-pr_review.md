@@ -32,13 +32,30 @@ Do not comment on:
 
 ## Output format
 
-If you find critical issues, list each one with:
+If you find critical issues, use the following template for each one:
 
-1. **Location** — file and line number
-2. **Category** — one of the categories above
-3. **Issue** — one concise sentence describing the problem
-4. **Impact** — what breaks or goes wrong if this ships
-5. **Fix** — the minimal change needed to resolve it
+---
+
+### `path/to/file.py` · Category
+
+**Issue:** One concise sentence describing the problem.
+
+**Impact:** What breaks or goes wrong if this ships.
+
+**Problematic lines (quoted verbatim from the diff):**
+
+```python
+<exact lines copied from the provided diff — do not paraphrase or reconstruct>
+```
+
+**Fix:** One sentence describing the minimal correction needed.
+
+---
+
+Rules for the template:
+- The heading must be a real file path from the diff followed by the category name (e.g., `### src/train.py · Correctness bug`)
+- The problematic lines must be copied character-for-character from the diff input — never rewritten or inferred
+- The fix must be a description, not generated code, to avoid hallucinating incorrect patches
 
 If you find no critical issues, output the exact string below and nothing else — no explanation, no preamble:
 
