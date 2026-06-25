@@ -1,0 +1,33 @@
+[build-system]
+requires = ["setuptools>=61"]
+build-backend = "setuptools.backends.legacy:build"
+
+[project]
+name = "torchdistill"
+dynamic = ["version"]
+description = "A Modular, Configuration-Driven Framework for Knowledge Distillation. Trained models, training logs and configurations are available for ensuring the reproducibility."
+readme = "README.md"
+license = { file = "LICENSE" }
+authors = [{ name = "Yoshitomo Matsubara" }]
+requires-python = ">=3.10"
+dependencies = [
+    "torch>=2.5.1",
+    "torchvision>=0.20.1",
+    "numpy",
+    "pyyaml>=6.0",
+    "scipy",
+    "cython",
+]
+
+[project.optional-dependencies]
+test = ["pytest"]
+docs = ["sphinx", "sphinx_rtd_theme", "sphinx_sitemap"]
+
+[project.urls]
+Repository = "https://github.com/yoshitomo-matsubara/torchdistill"
+
+[tool.setuptools.dynamic]
+version = { attr = "torchdistill.__version__" }
+
+[tool.setuptools.packages.find]
+exclude = ["tests*", "examples*", "demo*", "docs*", "configs*"]
