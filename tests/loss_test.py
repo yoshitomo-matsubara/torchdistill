@@ -55,10 +55,11 @@ def load_yaml_raw(yaml_path):
         return yaml.load(f, Loader=RawLoader)
 
 
-def get_train_transform():
+def get_transform():
+    """Deterministic eval-style transform: no random crop or flip."""
     return transforms.Compose([
-        transforms.RandomResizedCrop(224),
-        transforms.RandomHorizontalFlip(p=0.5),
+        transforms.Resize(256),
+        transforms.CenterCrop(224),
         transforms.ToTensor(),
         transforms.Normalize(mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225]),
     ])
@@ -149,9 +150,10 @@ def run_config(yaml_path, student, teacher, image_tensor, targets, train_key=Non
 class MidLevelLossTest(TestCase):
     @classmethod
     def setUpClass(cls):
-        torch.manual_seed(42)
-        cls.transform = get_train_transform()
-        tensors = [cls.transform(Image.open(p).convert('RGB')) for p in IMAGE_PATHS]
+        # single-threaded CPU ops for deterministic floating-point results
+        torch.set_num_threads(1)
+        transform = get_transform()
+        tensors = [transform(Image.open(p).convert('RGB')) for p in IMAGE_PATHS]
         cls.image_tensor = torch.stack(tensors)          # (4, 3, 224, 224)
         cls.targets = torch.zeros(4, dtype=torch.long)
         # SSKDLoss requires targets of size batch_size // 4 (one per original image)
@@ -170,6 +172,10 @@ class MidLevelLossTest(TestCase):
         os.makedirs(os.path.dirname(OUTPUT_PATH), exist_ok=True)
         with open(OUTPUT_PATH, 'w') as f:
             json.dump(cls.results, f, indent=2)
+
+    def setUp(self):
+        # reproducible random init of auxiliary wrapper parameters
+        torch.manual_seed(0)
 
     def _record(self, key, value):
         self.results[key] = value
