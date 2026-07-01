@@ -219,7 +219,7 @@ class ForwardHookManager(object):
                 else:
                     values = [sub_dict[key] for key in sorted(sub_dict.keys())]
                     gathered_obj = gather(values, self.target_device) if self.uses_cuda and len(values) > 1 \
-                        else values[-1]
+                        else values[0]
                 gathered_io_dict[module_path][io_type] = gathered_obj
         return gathered_io_dict
 
