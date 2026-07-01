@@ -91,11 +91,15 @@ def compute_accuracy(outputs, targets, topk=(1,)):
 
 @torch.inference_mode()
 def evaluate(model, data_loader, device, device_ids, distributed, log_freq=1000, title=None, header='Test:'):
-    model.to(device)
-    if distributed:
-        model = DistributedDataParallel(model, device_ids=device_ids)
-    elif device.type.startswith('cuda'):
-        model = DataParallel(model, device_ids=device_ids)
+    # A model coming from TrainingBox/DistillationBox may already be wrapped (DDP, FSDP, FSDP2);
+    # re-wrapping it here (or moving an already device-placed FSDP/FSDP2 model with .to(device))
+    # would break it, so only wrap fresh, unwrapped models.
+    if not module_util.check_if_wrapped(model):
+        model.to(device)
+        if distributed:
+            model = DistributedDataParallel(model, device_ids=device_ids)
+        elif device.type.startswith('cuda'):
+            model = DataParallel(model, device_ids=device_ids)
 
     if title is not None:
         logger.info(title)
@@ -138,21 +142,28 @@ def train(
         best_val_top1_accuracy, _ = load_ckpt(src_ckpt_file_path, optimizer=optimizer, lr_scheduler=lr_scheduler)
 
     log_freq = train_config['log_freq']
-    student_model_without_ddp = student_model.module if module_util.check_if_wrapped(student_model) else student_model
+    # Source the (possibly DDP/FSDP/FSDP2-wrapped) model from the box rather than the raw
+    # `student_model` reference: FSDP shards parameters, so the raw reference no longer holds the
+    # full, trained weights the way it incidentally does under DP/DDP's shared tensor storage.
+    wrapped_student_model = training_box.model if teacher_model is None else training_box.student_model
     start_time = time.time()
     for epoch in range(args.start_epoch, training_box.num_epochs):
         training_box.pre_epoch_process(epoch=epoch)
         train_one_epoch(training_box, device, epoch, log_freq)
         val_top1_accuracy = evaluate(
-            student_model, training_box.val_data_loader, device, device_ids, distributed,
+            wrapped_student_model, training_box.val_data_loader, device, device_ids, distributed,
             log_freq=log_freq, header='Validation:'
         )
-        if val_top1_accuracy > best_val_top1_accuracy and is_main_process():
-            logger.info('Best top-1 accuracy: {:.4f} -> {:.4f}'.format(best_val_top1_accuracy, val_top1_accuracy))
-            logger.info('Updating ckpt at {}'.format(dst_ckpt_file_path))
+        # Evaluated on a synchronized/reduced accuracy, so this is identical across ranks; keep the
+        # comparison and best-value update unconditional so save_ckpt (a collective under FSDP) is
+        # called by every rank in lockstep. Only the logging is main-process-only.
+        if val_top1_accuracy > best_val_top1_accuracy:
+            if is_main_process():
+                logger.info('Best top-1 accuracy: {:.4f} -> {:.4f}'.format(best_val_top1_accuracy, val_top1_accuracy))
+                logger.info('Updating ckpt at {}'.format(dst_ckpt_file_path))
             best_val_top1_accuracy = val_top1_accuracy
             save_ckpt(
-                student_model_without_ddp, optimizer, lr_scheduler, best_val_top1_accuracy, args, dst_ckpt_file_path
+                wrapped_student_model, optimizer, lr_scheduler, best_val_top1_accuracy, args, dst_ckpt_file_path
             )
         training_box.post_epoch_process()
 

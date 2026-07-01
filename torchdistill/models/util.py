@@ -9,8 +9,8 @@ from .registry import get_adaptation_module
 from ..common.constant import def_logger
 from ..common.file_util import make_parent_dirs
 from ..common.main_util import is_main_process, save_on_master
-from ..common.module_util import check_if_wrapped, get_module, get_frozen_param_names, get_updatable_param_names,\
-    freeze_module_params
+from ..common.module_util import get_module, get_frozen_param_names, get_updatable_param_names,\
+    freeze_module_params, get_full_state_dict, load_full_state_dict
 
 logger = def_logger.getChild(__name__)
 
@@ -54,10 +54,7 @@ def load_module_ckpt(module, map_location, ckpt_file_path):
     :type ckpt_file_path: str
     """
     state_dict = torch.load(ckpt_file_path, map_location=map_location)
-    if check_if_wrapped(module):
-        module.module.load_state_dict(state_dict)
-    else:
-        module.load_state_dict(state_dict)
+    load_full_state_dict(module, state_dict)
 
 
 def save_module_ckpt(module, ckpt_file_path):
@@ -71,7 +68,7 @@ def save_module_ckpt(module, ckpt_file_path):
     """
     if is_main_process():
         make_parent_dirs(ckpt_file_path)
-    state_dict = module.module.state_dict() if check_if_wrapped(module) else module.state_dict()
+    state_dict = get_full_state_dict(module)
     save_on_master(state_dict, ckpt_file_path)
 
 

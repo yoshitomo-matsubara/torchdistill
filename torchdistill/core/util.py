@@ -1,6 +1,8 @@
 from collections import abc
 
 import torch
+from torch.distributed._composable.fsdp import fully_shard
+from torch.distributed.fsdp import FullyShardedDataParallel
 from torch.nn import DataParallel
 from torch.nn.parallel import DistributedDataParallel
 from torch.nn.parallel.scatter_gather import gather
@@ -69,7 +71,19 @@ def set_hooks(model, unwrapped_org_model, model_config, io_dict):
 def wrap_model(model, model_config, device, device_ids=None, distributed=False,
                find_unused_parameters=False, any_updatable=True):
     """
-    Wraps ``model`` with either DataParallel or DistributedDataParallel if specified.
+    Wraps ``model`` with DataParallel, DistributedDataParallel, FullyShardedDataParallel (FSDP), or
+    FSDP2 (``fully_shard``) if specified.
+
+    ``model_config['wrapper']['key']`` selects the wrapper and accepts one of
+    'DataParallel', 'DistributedDataParallel', 'FullyShardedDataParallel' (FSDP), or
+    'FullyShardedDataParallel2' (FSDP2). ``model_config['wrapper']['kwargs']`` are forwarded to the
+    wrapper's constructor (e.g., ``auto_wrap_policy``, ``sharding_strategy``, ``mixed_precision`` for FSDP).
+
+    .. note::
+        FSDP/FSDP2 shard parameters across the process group, so ``model``'s ``state_dict()`` will only
+        reflect the local shard. Use :func:`torchdistill.common.module_util.get_full_state_dict` /
+        :func:`torchdistill.common.module_util.load_full_state_dict` for checkpointing instead of calling
+        ``state_dict()`` / ``load_state_dict()`` directly.
 
     :param model: model.
     :type model: nn.Module
@@ -96,15 +110,22 @@ def wrap_model(model, model_config, device, device_ids=None, distributed=False,
     else:
         wrapper_key = wrapper
 
-    wrapper_kwargs['device_ids'] = device_ids
     model.to(device)
     if wrapper_key is not None and device.type.startswith('cuda') and not check_if_wrapped(model):
-        if wrapper_key == 'DistributedDataParallel' and distributed and any_updatable:
+        if wrapper_key == 'FullyShardedDataParallel2' and distributed:
+            model = fully_shard(model, **wrapper_kwargs)
+        elif wrapper_key == 'FullyShardedDataParallel' and distributed:
+            if device_ids:
+                wrapper_kwargs.setdefault('device_id', device_ids[0])
+            model = FullyShardedDataParallel(model, **wrapper_kwargs)
+        elif wrapper_key == 'DistributedDataParallel' and distributed and any_updatable:
+            wrapper_kwargs['device_ids'] = device_ids
             if 'find_unused_parameters' not in wrapper_kwargs:
                 wrapper_kwargs['find_unused_parameters'] = find_unused_parameters
 
             model = DistributedDataParallel(model, **wrapper_kwargs)
         elif wrapper_key in {'DataParallel', 'DistributedDataParallel'}:
+            wrapper_kwargs['device_ids'] = device_ids
             model = DataParallel(model, **wrapper_kwargs)
     return model
 
