@@ -2,7 +2,7 @@ accelerate
 datasets >= 3.6.0
 sentencepiece
 protobuf
-torch >= 2.0.0
+torch >= 2.5.1
 transformers >= 4.6.1
 pandas
 evaluate

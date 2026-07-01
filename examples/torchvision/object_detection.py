@@ -86,7 +86,7 @@ def train_one_epoch(training_box, device, epoch, log_freq):
 
 def get_iou_types(model):
     model_without_ddp = model
-    if isinstance(model, DistributedDataParallel):
+    if module_util.check_if_wrapped(model) and hasattr(model, 'module'):
         model_without_ddp = model.module
 
     iou_type_list = ['bbox']
@@ -105,9 +105,13 @@ def log_info(*args, **kwargs):
 
 @torch.inference_mode()
 def evaluate(model, data_loader, iou_types, device, device_ids, distributed, log_freq=1000, title=None, header='Test:'):
-    model.to(device)
-    if distributed:
-        model = DistributedDataParallel(model, device_ids=device_ids)
+    # A model coming from TrainingBox/DistillationBox may already be wrapped (DDP, FSDP, FSDP2);
+    # re-wrapping it here (or moving an already device-placed FSDP/FSDP2 model with .to(device))
+    # would break it, so only wrap fresh, unwrapped models.
+    if not module_util.check_if_wrapped(model):
+        model.to(device)
+        if distributed:
+            model = DistributedDataParallel(model, device_ids=device_ids)
 
     if title is not None:
         logger.info(title)
@@ -176,22 +180,29 @@ def train(
     log_freq = train_config['log_freq']
     iou_types = args.iou_types
     val_iou_type = iou_types[0] if isinstance(iou_types, (list, tuple)) and len(iou_types) > 0 else 'bbox'
-    student_model_without_ddp = student_model.module if module_util.check_if_wrapped(student_model) else student_model
+    # Source the (possibly DDP/FSDP/FSDP2-wrapped) model from the box rather than the raw
+    # `student_model` reference: FSDP shards parameters, so the raw reference no longer holds the
+    # full, trained weights the way it incidentally does under DP/DDP's shared tensor storage.
+    wrapped_student_model = training_box.model if teacher_model is None else training_box.student_model
     start_time = time.time()
     for epoch in range(args.start_epoch, training_box.num_epochs):
         training_box.pre_epoch_process(epoch=epoch)
         train_one_epoch(training_box, device, epoch, log_freq)
         val_coco_evaluator = evaluate(
-            student_model, training_box.val_data_loader, iou_types, device, device_ids, distributed,
+            wrapped_student_model, training_box.val_data_loader, iou_types, device, device_ids, distributed,
             log_freq=log_freq, header='Validation:'
         )
         # Average Precision  (AP) @[ IoU=0.50:0.95 | area=   all | maxDets=100 ]
         val_map = val_coco_evaluator.coco_eval[val_iou_type].stats[0]
-        if val_map > best_val_map and is_main_process():
-            logger.info('Best mAP ({}): {:.4f} -> {:.4f}'.format(val_iou_type, best_val_map, val_map))
-            logger.info('Updating ckpt at {}'.format(dst_ckpt_file_path))
+        # Evaluated on a synchronized/reduced mAP, so this is identical across ranks; keep the
+        # comparison and best-value update unconditional so save_ckpt (a collective under FSDP) is
+        # called by every rank in lockstep. Only the logging is main-process-only.
+        if val_map > best_val_map:
+            if is_main_process():
+                logger.info('Best mAP ({}): {:.4f} -> {:.4f}'.format(val_iou_type, best_val_map, val_map))
+                logger.info('Updating ckpt at {}'.format(dst_ckpt_file_path))
             best_val_map = val_map
-            save_ckpt(student_model_without_ddp, optimizer, lr_scheduler, best_val_map, args, dst_ckpt_file_path)
+            save_ckpt(wrapped_student_model, optimizer, lr_scheduler, best_val_map, args, dst_ckpt_file_path)
         training_box.post_epoch_process()
 
     if distributed:

@@ -1,5 +1,8 @@
 from collections import OrderedDict
 
+from torch.distributed._composable.fsdp import FSDPModule
+from torch.distributed.checkpoint.state_dict import get_model_state_dict, set_model_state_dict, StateDictOptions
+from torch.distributed.fsdp import FullyShardedDataParallel
 from torch.nn import DataParallel, Sequential, ModuleList, Module, Parameter
 from torch.nn.parallel import DistributedDataParallel
 
@@ -10,14 +13,74 @@ logger = def_logger.getChild(__name__)
 
 def check_if_wrapped(model):
     """
-    Checks if a given model is wrapped by DataParallel or DistributedDataParallel.
+    Checks if a given model is wrapped by DataParallel, DistributedDataParallel,
+    FullyShardedDataParallel (FSDP), or FSDP2 (``fully_shard``).
 
     :param model: model.
     :type model: nn.Module
-    :return: True if `model` is wrapped by either DataParallel or DistributedDataParallel.
+    :return: True if `model` is wrapped by one of the supported parallel wrappers.
     :rtype: bool
     """
-    return isinstance(model, (DataParallel, DistributedDataParallel))
+    return isinstance(model, (DataParallel, DistributedDataParallel, FullyShardedDataParallel, FSDPModule))
+
+
+def check_if_fsdp_wrapped(model):
+    """
+    Checks if a given model is wrapped by FullyShardedDataParallel (FSDP) or FSDP2 (``fully_shard``).
+
+    :param model: model.
+    :type model: nn.Module
+    :return: True if `model` is wrapped by FSDP or FSDP2.
+    :rtype: bool
+    """
+    return isinstance(model, (FullyShardedDataParallel, FSDPModule))
+
+
+def get_full_state_dict(model, cpu_offload=True):
+    """
+    Returns a full (unsharded) state dict for ``model``, regardless of whether it is wrapped by
+    DataParallel, DistributedDataParallel, FullyShardedDataParallel (FSDP), FSDP2 (``fully_shard``),
+    or not wrapped at all.
+
+    .. note::
+        For FSDP/FSDP2-wrapped ``model``, this triggers a collective all-gather and therefore must be
+        called by every rank in the process group, even though the (non-empty) result is only needed
+        on the rank that will persist it to disk.
+
+    :param model: model, optionally wrapped by a parallel wrapper.
+    :type model: nn.Module
+    :param cpu_offload: if True, offloads the gathered full state dict to CPU (FSDP/FSDP2 only).
+    :type cpu_offload: bool
+    :return: full state dict.
+    :rtype: dict
+    """
+    if check_if_fsdp_wrapped(model):
+        return get_model_state_dict(model, options=StateDictOptions(full_state_dict=True, cpu_offload=cpu_offload))
+    return model.module.state_dict() if check_if_wrapped(model) else model.state_dict()
+
+
+def load_full_state_dict(model, state_dict, strict=True):
+    """
+    Loads ``state_dict`` (as returned by :func:`get_full_state_dict`) into ``model``, regardless of
+    whether it is wrapped by DataParallel, DistributedDataParallel, FullyShardedDataParallel (FSDP),
+    FSDP2 (``fully_shard``), or not wrapped at all.
+
+    .. note::
+        For FSDP/FSDP2-wrapped ``model``, this triggers a collective scatter and therefore must be
+        called by every rank in the process group.
+
+    :param model: model, optionally wrapped by a parallel wrapper.
+    :type model: nn.Module
+    :param state_dict: full (unsharded) state dict to be loaded.
+    :type state_dict: dict
+    :param strict: whether to strictly enforce that the keys match.
+    :type strict: bool
+    """
+    if check_if_fsdp_wrapped(model):
+        set_model_state_dict(model, state_dict, options=StateDictOptions(full_state_dict=True, strict=strict))
+        return
+    target_module = model.module if check_if_wrapped(model) else model
+    target_module.load_state_dict(state_dict, strict=strict)
 
 
 def count_params(module):
@@ -99,7 +162,7 @@ def get_module(root_module, module_path):
     module = root_module
     for module_name in module_names:
         if not hasattr(module, module_name):
-            if isinstance(module, (DataParallel, DistributedDataParallel)):
+            if isinstance(module, (DataParallel, DistributedDataParallel, FullyShardedDataParallel)):
                 module = module.module
                 if not hasattr(module, module_name):
                     if isinstance(module, Sequential) and module_name.lstrip('-').isnumeric():

@@ -30,7 +30,7 @@ import numpy as np
 import pandas as pd
 import torch
 import transformers
-from accelerate import Accelerator, DistributedType
+from accelerate import Accelerator
 from datasets import load_dataset
 from torch.backends import cudnn
 from transformers import AutoConfig, AutoModelForSequenceClassification, AutoTokenizer, DataCollatorWithPadding, \
@@ -294,8 +294,13 @@ def train(teacher_model, student_model, dataset_dict, is_regression, dst_ckpt_di
             logger.info('Updating ckpt at {}'.format(dst_ckpt_dir_path))
             best_val_number = val_value
             accelerator.wait_for_everyone()
+            # get_state_dict() performs the collective full-parameter gather FSDP/FSDP2 require;
+            # a plain unwrapped_model.state_dict() would only capture the local shard.
             unwrapped_model = accelerator.unwrap_model(student_model)
-            unwrapped_model.save_pretrained(dst_ckpt_dir_path, save_function=accelerator.save)
+            unwrapped_model.save_pretrained(
+                dst_ckpt_dir_path, is_main_process=accelerator.is_main_process,
+                save_function=accelerator.save, state_dict=accelerator.get_state_dict(student_model),
+            )
         training_box.post_epoch_process()
 
 
@@ -351,7 +356,9 @@ def main(args):
 
     # Initialize the accelerator. We will let the accelerator handle device placement for us in this example.
     accelerator = Accelerator()
-    distributed = accelerator.state.distributed_type == DistributedType.MULTI_GPU
+    # num_processes > 1 covers every multi-process backend Accelerate supports (DDP, FSDP,
+    # DeepSpeed, etc.), whereas comparing against DistributedType.MULTI_GPU alone misses FSDP.
+    distributed = accelerator.num_processes > 1
     device_ids = [accelerator.device.index]
     if distributed:
         setup_for_distributed(is_main_process())
