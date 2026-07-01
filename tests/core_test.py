@@ -80,14 +80,43 @@ class ForwardHookManagerUnitTest(TestCase):
         for expected, actual in zip(expected_outputs, hooked_outputs):
             assert torch.equal(expected, actual)
 
+    def test_pop_io_dict_stacks_accumulated(self):
+        device = torch.device('cpu')
+        fhm = ForwardHookManager(device)
+        model = models.resnet18(False)
+        target_module_path = 'fc'
+        fhm.add_hook(
+            model, target_module_path, requires_input=False, requires_output=True,
+            accumulates=True, stacks_accumulated=True
+        )
+        assert target_module_path in fhm._accumulating_module_paths
+        assert target_module_path in fhm._stacking_module_paths
+        num_steps = 3
+        expected_outputs = [model(torch.rand(1, 3, 224, 224)) for _ in range(num_steps)]
+        io_dict = fhm.pop_io_dict()
+        hooked_outputs = io_dict[target_module_path]['output']
+        assert isinstance(hooked_outputs, torch.Tensor)
+        assert hooked_outputs.shape == (num_steps, *expected_outputs[0].shape)
+        for i, expected in enumerate(expected_outputs):
+            assert torch.equal(expected, hooked_outputs[i])
+
+    def test_add_hook_stacks_accumulated_without_accumulates_raises(self):
+        device = torch.device('cpu')
+        fhm = ForwardHookManager(device)
+        model = models.resnet18(False)
+        with self.assertRaises(ValueError):
+            fhm.add_hook(model, 'fc', accumulates=False, stacks_accumulated=True)
+
     def test_clear_with_accumulates(self):
         device = torch.device('cpu')
         fhm = ForwardHookManager(device)
         model = models.resnet18(False)
         target_module_path = 'fc'
-        fhm.add_hook(model, target_module_path, accumulates=True)
+        fhm.add_hook(model, target_module_path, accumulates=True, stacks_accumulated=True)
         assert target_module_path in fhm._accumulating_module_paths
+        assert target_module_path in fhm._stacking_module_paths
         fhm.clear()
         assert len(fhm._accumulating_module_paths) == 0
+        assert len(fhm._stacking_module_paths) == 0
         assert len(fhm.hook_list) == 0
         assert len(fhm.io_dict) == 0
