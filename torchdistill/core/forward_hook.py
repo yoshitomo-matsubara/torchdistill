@@ -36,7 +36,9 @@ def get_device_index(data):
     return None
 
 
-def register_forward_hook_with_dict(root_module, module_path, requires_input, requires_output, io_dict):
+def register_forward_hook_with_dict(
+        root_module, module_path, requires_input, requires_output, io_dict, accumulates=False
+):
     """
     Registers a forward hook for a child module to store its input and/or output in `io_dict`.
 
@@ -50,6 +52,9 @@ def register_forward_hook_with_dict(root_module, module_path, requires_input, re
     :type requires_output: bool
     :param io_dict: dict to store the target child module's input and/or output.
     :type io_dict: dict
+    :param accumulates: if True, appends input/output across forward passes instead of overwriting.
+        Useful for autoregressive generation where the same module is called multiple times.
+    :type accumulates: bool
     :return: removable forward hook handle.
     :rtype: torch.utils.hook.RemovableHandle
     """
@@ -63,7 +68,10 @@ def register_forward_hook_with_dict(root_module, module_path, requires_input, re
         sub_io_dict = io_dict[module_path]
         if 'input' not in sub_io_dict:
             sub_io_dict['input'] = dict()
-        sub_io_dict['input'][device_index] = func_input
+        if accumulates:
+            sub_io_dict['input'].setdefault(device_index, list()).append(func_input)
+        else:
+            sub_io_dict['input'][device_index] = func_input
 
     def forward_hook4output(self, func_input, func_output):
         if isinstance(func_output, tuple) and len(func_output) == 1:
@@ -73,7 +81,10 @@ def register_forward_hook_with_dict(root_module, module_path, requires_input, re
         sub_io_dict = io_dict[module_path]
         if 'output' not in sub_io_dict:
             sub_io_dict['output'] = dict()
-        sub_io_dict['output'][device_index] = func_output
+        if accumulates:
+            sub_io_dict['output'].setdefault(device_index, list()).append(func_output)
+        else:
+            sub_io_dict['output'][device_index] = func_output
 
     def forward_hook4io(self, func_input, func_output):
         if isinstance(func_input, tuple) and len(func_input) == 1:
@@ -89,8 +100,12 @@ def register_forward_hook_with_dict(root_module, module_path, requires_input, re
         if 'output' not in sub_io_dict:
             sub_io_dict['output'] = dict()
 
-        sub_io_dict['input'][device_index] = func_input
-        sub_io_dict['output'][device_index] = func_output
+        if accumulates:
+            sub_io_dict['input'].setdefault(device_index, list()).append(func_input)
+            sub_io_dict['output'].setdefault(device_index, list()).append(func_output)
+        else:
+            sub_io_dict['input'][device_index] = func_input
+            sub_io_dict['output'][device_index] = func_output
 
     if requires_input and not requires_output:
         return root_module.register_forward_hook(forward_hook4input)
@@ -127,8 +142,13 @@ class ForwardHookManager(object):
         self.uses_cuda = self.target_device.type == 'cuda'
         self.io_dict = dict()
         self.hook_list = list()
+        self._accumulating_module_paths = set()
+        self._stacking_module_paths = set()
 
-    def add_hook(self, root_module, module_path, requires_input=True, requires_output=True):
+    def add_hook(
+            self, root_module, module_path, requires_input=True, requires_output=True, accumulates=False,
+            stacks_accumulated=False
+    ):
         """
         Registers a forward hook for a child module to store its input and/or output.
 
@@ -140,16 +160,38 @@ class ForwardHookManager(object):
         :type requires_input: bool
         :param requires_output: if True, stores output from the target child module.
         :type requires_output: bool
+        :param accumulates: if True, appends input/output across forward passes instead of overwriting.
+            Useful for autoregressive generation where the same module is called multiple times.
+        :type accumulates: bool
+        :param stacks_accumulated: if True, stacks the accumulated per-step tensors into a single
+            ``torch.Tensor`` via ``torch.stack`` when ``pop_io_dict`` is called. Requires
+            ``accumulates=True`` and that all per-step tensors have the same shape.
+        :type stacks_accumulated: bool
+        :raises ValueError: if ``stacks_accumulated=True`` but ``accumulates=False``.
         """
+        if stacks_accumulated and not accumulates:
+            raise ValueError('stacks_accumulated=True requires accumulates=True')
         unwrapped_module = root_module.module if check_if_wrapped(root_module) else root_module
         sub_module = get_module(unwrapped_module, module_path)
-        handle = \
-            register_forward_hook_with_dict(sub_module, module_path, requires_input, requires_output, self.io_dict)
+        handle = register_forward_hook_with_dict(
+            sub_module, module_path, requires_input, requires_output, self.io_dict, accumulates
+        )
         self.hook_list.append((module_path, handle))
+        if accumulates:
+            self._accumulating_module_paths.add(module_path)
+        if stacks_accumulated:
+            self._stacking_module_paths.add(module_path)
 
     def pop_io_dict(self):
         """
         Pops I/O dict after gathering tensors on ``self.target_device``.
+
+        For module paths registered with ``accumulates=True``, the returned value per I/O type is a
+        list of tensors/outputs (one per forward pass) instead of a single tensor. The list is not
+        stacked into a ``torch.Tensor`` because tensor shapes may vary across steps (e.g., the
+        sequence dimension grows in models without KV-cache). If the shapes are uniform, callers can
+        stack manually: ``torch.stack(io_dict[module_path]['output'])``, or register the hook with
+        ``stacks_accumulated=True`` to have this done automatically.
 
         :return: I/O dict that contains input and/or output tensors with a module path as a key.
         :rtype: dict
@@ -157,10 +199,27 @@ class ForwardHookManager(object):
         gathered_io_dict = dict()
         for module_path, module_io_dict in self.io_dict.items():
             gathered_io_dict[module_path] = dict()
+            is_accumulating = module_path in self._accumulating_module_paths
+            is_stacking = module_path in self._stacking_module_paths
             for io_type in list(module_io_dict.keys()):
                 sub_dict = module_io_dict.pop(io_type)
-                values = [sub_dict[key] for key in sorted(sub_dict.keys())]
-                gathered_obj = gather(values, self.target_device) if self.uses_cuda and len(values) > 1 else values[-1]
+                if is_accumulating:
+                    # sub_dict[device_index] is a list of per-step tensors
+                    per_device_steps = [sub_dict[key] for key in sorted(sub_dict.keys())]
+                    if self.uses_cuda and len(per_device_steps) > 1:
+                        n_steps = len(per_device_steps[0])
+                        gathered_obj = [
+                            gather([device_steps[s] for device_steps in per_device_steps], self.target_device)
+                            for s in range(n_steps)
+                        ]
+                    else:
+                        gathered_obj = per_device_steps[0]
+                    if is_stacking:
+                        gathered_obj = torch.stack(gathered_obj)
+                else:
+                    values = [sub_dict[key] for key in sorted(sub_dict.keys())]
+                    gathered_obj = gather(values, self.target_device) if self.uses_cuda and len(values) > 1 \
+                        else values[0]
                 gathered_io_dict[module_path][io_type] = gathered_obj
         return gathered_io_dict
 
@@ -203,3 +262,5 @@ class ForwardHookManager(object):
         for _, handle in self.hook_list:
             handle.remove()
         self.hook_list.clear()
+        self._accumulating_module_paths.clear()
+        self._stacking_module_paths.clear()
