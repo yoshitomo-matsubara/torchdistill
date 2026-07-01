@@ -143,8 +143,12 @@ class ForwardHookManager(object):
         self.io_dict = dict()
         self.hook_list = list()
         self._accumulating_module_paths = set()
+        self._stacking_module_paths = set()
 
-    def add_hook(self, root_module, module_path, requires_input=True, requires_output=True, accumulates=False):
+    def add_hook(
+            self, root_module, module_path, requires_input=True, requires_output=True, accumulates=False,
+            stacks_accumulated=False
+    ):
         """
         Registers a forward hook for a child module to store its input and/or output.
 
@@ -159,7 +163,14 @@ class ForwardHookManager(object):
         :param accumulates: if True, appends input/output across forward passes instead of overwriting.
             Useful for autoregressive generation where the same module is called multiple times.
         :type accumulates: bool
+        :param stacks_accumulated: if True, stacks the accumulated per-step tensors into a single
+            ``torch.Tensor`` via ``torch.stack`` when ``pop_io_dict`` is called. Requires
+            ``accumulates=True`` and that all per-step tensors have the same shape.
+        :type stacks_accumulated: bool
+        :raises ValueError: if ``stacks_accumulated=True`` but ``accumulates=False``.
         """
+        if stacks_accumulated and not accumulates:
+            raise ValueError('stacks_accumulated=True requires accumulates=True')
         unwrapped_module = root_module.module if check_if_wrapped(root_module) else root_module
         sub_module = get_module(unwrapped_module, module_path)
         handle = register_forward_hook_with_dict(
@@ -168,13 +179,19 @@ class ForwardHookManager(object):
         self.hook_list.append((module_path, handle))
         if accumulates:
             self._accumulating_module_paths.add(module_path)
+        if stacks_accumulated:
+            self._stacking_module_paths.add(module_path)
 
     def pop_io_dict(self):
         """
         Pops I/O dict after gathering tensors on ``self.target_device``.
 
         For module paths registered with ``accumulates=True``, the returned value per I/O type is a
-        list of tensors/outputs (one per forward pass) instead of a single tensor.
+        list of tensors/outputs (one per forward pass) instead of a single tensor. The list is not
+        stacked into a ``torch.Tensor`` because tensor shapes may vary across steps (e.g., the
+        sequence dimension grows in models without KV-cache). If the shapes are uniform, callers can
+        stack manually: ``torch.stack(io_dict[module_path]['output'])``, or register the hook with
+        ``stacks_accumulated=True`` to have this done automatically.
 
         :return: I/O dict that contains input and/or output tensors with a module path as a key.
         :rtype: dict
@@ -183,6 +200,7 @@ class ForwardHookManager(object):
         for module_path, module_io_dict in self.io_dict.items():
             gathered_io_dict[module_path] = dict()
             is_accumulating = module_path in self._accumulating_module_paths
+            is_stacking = module_path in self._stacking_module_paths
             for io_type in list(module_io_dict.keys()):
                 sub_dict = module_io_dict.pop(io_type)
                 if is_accumulating:
@@ -196,6 +214,8 @@ class ForwardHookManager(object):
                         ]
                     else:
                         gathered_obj = per_device_steps[0]
+                    if is_stacking:
+                        gathered_obj = torch.stack(gathered_obj)
                 else:
                     values = [sub_dict[key] for key in sorted(sub_dict.keys())]
                     gathered_obj = gather(values, self.target_device) if self.uses_cuda and len(values) > 1 \
@@ -243,3 +263,4 @@ class ForwardHookManager(object):
             handle.remove()
         self.hook_list.clear()
         self._accumulating_module_paths.clear()
+        self._stacking_module_paths.clear()
