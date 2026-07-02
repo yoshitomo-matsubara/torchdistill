@@ -16,6 +16,8 @@
   "pad/resnet18_from_resnet34": 8.924606323242188,
   "pkt/resnet18_from_resnet152": 0.7128581404685974,
   "rkd/resnet18_from_resnet34": 8.150877952575684,
+  "skd_direction/resnet18_from_resnet34": 0.32854241132736206,
+  "skd_instance/resnet18_from_resnet34": 0.027624865993857384,
   "spkd/resnet18_from_resnet34": 8.118548393249512,
   "srd/resnet18_from_resnet34": 27.685388565063477,
   "sskd/resnet18_from_resnet34": 9.654172897338867,
