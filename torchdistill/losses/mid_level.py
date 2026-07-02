@@ -257,7 +257,7 @@ class FSPLoss(nn.Module):
 
     def forward(self, student_io_dict, teacher_io_dict, *args, **kwargs):
         fsp_loss = 0
-        batch_size = 1
+        batch_size = None
         for pair_name, pair_config in self.fsp_pairs.items():
             student_first_feature_map = _extract_feature_map(student_io_dict, pair_config['student_first'])
             student_second_feature_map = _extract_feature_map(student_io_dict, pair_config['student_second'])
@@ -547,7 +547,7 @@ class AltActTransferLoss(nn.Module):
 
     def forward(self, student_io_dict, teacher_io_dict, *args, **kwargs):
         dab_loss = 0
-        batch_size = 1
+        batch_size = None
         for pair_name, pair_config in self.feature_pairs.items():
             student_feature_map = _extract_feature_map(student_io_dict, pair_config['student'])
             teacher_feature_map = _extract_feature_map(teacher_io_dict, pair_config['teacher'])
