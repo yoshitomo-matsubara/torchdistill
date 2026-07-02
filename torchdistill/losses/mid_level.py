@@ -1812,3 +1812,89 @@ class DISTPlusLoss(DISTLoss):
         spatial_relation_loss = self.spatial_relation(student_features, teacher_features)
         loss = dist_loss + self.iota * channel_relation_loss + self.kappa * spatial_relation_loss
         return loss
+
+
+@register_mid_level_loss
+class SKDInstanceLoss(nn.Module):
+    """
+    A loss module for the instance-wise term of Streamlined Knowledge Distillation (SKD).
+
+    .. math::
+
+       L_{INS} = \\text{KL}\\left(\\text{softmax}(z_{(t)} / \\tau), \\text{softmax}(z_{(s)} / \\tau)\\right)
+
+    Hyeon-Jin Jeong, Han-Jin Lee, Seok-Hwan Choi: `"Streamlined Knowledge Distillation" <https://openaccess.thecvf.com/content/CVPR2026/papers/Jeong_Streamlined_Knowledge_Distillation_CVPR_2026_paper.pdf>`_ @ CVPR 2026 (2026)
+
+    :param student_module_path: student model's logit module path.
+    :type student_module_path: str
+    :param student_module_io: 'input' or 'output' of the module in the student model.
+    :type student_module_io: str
+    :param teacher_module_path: teacher model's logit module path.
+    :type teacher_module_path: str
+    :param teacher_module_io: 'input' or 'output' of the module in the teacher model.
+    :type teacher_module_io: str
+    :param temperature: hyperparameter :math:`\\tau` to soften class-probability distributions. Not given a numerical value in the paper; the paper's public code repository uses 4.0.
+    :type temperature: float
+    """
+    def __init__(self, student_module_path, student_module_io, teacher_module_path, teacher_module_io,
+                 temperature=4.0, **kwargs):
+        super().__init__()
+        self.student_module_path = student_module_path
+        self.student_module_io = student_module_io
+        self.teacher_module_path = teacher_module_path
+        self.teacher_module_io = teacher_module_io
+        self.temperature = temperature
+
+    def forward(self, student_io_dict, teacher_io_dict, *args, **kwargs):
+        student_logits = student_io_dict[self.student_module_path][self.student_module_io]
+        teacher_logits = teacher_io_dict[self.teacher_module_path][self.teacher_module_io]
+        log_p_student = torch.log_softmax(student_logits / self.temperature, dim=1)
+        p_teacher = torch.softmax(teacher_logits / self.temperature, dim=1)
+        return torch.nn.functional.kl_div(log_p_student, p_teacher, reduction='batchmean')
+
+
+@register_mid_level_loss
+class SKDDirectionLoss(nn.Module):
+    """
+    A loss module for the direction-wise term of Streamlined Knowledge Distillation (SKD): a Mahalanobis
+    distance-based loss between student and teacher Gramian matrices of L2-normalized logits.
+
+    .. math::
+
+       L_{DIR} = \\frac{1}{B} \\sum_{i=1}^B \\sqrt{D_{i,:}^\\top \\Sigma'^{-1} D_{i,:}}
+
+    Hyeon-Jin Jeong, Han-Jin Lee, Seok-Hwan Choi: `"Streamlined Knowledge Distillation" <https://openaccess.thecvf.com/content/CVPR2026/papers/Jeong_Streamlined_Knowledge_Distillation_CVPR_2026_paper.pdf>`_ @ CVPR 2026 (2026)
+
+    :param student_module_path: student model's logit module path.
+    :type student_module_path: str
+    :param student_module_io: 'input' or 'output' of the module in the student model.
+    :type student_module_io: str
+    :param teacher_module_path: teacher model's logit module path.
+    :type teacher_module_path: str
+    :param teacher_module_io: 'input' or 'output' of the module in the teacher model.
+    :type teacher_module_io: str
+    :param tikhonov: Tikhonov regularization factor :math:`\\lambda` added to the Gramian difference's covariance matrix :math:`\\Sigma` for numerical stability, i.e., :math:`\\Sigma' = \\Sigma + \\lambda I`. Not given a numerical value in the paper; the paper's public code repository uses 0.1.
+    :type tikhonov: float
+    """
+    def __init__(self, student_module_path, student_module_io, teacher_module_path, teacher_module_io,
+                 tikhonov=1e-1, **kwargs):
+        super().__init__()
+        self.student_module_path = student_module_path
+        self.student_module_io = student_module_io
+        self.teacher_module_path = teacher_module_path
+        self.teacher_module_io = teacher_module_io
+        self.tikhonov = tikhonov
+
+    def forward(self, student_io_dict, teacher_io_dict, *args, **kwargs):
+        student_logits = student_io_dict[self.student_module_path][self.student_module_io]
+        teacher_logits = teacher_io_dict[self.teacher_module_path][self.teacher_module_io]
+        student_gram = normalize(student_logits, p=2, dim=1)
+        teacher_gram = normalize(teacher_logits, p=2, dim=1)
+        student_gram = torch.mm(student_gram, student_gram.t())
+        teacher_gram = torch.mm(teacher_gram, teacher_gram.t())
+        diff = student_gram - teacher_gram
+        cov_matrix = torch.cov(diff.t()) + self.tikhonov * torch.eye(diff.size(1), device=diff.device)
+        cholesky_factor = torch.linalg.cholesky(cov_matrix)
+        inv_cov_matrix = torch.cholesky_inverse(cholesky_factor)
+        mahalanobis_dist = torch.einsum('bi,ij,bj->b', diff, inv_cov_matrix, diff)
+        return torch.sqrt(mahalanobis_dist).mean()
