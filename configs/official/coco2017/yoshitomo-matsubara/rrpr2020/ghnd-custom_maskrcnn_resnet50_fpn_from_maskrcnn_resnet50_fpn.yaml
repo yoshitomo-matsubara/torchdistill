@@ -80,7 +80,6 @@ train:
     collate_fn: 'coco_collate_fn'
     kwargs:
       num_workers: 16
-    cache_output:
   val_data_loader:
     dataset_id: *coco_val
     sampler: &val_sampler

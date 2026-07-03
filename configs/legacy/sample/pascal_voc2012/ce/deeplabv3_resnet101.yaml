@@ -77,7 +77,6 @@ train:
     batch_size: 16
     collate_fn: 'coco_seg_collate_fn'
     drop_last: True
-    cache_output:
   val_data_loader:
     dataset_id: *pascal_val
     random_sample: False
