@@ -1,6 +1,3 @@
-from collections import abc
-
-import torch
 from torch.distributed._composable.fsdp import fully_shard
 from torch.distributed.fsdp import FullyShardedDataParallel
 from torch.nn import DataParallel
@@ -130,58 +127,6 @@ def wrap_model(model, model_config, device, device_ids=None, distributed=False,
     return model
 
 
-def change_device(data, device):
-    """
-    Updates the device of tensor(s) stored in ``data``  with a new ``device``.
-
-    :param data: data that contain tensor(s).
-    :type data: Any
-    :param device: new device.
-    :type device: torch.device or str
-    :return: ``data`` on the new ``device``.
-    :rtype: Any
-    """
-    elem_type = type(data)
-    if isinstance(data, torch.Tensor):
-        return data.to(device)
-    elif isinstance(data, tuple) and hasattr(data, '_fields'):  # namedtuple
-        return elem_type(*(change_device(samples, device) for samples in zip(*data)))
-    elif isinstance(data, (list, tuple)):
-        return elem_type(*(change_device(d, device) for d in data))
-    elif isinstance(data, abc.Mapping):
-        return {key: change_device(data[key], device) for key in data}
-    elif isinstance(data, abc.Sequence):
-        transposed = zip(*data)
-        return [change_device(samples, device) for samples in transposed]
-    return data
-
-
-def tensor2numpy2tensor(data, device):
-    """
-    Converts tensor to numpy data and re-converts the numpy data to tensor.
-
-    :param data: data that contain tensor(s).
-    :type data: Any
-    :param device: new device.
-    :type device: torch.device or str
-    :return: data that contain recreated tensor(s).
-    :rtype: Any
-    """
-    elem_type = type(data)
-    if isinstance(data, torch.Tensor):
-        return torch.Tensor(data.to(device).data.numpy())
-    elif isinstance(data, tuple) and hasattr(data, '_fields'):  # namedtuple
-        return elem_type(*(tensor2numpy2tensor(samples, device) for samples in zip(*data)))
-    elif isinstance(data, (list, tuple)):
-        return elem_type(*(tensor2numpy2tensor(d, device) for d in data))
-    elif isinstance(data, abc.Mapping):
-        return {key: tensor2numpy2tensor(data[key], device) for key in data}
-    elif isinstance(data, abc.Sequence):
-        transposed = zip(*data)
-        return [tensor2numpy2tensor(samples, device) for samples in transposed]
-    return data
-
-
 def clear_io_dict(model_io_dict):
     """
     Clears a model I/O dict's sub dict(s).
@@ -231,22 +176,3 @@ def update_io_dict(main_io_dict, sub_io_dict):
             if len(value) > 0:
                 main_io_dict[key][io_type] = value
 
-
-def extract_sub_model_io_dict(model_io_dict, index):
-    """
-    Extracts sub I/O dict from ``model_io_dict``.
-
-    :param model_io_dict: model I/O dict.
-    :type model_io_dict: dict
-    :param index: sample index.
-    :type index: int
-    :return: extracted sub I/O dict.
-    :rtype: dict
-    """
-    sub_model_output_dict = dict()
-    for module_path, sub_model_io_dict in model_io_dict.items():
-        tmp_dict = dict()
-        for key, value in sub_model_io_dict.items():
-            tmp_dict[key] = value[index]
-        sub_model_output_dict[module_path] = tmp_dict
-    return sub_model_output_dict

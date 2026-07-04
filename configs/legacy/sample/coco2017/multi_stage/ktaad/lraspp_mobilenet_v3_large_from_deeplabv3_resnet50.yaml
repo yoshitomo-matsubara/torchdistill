@@ -73,7 +73,6 @@ train:
       batch_size: 16
       collate_fn: 'coco_seg_collate_fn'
       drop_last: True
-      cache_output:
     val_data_loader:
       dataset_id: *coco_val
       random_sample: False
@@ -157,7 +156,6 @@ train:
       batch_size: 8
       collate_fn: 'coco_seg_collate_fn'
       drop_last: True
-      cache_output:
     teacher:
       sequential: []
       special:

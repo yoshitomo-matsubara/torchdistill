@@ -62,7 +62,6 @@ train:
       random_sample: True
       batch_size: 256
       num_workers: 16
-      cache_output:
     val_data_loader:
       dataset_id: *imagenet_val
       random_sample: False
@@ -135,7 +134,6 @@ train:
       random_sample: True
       batch_size: 256
       num_workers: 16
-      cache_output:
     teacher:
       sequential: []
       special:

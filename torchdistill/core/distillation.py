@@ -1,5 +1,3 @@
-import copy
-
 import torch
 from torch import nn
 
@@ -9,8 +7,7 @@ from .interfaces.pre_epoch_proc import default_pre_epoch_process_with_teacher
 from .interfaces.pre_forward_proc import default_pre_forward_process
 from .interfaces.registry import get_pre_epoch_proc_func, get_pre_forward_proc_func, get_forward_proc_func, \
     get_post_forward_proc_func, get_post_epoch_proc_func
-from .util import set_hooks, wrap_model, change_device, tensor2numpy2tensor, extract_io_dict, update_io_dict, \
-    extract_sub_model_io_dict
+from .util import set_hooks, wrap_model, extract_io_dict, update_io_dict
 from ..common.constant import SELF_MODULE_PATH, def_logger
 from ..common.file_util import make_parent_dirs
 from ..common.main_util import load_ckpt, save_on_master
@@ -347,64 +344,22 @@ class DistillationBox(object):
         if supp_dict is None:
             supp_dict = dict()
 
-        cached_data = supp_dict.get('cached_data', None)
-        cache_file_paths = supp_dict.get('cache_file_path', None)
-        teacher_outputs = None
-        cached_extracted_teacher_output_dict = None
-        # Use cached data if available
-        if cached_data is not None and isinstance(cached_data, dict):
-            teacher_outputs = cached_data['teacher_outputs']
-            cached_extracted_teacher_output_dict = cached_data['extracted_outputs']
-            if self.device.type != 'cpu':
-                teacher_outputs = change_device(teacher_outputs, self.device)
-                cached_extracted_teacher_output_dict = change_device(cached_extracted_teacher_output_dict, self.device)
-            if not self.teacher_updatable:
-                return teacher_outputs, cached_extracted_teacher_output_dict
-
-        # If no cached data
-        if teacher_outputs is None:
-            if self.teacher_updatable:
+        if self.teacher_updatable:
+            teacher_outputs = self.teacher_forward_proc(
+                self.teacher_model, sample_batch, targets, supp_dict, **kwargs
+            )
+        else:
+            with torch.no_grad():
                 teacher_outputs = self.teacher_forward_proc(
                     self.teacher_model, sample_batch, targets, supp_dict, **kwargs
                 )
-            else:
-                with torch.no_grad():
-                    teacher_outputs = self.teacher_forward_proc(
-                        self.teacher_model, sample_batch, targets, supp_dict, **kwargs
-                    )
 
-        if cached_extracted_teacher_output_dict is not None:
-            if isinstance(self.teacher_model, AuxiliaryModelWrapper) or \
-                    (check_if_wrapped(self.teacher_model) and
-                     isinstance(self.teacher_model.module, AuxiliaryModelWrapper)):
-                self.teacher_io_dict.update(cached_extracted_teacher_output_dict)
-                if isinstance(self.teacher_model, AuxiliaryModelWrapper):
-                    self.teacher_model.secondary_forward(self.teacher_io_dict)
-
-            extracted_teacher_io_dict = extract_io_dict(self.teacher_io_dict, self.device)
-            return teacher_outputs, extracted_teacher_io_dict
-
-        # Deep copy of teacher info dict if auxiliary teacher model wrapper contains trainable module(s)
-        teacher_io_dict4cache = copy.deepcopy(self.teacher_io_dict) \
-            if self.teacher_updatable and isinstance(cache_file_paths, (list, tuple)) is not None else None
         extracted_teacher_io_dict = extract_io_dict(self.teacher_io_dict, self.device)
         extracted_teacher_io_dict[SELF_MODULE_PATH]['output'] = teacher_outputs
         if isinstance(self.teacher_model, AuxiliaryModelWrapper):
             self.teacher_model.secondary_forward(extracted_teacher_io_dict)
 
         update_io_dict(extracted_teacher_io_dict, extract_io_dict(self.teacher_io_dict, self.device))
-        # Write cache files if output file paths (cache_file_paths) are given
-        if isinstance(cache_file_paths, (list, tuple)):
-            if teacher_io_dict4cache is None:
-                teacher_io_dict4cache = extracted_teacher_io_dict
-
-            cpu_device = torch.device('cpu')
-            for i, (teacher_output, cache_file_path) in enumerate(zip(teacher_outputs.cpu().numpy(), cache_file_paths)):
-                sub_dict = extract_sub_model_io_dict(teacher_io_dict4cache, i)
-                sub_dict = tensor2numpy2tensor(sub_dict, cpu_device)
-                cache_dict = {'teacher_outputs': torch.Tensor(teacher_output), 'extracted_outputs': sub_dict}
-                make_parent_dirs(cache_file_path)
-                torch.save(cache_dict, cache_file_path)
         return teacher_outputs, extracted_teacher_io_dict
 
     def forward_process(self, sample_batch, targets=None, supp_dict=None, **kwargs):

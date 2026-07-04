@@ -6,7 +6,7 @@ from torch.utils.data.distributed import DistributedSampler
 
 from ..common.constant import def_logger
 from ..datasets.registry import get_collate_func, get_batch_sampler, get_dataset_wrapper
-from ..datasets.wrapper import default_idx2subpath, BaseDatasetWrapper, CacheableDataset
+from ..datasets.wrapper import BaseDatasetWrapper
 
 logger = def_logger.getChild(__name__)
 
@@ -81,7 +81,6 @@ def build_data_loader(dataset, data_loader_config, distributed, accelerator=None
     :return: data loader.
     :rtype: torch.utils.data.DataLoader
     """
-    cache_dir_path = data_loader_config.get('cache_output', None)
     dataset_wrapper_config = data_loader_config.get('dataset_wrapper', None)
     if isinstance(dataset_wrapper_config, dict) and len(dataset_wrapper_config) > 0:
         dataset_wrapper_args = dataset_wrapper_config.get('args', None)
@@ -92,8 +91,6 @@ def build_data_loader(dataset, data_loader_config, distributed, accelerator=None
             dataset_wrapper_kwargs = dict()
         dataset_wrapper_cls_or_func = get_dataset_wrapper(dataset_wrapper_config['key'])
         dataset = dataset_wrapper_cls_or_func(dataset, *dataset_wrapper_args, **dataset_wrapper_kwargs)
-    elif cache_dir_path is not None:
-        dataset = CacheableDataset(dataset, cache_dir_path, idx2subpath_func=default_idx2subpath)
     elif data_loader_config.get('requires_supp', False):
         dataset = BaseDatasetWrapper(dataset)
 
