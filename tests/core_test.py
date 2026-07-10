@@ -15,7 +15,7 @@ class ForwardHookManagerUnitTest(TestCase):
     def test_add_hook(self):
         device = torch.device('cpu')
         fhm = ForwardHookManager(device)
-        model = models.resnet18(False)
+        model = models.resnet18(weights=None)
         target_module_path = 'layer2'
         fhm.add_hook(model, target_module_path)
         assert fhm.hook_list[0][0] == target_module_path
@@ -23,7 +23,7 @@ class ForwardHookManagerUnitTest(TestCase):
     def test_pop_io_dict(self):
         device = torch.device('cpu')
         fhm = ForwardHookManager(device)
-        model = models.resnet18(False)
+        model = models.resnet18(weights=None)
         target_module_path = 'fc'
         fhm.add_hook(model, target_module_path, requires_input=False, requires_output=True)
         x = torch.rand(1, 3, 224, 224)
@@ -38,7 +38,7 @@ class ForwardHookManagerUnitTest(TestCase):
     def test_pop_io_dict_from_device(self):
         device = torch.device('cpu')
         fhm = ForwardHookManager(device)
-        model = models.resnet18(False)
+        model = models.resnet18(weights=None)
         target_module_path = 'fc'
         fhm.add_hook(model, target_module_path, requires_input=False, requires_output=True)
         x = torch.rand(1, 3, 224, 224)
@@ -53,7 +53,7 @@ class ForwardHookManagerUnitTest(TestCase):
     def test_pop_io_dict_accumulates_false(self):
         device = torch.device('cpu')
         fhm = ForwardHookManager(device)
-        model = models.resnet18(False)
+        model = models.resnet18(weights=None)
         target_module_path = 'fc'
         fhm.add_hook(model, target_module_path, requires_input=False, requires_output=True, accumulates=False)
         assert target_module_path not in fhm._accumulating_module_paths
@@ -67,7 +67,7 @@ class ForwardHookManagerUnitTest(TestCase):
     def test_pop_io_dict_accumulates_true(self):
         device = torch.device('cpu')
         fhm = ForwardHookManager(device)
-        model = models.resnet18(False)
+        model = models.resnet18(weights=None)
         target_module_path = 'fc'
         fhm.add_hook(model, target_module_path, requires_input=False, requires_output=True, accumulates=True)
         assert target_module_path in fhm._accumulating_module_paths
@@ -83,7 +83,7 @@ class ForwardHookManagerUnitTest(TestCase):
     def test_pop_io_dict_stacks_accumulated(self):
         device = torch.device('cpu')
         fhm = ForwardHookManager(device)
-        model = models.resnet18(False)
+        model = models.resnet18(weights=None)
         target_module_path = 'fc'
         fhm.add_hook(
             model, target_module_path, requires_input=False, requires_output=True,
@@ -103,14 +103,14 @@ class ForwardHookManagerUnitTest(TestCase):
     def test_add_hook_stacks_accumulated_without_accumulates_raises(self):
         device = torch.device('cpu')
         fhm = ForwardHookManager(device)
-        model = models.resnet18(False)
+        model = models.resnet18(weights=None)
         with self.assertRaises(ValueError):
             fhm.add_hook(model, 'fc', accumulates=False, stacks_accumulated=True)
 
     def test_clear_with_accumulates(self):
         device = torch.device('cpu')
         fhm = ForwardHookManager(device)
-        model = models.resnet18(False)
+        model = models.resnet18(weights=None)
         target_module_path = 'fc'
         fhm.add_hook(model, target_module_path, accumulates=True, stacks_accumulated=True)
         assert target_module_path in fhm._accumulating_module_paths
