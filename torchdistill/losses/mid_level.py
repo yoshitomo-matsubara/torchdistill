@@ -1880,10 +1880,18 @@ class SKDInstanceLoss(nn.Module):
     :type teacher_module_io: str
     :param temperature: hyperparameter :math:`\\tau` to soften class-probability distributions. Not given a numerical value in the paper; the paper's public code repository uses 4.0.
     :type temperature: float
+    :param mode: reference to follow 'paper' or 'code'.
+    :type mode: str
+
+    .. warning::
+        There is a discrepancy between Eq. (1) in the paper and `the authors' implementation
+        <https://github.com/HyunJunSik/StreamLined/blob/main/Distiller/SKD.py>`_: the code scales the KL divergence
+        by :math:`\\tau^2` and masks the loss to the samples whose teacher confidence is at most the batch median.
+        Use ``mode`` = 'paper' instead of 'code' if you want to follow the equation in the paper.
     """
     def __init__(
             self, student_module_path, student_module_io, teacher_module_path, teacher_module_io,
-            temperature=4.0, **kwargs
+            temperature=4.0, mode='paper', **kwargs
     ):
         super().__init__()
         self.student_module_path = student_module_path
@@ -1891,13 +1899,30 @@ class SKDInstanceLoss(nn.Module):
         self.teacher_module_path = teacher_module_path
         self.teacher_module_io = teacher_module_io
         self.temperature = temperature
+        self.mode = mode
+        if mode not in ('code', 'paper'):
+            raise ValueError('mode `{}` is not expected'.format(mode))
+
+    def compute_instance_loss_paper(self, student_logits, teacher_logits):
+        log_p_student = torch.log_softmax(student_logits / self.temperature, dim=1)
+        p_teacher = torch.softmax(teacher_logits / self.temperature, dim=1)
+        return torch.nn.functional.kl_div(log_p_student, p_teacher, reduction='batchmean')
+
+    def compute_instance_loss(self, student_logits, teacher_logits):
+        log_p_student = torch.log_softmax(student_logits / self.temperature, dim=1)
+        p_teacher = torch.softmax(teacher_logits / self.temperature, dim=1)
+        kd_loss = torch.nn.functional.kl_div(log_p_student, p_teacher, reduction='none').sum(1) \
+            * (self.temperature ** 2)
+        confidence = torch.softmax(teacher_logits.detach(), dim=1).max(dim=1).values
+        mask = confidence.le(torch.quantile(confidence, 0.5))
+        return (kd_loss * mask).mean()
 
     def forward(self, student_io_dict, teacher_io_dict, *args, **kwargs):
         student_logits = student_io_dict[self.student_module_path][self.student_module_io]
         teacher_logits = teacher_io_dict[self.teacher_module_path][self.teacher_module_io]
-        log_p_student = torch.log_softmax(student_logits / self.temperature, dim=1)
-        p_teacher = torch.softmax(teacher_logits / self.temperature, dim=1)
-        return torch.nn.functional.kl_div(log_p_student, p_teacher, reduction='batchmean')
+        if self.mode == 'paper':
+            return self.compute_instance_loss_paper(student_logits, teacher_logits)
+        return self.compute_instance_loss(student_logits, teacher_logits)
 
 
 @register_mid_level_loss
@@ -1922,10 +1947,20 @@ class SKDDirectionLoss(nn.Module):
     :type teacher_module_io: str
     :param tikhonov: Tikhonov regularization factor :math:`\\lambda` added to the Gramian difference's covariance matrix :math:`\\Sigma` for numerical stability, i.e., :math:`\\Sigma' = \\Sigma + \\lambda I`. Not given a numerical value in the paper; the paper's public code repository uses 0.1.
     :type tikhonov: float
+    :param mode: reference to follow 'paper' or 'code'.
+    :type mode: str
+
+    .. warning::
+        There is a discrepancy between Eqs. (3)-(8) in the paper and `the authors' implementation
+        <https://github.com/HyunJunSik/StreamLined/blob/main/Distiller/SKD.py>`_: the code divides each Gramian
+        matrix by the number of classes :math:`C` and multiplies the loss by a boolean mask of the classes whose
+        teacher confidence (summed over the batch) is at most the median before taking the mean, which rescales
+        the loss by the masked-class ratio (roughly 0.5).
+        Use ``mode`` = 'paper' instead of 'code' if you want to follow the equations in the paper.
     """
     def __init__(
             self, student_module_path, student_module_io, teacher_module_path, teacher_module_io,
-            tikhonov=1e-1, **kwargs
+            tikhonov=1e-1, mode='paper', **kwargs
     ):
         super().__init__()
         self.student_module_path = student_module_path
@@ -1933,17 +1968,35 @@ class SKDDirectionLoss(nn.Module):
         self.teacher_module_path = teacher_module_path
         self.teacher_module_io = teacher_module_io
         self.tikhonov = tikhonov
+        self.mode = mode
+        if mode not in ('code', 'paper'):
+            raise ValueError('mode `{}` is not expected'.format(mode))
 
-    def forward(self, student_io_dict, teacher_io_dict, *args, **kwargs):
-        student_logits = student_io_dict[self.student_module_path][self.student_module_io]
-        teacher_logits = teacher_io_dict[self.teacher_module_path][self.teacher_module_io]
+    def compute_mahalanobis_dist(self, student_logits, teacher_logits, gram_scale=1.0):
         student_gram = normalize(student_logits, p=2, dim=1)
         teacher_gram = normalize(teacher_logits, p=2, dim=1)
-        student_gram = torch.mm(student_gram, student_gram.t())
-        teacher_gram = torch.mm(teacher_gram, teacher_gram.t())
+        student_gram = torch.mm(student_gram, student_gram.t()) / gram_scale
+        teacher_gram = torch.mm(teacher_gram, teacher_gram.t()) / gram_scale
         diff = student_gram - teacher_gram
         cov_matrix = torch.cov(diff.t()) + self.tikhonov * torch.eye(diff.size(1), device=diff.device)
         cholesky_factor = torch.linalg.cholesky(cov_matrix)
         inv_cov_matrix = torch.cholesky_inverse(cholesky_factor)
         mahalanobis_dist = torch.einsum('bi,ij,bj->b', diff, inv_cov_matrix, diff)
         return torch.sqrt(mahalanobis_dist).mean()
+
+    def compute_direction_loss_paper(self, student_logits, teacher_logits):
+        return self.compute_mahalanobis_dist(student_logits, teacher_logits)
+
+    def compute_direction_loss(self, student_logits, teacher_logits):
+        num_classes = student_logits.size(1)
+        skd_loss = self.compute_mahalanobis_dist(student_logits, teacher_logits, gram_scale=num_classes)
+        class_confidence = torch.softmax(teacher_logits.detach(), dim=1).sum(dim=0)
+        class_conf_mask = class_confidence.le(torch.quantile(class_confidence, 0.5))
+        return (skd_loss * class_conf_mask).mean()
+
+    def forward(self, student_io_dict, teacher_io_dict, *args, **kwargs):
+        student_logits = student_io_dict[self.student_module_path][self.student_module_io]
+        teacher_logits = teacher_io_dict[self.teacher_module_path][self.teacher_module_io]
+        if self.mode == 'paper':
+            return self.compute_direction_loss_paper(student_logits, teacher_logits)
+        return self.compute_direction_loss(student_logits, teacher_logits)
