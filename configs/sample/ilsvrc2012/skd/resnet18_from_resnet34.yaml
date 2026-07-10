@@ -85,7 +85,7 @@ train:
         key: 'torch.utils.data.RandomSampler'
       kwargs:
     kwargs:
-      batch_size: 512
+      batch_size: 256
       num_workers: 16
       pin_memory: True
       drop_last: False
@@ -135,7 +135,8 @@ train:
               student_module_io: 'output'
               teacher_module_path: '.'
               teacher_module_io: 'output'
-              temperature: 4.0
+              temperature: 1.0
+              mode: 'code'
           weight: 1.0
         direction:
           criterion:
@@ -146,6 +147,7 @@ train:
               teacher_module_path: '.'
               teacher_module_io: 'output'
               tikhonov: 0.1
+              mode: 'code'
           weight: 1.0
 
 test:
