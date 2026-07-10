@@ -1618,6 +1618,20 @@ class DISTLoss(nn.Module):
     :type tau: float
     :param eps: small value to avoid division by zero in cosine simularity.
     :type eps: float
+
+    .. code-block:: yaml
+       :caption: An example YAML to instantiate :class:`DISTLoss` for a teacher-student pair of ResNet-34 and ResNet-18 in torchvision.
+
+        criterion:
+          key: 'DISTLoss'
+          kwargs:
+            student_module_path: '.'
+            student_module_io: 'output'
+            teacher_module_path: '.'
+            teacher_module_io: 'output'
+            beta: 1.0
+            gamma: 1.0
+            tau: 1.0
     """
 
     def __init__(
@@ -1685,6 +1699,24 @@ class SRDLoss(nn.Module):
     :type temperature: float
     :param reduction: loss reduction type.
     :type reduction: str or None
+
+    .. code-block:: yaml
+       :caption: An example YAML to instantiate :class:`SRDLoss` for a teacher-student pair of ResNet-34 and ResNet-18 in torchvision, using an auxiliary wrapper :class:`torchdistill.models.wrapper.SRDModelWrapper` for the teacher and student models.
+
+        criterion:
+          key: 'SRDLoss'
+          kwargs:
+            student_feature_module_path: 'norm_layer'
+            student_feature_module_io: 'output'
+            teacher_feature_module_path: 'norm_layer'
+            teacher_feature_module_io: 'output'
+            student_linear_module_path: '.'
+            student_linear_module_io: 'output'
+            teacher_linear_module_path: '.'
+            teacher_linear_module_io: 'output'
+            exponent: 4.0
+            temperature: 1.0
+            reduction: 'batchmean'
     """
 
     def __init__(
@@ -1746,6 +1778,21 @@ class LogitStdKDLoss(nn.KLDivLoss):
     :type beta: float or None
     :param reduction: ``reduction`` for KLDivLoss. If ``reduction`` = 'batchmean', CrossEntropyLoss's ``reduction`` will be 'mean'.
     :type reduction: str or None
+
+    .. code-block:: yaml
+       :caption: An example YAML to instantiate :class:`LogitStdKDLoss` for a teacher-student pair of ResNet-34 and ResNet-18 in torchvision.
+
+        criterion:
+          key: 'LogitStdKDLoss'
+          kwargs:
+            student_module_path: '.'
+            student_module_io: 'output'
+            teacher_module_path: '.'
+            teacher_module_io: 'output'
+            temperature: 2.0
+            alpha: 0.5
+            beta: 9
+            reduction: 'batchmean'
     """
     def __init__(
             self, student_module_path, student_module_io, teacher_module_path, teacher_module_io,
@@ -1888,6 +1935,19 @@ class SKDInstanceLoss(nn.Module):
         <https://github.com/HyunJunSik/StreamLined/blob/main/Distiller/SKD.py>`_: the code scales the KL divergence
         by :math:`\\tau^2` and masks the loss to the samples whose teacher confidence is at most the batch median.
         Use ``mode`` = 'paper' instead of 'code' if you want to follow the equation in the paper.
+
+    .. code-block:: yaml
+       :caption: An example YAML to instantiate :class:`SKDInstanceLoss` for a teacher-student pair of ResNet-34 and ResNet-18 in torchvision.
+
+        criterion:
+          key: 'SKDInstanceLoss'
+          kwargs:
+            student_module_path: '.'
+            student_module_io: 'output'
+            teacher_module_path: '.'
+            teacher_module_io: 'output'
+            temperature: 4.0
+            mode: 'code'
     """
     def __init__(
             self, student_module_path, student_module_io, teacher_module_path, teacher_module_io,
@@ -1957,6 +2017,19 @@ class SKDDirectionLoss(nn.Module):
         teacher confidence (summed over the batch) is at most the median before taking the mean, which rescales
         the loss by the masked-class ratio (roughly 0.5).
         Use ``mode`` = 'paper' instead of 'code' if you want to follow the equations in the paper.
+
+    .. code-block:: yaml
+       :caption: An example YAML to instantiate :class:`SKDDirectionLoss` for a teacher-student pair of ResNet-34 and ResNet-18 in torchvision.
+
+        criterion:
+          key: 'SKDDirectionLoss'
+          kwargs:
+            student_module_path: '.'
+            student_module_io: 'output'
+            teacher_module_path: '.'
+            teacher_module_io: 'output'
+            tikhonov: 0.1
+            mode: 'code'
     """
     def __init__(
             self, student_module_path, student_module_io, teacher_module_path, teacher_module_io,
