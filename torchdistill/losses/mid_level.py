@@ -139,7 +139,7 @@ class KDLoss(nn.KLDivLoss):
 
     .. math::
 
-       L_{KD} = \\alpha \cdot L_{CE} + (1 - \\alpha) \cdot \\tau^2 \cdot L_{KL}
+       L_{KD} = \\alpha \\cdot L_{CE} + (1 - \\alpha) \\cdot \\tau^2 \\cdot L_{KL}
 
     Geoffrey Hinton, Oriol Vinyals, Jeff Dean: `"Distilling the Knowledge in a Neural Network" <https://arxiv.org/abs/1503.02531>`_ @ NIPS 2014 Deep Learning and Representation Learning Workshop (2014)
 

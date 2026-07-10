@@ -59,9 +59,9 @@ class WeightedSumLoss(AbstractLoss):
     A weighted sum (linear combination) of mid-/low-level loss modules.
 
     If ``model_term`` contains a numerical value with ``weight`` key, it will be a multiplier :math:`W_{model}`
-    for the sum of model-driven loss values :math:`\sum_{i} L_{model, i}`.
+    for the sum of model-driven loss values :math:`\\sum_{i} L_{model, i}`.
 
-    .. math:: L_{total} = W_{model} \cdot (\sum_{i} L_{model, i}) + \sum_{k} W_{sub, k} \cdot L_{sub, k}
+    .. math:: L_{total} = W_{model} \\cdot (\\sum_{i} L_{model, i}) + \\sum_{k} W_{sub, k} \\cdot L_{sub, k}
 
     :param model_term: model-driven loss module configurations.
     :type model_term: dict or None
