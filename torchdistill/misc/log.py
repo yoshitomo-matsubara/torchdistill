@@ -9,7 +9,7 @@ import torch.distributed as dist
 
 from ..common.constant import def_logger, LOGGING_FORMAT
 from ..common.file_util import make_parent_dirs
-from ..common.main_util import is_dist_avail_and_initialized
+from ..common.main_util import is_dist_avail_and_initialized, is_main_process
 
 logger = def_logger.getChild(__name__)
 
@@ -36,6 +36,118 @@ def setup_log_file(log_file_path):
     fh = FileHandler(filename=log_file_path, mode='w')
     fh.setFormatter(Formatter(LOGGING_FORMAT))
     def_logger.addHandler(fh)
+
+
+class TrainingTracker(object):
+    """
+    A thin wrapper around an experiment tracking library (`trackio` or `wandb`).
+    The library is imported lazily so that it stays an optional dependency.
+
+    :param engine: tracking library name ('trackio' or 'wandb').
+    :type engine: str
+    :param kwargs: keyword arguments passed to the library's ``init`` function
+        (e.g., ``project``, ``name``, ``config``). See the external references below for available arguments.
+    :type kwargs: dict
+
+    .. code-block:: python
+       :caption: An example to instantiate :class:`TrainingTracker` and log metrics with it.
+
+        tracker = TrainingTracker(
+            'trackio',
+            project='torchdistill-cifar10',
+            name='resnet18-kd-run1',
+            config={'train': {'num_epochs': 182}, 'student_model': 'resnet18'}
+        )
+        tracker.log({'train/loss': 0.512, 'train/lr': 0.1}, step=100)
+        tracker.log({'val/acc1': 92.3, 'epoch': 0}, step=391)
+        tracker.finish()
+
+    .. seealso::
+        * `Trackio documentation <https://huggingface.co/docs/trackio/index>`_ (``trackio.init``)
+          for ``engine='trackio'``
+        * `wandb.init reference <https://docs.wandb.ai/ref/python/init/>`_ for ``engine='wandb'``
+    """
+    SUPPORTED_ENGINES = ('trackio', 'wandb')
+
+    def __init__(self, engine, **kwargs):
+        if engine not in self.SUPPORTED_ENGINES:
+            raise ValueError(f'`engine` should be one of {self.SUPPORTED_ENGINES}, but got `{engine}`')
+
+        if engine == 'trackio':
+            import trackio
+            self.module = trackio
+        else:
+            import wandb
+            self.module = wandb
+
+        self.engine = engine
+        self.module.init(**kwargs)
+
+    def log(self, metrics, step=None):
+        """
+        Logs a metric dict.
+
+        :param metrics: metric names and values.
+        :type metrics: dict
+        :param step: global step to associate the metrics with.
+        :type step: int or None
+        """
+        self.module.log(metrics, step=step)
+
+    def finish(self):
+        """
+        Finishes the tracking run.
+        """
+        self.module.finish()
+
+
+def setup_tracker(tracker_config, run_config=None):
+    """
+    Sets up a :class:`TrainingTracker` from ``tracker_config``.
+
+    :param tracker_config: tracker configuration with 'engine' ('trackio' or 'wandb') and
+        optional 'kwargs' passed to the library's ``init`` function.
+        If None or its 'engine' is None, no tracker is set up.
+    :type tracker_config: dict or None
+    :param run_config: run configuration (e.g., loaded yaml config) to be logged as the run's config.
+    :type run_config: dict or None
+    :return: training tracker if configured and this is the main process, None otherwise.
+    :rtype: TrainingTracker or None
+
+    .. code-block:: yaml
+       :caption: An example (partial) YAML config whose ``tracker`` entry is passed to :func:`setup_tracker`
+          as ``tracker_config``. ``kwargs`` is passed as-is to ``trackio.init`` / ``wandb.init``.
+
+        tracker:
+          engine: 'trackio'
+          kwargs:
+            project: 'torchdistill-cifar10'
+            name: 'resnet18-kd-run1'
+
+    .. code-block:: python
+       :caption: An example to set up a :class:`TrainingTracker` with the YAML config above.
+
+        config = yaml_util.load_yaml_file('/path/to/the/yaml/config/above.yaml')
+        tracker = setup_tracker(config.get('tracker', None), run_config=config)
+
+        # Equivalent dict-based setup without a YAML file
+        tracker = setup_tracker(
+            {'engine': 'trackio', 'kwargs': {'project': 'torchdistill-cifar10', 'name': 'resnet18-kd-run1'}},
+            run_config=config
+        )
+
+    .. seealso::
+        * `Trackio documentation <https://huggingface.co/docs/trackio/index>`_ (``trackio.init``)
+          for ``engine: 'trackio'``
+        * `wandb.init reference <https://docs.wandb.ai/ref/python/init/>`_ for ``engine: 'wandb'``
+    """
+    if tracker_config is None or tracker_config.get('engine', None) is None or not is_main_process():
+        return None
+
+    kwargs = dict(tracker_config.get('kwargs', None) or dict())
+    if run_config is not None:
+        kwargs.setdefault('config', run_config)
+    return TrainingTracker(tracker_config['engine'], **kwargs)
 
 
 class SmoothedValue(object):
@@ -126,10 +238,19 @@ class MetricLogger(object):
 
     :param delimiter: delimiter in a log message.
     :type delimiter: str
+    :param tracker: training tracker to log metrics with. If None, no tracking is done.
+    :type tracker: TrainingTracker or None
+    :param tracker_prefix: prefix prepended to metric names when logging with ``tracker`` (e.g., 'train/').
+    :type tracker_prefix: str
+    :param tracker_start_step: global step at which this logger's iterations start.
+    :type tracker_start_step: int
     """
-    def __init__(self, delimiter="\t"):
+    def __init__(self, delimiter="\t", tracker=None, tracker_prefix='', tracker_start_step=0):
         self.meters = defaultdict(SmoothedValue)
         self.delimiter = delimiter
+        self.tracker = tracker
+        self.tracker_prefix = tracker_prefix
+        self.tracker_start_step = tracker_start_step
 
     def update(self, **kwargs):
         """
@@ -240,6 +361,12 @@ class MetricLogger(object):
                         i, len(iterable), eta=eta_string,
                         meters=str(self),
                         time=str(iter_time), data=str(data_time)))
+
+                if self.tracker is not None:
+                    self.tracker.log(
+                        {self.tracker_prefix + name: meter.value for name, meter in self.meters.items()},
+                        step=self.tracker_start_step + i
+                    )
 
             i += 1
             end = time.time()

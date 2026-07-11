@@ -22,7 +22,7 @@ from torchdistill.common.main_util import is_main_process, init_distributed_mode
 from torchdistill.core.distillation import get_distillation_box
 from torchdistill.core.training import get_training_box
 from torchdistill.datasets.util import build_data_loader
-from torchdistill.misc.log import set_basic_log_config, setup_log_file, SmoothedValue, MetricLogger
+from torchdistill.misc.log import set_basic_log_config, setup_log_file, setup_tracker, SmoothedValue, MetricLogger
 from torchdistill.models.official import get_object_detection_model
 from torchdistill.models.registry import get_model
 
@@ -43,6 +43,10 @@ def get_args():
     parser.add_argument('-test_only', action='store_true', help='only test the models')
     parser.add_argument('-student_only', action='store_true', help='test the student model only')
     parser.add_argument('-log_config', action='store_true', help='log config')
+    parser.add_argument(
+        '-disable_tracker', action='store_true',
+        help='disable experiment tracker (trackio/wandb) even if configured in the yaml file'
+    )
     # distributed training parameters
     parser.add_argument('--world_size', default=1, type=int, help='number of distributed processes')
     parser.add_argument('--dist_url', default='env://', help='url used to set up distributed training')
@@ -63,8 +67,11 @@ def load_model(model_config, device):
     return model.to(device)
 
 
-def train_one_epoch(training_box, device, epoch, log_freq):
-    metric_logger = MetricLogger(delimiter='  ')
+def train_one_epoch(training_box, device, epoch, log_freq, tracker=None):
+    metric_logger = MetricLogger(
+        delimiter='  ', tracker=tracker, tracker_prefix='train/',
+        tracker_start_step=epoch * len(training_box.train_data_loader)
+    )
     metric_logger.add_meter('lr', SmoothedValue(window_size=1, fmt='{value}'))
     metric_logger.add_meter('img/s', SmoothedValue(window_size=10, fmt='{value}'))
     header = 'Epoch: [{}]'.format(epoch)
@@ -162,7 +169,7 @@ def evaluate(model, data_loader, iou_types, device, device_ids, distributed, log
 
 def train(
         teacher_model, student_model, dataset_dict, src_ckpt_file_path, dst_ckpt_file_path,
-        device, device_ids, distributed, world_size, config, args
+        device, device_ids, distributed, world_size, config, args, tracker=None
 ):
     logger.info('Start training')
     train_config = config['train']
@@ -187,13 +194,18 @@ def train(
     start_time = time.time()
     for epoch in range(args.start_epoch, training_box.num_epochs):
         training_box.pre_epoch_process(epoch=epoch)
-        train_one_epoch(training_box, device, epoch, log_freq)
+        train_one_epoch(training_box, device, epoch, log_freq, tracker=tracker)
         val_coco_evaluator = evaluate(
             wrapped_student_model, training_box.val_data_loader, iou_types, device, device_ids, distributed,
             log_freq=log_freq, header='Validation:'
         )
         # Average Precision  (AP) @[ IoU=0.50:0.95 | area=   all | maxDets=100 ]
         val_map = val_coco_evaluator.coco_eval[val_iou_type].stats[0]
+        if tracker is not None:
+            tracker.log(
+                {'val/map_{}'.format(val_iou_type): val_map, 'epoch': epoch},
+                step=(epoch + 1) * len(training_box.train_data_loader)
+            )
         # Evaluated on a synchronized/reduced mAP, so this is identical across ranks; keep the
         # comparison and best-value update unconditional so save_ckpt (a collective under FSDP) is
         # called by every rank in lockstep. Only the logging is main-process-only.
@@ -241,10 +253,11 @@ def main(args):
     if args.log_config:
         logger.info(config)
 
+    tracker = setup_tracker(config.get('tracker', None), run_config=config) if not args.disable_tracker else None
     if not args.test_only:
         train(
             teacher_model, student_model, dataset_dict, src_ckpt_file_path, dst_ckpt_file_path,
-            device, device_ids, distributed, world_size, config, args
+            device, device_ids, distributed, world_size, config, args, tracker=tracker
         )
 
     student_model_without_ddp = student_model.module if module_util.check_if_wrapped(student_model) else student_model
@@ -263,10 +276,14 @@ def main(args):
             teacher_model, test_data_loader, iou_types, device, device_ids, distributed,
             log_freq=log_freq, title='[Teacher: {}]'.format(teacher_model_config['key'])
         )
-    evaluate(
+    test_coco_evaluator = evaluate(
         student_model, test_data_loader, iou_types, device, device_ids, distributed,
         log_freq=log_freq, title='[Student: {}]'.format(student_model_config['key'])
     )
+    if tracker is not None:
+        val_iou_type = iou_types[0] if isinstance(iou_types, (list, tuple)) and len(iou_types) > 0 else 'bbox'
+        tracker.log({'test/map_{}'.format(val_iou_type): test_coco_evaluator.coco_eval[val_iou_type].stats[0]})
+        tracker.finish()
 
 
 if __name__ == '__main__':
