@@ -39,10 +39,14 @@ class ImportUnitTest(TestCase):
         assert str(dropout) == str(nn.Dropout())
 
     def test_import_call_method(self):
-        kwargs1 = {'package': 'torchvision.models.alexnet', 'class_name': 'AlexNet_Weights', 'method_name': 'verify',
-                   'init': {'kwargs': {'obj': 'AlexNet_Weights.IMAGENET1K_V1'}}}
-        kwargs2 = {'package': 'torchvision.models.alexnet.AlexNet_Weights.verify',
-                   'init': {'kwargs': {'obj': 'AlexNet_Weights.IMAGENET1K_V1'}}}
+        kwargs1 = {
+            'package': 'torchvision.models.alexnet', 'class_name': 'AlexNet_Weights', 'method_name': 'verify',
+            'init': {'kwargs': {'obj': 'AlexNet_Weights.IMAGENET1K_V1'}}
+        }
+        kwargs2 = {
+            'package': 'torchvision.models.alexnet.AlexNet_Weights.verify',
+            'init': {'kwargs': {'obj': 'AlexNet_Weights.IMAGENET1K_V1'}}
+        }
 
         weights1 = import_call_method(**kwargs1)
         weights2 = import_call_method(**kwargs2)
