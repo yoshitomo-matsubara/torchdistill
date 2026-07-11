@@ -44,7 +44,7 @@ from torchdistill.core.distillation import get_distillation_box
 from torchdistill.core.training import get_training_box
 from torchdistill.datasets import util
 from torchdistill.datasets.registry import register_collate_func
-from torchdistill.misc.log import set_basic_log_config, setup_log_file, SmoothedValue, MetricLogger
+from torchdistill.misc.log import set_basic_log_config, setup_log_file, setup_tracker, SmoothedValue, MetricLogger
 
 logger = def_logger.getChild(__name__)
 
@@ -64,7 +64,7 @@ GLUE_TASK2KEYS = {
 register_collate_func(default_data_collator)
 
 
-def get_argparser():
+def get_args():
     parser = argparse.ArgumentParser(description='Knowledge distillation for text classification models')
     parser.add_argument('--config', required=True, help='yaml file path')
     parser.add_argument('--run_log', help='log file path')
@@ -74,11 +74,17 @@ def get_argparser():
     parser.add_argument('-disable_cudnn_benchmark', action='store_true', help='disable torch.backend.cudnn.benchmark')
     parser.add_argument('-test_only', action='store_true', help='only test the models')
     parser.add_argument('-student_only', action='store_true', help='test the student model only')
+    parser.add_argument(
+        '-disable_tracker', action='store_true',
+        help='disable experiment tracker (trackio/wandb) even if configured in the yaml file'
+    )
     # distributed training parameters
     parser.add_argument('--world_size', default=1, type=int, help='number of distributed processes')
-    parser.add_argument('-adjust_lr', action='store_true',
-                        help='multiply learning rate by number of distributed processes (world_size)')
-    return parser
+    parser.add_argument(
+        '-adjust_lr', action='store_true',
+        help='multiply learning rate by number of distributed processes (world_size)'
+    )
+    return parser.parse_args()
 
 
 def load_tokenizer_and_model(model_config, task_name, prioritizes_dst_ckpt=False):
@@ -237,8 +243,11 @@ def get_metrics(task_name):
     return metric
 
 
-def train_one_epoch(training_box, epoch, log_freq):
-    metric_logger = MetricLogger(delimiter='  ')
+def train_one_epoch(training_box, epoch, log_freq, tracker=None):
+    metric_logger = MetricLogger(
+        delimiter='  ', tracker=tracker, tracker_prefix='train/',
+        tracker_start_step=epoch * len(training_box.train_data_loader)
+    )
     metric_logger.add_meter('lr', SmoothedValue(window_size=1, fmt='{value}'))
     metric_logger.add_meter('sample/s', SmoothedValue(window_size=10, fmt='{value}'))
     header = 'Epoch: [{}]'.format(epoch)
@@ -273,7 +282,7 @@ def evaluate(model, data_loader, metric, is_regression, accelerator, title=None,
 
 
 def train(teacher_model, student_model, dataset_dict, is_regression, dst_ckpt_dir_path, metric,
-          device, device_ids, distributed, config, args, accelerator):
+          device, device_ids, distributed, config, args, accelerator, tracker=None):
     logger.info('Start training')
     train_config = config['train']
     lr_factor = args.world_size if distributed and args.adjust_lr else 1
@@ -286,9 +295,14 @@ def train(teacher_model, student_model, dataset_dict, is_regression, dst_ckpt_di
     best_val_number = 0.0
     for epoch in range(training_box.num_epochs):
         training_box.pre_epoch_process(epoch=epoch)
-        train_one_epoch(training_box, epoch, log_freq)
+        train_one_epoch(training_box, epoch, log_freq, tracker=tracker)
         val_dict = evaluate(student_model, training_box.val_data_loader, metric, is_regression,
                             accelerator, header='Validation: ')
+        if tracker is not None:
+            tracker.log(
+                {'val/' + key: value for key, value in val_dict.items()} | {'epoch': epoch},
+                step=(epoch + 1) * len(training_box.train_data_loader)
+            )
         val_value = sum(val_dict.values())
         if val_value > best_val_number:
             logger.info('Updating ckpt at {}'.format(dst_ckpt_dir_path))
@@ -401,9 +415,13 @@ def main(args):
     # Get the metric function
     metric = get_metrics(task_name)
 
+    tracker = setup_tracker(config.get('tracker', None), run_config=config) \
+        if accelerator.is_main_process and not args.disable_tracker else None
     if not args.test_only:
-        train(teacher_model, student_model, dataset_dict, is_regression, dst_ckpt_dir_path, metric,
-              device, device_ids, distributed, config, args, accelerator)
+        train(
+            teacher_model, student_model, dataset_dict, is_regression, dst_ckpt_dir_path, metric,
+            device, device_ids, distributed, config, args, accelerator, tracker=tracker
+        )
         student_tokenizer.save_pretrained(dst_ckpt_dir_path)
 
     test_config = config['test']
@@ -421,8 +439,13 @@ def main(args):
     # Reload the best checkpoint based on validation result
     student_tokenizer, student_model = load_tokenizer_and_model(student_model_config, task_name, True)
     student_model = accelerator.prepare(student_model)
-    evaluate(student_model, test_data_loader, metric, is_regression, accelerator,
-             title='[Student: {}]'.format(student_model_config['key']))
+    test_dict = evaluate(
+        student_model, test_data_loader, metric, is_regression, accelerator,
+        title='[Student: {}]'.format(student_model_config['key'])
+    )
+    if tracker is not None:
+        tracker.log({'test/' + key: value for key, value in test_dict.items()})
+        tracker.finish()
 
     # Output prediction for private dataset(s) if both the config and output dir path are given
     private_configs = config.get('private', None)
@@ -433,5 +456,4 @@ def main(args):
 
 
 if __name__ == '__main__':
-    argparser = get_argparser()
-    main(argparser.parse_args())
+    main(get_args())
