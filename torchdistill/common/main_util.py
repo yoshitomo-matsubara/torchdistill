@@ -281,8 +281,10 @@ def init_distributed_mode(world_size=1, dist_url='env://'):
     torch.cuda.set_device(device_id)
     dist_backend = 'nccl'
     logger.info('| distributed init (rank {}): {}'.format(rank, dist_url))
-    torch.distributed.init_process_group(backend=dist_backend, init_method=dist_url,
-                                         world_size=world_size, rank=rank)
+    torch.distributed.init_process_group(
+        backend=dist_backend, init_method=dist_url,
+        world_size=world_size, rank=rank
+    )
     torch.distributed.barrier()
     setup_for_distributed(rank == 0)
     return True, world_size, [device_id]
@@ -368,5 +370,9 @@ def save_ckpt(model, optimizer, lr_scheduler, best_value, args, output_file_path
     make_parent_dirs(output_file_path)
     model_state_dict = get_full_state_dict(model)
     lr_scheduler_state_dict = lr_scheduler.state_dict() if lr_scheduler is not None else None
-    save_on_master({'model': model_state_dict, 'optimizer': optimizer.state_dict(), 'best_value': best_value,
-                    'lr_scheduler': lr_scheduler_state_dict, 'args': args}, output_file_path)
+    save_on_master(
+        {
+            'model': model_state_dict, 'optimizer': optimizer.state_dict(), 'best_value': best_value,
+            'lr_scheduler': lr_scheduler_state_dict, 'args': args
+        }, output_file_path
+    )
