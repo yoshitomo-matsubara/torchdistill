@@ -150,6 +150,91 @@ def setup_tracker(tracker_config, run_config=None):
     return TrainingTracker(tracker_config['engine'], **kwargs)
 
 
+class TrainingTrackerReader(object):
+    """
+    A read-side companion to :class:`TrainingTracker` that loads metrics logged with `trackio` or `wandb`
+    back as ``pandas.DataFrame``. The libraries are imported lazily so that they stay optional dependencies.
+
+    :param engine: tracking library name ('trackio' or 'wandb').
+    :type engine: str
+    :param wandb_entity: wandb entity (user or team name). Used only if ``engine`` = 'wandb'.
+        If None, the default entity of the wandb API key is used.
+    :type wandb_entity: str or None
+
+    .. code-block:: python
+       :caption: An example to load the run history logged with the :class:`TrainingTracker` example.
+
+        reader = TrainingTrackerReader('trackio')
+        history = reader.load_run_history('torchdistill-cifar10', 'resnet18-kd-run1')
+        # `history` is a pandas.DataFrame with 'step', 'relative_time', and metric columns
+        # such as 'train/loss' and 'val/acc1'
+        print(history[history['val/acc1'].notna()][['epoch', 'val/acc1']])
+
+    .. seealso::
+        * `Trackio documentation <https://huggingface.co/docs/trackio/index>`_ for ``engine='trackio'``
+        * `wandb public API reference <https://docs.wandb.ai/ref/python/public-api/>`_ for ``engine='wandb'``
+    """
+    SUPPORTED_ENGINES = ('trackio', 'wandb')
+
+    def __init__(self, engine, wandb_entity=None):
+        if engine not in self.SUPPORTED_ENGINES:
+            raise ValueError(f'`engine` should be one of {self.SUPPORTED_ENGINES}, but got `{engine}`')
+
+        if engine == 'trackio':
+            from trackio.sqlite_storage import SQLiteStorage
+            self.storage = SQLiteStorage
+            self.api = None
+        else:
+            import wandb
+            self.storage = None
+            self.api = wandb.Api()
+
+        self.engine = engine
+        self.wandb_entity = wandb_entity
+
+    def _find_wandb_run(self, project, run_name):
+        project_path = project if self.wandb_entity is None else f'{self.wandb_entity}/{project}'
+        runs = self.api.runs(project_path, filters={'display_name': run_name})
+        if len(runs) == 0:
+            raise ValueError(f'run `{run_name}` was not found in wandb project `{project_path}`')
+        return runs[0]
+
+    @staticmethod
+    def _normalize_history(data_frame):
+        import pandas as pd
+        column_dict = {'_step': 'step', '_runtime': 'relative_time'}
+        data_frame = data_frame.rename(columns={k: v for k, v in column_dict.items() if k in data_frame.columns})
+        if 'relative_time' not in data_frame.columns and 'timestamp' in data_frame.columns:
+            timestamps = pd.to_datetime(data_frame['timestamp'])
+            data_frame['relative_time'] = (timestamps - timestamps.min()).dt.total_seconds()
+        if 'step' in data_frame.columns:
+            data_frame = data_frame.sort_values('step').reset_index(drop=True)
+        return data_frame
+
+    def load_run_history(self, project, run_name):
+        """
+        Loads the metric history of a run as a ``pandas.DataFrame``, one row per logged step.
+        Engine-specific columns are normalized so that 'step' and 'relative_time' (seconds since
+        the first log) are available for both engines, in addition to the logged metric columns.
+
+        :param project: project name used at logging time.
+        :type project: str
+        :param run_name: run name used at logging time.
+        :type run_name: str
+        :return: metric history of the run.
+        :rtype: pandas.DataFrame
+        """
+        import pandas as pd
+        if self.engine == 'trackio':
+            records = self.storage.get_logs(project, run_name)
+            if len(records) == 0:
+                raise ValueError(f'run `{run_name}` was not found in trackio project `{project}`')
+        else:
+            run = self._find_wandb_run(project, run_name)
+            records = list(run.scan_history())
+        return self._normalize_history(pd.DataFrame(records))
+
+
 class SmoothedValue(object):
     """
     A deque-based value object tracks a series of values and provides access to smoothed values
