@@ -120,6 +120,61 @@ class ForwardHookManagerUnitTest(TestCase):
         with self.assertRaises(ValueError):
             fhm.add_hook(model, 'fc', accumulates=False, stacks_accumulated=True)
 
+    def test_clear_io_dict_empties_module_entries_and_keeps_hooks(self):
+        device = torch.device('cpu')
+        fhm = ForwardHookManager(device)
+        model = models.resnet18(weights=None)
+        target_module_path = 'fc'
+        fhm.add_hook(model, target_module_path, requires_input=False, requires_output=True)
+        model(torch.rand(1, 3, 224, 224))
+        assert len(fhm.io_dict[target_module_path]['output']) > 0
+        fhm.clear_io_dict()
+        # Each module path is left with an empty dict rather than empty I/O type entries
+        assert fhm.io_dict[target_module_path] == dict()
+        assert len(fhm.hook_list) == 1
+        # The hooks are still registered, so the next forward pass repopulates the I/O dict
+        y = model(torch.rand(1, 3, 224, 224))
+        assert torch.equal(fhm.pop_io_dict()[target_module_path]['output'], y)
+
+    def test_pop_io_dict_after_clear_io_dict(self):
+        device = torch.device('cpu')
+        fhm = ForwardHookManager(device)
+        model = models.resnet18(weights=None)
+        fhm.add_hook(model, 'fc', requires_input=False, requires_output=True)
+        model(torch.rand(1, 3, 224, 224))
+        fhm.clear_io_dict()
+        # Popping without an intervening forward pass yields an empty entry instead of raising
+        assert fhm.pop_io_dict() == {'fc': dict()}
+
+    def test_change_target_device_updates_uses_cuda(self):
+        fhm = ForwardHookManager(torch.device('cpu'))
+        assert not fhm.uses_cuda
+        fhm.change_target_device(torch.device('cuda:0'))
+        assert fhm.target_device == torch.device('cuda:0')
+        assert fhm.uses_cuda
+        fhm.change_target_device('cpu')
+        assert fhm.target_device == torch.device('cpu')
+        assert not fhm.uses_cuda
+
+    def test_change_target_device_clears_io_dict_across_device_types(self):
+        device = torch.device('cpu')
+        fhm = ForwardHookManager(device)
+        model = models.resnet18(weights=None)
+        fhm.add_hook(model, 'fc', requires_input=False, requires_output=True)
+        model(torch.rand(1, 3, 224, 224))
+        fhm.change_target_device(torch.device('cuda:0'))
+        assert fhm.io_dict['fc'] == dict()
+        assert len(fhm.hook_list) == 1
+
+    def test_change_target_device_keeps_io_dict_within_same_device_type(self):
+        device = torch.device('cpu')
+        fhm = ForwardHookManager(device)
+        model = models.resnet18(weights=None)
+        fhm.add_hook(model, 'fc', requires_input=False, requires_output=True)
+        y = model(torch.rand(1, 3, 224, 224))
+        fhm.change_target_device('cpu')
+        assert torch.equal(fhm.pop_io_dict()['fc']['output'], y)
+
     def test_clear_with_accumulates(self):
         device = torch.device('cpu')
         fhm = ForwardHookManager(device)
@@ -545,4 +600,160 @@ class ForwardHookAlternativePathUnitTest(TestCase):
         assert not io_dict['teacher'][SELF_MODULE_PATH]['output'].requires_grad
         assert io_dict['student']['layer2']['output'].requires_grad
         assert io_dict['student'][SELF_MODULE_PATH]['output'].requires_grad
+        distillation_box.clean_modules()
+
+
+class ToyAutoregressiveNet(nn.Module):
+    """Model that calls the same block once per generated step, as in autoregressive generation."""
+    def __init__(self, num_steps=4):
+        super().__init__()
+        self.num_steps = num_steps
+        self.embed = nn.Linear(8, 6)
+        self.block = nn.Linear(6, 6)
+        self.head = nn.Linear(6, 5)
+
+    def forward(self, x):
+        hidden = self.embed(x)
+        step_outputs = list()
+        for _ in range(self.num_steps):
+            hidden = self.block(hidden)
+            step_outputs.append(self.head(hidden))
+        return torch.stack(step_outputs, dim=1)
+
+    def step_hidden_states(self, x):
+        """Recomputes the per-step outputs of `block` without relying on any hook."""
+        hidden = self.embed(x)
+        hidden_states = list()
+        for _ in range(self.num_steps):
+            hidden = self.block(hidden)
+            hidden_states.append(hidden)
+        return hidden_states
+
+
+class AccumulatingForwardHookUnitTest(TestCase):
+    @staticmethod
+    def build_training_box(model, forward_hook_config):
+        train_config = build_train_config(
+            model_config={'forward_hook': forward_hook_config, 'forward_proc': 'forward_batch_only'}
+        )
+        return get_training_box(model, dict(), train_config, torch.device('cpu'), None, False, 1.0)
+
+    def test_accumulates_per_step_outputs_as_list(self):
+        model = ToyAutoregressiveNet()
+        model.eval()
+        training_box = self.build_training_box(model, {'output': ['block'], 'accumulates': ['block']})
+        x = torch.rand(3, 8)
+        training_box.forward_process(x, targets=torch.rand(3, 4, 5))
+        hooked_outputs = training_box.criterion.captured_io_dict['student']['block']['output']
+        expected_hidden_states = model.step_hidden_states(x)
+        assert isinstance(hooked_outputs, list)
+        assert len(hooked_outputs) == model.num_steps
+        for expected, actual in zip(expected_hidden_states, hooked_outputs):
+            assert torch.equal(expected, actual)
+        training_box.clean_modules()
+
+    def test_stacks_accumulated_per_step_outputs(self):
+        model = ToyAutoregressiveNet()
+        model.eval()
+        training_box = self.build_training_box(
+            model, {'output': ['block'], 'accumulates': ['block'], 'stacks_accumulated': ['block']}
+        )
+        x = torch.rand(3, 8)
+        training_box.forward_process(x, targets=torch.rand(3, 4, 5))
+        hooked_outputs = training_box.criterion.captured_io_dict['student']['block']['output']
+        expected_hidden_states = model.step_hidden_states(x)
+        assert isinstance(hooked_outputs, torch.Tensor)
+        assert hooked_outputs.shape == (model.num_steps, 3, 6)
+        for i, expected in enumerate(expected_hidden_states):
+            assert torch.equal(expected, hooked_outputs[i])
+        training_box.clean_modules()
+
+    def test_accumulates_true_applies_to_all_target_modules(self):
+        model = ToyAutoregressiveNet()
+        model.eval()
+        training_box = self.build_training_box(
+            model, {'input': ['head'], 'output': ['block', 'head'], 'accumulates': True}
+        )
+        x = torch.rand(3, 8)
+        training_box.forward_process(x, targets=torch.rand(3, 4, 5))
+        student_io_dict = training_box.criterion.captured_io_dict['student']
+        expected_hidden_states = model.step_hidden_states(x)
+        assert len(student_io_dict['block']['output']) == model.num_steps
+        assert len(student_io_dict['head']['output']) == model.num_steps
+        # Input of `head` at each step is the output of `block` at the same step
+        for expected, actual in zip(expected_hidden_states, student_io_dict['head']['input']):
+            assert torch.equal(expected, actual)
+        training_box.clean_modules()
+
+    def test_without_accumulates_only_last_step_is_kept(self):
+        model = ToyAutoregressiveNet()
+        model.eval()
+        training_box = self.build_training_box(model, {'output': ['block']})
+        x = torch.rand(3, 8)
+        training_box.forward_process(x, targets=torch.rand(3, 4, 5))
+        hooked_output = training_box.criterion.captured_io_dict['student']['block']['output']
+        assert isinstance(hooked_output, torch.Tensor)
+        assert torch.equal(hooked_output, model.step_hidden_states(x)[-1])
+        training_box.clean_modules()
+
+    def test_accumulated_outputs_do_not_leak_across_forward_processes(self):
+        model = ToyAutoregressiveNet()
+        model.eval()
+        training_box = self.build_training_box(model, {'output': ['block'], 'accumulates': ['block']})
+        training_box.forward_process(torch.rand(3, 8), targets=torch.rand(3, 4, 5))
+        x2 = torch.rand(3, 8)
+        training_box.forward_process(x2, targets=torch.rand(3, 4, 5))
+        hooked_outputs = training_box.criterion.captured_io_dict['student']['block']['output']
+        assert len(hooked_outputs) == model.num_steps
+        for expected, actual in zip(model.step_hidden_states(x2), hooked_outputs):
+            assert torch.equal(expected, actual)
+        training_box.clean_modules()
+
+    def test_accumulates_with_unhooked_module_path_raises(self):
+        model = ToyAutoregressiveNet()
+        model.eval()
+        with self.assertRaises(ValueError):
+            self.build_training_box(model, {'output': ['block'], 'accumulates': ['embed']})
+
+    def test_stacks_accumulated_without_accumulates_raises(self):
+        model = ToyAutoregressiveNet()
+        model.eval()
+        with self.assertRaises(ValueError):
+            self.build_training_box(model, {'output': ['block'], 'stacks_accumulated': ['block']})
+
+    def test_distillation_box_accumulates_teacher_and_student_per_step_outputs(self):
+        teacher_model = ToyAutoregressiveNet()
+        student_model = ToyAutoregressiveNet()
+        teacher_model.eval()
+        student_model.eval()
+        train_config = build_train_config(
+            teacher_model_config={
+                'forward_hook': {'output': ['block'], 'accumulates': True, 'stacks_accumulated': True},
+                'forward_proc': 'forward_batch_only',
+                'requires_grad': False
+            },
+            student_model_config={
+                'forward_hook': {'output': ['block'], 'accumulates': ['block']},
+                'forward_proc': 'forward_batch_only'
+            }
+        )
+        distillation_box = get_distillation_box(
+            teacher_model, student_model, dict(), train_config, torch.device('cpu'), None, False, 1.0
+        )
+        x = torch.rand(3, 8)
+        distillation_box.forward_process(x, targets=torch.rand(3, 4, 5))
+        io_dict = distillation_box.criterion.captured_io_dict
+        teacher_outputs = io_dict['teacher']['block']['output']
+        student_outputs = io_dict['student']['block']['output']
+        # The teacher stacks its accumulated steps while the student keeps them as a list
+        assert isinstance(teacher_outputs, torch.Tensor)
+        assert teacher_outputs.shape == (teacher_model.num_steps, 3, 6)
+        assert isinstance(student_outputs, list)
+        assert len(student_outputs) == student_model.num_steps
+        for i, expected in enumerate(teacher_model.step_hidden_states(x)):
+            assert torch.equal(expected, teacher_outputs[i])
+        for expected, actual in zip(student_model.step_hidden_states(x), student_outputs):
+            assert torch.equal(expected, actual)
+        assert not teacher_outputs.requires_grad
+        assert student_outputs[0].requires_grad
         distillation_box.clean_modules()
