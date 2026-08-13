@@ -160,7 +160,12 @@ class IoDictCaptureLoss(nn.Module):
     def forward(self, io_dict, model_loss_dict, targets):
         self.captured_io_dict = io_dict
         self.captured_model_loss_dict = model_loss_dict
-        return sum(loss.mean() for loss in model_loss_dict.values())
+        # `extract_model_loss_dict` returns an empty dict unless the model output is a dict,
+        # so always return a tensor rather than the int 0 that sum() would give for no terms
+        sub_losses = [loss.mean() for loss in model_loss_dict.values()]
+        if len(sub_losses) == 0:
+            return torch.zeros((), requires_grad=True)
+        return torch.stack(sub_losses).sum()
 
 
 def build_train_config(model_config=None, teacher_model_config=None, student_model_config=None):
