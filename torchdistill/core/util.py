@@ -1,3 +1,4 @@
+import warnings
 from collections import abc
 
 import torch
@@ -10,7 +11,7 @@ from torch.nn.parallel.scatter_gather import gather
 from ..common.constant import def_logger
 from ..common.module_util import get_module, check_if_wrapped
 from ..common.constant import SELF_MODULE_PATH
-from ..core.forward_hook import register_forward_hook_with_dict
+from ..core.forward_hook import clear_io_dict_values
 
 logger = def_logger.getChild(__name__)
 
@@ -19,6 +20,10 @@ def add_kwargs_to_io_dict(io_dict, module_path, **kwargs):
     """
     Adds kwargs to an I/O dict.
 
+    .. deprecated:: 1.2.0
+        Forward hooks initialize their own entries in an I/O dict, and this function is no longer used
+        internally. It will be removed in a future release.
+
     :param io_dict: I/O dict.
     :type io_dict: dict
     :param module_path: module path.
@@ -26,6 +31,10 @@ def add_kwargs_to_io_dict(io_dict, module_path, **kwargs):
     :param kwargs: kwargs to be stored in ``io_dict``.
     :type kwargs: dict
     """
+    warnings.warn(
+        '`add_kwargs_to_io_dict` is deprecated and will be removed in a future release',
+        DeprecationWarning, stacklevel=2
+    )
     io_dict[module_path] = kwargs
 
 
@@ -118,8 +127,10 @@ def set_hooks(model, unwrapped_org_model, model_config, forward_hook_manager):
     return pair_list
 
 
-def wrap_model(model, model_config, device, device_ids=None, distributed=False,
-               find_unused_parameters=False, any_updatable=True):
+def wrap_model(
+        model, model_config, device, device_ids=None, distributed=False,
+        find_unused_parameters=False, any_updatable=True
+):
     """
     Wraps ``model`` with DataParallel, DistributedDataParallel, FullyShardedDataParallel (FSDP), or
     FSDP2 (``fully_shard``) if specified.
@@ -185,25 +196,29 @@ def clear_io_dict(model_io_dict):
     Clears a model I/O dict's sub dict(s).
 
     Each module path is left with an empty dict, and the forward hooks repopulate the I/O type entries
-    at the next forward pass. This matches
-    :meth:`torchdistill.core.forward_hook.ForwardHookManager.clear_io_dict`.
+    at the next forward pass.
+
+    .. note::
+        If you hold a :class:`torchdistill.core.forward_hook.ForwardHookManager`, prefer its
+        :meth:`~torchdistill.core.forward_hook.ForwardHookManager.clear_io_dict` method. Both share
+        :func:`torchdistill.core.forward_hook.clear_io_dict_values` as their implementation.
 
     :param model_io_dict: model I/O dict.
     :type model_io_dict: dict
     """
-    for module_io_dict in model_io_dict.values():
-        module_io_dict.clear()
+    clear_io_dict_values(model_io_dict)
 
 
 def extract_io_dict(model_io_dict, target_device):
     """
     Extracts I/O dict, gathering tensors on ``target_device``.
 
-    .. note::
-        :class:`torchdistill.core.training.TrainingBox` and :class:`torchdistill.core.distillation.DistillationBox`
-        use :meth:`torchdistill.core.forward_hook.ForwardHookManager.pop_io_dict` instead of this function.
-        Unlike :meth:`~torchdistill.core.forward_hook.ForwardHookManager.pop_io_dict`, this function does not
-        support accumulated I/O and always adds a :obj:`torchdistill.common.constant.SELF_MODULE_PATH` entry.
+    .. deprecated:: 1.2.0
+        Use :meth:`torchdistill.core.forward_hook.ForwardHookManager.pop_io_dict` instead, which additionally
+        supports accumulated I/O. Unlike :meth:`~torchdistill.core.forward_hook.ForwardHookManager.pop_io_dict`,
+        this function always adds a :obj:`torchdistill.common.constant.SELF_MODULE_PATH` entry, so replace
+        ``io_dict[SELF_MODULE_PATH]['output'] = outputs`` with ``io_dict[SELF_MODULE_PATH] = {'output': outputs}``
+        when migrating. This function will be removed in a future release.
 
     :param model_io_dict: model I/O dict.
     :type model_io_dict: dict
@@ -212,6 +227,11 @@ def extract_io_dict(model_io_dict, target_device):
     :return: extracted I/O dict.
     :rtype: dict
     """
+    warnings.warn(
+        '`extract_io_dict` is deprecated and will be removed in a future release; '
+        'use `ForwardHookManager.pop_io_dict` instead',
+        DeprecationWarning, stacklevel=2
+    )
     uses_cuda = target_device.type == 'cuda'
     gathered_io_dict = {SELF_MODULE_PATH: dict()}
     for module_path, module_io_dict in model_io_dict.items():

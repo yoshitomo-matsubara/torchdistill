@@ -36,6 +36,21 @@ def get_device_index(data):
     return None
 
 
+def clear_io_dict_values(io_dict):
+    """
+    Clears the values stored in an I/O dict, leaving an empty dict for each module path.
+
+    Forward hooks repopulate the I/O type entries at the next forward pass, so this does not affect
+    the registered forward hooks. This is the shared implementation behind
+    :meth:`ForwardHookManager.clear_io_dict` and :func:`torchdistill.core.util.clear_io_dict`.
+
+    :param io_dict: I/O dict whose stored values should be cleared.
+    :type io_dict: dict
+    """
+    for module_io_dict in io_dict.values():
+        module_io_dict.clear()
+
+
 def register_forward_hook_with_dict(
         root_module, module_path, requires_input, requires_output, io_dict, accumulates=False
 ):
@@ -302,8 +317,7 @@ class ForwardHookManager(object):
         at the next forward pass. Use :meth:`clear` instead if the registered forward hooks should be
         unregistered as well.
         """
-        for module_io_dict in self.io_dict.values():
-            module_io_dict.clear()
+        clear_io_dict_values(self.io_dict)
 
     def clear(self):
         """
