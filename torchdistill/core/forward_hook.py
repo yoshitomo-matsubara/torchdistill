@@ -169,18 +169,55 @@ class ForwardHookManager(object):
         :type stacks_accumulated: bool
         :raises ValueError: if ``stacks_accumulated=True`` but ``accumulates=False``.
         """
-        if stacks_accumulated and not accumulates:
-            raise ValueError('stacks_accumulated=True requires accumulates=True')
         unwrapped_module = root_module.module if check_if_wrapped(root_module) else root_module
         sub_module = get_module(unwrapped_module, module_path)
-        handle = register_forward_hook_with_dict(
-            sub_module, module_path, requires_input, requires_output, self.io_dict, accumulates
+        return self.add_hook_to_module(
+            sub_module, module_path, requires_input, requires_output, accumulates, stacks_accumulated
         )
-        self.hook_list.append((module_path, handle))
+
+    def add_hook_to_module(
+            self, target_module, module_path, requires_input=True, requires_output=True, accumulates=False,
+            stacks_accumulated=False
+    ):
+        """
+        Registers a forward hook for an already resolved target module.
+
+        Use this instead of :meth:`add_hook` when the target module cannot be reached by a module path from
+        a single root module e.g., when the module was added to a redesigned model and thus should be looked up
+        in a different module tree than the other target modules.
+
+        :param target_module: target module to be hooked.
+        :type target_module: nn.Module
+        :param module_path: module path used as a key of the I/O dict.
+        :type module_path: str
+        :param requires_input: if True, stores input to the target module.
+        :type requires_input: bool
+        :param requires_output: if True, stores output from the target module.
+        :type requires_output: bool
+        :param accumulates: if True, appends input/output across forward passes instead of overwriting.
+            Useful for autoregressive generation where the same module is called multiple times.
+        :type accumulates: bool
+        :param stacks_accumulated: if True, stacks the accumulated per-step tensors into a single
+            ``torch.Tensor`` via ``torch.stack`` when :meth:`pop_io_dict` is called. Requires
+            ``accumulates=True`` and that all per-step tensors have the same shape.
+        :type stacks_accumulated: bool
+        :raises ValueError: if ``stacks_accumulated=True`` but ``accumulates=False``.
+        :return: pair of module path and removable forward hook handle.
+        :rtype: (str, torch.utils.hook.RemovableHandle)
+        """
+        if stacks_accumulated and not accumulates:
+            raise ValueError('stacks_accumulated=True requires accumulates=True')
+
+        handle = register_forward_hook_with_dict(
+            target_module, module_path, requires_input, requires_output, self.io_dict, accumulates
+        )
+        pair = (module_path, handle)
+        self.hook_list.append(pair)
         if accumulates:
             self._accumulating_module_paths.add(module_path)
         if stacks_accumulated:
             self._stacking_module_paths.add(module_path)
+        return pair
 
     def pop_io_dict(self):
         """
@@ -203,6 +240,9 @@ class ForwardHookManager(object):
             is_stacking = module_path in self._stacking_module_paths
             for io_type in list(module_io_dict.keys()):
                 sub_dict = module_io_dict.pop(io_type)
+                if len(sub_dict) == 0:
+                    # The target module was not called since the last pop / clear
+                    continue
                 if is_accumulating:
                     # sub_dict[device_index] is a list of per-step tensors
                     per_device_steps = [sub_dict[key] for key in sorted(sub_dict.keys())]
@@ -250,9 +290,20 @@ class ForwardHookManager(object):
         """
         target_device = torch.device(target_device) if isinstance(target_device, str) else target_device
         if self.target_device.type != target_device.type:
-            for sub_dict in self.io_dict.values():
-                sub_dict.clear()
+            self.clear_io_dict()
         self.target_device = target_device
+        self.uses_cuda = self.target_device.type == 'cuda'
+
+    def clear_io_dict(self):
+        """
+        Clears the values stored in the I/O dict, keeping the registered forward hooks.
+
+        Each module path is left with an empty dict, and the forward hooks repopulate the I/O type entries
+        at the next forward pass. Use :meth:`clear` instead if the registered forward hooks should be
+        unregistered as well.
+        """
+        for module_io_dict in self.io_dict.values():
+            module_io_dict.clear()
 
     def clear(self):
         """

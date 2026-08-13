@@ -1,13 +1,14 @@
 import torch
 from torch import nn
 
+from .forward_hook import ForwardHookManager
 from .interfaces.post_epoch_proc import default_post_epoch_process_with_teacher
 from .interfaces.post_forward_proc import default_post_forward_process
 from .interfaces.pre_epoch_proc import default_pre_epoch_process_with_teacher
 from .interfaces.pre_forward_proc import default_pre_forward_process
 from .interfaces.registry import get_pre_epoch_proc_func, get_pre_forward_proc_func, get_forward_proc_func, \
     get_post_forward_proc_func, get_post_epoch_proc_func
-from .util import set_hooks, wrap_model, extract_io_dict, update_io_dict
+from .util import set_hooks, wrap_model, update_io_dict
 from ..common.constant import SELF_MODULE_PATH, def_logger
 from ..common.file_util import make_parent_dirs
 from ..common.main_util import load_ckpt, save_on_master
@@ -82,8 +83,8 @@ class DistillationBox(object):
             else self.org_teacher_model
         unwrapped_org_student_model = self.org_student_model.module if check_if_wrapped(self.org_student_model) \
             else self.org_student_model
-        self.target_teacher_pairs.clear()
-        self.target_student_pairs.clear()
+        self.teacher_forward_hook_manager.clear()
+        self.student_forward_hook_manager.clear()
         teacher_ref_model = unwrapped_org_teacher_model
         student_ref_model = unwrapped_org_student_model
         if len(teacher_config) > 0 or (len(teacher_config) == 0 and self.teacher_model is None):
@@ -122,12 +123,8 @@ class DistillationBox(object):
             len(teacher_config.get('frozen_modules', list())) > 0 or not teacher_config.get('requires_grad', True)
         self.student_any_frozen = \
             len(student_config.get('frozen_modules', list())) > 0 or not student_config.get('requires_grad', True)
-        self.target_teacher_pairs.extend(
-            set_hooks(self.teacher_model, teacher_ref_model, teacher_config, self.teacher_io_dict)
-        )
-        self.target_student_pairs.extend(
-            set_hooks(self.student_model, student_ref_model, student_config, self.student_io_dict)
-        )
+        set_hooks(self.teacher_model, teacher_ref_model, teacher_config, self.teacher_forward_hook_manager)
+        set_hooks(self.student_model, student_ref_model, student_config, self.student_forward_hook_manager)
         self.teacher_forward_proc = get_forward_proc_func(teacher_config.get('forward_proc', None))
         self.student_forward_proc = get_forward_proc_func(student_config.get('forward_proc', None))
 
@@ -300,8 +297,8 @@ class DistillationBox(object):
         self.teacher_model = None
         self.student_model = None
         self.teacher_forward_proc, self.student_forward_proc = None, None
-        self.target_teacher_pairs, self.target_student_pairs = list(), list()
-        self.teacher_io_dict, self.student_io_dict = dict(), dict()
+        self.teacher_forward_hook_manager = ForwardHookManager(device)
+        self.student_forward_hook_manager = ForwardHookManager(device)
         self.train_data_loader, self.val_data_loader, self.optimizer, self.lr_scheduler = None, None, None, None
         self.criterion, self.extract_model_loss = None, None
         self.teacher_updatable, self.teacher_any_frozen, self.student_any_frozen = None, None, None
@@ -311,6 +308,46 @@ class DistillationBox(object):
         self.stage_grad_count = 0
         self.setup(train_config)
         self.num_epochs = train_config['num_epochs']
+
+    @property
+    def teacher_io_dict(self):
+        """
+        I/O dict of the teacher model, populated by the forward hooks registered with ``forward_hook`` configuration.
+
+        :return: teacher model I/O dict.
+        :rtype: dict
+        """
+        return self.teacher_forward_hook_manager.io_dict
+
+    @property
+    def student_io_dict(self):
+        """
+        I/O dict of the student model, populated by the forward hooks registered with ``forward_hook`` configuration.
+
+        :return: student model I/O dict.
+        :rtype: dict
+        """
+        return self.student_forward_hook_manager.io_dict
+
+    @property
+    def target_teacher_pairs(self):
+        """
+        Pairs of module path and removable forward hook handle registered for the teacher model.
+
+        :return: list of pairs of module path and removable forward hook handle.
+        :rtype: list[(str, torch.utils.hook.RemovableHandle)]
+        """
+        return self.teacher_forward_hook_manager.hook_list
+
+    @property
+    def target_student_pairs(self):
+        """
+        Pairs of module path and removable forward hook handle registered for the student model.
+
+        :return: list of pairs of module path and removable forward hook handle.
+        :rtype: list[(str, torch.utils.hook.RemovableHandle)]
+        """
+        return self.student_forward_hook_manager.hook_list
 
     def pre_epoch_process(self, *args, **kwargs):
         """
@@ -354,12 +391,12 @@ class DistillationBox(object):
                     self.teacher_model, sample_batch, targets, supp_dict, **kwargs
                 )
 
-        extracted_teacher_io_dict = extract_io_dict(self.teacher_io_dict, self.device)
-        extracted_teacher_io_dict[SELF_MODULE_PATH]['output'] = teacher_outputs
+        extracted_teacher_io_dict = self.teacher_forward_hook_manager.pop_io_dict()
+        extracted_teacher_io_dict[SELF_MODULE_PATH] = {'output': teacher_outputs}
         if isinstance(self.teacher_model, AuxiliaryModelWrapper):
             self.teacher_model.secondary_forward(extracted_teacher_io_dict)
 
-        update_io_dict(extracted_teacher_io_dict, extract_io_dict(self.teacher_io_dict, self.device))
+        update_io_dict(extracted_teacher_io_dict, self.teacher_forward_hook_manager.pop_io_dict())
         return teacher_outputs, extracted_teacher_io_dict
 
     def forward_process(self, sample_batch, targets=None, supp_dict=None, **kwargs):
@@ -379,13 +416,13 @@ class DistillationBox(object):
             sample_batch=sample_batch, targets=targets, supp_dict=supp_dict, **kwargs
         )
         student_outputs = self.student_forward_proc(self.student_model, sample_batch, targets, supp_dict, **kwargs)
-        extracted_student_io_dict = extract_io_dict(self.student_io_dict, self.device)
-        extracted_student_io_dict[SELF_MODULE_PATH]['output'] = student_outputs
+        extracted_student_io_dict = self.student_forward_hook_manager.pop_io_dict()
+        extracted_student_io_dict[SELF_MODULE_PATH] = {'output': student_outputs}
         if isinstance(self.student_model, AuxiliaryModelWrapper):
             self.student_model.secondary_forward(extracted_student_io_dict)
 
         model_loss_dict = self.extract_model_loss(student_outputs, targets, supp_dict=supp_dict)
-        update_io_dict(extracted_student_io_dict, extract_io_dict(self.student_io_dict, self.device))
+        update_io_dict(extracted_student_io_dict, self.student_forward_hook_manager.pop_io_dict())
         io_dict = {'teacher': extracted_teacher_io_dict, 'student': extracted_student_io_dict}
         total_loss = self.criterion(io_dict, model_loss_dict, targets)
         return total_loss
@@ -413,13 +450,8 @@ class DistillationBox(object):
         """
         unfreeze_module_params(self.org_teacher_model)
         unfreeze_module_params(self.org_student_model)
-        self.teacher_io_dict.clear()
-        self.student_io_dict.clear()
-        for _, module_handle in self.target_teacher_pairs + self.target_student_pairs:
-            module_handle.remove()
-
-        self.target_teacher_pairs.clear()
-        self.target_student_pairs.clear()
+        self.teacher_forward_hook_manager.clear()
+        self.student_forward_hook_manager.clear()
 
 
 class MultiStagesDistillationBox(DistillationBox):
