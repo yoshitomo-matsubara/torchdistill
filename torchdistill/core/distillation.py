@@ -6,8 +6,8 @@ from .interfaces.post_epoch_proc import default_post_epoch_process_with_teacher
 from .interfaces.post_forward_proc import default_post_forward_process
 from .interfaces.pre_epoch_proc import default_pre_epoch_process_with_teacher
 from .interfaces.pre_forward_proc import default_pre_forward_process
-from .interfaces.registry import get_pre_epoch_proc_func, get_pre_forward_proc_func, get_forward_proc_func, \
-    get_post_forward_proc_func, get_post_epoch_proc_func
+from .interfaces.registry import build_proc_func, get_pre_epoch_proc_func, get_pre_forward_proc_func, \
+    get_forward_proc_func, get_post_forward_proc_func, get_post_epoch_proc_func
 from .util import set_hooks, wrap_model, update_io_dict
 from ..common.constant import SELF_MODULE_PATH, def_logger
 from ..common.file_util import make_parent_dirs
@@ -153,20 +153,20 @@ class DistillationBox(object):
         """
         pre_epoch_process = default_pre_epoch_process_with_teacher
         if 'pre_epoch_process' in train_config:
-            pre_epoch_process = get_pre_epoch_proc_func(train_config['pre_epoch_process'])
+            pre_epoch_process = build_proc_func(train_config['pre_epoch_process'], get_pre_epoch_proc_func)
         setattr(DistillationBox, 'pre_epoch_process', pre_epoch_process)
         pre_forward_process = default_pre_forward_process
         if 'pre_forward_process' in train_config:
-            pre_forward_process = get_pre_forward_proc_func(train_config['pre_forward_process'])
+            pre_forward_process = build_proc_func(train_config['pre_forward_process'], get_pre_forward_proc_func)
         setattr(DistillationBox, 'pre_forward_process', pre_forward_process)
         post_forward_process = default_post_forward_process
         if 'post_forward_process' in train_config:
-            post_forward_process = get_post_forward_proc_func(train_config['post_forward_process'])
+            post_forward_process = build_proc_func(train_config['post_forward_process'], get_post_forward_proc_func)
 
         setattr(DistillationBox, 'post_forward_process', post_forward_process)
         post_epoch_process = default_post_epoch_process_with_teacher
         if 'post_epoch_process' in train_config:
-            post_epoch_process = get_post_epoch_proc_func(train_config['post_epoch_process'])
+            post_epoch_process = build_proc_func(train_config['post_epoch_process'], get_post_epoch_proc_func)
         setattr(DistillationBox, 'post_epoch_process', post_epoch_process)
 
     def setup(self, train_config):

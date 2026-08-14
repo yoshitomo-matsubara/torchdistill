@@ -1,3 +1,5 @@
+from functools import wraps
+
 PRE_EPOCH_PROC_FUNC_DICT = dict()
 PRE_FORWARD_PROC_FUNC_DICT = dict()
 FORWARD_PROC_FUNC_DICT = dict()
@@ -278,3 +280,32 @@ def get_post_epoch_proc_func(key):
     if key in POST_EPOCH_PROC_FUNC_DICT:
         return POST_EPOCH_PROC_FUNC_DICT[key]
     raise ValueError('No post-epoch process function `{}` registered'.format(key))
+
+
+def build_proc_func(proc_config, get_registered_proc_func):
+    """
+    Builds a process function from a process configuration.
+
+    The configuration is either a unique key (str) of a registered process function, or a dict with ``key``
+    and optional ``kwargs``. The ``kwargs`` are used as default keyword arguments of the process function,
+    and keyword arguments given at call time take precedence over them.
+
+    :param proc_config: process configuration.
+    :type proc_config: str or dict
+    :param get_registered_proc_func: getter of a registered process function e.g., :func:`get_pre_forward_proc_func`.
+    :type get_registered_proc_func: typing.Callable
+    :return: process function.
+    :rtype: typing.Callable
+    """
+    if not isinstance(proc_config, dict):
+        return get_registered_proc_func(proc_config)
+
+    proc_func = get_registered_proc_func(proc_config['key'])
+    default_kwargs = proc_config.get('kwargs', None)
+    if not default_kwargs:
+        return proc_func
+
+    @wraps(proc_func)
+    def proc_func_with_default_kwargs(self, *args, **kwargs):
+        return proc_func(self, *args, **(default_kwargs | kwargs))
+    return proc_func_with_default_kwargs
