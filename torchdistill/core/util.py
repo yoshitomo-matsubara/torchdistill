@@ -1,3 +1,7 @@
+import warnings
+from collections import abc
+
+import torch
 from torch.distributed._composable.fsdp import fully_shard
 from torch.distributed.fsdp import FullyShardedDataParallel
 from torch.nn import DataParallel
@@ -7,14 +11,43 @@ from torch.nn.parallel.scatter_gather import gather
 from ..common.constant import def_logger
 from ..common.module_util import get_module, check_if_wrapped
 from ..common.constant import SELF_MODULE_PATH
-from ..core.forward_hook import register_forward_hook_with_dict
+from ..core.forward_hook import clear_io_dict_values
 
 logger = def_logger.getChild(__name__)
+
+
+def get_proc_config(train_config, key):
+    """
+    Extracts a pre/post-epoch/forward process configuration, supporting the deprecated key
+    (e.g., ``pre_forward_process`` for ``pre_forward_proc``) for backward compatibility.
+
+    :param train_config: training configuration.
+    :type train_config: dict
+    :param key: process configuration key e.g., ``pre_forward_proc``.
+    :type key: str
+    :return: process configuration if either the key or its deprecated version is available, None otherwise.
+    :rtype: dict or str or None
+    """
+    if key in train_config:
+        return train_config[key]
+
+    deprecated_key = key.replace('_proc', '_process')
+    if deprecated_key in train_config:
+        message = f'`{deprecated_key}` key is deprecated and will be removed in a future release. ' \
+                  f'Use `{key}` instead.'
+        warnings.warn(message, DeprecationWarning)
+        logger.warning(message)
+        return train_config[deprecated_key]
+    return None
 
 
 def add_kwargs_to_io_dict(io_dict, module_path, **kwargs):
     """
     Adds kwargs to an I/O dict.
+
+    .. deprecated:: 1.2.0
+        Forward hooks initialize their own entries in an I/O dict, and this function is no longer used
+        internally. It will be removed in a future release.
 
     :param io_dict: I/O dict.
     :type io_dict: dict
@@ -23,6 +56,10 @@ def add_kwargs_to_io_dict(io_dict, module_path, **kwargs):
     :param kwargs: kwargs to be stored in ``io_dict``.
     :type kwargs: dict
     """
+    warnings.warn(
+        '`add_kwargs_to_io_dict` is deprecated and will be removed in a future release',
+        DeprecationWarning, stacklevel=2
+    )
     io_dict[module_path] = kwargs
 
 
@@ -32,9 +69,48 @@ def _extract_module(org_model, sub_model, module_path):
     return get_module(org_model, module_path)
 
 
-def set_hooks(model, unwrapped_org_model, model_config, io_dict):
+def _resolve_module_path_flag(flag_config, target_module_path_set):
     """
-    Sets forward hooks for target modules in model.
+    Resolves a forward hook flag that is given either as a bool (applied to all the target modules)
+    or as a list of module paths (applied to the listed target modules only).
+
+    :param flag_config: bool or list of module paths.
+    :type flag_config: bool or list[str] or None
+    :param target_module_path_set: set of all the target module paths.
+    :type target_module_path_set: set[str]
+    :return: set of module paths the flag is enabled for.
+    :rtype: set[str]
+    """
+    if flag_config is None or flag_config is False:
+        return set()
+    if flag_config is True:
+        return set(target_module_path_set)
+
+    module_path_set = set(flag_config)
+    unknown_module_path_set = module_path_set - target_module_path_set
+    if len(unknown_module_path_set) > 0:
+        raise ValueError(
+            'module path(s) {} should be listed in `input` and/or `output` of the forward hook configuration'.format(
+                sorted(unknown_module_path_set)
+            )
+        )
+    return module_path_set
+
+
+def set_hooks(model, unwrapped_org_model, model_config, forward_hook_manager):
+    """
+    Sets forward hooks for target modules in model, using ``forward_hook_manager``.
+
+    ``model_config['forward_hook']`` accepts the following keys:
+
+    * ``input``: list of module paths whose input should be stored.
+    * ``output``: list of module paths whose output should be stored.
+    * ``accumulates``: bool (applied to all the target modules) or list of module paths whose input/output
+      should be accumulated across forward passes instead of being overwritten. Useful for autoregressive
+      use cases such as on-policy distillation, where the target modules are called once per generated token.
+    * ``stacks_accumulated``: bool or list of module paths whose accumulated per-step tensors should be
+      stacked into a single tensor by :meth:`torchdistill.core.forward_hook.ForwardHookManager.pop_io_dict`.
+      Requires the same module paths to be accumulated, and that the per-step tensors share the same shape.
 
     :param model: model.
     :type model: nn.Module
@@ -42,8 +118,8 @@ def set_hooks(model, unwrapped_org_model, model_config, io_dict):
     :type unwrapped_org_model: nn.Module
     :param model_config: model configuration.
     :type model_config: dict
-    :param io_dict: I/O dict.
-    :type io_dict: dict
+    :param forward_hook_manager: forward hook manager to register the forward hooks with.
+    :type forward_hook_manager: torchdistill.core.forward_hook.ForwardHookManager
     :return: list of pairs of module path and removable forward hook handle.
     :rtype: list[(str, torch.utils.hook.RemovableHandle)]
     """
@@ -54,19 +130,32 @@ def set_hooks(model, unwrapped_org_model, model_config, io_dict):
 
     input_module_path_set = set(forward_hook_config.get('input', list()))
     output_module_path_set = set(forward_hook_config.get('output', list()))
-    for target_module_path in input_module_path_set.union(output_module_path_set):
-        requires_input = target_module_path in input_module_path_set
-        requires_output = target_module_path in output_module_path_set
-        add_kwargs_to_io_dict(io_dict, target_module_path)
+    target_module_path_set = input_module_path_set.union(output_module_path_set)
+    accumulating_module_path_set = \
+        _resolve_module_path_flag(forward_hook_config.get('accumulates', None), target_module_path_set)
+    stacking_module_path_set = \
+        _resolve_module_path_flag(forward_hook_config.get('stacks_accumulated', None), target_module_path_set)
+    if forward_hook_config.get('stacks_accumulated', None) is True:
+        # `stacks_accumulated: True` should only apply to the accumulated module paths
+        stacking_module_path_set &= accumulating_module_path_set
+
+    for target_module_path in target_module_path_set:
         target_module = _extract_module(unwrapped_org_model, model, target_module_path)
-        handle = register_forward_hook_with_dict(target_module, target_module_path,
-                                                 requires_input, requires_output, io_dict)
-        pair_list.append((target_module_path, handle))
+        pair = forward_hook_manager.add_hook_to_module(
+            target_module, target_module_path,
+            requires_input=target_module_path in input_module_path_set,
+            requires_output=target_module_path in output_module_path_set,
+            accumulates=target_module_path in accumulating_module_path_set,
+            stacks_accumulated=target_module_path in stacking_module_path_set
+        )
+        pair_list.append(pair)
     return pair_list
 
 
-def wrap_model(model, model_config, device, device_ids=None, distributed=False,
-               find_unused_parameters=False, any_updatable=True):
+def wrap_model(
+        model, model_config, device, device_ids=None, distributed=False,
+        find_unused_parameters=False, any_updatable=True
+):
     """
     Wraps ``model`` with DataParallel, DistributedDataParallel, FullyShardedDataParallel (FSDP), or
     FSDP2 (``fully_shard``) if specified.
@@ -131,17 +220,30 @@ def clear_io_dict(model_io_dict):
     """
     Clears a model I/O dict's sub dict(s).
 
+    Each module path is left with an empty dict, and the forward hooks repopulate the I/O type entries
+    at the next forward pass.
+
+    .. note::
+        If you hold a :class:`torchdistill.core.forward_hook.ForwardHookManager`, prefer its
+        :meth:`~torchdistill.core.forward_hook.ForwardHookManager.clear_io_dict` method. Both share
+        :func:`torchdistill.core.forward_hook.clear_io_dict_values` as their implementation.
+
     :param model_io_dict: model I/O dict.
     :type model_io_dict: dict
     """
-    for module_io_dict in model_io_dict.values():
-        for sub_dict in list(module_io_dict.values()):
-            sub_dict.clear()
+    clear_io_dict_values(model_io_dict)
 
 
 def extract_io_dict(model_io_dict, target_device):
     """
     Extracts I/O dict, gathering tensors on ``target_device``.
+
+    .. deprecated:: 1.2.0
+        Use :meth:`torchdistill.core.forward_hook.ForwardHookManager.pop_io_dict` instead, which additionally
+        supports accumulated I/O. Unlike :meth:`~torchdistill.core.forward_hook.ForwardHookManager.pop_io_dict`,
+        this function always adds a :obj:`torchdistill.common.constant.SELF_MODULE_PATH` entry, so replace
+        ``io_dict[SELF_MODULE_PATH]['output'] = outputs`` with ``io_dict[SELF_MODULE_PATH] = {'output': outputs}``
+        when migrating. This function will be removed in a future release.
 
     :param model_io_dict: model I/O dict.
     :type model_io_dict: dict
@@ -150,6 +252,11 @@ def extract_io_dict(model_io_dict, target_device):
     :return: extracted I/O dict.
     :rtype: dict
     """
+    warnings.warn(
+        '`extract_io_dict` is deprecated and will be removed in a future release; '
+        'use `ForwardHookManager.pop_io_dict` instead',
+        DeprecationWarning, stacklevel=2
+    )
     uses_cuda = target_device.type == 'cuda'
     gathered_io_dict = {SELF_MODULE_PATH: dict()}
     for module_path, module_io_dict in model_io_dict.items():
@@ -173,6 +280,8 @@ def update_io_dict(main_io_dict, sub_io_dict):
     """
     for key, module_io_dict in sub_io_dict.items():
         for io_type, value in module_io_dict.items():
-            if len(value) > 0:
+            # Tensors are always treated as stored values as `len` is not defined for 0-dim tensors and
+            # would drop empty batches, while empty containers mean that nothing was stored
+            if isinstance(value, torch.Tensor) or not isinstance(value, abc.Sized) or len(value) > 0:
                 main_io_dict[key][io_type] = value
 

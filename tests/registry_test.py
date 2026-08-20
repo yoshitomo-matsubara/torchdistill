@@ -3,7 +3,7 @@ from unittest import TestCase
 from torchdistill.core.interfaces.registry import register_forward_proc_func, get_forward_proc_func, \
     register_pre_epoch_proc_func, register_pre_forward_proc_func, register_post_forward_proc_func, \
     register_post_epoch_proc_func, get_pre_epoch_proc_func, get_pre_forward_proc_func, get_post_forward_proc_func, \
-    get_post_epoch_proc_func
+    get_post_epoch_proc_func, build_proc_func
 from torchdistill.datasets.registry import register_dataset, register_collate_func, register_sample_loader, \
     register_batch_sampler, register_transform, register_dataset_wrapper, \
     DATASET_DICT, COLLATE_FUNC_DICT, SAMPLE_LOADER_DICT, BATCH_SAMPLER_DICT, \
@@ -415,6 +415,30 @@ class RegistryTest(TestCase):
             pass
 
         assert get_pre_forward_proc_func(random_name) == test_pre_forward_proc_func2
+
+    def test_build_proc_func(self):
+        @register_pre_forward_proc_func(key='test_build_proc_func_target')
+        def test_build_proc_func_target(self, sample_batch=None, generation=None, **kwargs):
+            return sample_batch, generation, kwargs
+
+        # A str config and a dict config without kwargs both give the registered function as is
+        assert build_proc_func('test_build_proc_func_target', get_pre_forward_proc_func) \
+               == test_build_proc_func_target
+        assert build_proc_func({'key': 'test_build_proc_func_target'}, get_pre_forward_proc_func) \
+               == test_build_proc_func_target
+
+        # kwargs in the config are used as default keyword arguments
+        proc_config = {'key': 'test_build_proc_func_target', 'kwargs': {'generation': {'max_new_tokens': 64}}}
+        proc_func = build_proc_func(proc_config, get_pre_forward_proc_func)
+        assert proc_func(None, sample_batch='batch') == ('batch', {'max_new_tokens': 64}, dict())
+
+        # Keyword arguments given at call time take precedence, without polluting the default ones
+        assert proc_func(None, sample_batch='batch', generation={'max_new_tokens': 8}) \
+               == ('batch', {'max_new_tokens': 8}, dict())
+        assert proc_func(None, sample_batch='batch') == ('batch', {'max_new_tokens': 64}, dict())
+
+        with self.assertRaises(ValueError):
+            build_proc_func({'key': 'unregistered_proc_func'}, get_pre_forward_proc_func)
 
     def test_register_post_forward_proc_func(self):
         @register_post_forward_proc_func

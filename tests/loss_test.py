@@ -15,7 +15,7 @@ import torchdistill.losses.high_level  # noqa: registers high-level losses
 import torchdistill.losses.mid_level  # noqa: registers mid-level losses
 import torchdistill.models.wrapper  # noqa: registers auxiliary model wrappers
 from torchdistill.core.forward_hook import ForwardHookManager
-from torchdistill.core.util import extract_io_dict, update_io_dict
+from torchdistill.core.util import update_io_dict
 from torchdistill.losses.registry import get_high_level_loss, get_mid_level_loss
 from torchdistill.models.wrapper import AuxiliaryModelWrapper
 
@@ -99,12 +99,12 @@ def run_forward(model, x, hook_manager):
     """Run forward and secondary_forward (for AuxiliaryModelWrapper), return extracted io_dict."""
     with torch.no_grad():
         output = model(x)
-    extracted = extract_io_dict(hook_manager.io_dict, DEVICE)
-    extracted['.']['output'] = output
+    extracted = hook_manager.pop_io_dict()
+    extracted['.'] = {'output': output}
     if isinstance(model, AuxiliaryModelWrapper):
         with torch.no_grad():
             model.secondary_forward(extracted)
-        update_io_dict(extracted, extract_io_dict(hook_manager.io_dict, DEVICE))
+        update_io_dict(extracted, hook_manager.pop_io_dict())
     return output, extracted
 
 

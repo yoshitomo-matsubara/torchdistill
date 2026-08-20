@@ -1,17 +1,18 @@
 from torch import nn
 
+from .forward_hook import ForwardHookManager
 from .interfaces.post_epoch_proc import default_post_epoch_process_without_teacher
 from .interfaces.post_forward_proc import default_post_forward_process
 from .interfaces.pre_epoch_proc import default_pre_epoch_process_without_teacher
 from .interfaces.pre_forward_proc import default_pre_forward_process
-from .interfaces.registry import get_pre_epoch_proc_func, get_pre_forward_proc_func, get_forward_proc_func, \
-    get_post_forward_proc_func, get_post_epoch_proc_func
-from .util import set_hooks, wrap_model, extract_io_dict, update_io_dict
+from .interfaces.registry import build_proc_func, get_pre_epoch_proc_func, get_pre_forward_proc_func, \
+    get_forward_proc_func, get_post_forward_proc_func, get_post_epoch_proc_func
+from .util import get_proc_config, set_hooks, wrap_model, update_io_dict
 from ..common.constant import SELF_MODULE_PATH, def_logger
 from ..common.file_util import make_parent_dirs
 from ..common.main_util import load_ckpt, save_on_master
-from ..common.module_util import check_if_wrapped, freeze_module_params, get_module, \
-    unfreeze_module_params, get_updatable_param_names
+from ..common.module_util import freeze_module_params, get_full_state_dict, get_module, \
+    unfreeze_module_params, get_updatable_param_names, unwrap_model
 from ..datasets.util import build_data_loaders
 from ..losses.registry import get_high_level_loss, get_func2extract_model_output
 from ..models.util import redesign_model
@@ -74,8 +75,8 @@ class TrainingBox(object):
         :param model_config: model configuration.
         :type model_config: dict
         """
-        unwrapped_org_model = self.org_model.module if check_if_wrapped(self.org_model) else self.org_model
-        self.target_model_pairs.clear()
+        unwrapped_org_model = unwrap_model(self.org_model)
+        self.model_forward_hook_manager.clear()
         ref_model = unwrapped_org_model
         if len(model_config) > 0 or (len(model_config) == 0 and self.model is None):
             logger.info('[student model]')
@@ -95,7 +96,7 @@ class TrainingBox(object):
 
         self.model_any_frozen = \
             len(model_config.get('frozen_modules', list())) > 0 or not model_config.get('requires_grad', True)
-        self.target_model_pairs.extend(set_hooks(self.model, ref_model, model_config, self.model_io_dict))
+        set_hooks(self.model, ref_model, model_config, self.model_forward_hook_manager)
         self.model_forward_proc = get_forward_proc_func(model_config.get('forward_proc', None))
 
     def setup_loss(self, train_config):
@@ -122,21 +123,25 @@ class TrainingBox(object):
         :type train_config: dict
         """
         pre_epoch_process = default_pre_epoch_process_without_teacher
-        if 'pre_epoch_process' in train_config:
-            pre_epoch_process = get_pre_epoch_proc_func(train_config['pre_epoch_process'])
+        pre_epoch_proc_config = get_proc_config(train_config, 'pre_epoch_proc')
+        if pre_epoch_proc_config is not None:
+            pre_epoch_process = build_proc_func(pre_epoch_proc_config, get_pre_epoch_proc_func)
         setattr(TrainingBox, 'pre_epoch_process', pre_epoch_process)
         pre_forward_process = default_pre_forward_process
-        if 'pre_forward_process' in train_config:
-            pre_forward_process = get_pre_forward_proc_func(train_config['pre_forward_process'])
+        pre_forward_proc_config = get_proc_config(train_config, 'pre_forward_proc')
+        if pre_forward_proc_config is not None:
+            pre_forward_process = build_proc_func(pre_forward_proc_config, get_pre_forward_proc_func)
         setattr(TrainingBox, 'pre_forward_process', pre_forward_process)
         post_forward_process = default_post_forward_process
-        if 'post_forward_process' in train_config:
-            post_forward_process = get_post_forward_proc_func(train_config['post_forward_process'])
+        post_forward_proc_config = get_proc_config(train_config, 'post_forward_proc')
+        if post_forward_proc_config is not None:
+            post_forward_process = build_proc_func(post_forward_proc_config, get_post_forward_proc_func)
 
         setattr(TrainingBox, 'post_forward_process', post_forward_process)
         post_epoch_process = default_post_epoch_process_without_teacher
-        if 'post_epoch_process' in train_config:
-            post_epoch_process = get_post_epoch_proc_func(train_config['post_epoch_process'])
+        post_epoch_proc_config = get_proc_config(train_config, 'post_epoch_proc')
+        if post_epoch_proc_config is not None:
+            post_epoch_process = build_proc_func(post_epoch_proc_config, get_post_epoch_proc_func)
         setattr(TrainingBox, 'post_epoch_process', post_epoch_process)
 
     def setup(self, train_config):
@@ -233,8 +238,7 @@ class TrainingBox(object):
         # Local attributes (can be updated at each stage)
         self.model = None
         self.model_forward_proc = None
-        self.target_model_pairs = list()
-        self.model_io_dict = dict()
+        self.model_forward_hook_manager = ForwardHookManager(device)
         self.train_data_loader, self.val_data_loader, self.optimizer, self.lr_scheduler = None, None, None, None
         self.criterion, self.extract_model_loss = None, None
         self.model_any_frozen = None
@@ -244,6 +248,26 @@ class TrainingBox(object):
         self.stage_grad_count = 0
         self.setup(train_config)
         self.num_epochs = train_config['num_epochs']
+
+    @property
+    def model_io_dict(self):
+        """
+        I/O dict of the model, populated by the forward hooks registered with ``forward_hook`` configuration.
+
+        :return: model I/O dict.
+        :rtype: dict
+        """
+        return self.model_forward_hook_manager.io_dict
+
+    @property
+    def target_model_pairs(self):
+        """
+        Pairs of module path and removable forward hook handle registered for the model.
+
+        :return: list of pairs of module path and removable forward hook handle.
+        :rtype: list[(str, torch.utils.hook.RemovableHandle)]
+        """
+        return self.model_forward_hook_manager.hook_list
 
     def pre_epoch_process(self, *args, **kwargs):
         """
@@ -275,13 +299,13 @@ class TrainingBox(object):
         :rtype: torch.Tensor
         """
         model_outputs = self.model_forward_proc(self.model, sample_batch, targets, supp_dict, **kwargs)
-        extracted_model_io_dict = extract_io_dict(self.model_io_dict, self.device)
-        extracted_model_io_dict[SELF_MODULE_PATH]['output'] = model_outputs
+        extracted_model_io_dict = self.model_forward_hook_manager.pop_io_dict()
+        extracted_model_io_dict[SELF_MODULE_PATH] = {'output': model_outputs}
         if isinstance(self.model, AuxiliaryModelWrapper):
             self.model.secondary_forward(extracted_model_io_dict)
 
         model_loss_dict = self.extract_model_loss(model_outputs, targets, supp_dict=supp_dict)
-        update_io_dict(extracted_model_io_dict, extract_io_dict(self.model_io_dict, self.device))
+        update_io_dict(extracted_model_io_dict, self.model_forward_hook_manager.pop_io_dict())
         io_dict = {'student': extracted_model_io_dict, 'teacher': dict()}
         total_loss = self.criterion(io_dict, model_loss_dict, targets)
         return total_loss
@@ -308,10 +332,7 @@ class TrainingBox(object):
         and clears the handle lists.
         """
         unfreeze_module_params(self.org_model)
-        self.model_io_dict.clear()
-        for _, module_handle in self.target_model_pairs:
-            module_handle.remove()
-        self.target_model_pairs.clear()
+        self.model_forward_hook_manager.clear()
 
 
 class MultiStagesTrainingBox(TrainingBox):
@@ -358,7 +379,9 @@ class MultiStagesTrainingBox(TrainingBox):
         """
         dst_ckpt_file_path = local_model_config.get('dst_ckpt', None)
         if dst_ckpt_file_path is not None:
-            model_state_dict = model.module.state_dict() if check_if_wrapped(model) else model.state_dict()
+            # get_full_state_dict() gathers the full parameters FSDP/FSDP2 shard across ranks, which a
+            # plain state_dict() on the local module would miss, so every rank must reach this call
+            model_state_dict = get_full_state_dict(model)
             make_parent_dirs(dst_ckpt_file_path)
             save_on_master(model_state_dict, dst_ckpt_file_path)
 

@@ -24,6 +24,23 @@ def check_if_wrapped(model):
     return isinstance(model, (DataParallel, DistributedDataParallel, FullyShardedDataParallel, FSDPModule))
 
 
+def unwrap_model(model):
+    """
+    Returns the model held by a parallel wrapper, or ``model`` itself if it is not wrapped.
+
+    .. note::
+        DataParallel, DistributedDataParallel, and FullyShardedDataParallel (FSDP) hold the model as
+        ``module``, but FSDP2 (``fully_shard``) is applied in place and gives the model a subclass of its
+        own class instead, so an FSDP2-wrapped model is already the model and is returned as it is.
+
+    :param model: model, optionally wrapped by a parallel wrapper.
+    :type model: nn.Module
+    :return: unwrapped model.
+    :rtype: nn.Module
+    """
+    return getattr(model, 'module', model) if check_if_wrapped(model) else model
+
+
 def check_if_fsdp_wrapped(model):
     """
     Checks if a given model is wrapped by FullyShardedDataParallel (FSDP) or FSDP2 (``fully_shard``).
@@ -56,7 +73,7 @@ def get_full_state_dict(model, cpu_offload=True):
     """
     if check_if_fsdp_wrapped(model):
         return get_model_state_dict(model, options=StateDictOptions(full_state_dict=True, cpu_offload=cpu_offload))
-    return model.module.state_dict() if check_if_wrapped(model) else model.state_dict()
+    return unwrap_model(model).state_dict()
 
 
 def load_full_state_dict(model, state_dict, strict=True):
@@ -79,7 +96,7 @@ def load_full_state_dict(model, state_dict, strict=True):
     if check_if_fsdp_wrapped(model):
         set_model_state_dict(model, state_dict, options=StateDictOptions(full_state_dict=True, strict=strict))
         return
-    target_module = model.module if check_if_wrapped(model) else model
+    target_module = unwrap_model(model)
     target_module.load_state_dict(state_dict, strict=strict)
 
 
