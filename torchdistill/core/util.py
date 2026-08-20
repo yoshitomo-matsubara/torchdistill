@@ -16,6 +16,31 @@ from ..core.forward_hook import clear_io_dict_values
 logger = def_logger.getChild(__name__)
 
 
+def get_proc_config(train_config, key):
+    """
+    Extracts a pre/post-epoch/forward process configuration, supporting the deprecated key
+    (e.g., ``pre_forward_process`` for ``pre_forward_proc``) for backward compatibility.
+
+    :param train_config: training configuration.
+    :type train_config: dict
+    :param key: process configuration key e.g., ``pre_forward_proc``.
+    :type key: str
+    :return: process configuration if either the key or its deprecated version is available, None otherwise.
+    :rtype: dict or str or None
+    """
+    if key in train_config:
+        return train_config[key]
+
+    deprecated_key = key.replace('_proc', '_process')
+    if deprecated_key in train_config:
+        message = f'`{deprecated_key}` key is deprecated and will be removed in a future release. ' \
+                  f'Use `{key}` instead.'
+        warnings.warn(message, DeprecationWarning)
+        logger.warning(message)
+        return train_config[deprecated_key]
+    return None
+
+
 def add_kwargs_to_io_dict(io_dict, module_path, **kwargs):
     """
     Adds kwargs to an I/O dict.

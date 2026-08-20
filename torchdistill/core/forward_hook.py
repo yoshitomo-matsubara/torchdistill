@@ -3,7 +3,7 @@ from collections import abc
 import torch
 from torch.nn.parallel.scatter_gather import gather
 
-from ..common.module_util import check_if_wrapped, get_module
+from ..common.module_util import get_module, unwrap_model
 
 
 def get_device_index(data):
@@ -184,7 +184,7 @@ class ForwardHookManager(object):
         :type stacks_accumulated: bool
         :raises ValueError: if ``stacks_accumulated=True`` but ``accumulates=False``.
         """
-        unwrapped_module = root_module.module if check_if_wrapped(root_module) else root_module
+        unwrapped_module = unwrap_model(root_module)
         sub_module = get_module(unwrapped_module, module_path)
         return self.add_hook_to_module(
             sub_module, module_path, requires_input, requires_output, accumulates, stacks_accumulated

@@ -7,12 +7,12 @@ from .interfaces.pre_epoch_proc import default_pre_epoch_process_without_teacher
 from .interfaces.pre_forward_proc import default_pre_forward_process
 from .interfaces.registry import build_proc_func, get_pre_epoch_proc_func, get_pre_forward_proc_func, \
     get_forward_proc_func, get_post_forward_proc_func, get_post_epoch_proc_func
-from .util import set_hooks, wrap_model, update_io_dict
+from .util import get_proc_config, set_hooks, wrap_model, update_io_dict
 from ..common.constant import SELF_MODULE_PATH, def_logger
 from ..common.file_util import make_parent_dirs
 from ..common.main_util import load_ckpt, save_on_master
-from ..common.module_util import check_if_wrapped, freeze_module_params, get_module, \
-    unfreeze_module_params, get_updatable_param_names
+from ..common.module_util import freeze_module_params, get_full_state_dict, get_module, \
+    unfreeze_module_params, get_updatable_param_names, unwrap_model
 from ..datasets.util import build_data_loaders
 from ..losses.registry import get_high_level_loss, get_func2extract_model_output
 from ..models.util import redesign_model
@@ -75,7 +75,7 @@ class TrainingBox(object):
         :param model_config: model configuration.
         :type model_config: dict
         """
-        unwrapped_org_model = self.org_model.module if check_if_wrapped(self.org_model) else self.org_model
+        unwrapped_org_model = unwrap_model(self.org_model)
         self.model_forward_hook_manager.clear()
         ref_model = unwrapped_org_model
         if len(model_config) > 0 or (len(model_config) == 0 and self.model is None):
@@ -123,21 +123,25 @@ class TrainingBox(object):
         :type train_config: dict
         """
         pre_epoch_process = default_pre_epoch_process_without_teacher
-        if 'pre_epoch_process' in train_config:
-            pre_epoch_process = build_proc_func(train_config['pre_epoch_process'], get_pre_epoch_proc_func)
+        pre_epoch_proc_config = get_proc_config(train_config, 'pre_epoch_proc')
+        if pre_epoch_proc_config is not None:
+            pre_epoch_process = build_proc_func(pre_epoch_proc_config, get_pre_epoch_proc_func)
         setattr(TrainingBox, 'pre_epoch_process', pre_epoch_process)
         pre_forward_process = default_pre_forward_process
-        if 'pre_forward_process' in train_config:
-            pre_forward_process = build_proc_func(train_config['pre_forward_process'], get_pre_forward_proc_func)
+        pre_forward_proc_config = get_proc_config(train_config, 'pre_forward_proc')
+        if pre_forward_proc_config is not None:
+            pre_forward_process = build_proc_func(pre_forward_proc_config, get_pre_forward_proc_func)
         setattr(TrainingBox, 'pre_forward_process', pre_forward_process)
         post_forward_process = default_post_forward_process
-        if 'post_forward_process' in train_config:
-            post_forward_process = build_proc_func(train_config['post_forward_process'], get_post_forward_proc_func)
+        post_forward_proc_config = get_proc_config(train_config, 'post_forward_proc')
+        if post_forward_proc_config is not None:
+            post_forward_process = build_proc_func(post_forward_proc_config, get_post_forward_proc_func)
 
         setattr(TrainingBox, 'post_forward_process', post_forward_process)
         post_epoch_process = default_post_epoch_process_without_teacher
-        if 'post_epoch_process' in train_config:
-            post_epoch_process = build_proc_func(train_config['post_epoch_process'], get_post_epoch_proc_func)
+        post_epoch_proc_config = get_proc_config(train_config, 'post_epoch_proc')
+        if post_epoch_proc_config is not None:
+            post_epoch_process = build_proc_func(post_epoch_proc_config, get_post_epoch_proc_func)
         setattr(TrainingBox, 'post_epoch_process', post_epoch_process)
 
     def setup(self, train_config):
@@ -375,7 +379,9 @@ class MultiStagesTrainingBox(TrainingBox):
         """
         dst_ckpt_file_path = local_model_config.get('dst_ckpt', None)
         if dst_ckpt_file_path is not None:
-            model_state_dict = model.module.state_dict() if check_if_wrapped(model) else model.state_dict()
+            # get_full_state_dict() gathers the full parameters FSDP/FSDP2 shard across ranks, which a
+            # plain state_dict() on the local module would miss, so every rank must reach this call
+            model_state_dict = get_full_state_dict(model)
             make_parent_dirs(dst_ckpt_file_path)
             save_on_master(model_state_dict, dst_ckpt_file_path)
 
