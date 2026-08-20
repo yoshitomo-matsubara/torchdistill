@@ -218,7 +218,7 @@ def main(args):
             device, device_ids, distributed, world_size, config, args, tracker=tracker
         )
 
-    student_model_without_ddp = student_model.module if module_util.check_if_wrapped(student_model) else student_model
+    student_model_without_ddp = module_util.unwrap_model(student_model)
     load_ckpt(dst_ckpt_file_path, model=student_model_without_ddp, strict=True)
     test_config = config['test']
     test_data_loader_config = test_config['test_data_loader']
