@@ -1747,8 +1747,10 @@ class SRDLoss(nn.Module):
 
         student_logits = student_io_dict[self.student_linear_module_path][self.student_linear_module_io]
         teacher_logits = teacher_io_dict[self.teacher_linear_module_path][self.teacher_linear_module_io]
-        kl_loss = self.criterion(torch.log_softmax(student_logits / self.temperature, dim=1),
-                                 torch.softmax(teacher_logits / self.temperature, dim=1))
+        kl_loss = self.criterion(
+            torch.log_softmax(student_logits / self.temperature, dim=1),
+            torch.softmax(teacher_logits / self.temperature, dim=1)
+        )
         loss = 2 * feat_distill_loss + kl_loss
         return loss
 
