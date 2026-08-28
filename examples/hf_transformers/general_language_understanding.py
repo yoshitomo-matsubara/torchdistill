@@ -152,8 +152,10 @@ def load_raw_glue_datasets_and_misc(task_name, train_file_path=None, valid_file_
     return raw_datasets, num_labels, label_names, is_regression
 
 
-def preprocess_glue_datasets(task_name, raw_datasets, num_labels, label_names, is_regression,
-                             pad_to_max_length, max_length, tokenizer, model, base_split_name='train'):
+def preprocess_glue_datasets(
+        task_name, raw_datasets, num_labels, label_names, is_regression, pad_to_max_length, max_length,
+        tokenizer, model, base_split_name='train'
+):
     # Preprocessing the datasets
     if task_name is not None:
         sentence1_key, sentence2_key = GLUE_TASK2KEYS[task_name]
@@ -225,13 +227,15 @@ def get_all_datasets(datasets_config, task_name, student_tokenizer, student_mode
         raw_data_kwargs = dataset_config['raw_data_kwargs']
         base_split_name = dataset_config.get('base_split_name', 'train')
         sub_task_name = dataset_config.get('name', task_name)
-        raw_datasets, num_labels, label_names, is_regression = \
-            load_raw_glue_datasets_and_misc(sub_task_name, base_split_name=base_split_name, **raw_data_kwargs)
+        raw_datasets, num_labels, label_names, is_regression = load_raw_glue_datasets_and_misc(
+            sub_task_name, base_split_name=base_split_name, **raw_data_kwargs
+        )
         pad_to_max_length = dataset_config.get('pad_to_max_length', False)
         max_length = dataset_config.get('max_length', 128)
-        sub_dataset_dict = \
-            preprocess_glue_datasets(sub_task_name, raw_datasets, num_labels, label_names, is_regression,
-                                     pad_to_max_length, max_length, student_tokenizer, student_model, base_split_name)
+        sub_dataset_dict = preprocess_glue_datasets(
+            sub_task_name, raw_datasets, num_labels, label_names, is_regression, pad_to_max_length, max_length,
+            student_tokenizer, student_model, base_split_name
+        )
         for split_name, dataset_id in dataset_config['dataset_id_map'].items():
             dataset_dict[dataset_id] = sub_dataset_dict[split_name]
         label_names_dict[sub_task_name] = label_names
@@ -281,23 +285,28 @@ def evaluate(model, data_loader, metric, is_regression, accelerator, title=None,
     return eval_dict
 
 
-def train(teacher_model, student_model, dataset_dict, is_regression, dst_ckpt_dir_path, metric,
-          device, device_ids, distributed, config, args, accelerator, tracker=None):
+def train(
+        teacher_model, student_model, dataset_dict, is_regression, dst_ckpt_dir_path, metric, device, device_ids, distributed, config,
+        args, accelerator, tracker=None
+):
     logger.info('Start training')
     train_config = config['train']
     lr_factor = args.world_size if distributed and args.adjust_lr else 1
-    training_box = get_training_box(student_model, dataset_dict, train_config,
-                                    device, device_ids, distributed, lr_factor, accelerator) if teacher_model is None \
-        else get_distillation_box(teacher_model, student_model, dataset_dict, train_config,
-                                  device, device_ids, distributed, lr_factor, accelerator)
+    training_box = get_training_box(
+        student_model, dataset_dict, train_config, device, device_ids, distributed, lr_factor, accelerator) \
+        if teacher_model is None else get_distillation_box(
+        teacher_model, student_model, dataset_dict, train_config,
+        device, device_ids, distributed, lr_factor, accelerator
+    )
     # Only show the progress bar once on each machine.
     log_freq = train_config['log_freq']
     best_val_number = 0.0
     for epoch in range(training_box.num_epochs):
         training_box.pre_epoch_process(epoch=epoch)
         train_one_epoch(training_box, epoch, log_freq, tracker=tracker)
-        val_dict = evaluate(student_model, training_box.val_data_loader, metric, is_regression,
-                            accelerator, header='Validation: ')
+        val_dict = evaluate(
+            student_model, training_box.val_data_loader, metric, is_regression, accelerator, header='Validation: '
+        )
         if tracker is not None:
             tracker.log(
                 {'val/' + key: value for key, value in val_dict.items()} | {'epoch': epoch},
@@ -319,8 +328,9 @@ def train(teacher_model, student_model, dataset_dict, is_regression, dst_ckpt_di
 
 
 @torch.inference_mode()
-def predict_private(model, dataset_dict, label_names_dict, is_regression, accelerator,
-                    private_configs, private_output_dir_path):
+def predict_private(
+        model, dataset_dict, label_names_dict, is_regression, accelerator, private_configs, private_output_dir_path
+):
     logger.info('Start prediction for private dataset(s)')
     model.eval()
     for private_config in private_configs:
@@ -396,21 +406,23 @@ def main(args):
     teacher_model_config = models_config.get('teacher_model', None)
     teacher_tokenizer, teacher_model = (None, None) if teacher_model_config is None \
         else load_tokenizer_and_model(teacher_model_config, task_name, True)
-    student_model_config =\
-        models_config['student_model'] if 'student_model' in models_config else models_config['model']
+    student_model_config = models_config['student_model'] if 'student_model' in models_config \
+        else models_config['model']
     student_tokenizer, student_model = load_tokenizer_and_model(student_model_config, task_name, False)
     dst_ckpt_dir_path = student_model_config['dst_ckpt']
     # Get the datasets: you can either provide your own CSV/JSON training and evaluation files (see below)
     # or specify a GLUE benchmark task (the dataset will be downloaded automatically from the datasets Hub).
-    dataset_dict, label_names_dict, is_regression = \
-        get_all_datasets(config['datasets'], task_name, student_tokenizer, student_model)
+    dataset_dict, label_names_dict, is_regression = get_all_datasets(
+        config['datasets'], task_name, student_tokenizer, student_model
+    )
 
     # Update config with dataset size len(data_loader)
     customize_lr_config(config, dataset_dict, world_size)
 
     # register collate function
-    register_collate_func(DataCollatorWithPadding(student_tokenizer,
-                                                  pad_to_multiple_of=(8 if accelerator.use_fp16 else None)))
+    register_collate_func(
+        DataCollatorWithPadding(student_tokenizer, pad_to_multiple_of=(8 if accelerator.use_fp16 else None))
+    )
 
     # Get the metric function
     metric = get_metrics(task_name)
@@ -426,15 +438,18 @@ def main(args):
 
     test_config = config['test']
     test_data_loader_config = test_config['test_data_loader']
-    test_data_loader = util.build_data_loader(dataset_dict[test_data_loader_config['dataset_id']],
-                                              test_data_loader_config, distributed)
+    test_data_loader = util.build_data_loader(
+        dataset_dict[test_data_loader_config['dataset_id']], test_data_loader_config, distributed
+    )
     test_data_loader = accelerator.prepare(test_data_loader)
     cudnn.benchmark = False
     cudnn.deterministic = True
     if not args.student_only and teacher_model is not None:
         teacher_model = teacher_model.to(accelerator.device)
-        evaluate(teacher_model, test_data_loader, metric, is_regression, accelerator,
-                 title='[Teacher: {}]'.format(teacher_model_config['key']))
+        evaluate(
+            teacher_model, test_data_loader, metric, is_regression, accelerator,
+            title='[Teacher: {}]'.format(teacher_model_config['key'])
+        )
 
     # Reload the best checkpoint based on validation result
     student_tokenizer, student_model = load_tokenizer_and_model(student_model_config, task_name, True)
@@ -451,8 +466,10 @@ def main(args):
     private_configs = config.get('private', None)
     private_output_dir_path = args.private_output
     if private_configs is not None and private_output_dir_path is not None and is_main_process():
-        predict_private(student_model, dataset_dict, label_names_dict, is_regression, accelerator,
-                        private_configs, private_output_dir_path)
+        predict_private(
+            student_model, dataset_dict, label_names_dict, is_regression, accelerator,
+            private_configs, private_output_dir_path
+        )
 
 
 if __name__ == '__main__':
