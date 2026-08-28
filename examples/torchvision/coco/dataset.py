@@ -308,12 +308,16 @@ def get_coco(img_dir_path, ann_file_path, transforms, annotated_only, is_segment
 
 
 @register_dataset
-def coco_dataset(img_dir_path, ann_file_path, annotated_only, random_horizontal_flip=None, is_segment=False,
-                 transforms=None, jpeg_quality=None):
+def coco_dataset(
+        img_dir_path, ann_file_path, annotated_only, random_horizontal_flip=None, is_segment=False,
+        transforms=None, jpeg_quality=None
+):
     if transforms is None:
         transform_list = [ImageToTensor(jpeg_quality)]
         if random_horizontal_flip is not None and not is_segment:
             transform_list.append(CocoRandomHorizontalFlip(random_horizontal_flip))
         transforms = Compose(transform_list)
-    return get_coco(img_dir_path=img_dir_path, ann_file_path=ann_file_path,
-                    transforms=transforms, annotated_only=annotated_only, is_segment=is_segment)
+    return get_coco(
+        img_dir_path=img_dir_path, ann_file_path=ann_file_path, transforms=transforms, annotated_only=annotated_only,
+        is_segment=is_segment
+    )

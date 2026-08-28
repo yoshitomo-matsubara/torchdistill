@@ -37,13 +37,17 @@ def get_args():
     parser.add_argument('-test_only', action='store_true', help='only test the models')
     parser.add_argument('-student_only', action='store_true', help='test the student model only')
     parser.add_argument('-log_config', action='store_true', help='log config')
-    parser.add_argument('-disable_tracker', action='store_true',
-                        help='disable experiment tracker (trackio/wandb) even if configured in the yaml file')
+    parser.add_argument(
+        '-disable_tracker', action='store_true',
+        help='disable experiment tracker (trackio/wandb) even if configured in the yaml file'
+    )
     # distributed training parameters
     parser.add_argument('--world_size', default=1, type=int, help='number of distributed processes')
     parser.add_argument('--dist_url', default='env://', help='url used to set up distributed training')
-    parser.add_argument('-adjust_lr', action='store_true',
-                        help='multiply learning rate by number of distributed processes (world_size)')
+    parser.add_argument(
+        '-adjust_lr', action='store_true',
+        help='multiply learning rate by number of distributed processes (world_size)'
+    )
     return parser.parse_args()
 
 
