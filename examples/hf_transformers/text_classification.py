@@ -275,8 +275,9 @@ def main(args):
 
     test_config = config['test']
     test_data_loader_config = test_config['test_data_loader']
-    test_data_loader = util.build_data_loader(dataset_dict[test_data_loader_config['dataset_id']],
-                                              test_data_loader_config, distributed)
+    test_data_loader = util.build_data_loader(
+        dataset_dict[test_data_loader_config['dataset_id']], test_data_loader_config, distributed
+    )
     test_data_loader = accelerator.prepare(test_data_loader)
     cudnn.benchmark = False
     cudnn.deterministic = True

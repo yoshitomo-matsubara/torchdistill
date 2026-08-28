@@ -16,9 +16,10 @@ def extract_label_names(raw_dataset, label_key='label'):
     return label_names
 
 
-def preprocess_hf_text_datasets(raw_dataset_dict, tokenizer, text_keys, label_key, pad_to_max_length,
-                                max_length, base_split_name, batched, skipped_splits=None, remove_columns=None,
-                                label2id=None, dataset_id_map=None, **kwargs):
+def preprocess_hf_text_datasets(
+        raw_dataset_dict, tokenizer, text_keys, label_key, pad_to_max_length, max_length, base_split_name,
+        batched, skipped_splits=None, remove_columns=None, label2id=None, dataset_id_map=None, **kwargs
+):
     if skipped_splits is not None:
         for skipped_split in skipped_splits:
             raw_dataset_dict.pop(skipped_split)
