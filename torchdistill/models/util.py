@@ -37,8 +37,9 @@ def wrap_if_distributed(module, device, device_ids, distributed, find_unused_par
         any_frozen = len(get_frozen_param_names(module)) > 0
         if find_unused_parameters is None:
             find_unused_parameters = any_frozen
-        return DistributedDataParallel(module, device_ids=device_ids, find_unused_parameters=find_unused_parameters,
-                                       **kwargs)
+        return DistributedDataParallel(
+            module, device_ids=device_ids, find_unused_parameters=find_unused_parameters, **kwargs
+        )
     return module
 
 
