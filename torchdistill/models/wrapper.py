@@ -90,20 +90,18 @@ class Paraphraser4FactorTransfer(nn.Module):
         self.paraphrase_rate = k
         num_enc_output_channels = int(num_input_channels * k)
         self.encoder = nn.Sequential(
-            *self.make_enc_modules(num_input_channels, num_input_channels,
-                                   kernel_size, stride, padding, uses_bn),
-            *self.make_enc_modules(num_input_channels, num_enc_output_channels,
-                                   kernel_size, stride, padding, uses_bn),
-            *self.make_enc_modules(num_enc_output_channels, num_enc_output_channels,
-                                   kernel_size, stride, padding, uses_bn)
+            *self.make_enc_modules(num_input_channels, num_input_channels, kernel_size, stride, padding, uses_bn),
+            *self.make_enc_modules(num_input_channels, num_enc_output_channels, kernel_size, stride, padding, uses_bn),
+            *self.make_enc_modules(
+                num_enc_output_channels, num_enc_output_channels, kernel_size, stride, padding, uses_bn
+            )
         )
         self.decoder = nn.Sequential(
-            *self.make_dec_modules(num_enc_output_channels, num_enc_output_channels,
-                                   kernel_size, stride, padding, uses_bn),
-            *self.make_dec_modules(num_enc_output_channels, num_input_channels,
-                                   kernel_size, stride, padding, uses_bn),
-            *self.make_dec_modules(num_input_channels, num_input_channels,
-                                   kernel_size, stride, padding, uses_bn)
+            *self.make_dec_modules(
+                num_enc_output_channels, num_enc_output_channels, kernel_size, stride, padding, uses_bn
+            ),
+            *self.make_dec_modules(num_enc_output_channels, num_input_channels, kernel_size, stride, padding, uses_bn),
+            *self.make_dec_modules(num_input_channels, num_input_channels, kernel_size, stride, padding, uses_bn)
         )
         self.uses_decoder = uses_decoder
 
@@ -133,12 +131,15 @@ class Translator4FactorTransfer(nn.Sequential):
     """
     def __init__(self, num_input_channels, num_output_channels, kernel_size=3, stride=1, padding=1, uses_bn=True):
         super().__init__(
-            *Paraphraser4FactorTransfer.make_enc_modules(num_input_channels, num_input_channels,
-                                                         kernel_size, stride, padding, uses_bn),
-            *Paraphraser4FactorTransfer.make_enc_modules(num_input_channels, num_output_channels,
-                                                         kernel_size, stride, padding, uses_bn),
-            *Paraphraser4FactorTransfer.make_enc_modules(num_output_channels, num_output_channels,
-                                                         kernel_size, stride, padding, uses_bn)
+            *Paraphraser4FactorTransfer.make_enc_modules(
+                num_input_channels, num_input_channels, kernel_size, stride, padding, uses_bn
+            ),
+            *Paraphraser4FactorTransfer.make_enc_modules(
+                num_input_channels, num_output_channels, kernel_size, stride, padding, uses_bn
+            ),
+            *Paraphraser4FactorTransfer.make_enc_modules(
+                num_output_channels, num_output_channels, kernel_size, stride, padding, uses_bn
+            )
         )
 
 
@@ -168,9 +169,11 @@ class Teacher4FactorTransfer(AuxiliaryModelWrapper):
     :param find_unused_parameters: ``find_unused_parameters`` for DistributedDataParallel.
     :type find_unused_parameters: bool or None
     """
-    def __init__(self, teacher_model, minimal, input_module_path,
-                 paraphraser_kwargs, paraphraser_ckpt, uses_decoder, device, device_ids, distributed,
-                 find_unused_parameters=None, **kwargs):
+    def __init__(
+            self, teacher_model, minimal, input_module_path,
+            paraphraser_kwargs, paraphraser_ckpt, uses_decoder, device, device_ids, distributed,
+            find_unused_parameters=None, **kwargs
+    ):
         super().__init__()
         if minimal is None:
             minimal = dict()
@@ -185,8 +188,9 @@ class Teacher4FactorTransfer(AuxiliaryModelWrapper):
         self.teacher_model = redesign_model(teacher_ref_model, minimal, 'teacher', model_type)
         self.input_module_path = input_module_path
         paraphraser = Paraphraser4FactorTransfer(uses_decoder=uses_decoder, **paraphraser_kwargs)
-        self.paraphraser = wrap_if_distributed(paraphraser, device, device_ids, distributed,
-                                               find_unused_parameters=find_unused_parameters)
+        self.paraphraser = wrap_if_distributed(
+            paraphraser, device, device_ids, distributed, find_unused_parameters=find_unused_parameters
+        )
         self.ckpt_file_path = paraphraser_ckpt
         if os.path.isfile(self.ckpt_file_path):
             map_location = {'cuda:0': 'cuda:{}'.format(device_ids[0])} if distributed else device
@@ -228,15 +232,19 @@ class Student4FactorTransfer(AuxiliaryModelWrapper):
     :param find_unused_parameters: ``find_unused_parameters`` for DistributedDataParallel.
     :type find_unused_parameters: bool or None
     """
-    def __init__(self, student_model, input_module_path, translator_kwargs, device, device_ids, distributed,
-                 find_unused_parameters=None, **kwargs):
+    def __init__(
+            self, student_model, input_module_path, translator_kwargs, device, device_ids, distributed,
+            find_unused_parameters=None, **kwargs
+    ):
         super().__init__()
-        self.student_model = wrap_if_distributed(student_model, device, device_ids, distributed,
-                                                 find_unused_parameters=find_unused_parameters)
+        self.student_model = wrap_if_distributed(
+            student_model, device, device_ids, distributed, find_unused_parameters=find_unused_parameters
+        )
         self.input_module_path = input_module_path
-        self.translator = \
-            wrap_if_distributed(Translator4FactorTransfer(**translator_kwargs), device, device_ids, distributed,
-                                find_unused_parameters=find_unused_parameters)
+        self.translator = wrap_if_distributed(
+            Translator4FactorTransfer(**translator_kwargs), device, device_ids, distributed,
+            find_unused_parameters=find_unused_parameters
+        )
 
     def forward(self, *args):
         return self.student_model(*args)
@@ -272,17 +280,21 @@ class Connector4DAB(AuxiliaryModelWrapper):
             module_list.append(nn.BatchNorm2d(**bn2d_kwargs))
         return nn.Sequential(*module_list)
 
-    def __init__(self, student_model, connectors, device, device_ids, distributed, find_unused_parameters=None,
-                 **kwargs):
+    def __init__(
+            self, student_model, connectors, device, device_ids, distributed, find_unused_parameters=None,
+            **kwargs
+    ):
         super().__init__()
         self.student_model = wrap_if_distributed(student_model, device, device_ids, distributed, find_unused_parameters)
         io_path_pairs = list()
         self.connector_dict = nn.ModuleDict()
         for connector_key, connector_config in connectors.items():
-            connector = \
-                self.build_connector(connector_config['conv2d_kwargs'], connector_config.get('bn2d_kwargs', None))
-            self.connector_dict[connector_key] = \
-                wrap_if_distributed(connector, device, device_ids, distributed, find_unused_parameters)
+            connector = self.build_connector(
+                connector_config['conv2d_kwargs'], connector_config.get('bn2d_kwargs', None)
+            )
+            self.connector_dict[connector_key] = wrap_if_distributed(
+                connector, device, device_ids, distributed, find_unused_parameters
+            )
             io_path_pairs.append((connector_key, connector_config['io'], connector_config['path']))
         self.io_path_pairs = io_path_pairs
 
@@ -354,16 +366,19 @@ class VariationalDistributor4VID(AuxiliaryModelWrapper):
     :param find_unused_parameters: ``find_unused_parameters`` for DistributedDataParallel.
     :type find_unused_parameters: bool or None
     """
-    def __init__(self, student_model, regressors, device, device_ids, distributed, find_unused_parameters=None,
-                 **kwargs):
+    def __init__(
+            self, student_model, regressors, device, device_ids, distributed, find_unused_parameters=None,
+            **kwargs
+    ):
         super().__init__()
         self.student_model = wrap_if_distributed(student_model, device, device_ids, distributed, find_unused_parameters)
         io_path_pairs = list()
         self.regressor_dict = nn.ModuleDict()
         for regressor_key, regressor_config in regressors.items():
             regressor = Regressor4VID(**regressor_config['kwargs'])
-            self.regressor_dict[regressor_key] = \
-                wrap_if_distributed(regressor, device, device_ids, distributed, find_unused_parameters)
+            self.regressor_dict[regressor_key] = wrap_if_distributed(
+                regressor, device, device_ids, distributed, find_unused_parameters
+            )
             io_path_pairs.append((regressor_key, regressor_config['io'], regressor_config['path']))
         self.io_path_pairs = io_path_pairs
 
@@ -400,8 +415,10 @@ class Linear4CCKD(AuxiliaryModelWrapper):
     :param find_unused_parameters: ``find_unused_parameters`` for DistributedDataParallel.
     :type find_unused_parameters: bool or None
     """
-    def __init__(self, input_module, linear_kwargs, device, device_ids, distributed,
-                 teacher_model=None, student_model=None, find_unused_parameters=None, **kwargs):
+    def __init__(
+            self, input_module, linear_kwargs, device, device_ids, distributed,
+            teacher_model=None, student_model=None, find_unused_parameters=None, **kwargs
+    ):
         super().__init__()
         is_teacher = teacher_model is not None
         if not is_teacher:
@@ -411,8 +428,9 @@ class Linear4CCKD(AuxiliaryModelWrapper):
         self.is_teacher = is_teacher
         self.input_module_path = input_module['path']
         self.input_module_io = input_module['io']
-        self.linear = \
-            wrap_if_distributed(nn.Linear(**linear_kwargs), device, device_ids, distributed, find_unused_parameters)
+        self.linear = wrap_if_distributed(
+            nn.Linear(**linear_kwargs), device, device_ids, distributed, find_unused_parameters
+        )
 
     def forward(self, x):
         if self.is_teacher:
@@ -475,8 +493,10 @@ class Linear4CRD(AuxiliaryModelWrapper):
     :param find_unused_parameters: ``find_unused_parameters`` for DistributedDataParallel.
     :type find_unused_parameters: bool or None
     """
-    def __init__(self, input_module_path, linear_kwargs, device, device_ids, distributed, power=2,
-                 teacher_model=None, student_model=None, find_unused_parameters=None, **kwargs):
+    def __init__(
+            self, input_module_path, linear_kwargs, device, device_ids, distributed, power=2,
+            teacher_model=None, student_model=None, find_unused_parameters=None, **kwargs
+    ):
         super().__init__()
         is_teacher = teacher_model is not None
         if not is_teacher:
@@ -487,8 +507,9 @@ class Linear4CRD(AuxiliaryModelWrapper):
         self.empty = nn.Sequential()
         self.input_module_path = input_module_path
         linear = nn.Linear(**linear_kwargs)
-        self.normalizer = wrap_if_distributed(Normalizer4CRD(linear, power=power), device, device_ids, distributed,
-                                              find_unused_parameters)
+        self.normalizer = wrap_if_distributed(
+            Normalizer4CRD(linear, power=power), device, device_ids, distributed, find_unused_parameters
+        )
 
     def forward(self, x, supp_dict):
         # supp_dict is given to be hooked and stored in io_dict
@@ -566,8 +587,10 @@ class SSWrapper4SSKD(AuxiliaryModelWrapper):
     :param find_unused_parameters: ``find_unused_parameters`` for DistributedDataParallel.
     :type find_unused_parameters: bool or None
     """
-    def __init__(self, input_module, feat_dim, ss_module_ckpt, device, device_ids, distributed, freezes_ss_module=False,
-                 teacher_model=None, student_model=None, find_unused_parameters=None, **kwargs):
+    def __init__(
+            self, input_module, feat_dim, ss_module_ckpt, device, device_ids, distributed, freezes_ss_module=False,
+            teacher_model=None, student_model=None, find_unused_parameters=None, **kwargs
+    ):
         super().__init__()
         is_teacher = teacher_model is not None
         if not is_teacher:
@@ -627,8 +650,10 @@ class VarianceBranch4PAD(AuxiliaryModelWrapper):
     :param find_unused_parameters: ``find_unused_parameters`` for DistributedDataParallel.
     :type find_unused_parameters: bool or None
     """
-    def __init__(self, student_model, input_module, feat_dim, var_estimator_ckpt,
-                 device, device_ids, distributed, find_unused_parameters=None, **kwargs):
+    def __init__(
+            self, student_model, input_module, feat_dim, var_estimator_ckpt,
+            device, device_ids, distributed, find_unused_parameters=None, **kwargs
+    ):
         super().__init__()
         self.student_model = wrap_if_distributed(student_model, device, device_ids, distributed, find_unused_parameters)
         self.input_module_path = input_module['path']
@@ -717,8 +742,10 @@ class Student4KnowledgeReview(AuxiliaryModelWrapper):
     :param find_unused_parameters: ``find_unused_parameters`` for DistributedDataParallel.
     :type find_unused_parameters: bool or None
     """
-    def __init__(self, student_model, abfs, device, device_ids, distributed, sizes=None,
-                 find_unused_parameters=None, **kwargs):
+    def __init__(
+            self, student_model, abfs, device, device_ids, distributed, sizes=None,
+            find_unused_parameters=None, **kwargs
+    ):
         super().__init__()
         self.student_model = wrap_if_distributed(student_model, device, device_ids, distributed, find_unused_parameters)
         if sizes is None:
@@ -729,8 +756,10 @@ class Student4KnowledgeReview(AuxiliaryModelWrapper):
         num_abfs = len(abfs)
         io_path_pairs = list()
         for idx, abf_config in enumerate(abfs):
-            abf = wrap_if_distributed(AttentionBasedFusion(uses_attention=idx < num_abfs - 1, **abf_config['kwargs']),
-                                      device, device_ids, distributed, find_unused_parameters)
+            abf = wrap_if_distributed(
+                AttentionBasedFusion(uses_attention=idx < num_abfs - 1, **abf_config['kwargs']),
+                device, device_ids, distributed, find_unused_parameters
+            )
             abf_list.append(abf)
             io_path_pairs.append((abf_config['io'], abf_config['path']))
 
@@ -773,8 +802,10 @@ class Student4KTAAD(AuxiliaryModelWrapper):
     :param find_unused_parameters: ``find_unused_parameters`` for DistributedDataParallel.
     :type find_unused_parameters: bool or None
     """
-    def __init__(self, student_model, input_module_path, feature_adapter_config, affinity_adapter_config,
-                 device, device_ids, distributed, find_unused_parameters=None, **kwargs):
+    def __init__(
+            self, student_model, input_module_path, feature_adapter_config, affinity_adapter_config,
+            device, device_ids, distributed, find_unused_parameters=None, **kwargs
+    ):
         super().__init__()
         self.student_model = wrap_if_distributed(student_model, device, device_ids, distributed, find_unused_parameters)
         self.input_module_path = input_module_path
@@ -888,8 +919,10 @@ class SRDModelWrapper(AuxiliaryModelWrapper):
     :param find_unused_parameters: ``find_unused_parameters`` for DistributedDataParallel.
     :type find_unused_parameters: bool or None
     """
-    def __init__(self, input_module, norm_kwargs, device, device_ids, distributed, linear_kwargs=None,
-                 teacher_model=None, student_model=None, find_unused_parameters=None, **kwargs):
+    def __init__(
+            self, input_module, norm_kwargs, device, device_ids, distributed, linear_kwargs=None,
+            teacher_model=None, student_model=None, find_unused_parameters=None, **kwargs
+    ):
         super().__init__()
         is_teacher = teacher_model is not None
         if not is_teacher:

@@ -5,13 +5,13 @@ import torch
 from torchdistill.common.file_util import check_if_exists, make_parent_dirs
 
 
-def get_argparser():
+def get_args():
     parser = argparse.ArgumentParser(description='Extracting parameters from checkpoint')
     parser.add_argument('--src', required=True, help='input ckpt file path')
     parser.add_argument('--keys', required=True, nargs='+', help='keys of parameters to be extracted from ckpt')
     parser.add_argument('-use_dict', action='store_true', help='Save as a dict even if # keys = 1')
     parser.add_argument('--dst', required=True, help='output file path')
-    return parser
+    return parser.parse_args()
 
 
 def save_obj(obj, output_file_path):
@@ -47,5 +47,4 @@ def main(args):
 
 
 if __name__ == '__main__':
-    argparser = get_argparser()
-    main(argparser.parse_args())
+    main(get_args())

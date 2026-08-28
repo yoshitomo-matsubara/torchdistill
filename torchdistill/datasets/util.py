@@ -50,8 +50,9 @@ def split_dataset(dataset, lengths=None, generator_seed=None, sub_splits_configs
         sub_dataset.dataset = copy.deepcopy(sub_dataset.dataset)
 
     assert len(sub_datasets) == len(sub_splits_configs), \
-        'len(lengths) `{}` should be equal to len(sub_splits_configs) `{}`'.format(len(sub_datasets),
-                                                                                   len(sub_splits_configs))
+        'len(lengths) `{}` should be equal to len(sub_splits_configs) `{}`'.format(
+            len(sub_datasets), len(sub_splits_configs)
+        )
     for sub_dataset, sub_split_kwargs in zip(sub_datasets, sub_splits_configs):
         sub_split_kwargs = sub_split_kwargs.copy()
         transform = sub_split_kwargs.pop('transform', None)

@@ -66,8 +66,7 @@ class GroupedBatchSampler(BatchSampler):
         if num_remaining > 0:
             # for the remaining batches, take first the buffers with largest number
             # of elements
-            for group_id, _ in sorted(buffer_per_group.items(),
-                                      key=lambda x: len(x[1]), reverse=True):
+            for group_id, _ in sorted(buffer_per_group.items(), key=lambda x: len(x[1]), reverse=True):
                 remaining = self.batch_size - len(buffer_per_group[group_id])
                 buffer_per_group[group_id].extend(
                     samples_per_group[group_id][:remaining])
@@ -94,10 +93,10 @@ class _SubsetSampler(Sampler):
 
 
 def _compute_aspect_ratios_slow(dataset, indices=None):
-    logger.info('Your dataset doesn\'t support the fast path for '
-                'computing the aspect ratios, so will iterate over '
-                'the full dataset and load every image instead. '
-                'This might take some time...')
+    logger.info(
+        'Your dataset doesn\'t support the fast path for computing the aspect ratios, so will iterate over '
+        'the full dataset and load every image instead. This might take some time...'
+    )
     if indices is None:
         indices = range(len(dataset))
 

@@ -55,10 +55,11 @@ class DenseNet4Cifar(nn.Module):
         super().__init__()
 
         # First convolution
-        self.features = nn.Sequential(OrderedDict([
-            ('conv0', nn.Conv2d(3, num_init_features, kernel_size=3, stride=1,
-                                padding=1, bias=False))
-        ]))
+        self.features = nn.Sequential(
+            OrderedDict(
+                [('conv0', nn.Conv2d(3, num_init_features, kernel_size=3, stride=1, padding=1, bias=False))]
+            )
+        )
 
         # Each denseblock
         num_features = num_init_features
@@ -74,8 +75,7 @@ class DenseNet4Cifar(nn.Module):
             self.features.add_module('denseblock%d' % (i + 1), block)
             num_features = num_features + num_layers * growth_rate
             if i != len(block_config) - 1:
-                trans = _Transition(num_input_features=num_features,
-                                    num_output_features=num_features // 2)
+                trans = _Transition(num_input_features=num_features, num_output_features=num_features // 2)
                 self.features.add_module('transition%d' % (i + 1), trans)
                 num_features = num_features // 2
 
