@@ -1,0 +1,427 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" data-content_root="../../../">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>torchdistill.core.util &mdash; torchdistill v1.2.0-dev documentation</title>
+      <link rel="stylesheet" type="text/css" href="../../../_static/pygments.css?v=b86133f3" />
+      <link rel="stylesheet" type="text/css" href="../../../_static/css/theme.css?v=9edc463e" />
+
+  
+      <script src="../../../_static/jquery.js?v=5d32c60e"></script>
+      <script src="../../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+      <script src="../../../_static/documentation_options.js?v=53b07a3a"></script>
+      <script src="../../../_static/doctools.js?v=9bcbadda"></script>
+      <script src="../../../_static/sphinx_highlight.js?v=dc90522c"></script>
+    <script src="../../../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../search.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="../../../index.html">
+            
+              <img src="../../../_static/logo-white.png" class="logo" alt="Logo"/>
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">📚 Overview</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../usage.html">Usage</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../package.html">torchdistill API</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">🧑🏻‍💻 Research</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../benchmarks.html">Benchmarks</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../projects.html">Projects</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../../index.html">torchdistill</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content style-external-links">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../../../index.html" class="icon icon-home" aria-label="Home"></a></li>
+          <li class="breadcrumb-item"><a href="../../index.html">Module code</a></li>
+      <li class="breadcrumb-item active">torchdistill.core.util</li>
+      <li class="wy-breadcrumbs-aside">
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <h1>Source code for torchdistill.core.util</h1><div class="highlight"><pre>
+<span></span><span class="kn">import</span><span class="w"> </span><span class="nn">warnings</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">collections</span><span class="w"> </span><span class="kn">import</span> <span class="n">abc</span>
+
+<span class="kn">import</span><span class="w"> </span><span class="nn">torch</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">torch.distributed._composable.fsdp</span><span class="w"> </span><span class="kn">import</span> <span class="n">fully_shard</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">torch.distributed.fsdp</span><span class="w"> </span><span class="kn">import</span> <span class="n">FullyShardedDataParallel</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">torch.nn</span><span class="w"> </span><span class="kn">import</span> <span class="n">DataParallel</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">torch.nn.parallel</span><span class="w"> </span><span class="kn">import</span> <span class="n">DistributedDataParallel</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">torch.nn.parallel.scatter_gather</span><span class="w"> </span><span class="kn">import</span> <span class="n">gather</span>
+
+<span class="kn">from</span><span class="w"> </span><span class="nn">..common.constant</span><span class="w"> </span><span class="kn">import</span> <span class="n">def_logger</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">..common.module_util</span><span class="w"> </span><span class="kn">import</span> <span class="n">get_module</span><span class="p">,</span> <span class="n">check_if_wrapped</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">..common.constant</span><span class="w"> </span><span class="kn">import</span> <span class="n">SELF_MODULE_PATH</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">..core.forward_hook</span><span class="w"> </span><span class="kn">import</span> <span class="n">clear_io_dict_values</span>
+
+<span class="n">logger</span> <span class="o">=</span> <span class="n">def_logger</span><span class="o">.</span><span class="n">getChild</span><span class="p">(</span><span class="vm">__name__</span><span class="p">)</span>
+
+
+<div class="viewcode-block" id="get_proc_config">
+<a class="viewcode-back" href="../../../subpkgs/core.html#torchdistill.core.util.get_proc_config">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">get_proc_config</span><span class="p">(</span><span class="n">train_config</span><span class="p">,</span> <span class="n">key</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">"""</span>
+<span class="sd">    Extracts a pre/post-epoch/forward process configuration, supporting the deprecated key</span>
+<span class="sd">    (e.g., ``pre_forward_process`` for ``pre_forward_proc``) for backward compatibility.</span>
+
+<span class="sd">    :param train_config: training configuration.</span>
+<span class="sd">    :type train_config: dict</span>
+<span class="sd">    :param key: process configuration key e.g., ``pre_forward_proc``.</span>
+<span class="sd">    :type key: str</span>
+<span class="sd">    :return: process configuration if either the key or its deprecated version is available, None otherwise.</span>
+<span class="sd">    :rtype: dict or str or None</span>
+<span class="sd">    """</span>
+    <span class="k">if</span> <span class="n">key</span> <span class="ow">in</span> <span class="n">train_config</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">train_config</span><span class="p">[</span><span class="n">key</span><span class="p">]</span>
+
+    <span class="n">deprecated_key</span> <span class="o">=</span> <span class="n">key</span><span class="o">.</span><span class="n">replace</span><span class="p">(</span><span class="s1">'_proc'</span><span class="p">,</span> <span class="s1">'_process'</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">deprecated_key</span> <span class="ow">in</span> <span class="n">train_config</span><span class="p">:</span>
+        <span class="n">message</span> <span class="o">=</span> <span class="sa">f</span><span class="s1">'`</span><span class="si">{</span><span class="n">deprecated_key</span><span class="si">}</span><span class="s1">` key is deprecated and will be removed in a future release. '</span> \
+                  <span class="sa">f</span><span class="s1">'Use `</span><span class="si">{</span><span class="n">key</span><span class="si">}</span><span class="s1">` instead.'</span>
+        <span class="n">warnings</span><span class="o">.</span><span class="n">warn</span><span class="p">(</span><span class="n">message</span><span class="p">,</span> <span class="ne">DeprecationWarning</span><span class="p">)</span>
+        <span class="n">logger</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span><span class="n">message</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">train_config</span><span class="p">[</span><span class="n">deprecated_key</span><span class="p">]</span>
+    <span class="k">return</span> <span class="kc">None</span></div>
+
+
+
+<div class="viewcode-block" id="add_kwargs_to_io_dict">
+<a class="viewcode-back" href="../../../subpkgs/core.html#torchdistill.core.util.add_kwargs_to_io_dict">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">add_kwargs_to_io_dict</span><span class="p">(</span><span class="n">io_dict</span><span class="p">,</span> <span class="n">module_path</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">"""</span>
+<span class="sd">    Adds kwargs to an I/O dict.</span>
+
+<span class="sd">    .. deprecated:: 1.2.0</span>
+<span class="sd">        Forward hooks initialize their own entries in an I/O dict, and this function is no longer used</span>
+<span class="sd">        internally. It will be removed in a future release.</span>
+
+<span class="sd">    :param io_dict: I/O dict.</span>
+<span class="sd">    :type io_dict: dict</span>
+<span class="sd">    :param module_path: module path.</span>
+<span class="sd">    :type module_path: str</span>
+<span class="sd">    :param kwargs: kwargs to be stored in ``io_dict``.</span>
+<span class="sd">    :type kwargs: dict</span>
+<span class="sd">    """</span>
+    <span class="n">warnings</span><span class="o">.</span><span class="n">warn</span><span class="p">(</span>
+        <span class="s1">'`add_kwargs_to_io_dict` is deprecated and will be removed in a future release'</span><span class="p">,</span>
+        <span class="ne">DeprecationWarning</span><span class="p">,</span> <span class="n">stacklevel</span><span class="o">=</span><span class="mi">2</span>
+    <span class="p">)</span>
+    <span class="n">io_dict</span><span class="p">[</span><span class="n">module_path</span><span class="p">]</span> <span class="o">=</span> <span class="n">kwargs</span></div>
+
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_extract_module</span><span class="p">(</span><span class="n">org_model</span><span class="p">,</span> <span class="n">sub_model</span><span class="p">,</span> <span class="n">module_path</span><span class="p">):</span>
+    <span class="k">if</span> <span class="n">module_path</span><span class="o">.</span><span class="n">startswith</span><span class="p">(</span><span class="s1">'+'</span><span class="p">):</span>
+        <span class="k">return</span> <span class="n">get_module</span><span class="p">(</span><span class="n">sub_model</span><span class="p">,</span> <span class="n">module_path</span><span class="p">[</span><span class="mi">1</span><span class="p">:])</span>
+    <span class="k">return</span> <span class="n">get_module</span><span class="p">(</span><span class="n">org_model</span><span class="p">,</span> <span class="n">module_path</span><span class="p">)</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">_resolve_module_path_flag</span><span class="p">(</span><span class="n">flag_config</span><span class="p">,</span> <span class="n">target_module_path_set</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">"""</span>
+<span class="sd">    Resolves a forward hook flag that is given either as a bool (applied to all the target modules)</span>
+<span class="sd">    or as a list of module paths (applied to the listed target modules only).</span>
+
+<span class="sd">    :param flag_config: bool or list of module paths.</span>
+<span class="sd">    :type flag_config: bool or list[str] or None</span>
+<span class="sd">    :param target_module_path_set: set of all the target module paths.</span>
+<span class="sd">    :type target_module_path_set: set[str]</span>
+<span class="sd">    :return: set of module paths the flag is enabled for.</span>
+<span class="sd">    :rtype: set[str]</span>
+<span class="sd">    """</span>
+    <span class="k">if</span> <span class="n">flag_config</span> <span class="ow">is</span> <span class="kc">None</span> <span class="ow">or</span> <span class="n">flag_config</span> <span class="ow">is</span> <span class="kc">False</span><span class="p">:</span>
+        <span class="k">return</span> <span class="nb">set</span><span class="p">()</span>
+    <span class="k">if</span> <span class="n">flag_config</span> <span class="ow">is</span> <span class="kc">True</span><span class="p">:</span>
+        <span class="k">return</span> <span class="nb">set</span><span class="p">(</span><span class="n">target_module_path_set</span><span class="p">)</span>
+
+    <span class="n">module_path_set</span> <span class="o">=</span> <span class="nb">set</span><span class="p">(</span><span class="n">flag_config</span><span class="p">)</span>
+    <span class="n">unknown_module_path_set</span> <span class="o">=</span> <span class="n">module_path_set</span> <span class="o">-</span> <span class="n">target_module_path_set</span>
+    <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">unknown_module_path_set</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
+            <span class="s1">'module path(s) </span><span class="si">{}</span><span class="s1"> should be listed in `input` and/or `output` of the forward hook configuration'</span><span class="o">.</span><span class="n">format</span><span class="p">(</span>
+                <span class="nb">sorted</span><span class="p">(</span><span class="n">unknown_module_path_set</span><span class="p">)</span>
+            <span class="p">)</span>
+        <span class="p">)</span>
+    <span class="k">return</span> <span class="n">module_path_set</span>
+
+
+<div class="viewcode-block" id="set_hooks">
+<a class="viewcode-back" href="../../../subpkgs/core.html#torchdistill.core.util.set_hooks">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">set_hooks</span><span class="p">(</span><span class="n">model</span><span class="p">,</span> <span class="n">unwrapped_org_model</span><span class="p">,</span> <span class="n">model_config</span><span class="p">,</span> <span class="n">forward_hook_manager</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">"""</span>
+<span class="sd">    Sets forward hooks for target modules in model, using ``forward_hook_manager``.</span>
+
+<span class="sd">    ``model_config['forward_hook']`` accepts the following keys:</span>
+
+<span class="sd">    * ``input``: list of module paths whose input should be stored.</span>
+<span class="sd">    * ``output``: list of module paths whose output should be stored.</span>
+<span class="sd">    * ``accumulates``: bool (applied to all the target modules) or list of module paths whose input/output</span>
+<span class="sd">      should be accumulated across forward passes instead of being overwritten. Useful for autoregressive</span>
+<span class="sd">      use cases such as on-policy distillation, where the target modules are called once per generated token.</span>
+<span class="sd">    * ``stacks_accumulated``: bool or list of module paths whose accumulated per-step tensors should be</span>
+<span class="sd">      stacked into a single tensor by :meth:`torchdistill.core.forward_hook.ForwardHookManager.pop_io_dict`.</span>
+<span class="sd">      Requires the same module paths to be accumulated, and that the per-step tensors share the same shape.</span>
+
+<span class="sd">    :param model: model.</span>
+<span class="sd">    :type model: nn.Module</span>
+<span class="sd">    :param unwrapped_org_model: unwrapped original model.</span>
+<span class="sd">    :type unwrapped_org_model: nn.Module</span>
+<span class="sd">    :param model_config: model configuration.</span>
+<span class="sd">    :type model_config: dict</span>
+<span class="sd">    :param forward_hook_manager: forward hook manager to register the forward hooks with.</span>
+<span class="sd">    :type forward_hook_manager: torchdistill.core.forward_hook.ForwardHookManager</span>
+<span class="sd">    :return: list of pairs of module path and removable forward hook handle.</span>
+<span class="sd">    :rtype: list[(str, torch.utils.hook.RemovableHandle)]</span>
+<span class="sd">    """</span>
+    <span class="n">pair_list</span> <span class="o">=</span> <span class="nb">list</span><span class="p">()</span>
+    <span class="n">forward_hook_config</span> <span class="o">=</span> <span class="n">model_config</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">'forward_hook'</span><span class="p">,</span> <span class="nb">dict</span><span class="p">())</span>
+    <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">forward_hook_config</span><span class="p">)</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">pair_list</span>
+
+    <span class="n">input_module_path_set</span> <span class="o">=</span> <span class="nb">set</span><span class="p">(</span><span class="n">forward_hook_config</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">'input'</span><span class="p">,</span> <span class="nb">list</span><span class="p">()))</span>
+    <span class="n">output_module_path_set</span> <span class="o">=</span> <span class="nb">set</span><span class="p">(</span><span class="n">forward_hook_config</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">'output'</span><span class="p">,</span> <span class="nb">list</span><span class="p">()))</span>
+    <span class="n">target_module_path_set</span> <span class="o">=</span> <span class="n">input_module_path_set</span><span class="o">.</span><span class="n">union</span><span class="p">(</span><span class="n">output_module_path_set</span><span class="p">)</span>
+    <span class="n">accumulating_module_path_set</span> <span class="o">=</span> \
+        <span class="n">_resolve_module_path_flag</span><span class="p">(</span><span class="n">forward_hook_config</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">'accumulates'</span><span class="p">,</span> <span class="kc">None</span><span class="p">),</span> <span class="n">target_module_path_set</span><span class="p">)</span>
+    <span class="n">stacking_module_path_set</span> <span class="o">=</span> \
+        <span class="n">_resolve_module_path_flag</span><span class="p">(</span><span class="n">forward_hook_config</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">'stacks_accumulated'</span><span class="p">,</span> <span class="kc">None</span><span class="p">),</span> <span class="n">target_module_path_set</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">forward_hook_config</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">'stacks_accumulated'</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span> <span class="ow">is</span> <span class="kc">True</span><span class="p">:</span>
+        <span class="c1"># `stacks_accumulated: True` should only apply to the accumulated module paths</span>
+        <span class="n">stacking_module_path_set</span> <span class="o">&amp;=</span> <span class="n">accumulating_module_path_set</span>
+
+    <span class="k">for</span> <span class="n">target_module_path</span> <span class="ow">in</span> <span class="n">target_module_path_set</span><span class="p">:</span>
+        <span class="n">target_module</span> <span class="o">=</span> <span class="n">_extract_module</span><span class="p">(</span><span class="n">unwrapped_org_model</span><span class="p">,</span> <span class="n">model</span><span class="p">,</span> <span class="n">target_module_path</span><span class="p">)</span>
+        <span class="n">pair</span> <span class="o">=</span> <span class="n">forward_hook_manager</span><span class="o">.</span><span class="n">add_hook_to_module</span><span class="p">(</span>
+            <span class="n">target_module</span><span class="p">,</span> <span class="n">target_module_path</span><span class="p">,</span>
+            <span class="n">requires_input</span><span class="o">=</span><span class="n">target_module_path</span> <span class="ow">in</span> <span class="n">input_module_path_set</span><span class="p">,</span>
+            <span class="n">requires_output</span><span class="o">=</span><span class="n">target_module_path</span> <span class="ow">in</span> <span class="n">output_module_path_set</span><span class="p">,</span>
+            <span class="n">accumulates</span><span class="o">=</span><span class="n">target_module_path</span> <span class="ow">in</span> <span class="n">accumulating_module_path_set</span><span class="p">,</span>
+            <span class="n">stacks_accumulated</span><span class="o">=</span><span class="n">target_module_path</span> <span class="ow">in</span> <span class="n">stacking_module_path_set</span>
+        <span class="p">)</span>
+        <span class="n">pair_list</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">pair</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">pair_list</span></div>
+
+
+
+<div class="viewcode-block" id="wrap_model">
+<a class="viewcode-back" href="../../../subpkgs/core.html#torchdistill.core.util.wrap_model">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">wrap_model</span><span class="p">(</span>
+        <span class="n">model</span><span class="p">,</span> <span class="n">model_config</span><span class="p">,</span> <span class="n">device</span><span class="p">,</span> <span class="n">device_ids</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">distributed</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
+        <span class="n">find_unused_parameters</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">any_updatable</span><span class="o">=</span><span class="kc">True</span>
+<span class="p">):</span>
+<span class="w">    </span><span class="sd">"""</span>
+<span class="sd">    Wraps ``model`` with DataParallel, DistributedDataParallel, FullyShardedDataParallel (FSDP), or</span>
+<span class="sd">    FSDP2 (``fully_shard``) if specified.</span>
+
+<span class="sd">    ``model_config['wrapper']['key']`` selects the wrapper and accepts one of</span>
+<span class="sd">    'DataParallel', 'DistributedDataParallel', 'FullyShardedDataParallel' (FSDP), or</span>
+<span class="sd">    'FullyShardedDataParallel2' (FSDP2). ``model_config['wrapper']['kwargs']`` are forwarded to the</span>
+<span class="sd">    wrapper's constructor (e.g., ``auto_wrap_policy``, ``sharding_strategy``, ``mixed_precision`` for FSDP).</span>
+
+<span class="sd">    .. note::</span>
+<span class="sd">        FSDP/FSDP2 shard parameters across the process group, so ``model``'s ``state_dict()`` will only</span>
+<span class="sd">        reflect the local shard. Use :func:`torchdistill.common.module_util.get_full_state_dict` /</span>
+<span class="sd">        :func:`torchdistill.common.module_util.load_full_state_dict` for checkpointing instead of calling</span>
+<span class="sd">        ``state_dict()`` / ``load_state_dict()`` directly.</span>
+
+<span class="sd">    :param model: model.</span>
+<span class="sd">    :type model: nn.Module</span>
+<span class="sd">    :param model_config: model configuration.</span>
+<span class="sd">    :type model_config: dict</span>
+<span class="sd">    :param device: target device.</span>
+<span class="sd">    :type device: torch.device</span>
+<span class="sd">    :param device_ids: target device IDs.</span>
+<span class="sd">    :type device_ids: list[int]</span>
+<span class="sd">    :param distributed: whether to be in distributed training mode.</span>
+<span class="sd">    :type distributed: bool</span>
+<span class="sd">    :param find_unused_parameters: ``find_unused_parameters`` for DistributedDataParallel.</span>
+<span class="sd">    :type find_unused_parameters: bool</span>
+<span class="sd">    :param any_updatable: True if ``model`` contains any updatable parameters.</span>
+<span class="sd">    :type any_updatable: bool</span>
+<span class="sd">    :return: wrapped model (or ``model`` if wrapper is not specified).</span>
+<span class="sd">    :rtype: nn.Module</span>
+<span class="sd">    """</span>
+    <span class="n">wrapper</span> <span class="o">=</span> <span class="n">model_config</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">'wrapper'</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span> <span class="k">if</span> <span class="n">model_config</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="k">else</span> <span class="kc">None</span>
+    <span class="n">wrapper_kwargs</span> <span class="o">=</span> <span class="nb">dict</span><span class="p">()</span>
+    <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">wrapper</span><span class="p">,</span> <span class="nb">dict</span><span class="p">):</span>
+        <span class="n">wrapper_key</span> <span class="o">=</span> <span class="n">wrapper</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">'key'</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span>
+        <span class="n">wrapper_kwargs</span> <span class="o">=</span> <span class="n">wrapper</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">'kwargs'</span><span class="p">,</span> <span class="n">wrapper_kwargs</span><span class="p">)</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">wrapper_key</span> <span class="o">=</span> <span class="n">wrapper</span>
+
+    <span class="n">model</span><span class="o">.</span><span class="n">to</span><span class="p">(</span><span class="n">device</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">wrapper_key</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="ow">and</span> <span class="n">device</span><span class="o">.</span><span class="n">type</span><span class="o">.</span><span class="n">startswith</span><span class="p">(</span><span class="s1">'cuda'</span><span class="p">)</span> <span class="ow">and</span> <span class="ow">not</span> <span class="n">check_if_wrapped</span><span class="p">(</span><span class="n">model</span><span class="p">):</span>
+        <span class="k">if</span> <span class="n">wrapper_key</span> <span class="o">==</span> <span class="s1">'FullyShardedDataParallel2'</span> <span class="ow">and</span> <span class="n">distributed</span><span class="p">:</span>
+            <span class="n">model</span> <span class="o">=</span> <span class="n">fully_shard</span><span class="p">(</span><span class="n">model</span><span class="p">,</span> <span class="o">**</span><span class="n">wrapper_kwargs</span><span class="p">)</span>
+        <span class="k">elif</span> <span class="n">wrapper_key</span> <span class="o">==</span> <span class="s1">'FullyShardedDataParallel'</span> <span class="ow">and</span> <span class="n">distributed</span><span class="p">:</span>
+            <span class="k">if</span> <span class="n">device_ids</span><span class="p">:</span>
+                <span class="n">wrapper_kwargs</span><span class="o">.</span><span class="n">setdefault</span><span class="p">(</span><span class="s1">'device_id'</span><span class="p">,</span> <span class="n">device_ids</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span>
+            <span class="n">model</span> <span class="o">=</span> <span class="n">FullyShardedDataParallel</span><span class="p">(</span><span class="n">model</span><span class="p">,</span> <span class="o">**</span><span class="n">wrapper_kwargs</span><span class="p">)</span>
+        <span class="k">elif</span> <span class="n">wrapper_key</span> <span class="o">==</span> <span class="s1">'DistributedDataParallel'</span> <span class="ow">and</span> <span class="n">distributed</span> <span class="ow">and</span> <span class="n">any_updatable</span><span class="p">:</span>
+            <span class="n">wrapper_kwargs</span><span class="p">[</span><span class="s1">'device_ids'</span><span class="p">]</span> <span class="o">=</span> <span class="n">device_ids</span>
+            <span class="k">if</span> <span class="s1">'find_unused_parameters'</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">wrapper_kwargs</span><span class="p">:</span>
+                <span class="n">wrapper_kwargs</span><span class="p">[</span><span class="s1">'find_unused_parameters'</span><span class="p">]</span> <span class="o">=</span> <span class="n">find_unused_parameters</span>
+
+            <span class="n">model</span> <span class="o">=</span> <span class="n">DistributedDataParallel</span><span class="p">(</span><span class="n">model</span><span class="p">,</span> <span class="o">**</span><span class="n">wrapper_kwargs</span><span class="p">)</span>
+        <span class="k">elif</span> <span class="n">wrapper_key</span> <span class="ow">in</span> <span class="p">{</span><span class="s1">'DataParallel'</span><span class="p">,</span> <span class="s1">'DistributedDataParallel'</span><span class="p">}:</span>
+            <span class="n">wrapper_kwargs</span><span class="p">[</span><span class="s1">'device_ids'</span><span class="p">]</span> <span class="o">=</span> <span class="n">device_ids</span>
+            <span class="n">model</span> <span class="o">=</span> <span class="n">DataParallel</span><span class="p">(</span><span class="n">model</span><span class="p">,</span> <span class="o">**</span><span class="n">wrapper_kwargs</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">model</span></div>
+
+
+
+<div class="viewcode-block" id="clear_io_dict">
+<a class="viewcode-back" href="../../../subpkgs/core.html#torchdistill.core.util.clear_io_dict">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">clear_io_dict</span><span class="p">(</span><span class="n">model_io_dict</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">"""</span>
+<span class="sd">    Clears a model I/O dict's sub dict(s).</span>
+
+<span class="sd">    Each module path is left with an empty dict, and the forward hooks repopulate the I/O type entries</span>
+<span class="sd">    at the next forward pass.</span>
+
+<span class="sd">    .. note::</span>
+<span class="sd">        If you hold a :class:`torchdistill.core.forward_hook.ForwardHookManager`, prefer its</span>
+<span class="sd">        :meth:`~torchdistill.core.forward_hook.ForwardHookManager.clear_io_dict` method. Both share</span>
+<span class="sd">        :func:`torchdistill.core.forward_hook.clear_io_dict_values` as their implementation.</span>
+
+<span class="sd">    :param model_io_dict: model I/O dict.</span>
+<span class="sd">    :type model_io_dict: dict</span>
+<span class="sd">    """</span>
+    <span class="n">clear_io_dict_values</span><span class="p">(</span><span class="n">model_io_dict</span><span class="p">)</span></div>
+
+
+
+<div class="viewcode-block" id="extract_io_dict">
+<a class="viewcode-back" href="../../../subpkgs/core.html#torchdistill.core.util.extract_io_dict">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">extract_io_dict</span><span class="p">(</span><span class="n">model_io_dict</span><span class="p">,</span> <span class="n">target_device</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">"""</span>
+<span class="sd">    Extracts I/O dict, gathering tensors on ``target_device``.</span>
+
+<span class="sd">    .. deprecated:: 1.2.0</span>
+<span class="sd">        Use :meth:`torchdistill.core.forward_hook.ForwardHookManager.pop_io_dict` instead, which additionally</span>
+<span class="sd">        supports accumulated I/O. Unlike :meth:`~torchdistill.core.forward_hook.ForwardHookManager.pop_io_dict`,</span>
+<span class="sd">        this function always adds a :obj:`torchdistill.common.constant.SELF_MODULE_PATH` entry, so replace</span>
+<span class="sd">        ``io_dict[SELF_MODULE_PATH]['output'] = outputs`` with ``io_dict[SELF_MODULE_PATH] = {'output': outputs}``</span>
+<span class="sd">        when migrating. This function will be removed in a future release.</span>
+
+<span class="sd">    :param model_io_dict: model I/O dict.</span>
+<span class="sd">    :type model_io_dict: dict</span>
+<span class="sd">    :param target_device: target device.</span>
+<span class="sd">    :type target_device: torch.device or str</span>
+<span class="sd">    :return: extracted I/O dict.</span>
+<span class="sd">    :rtype: dict</span>
+<span class="sd">    """</span>
+    <span class="n">warnings</span><span class="o">.</span><span class="n">warn</span><span class="p">(</span>
+        <span class="s1">'`extract_io_dict` is deprecated and will be removed in a future release; '</span>
+        <span class="s1">'use `ForwardHookManager.pop_io_dict` instead'</span><span class="p">,</span>
+        <span class="ne">DeprecationWarning</span><span class="p">,</span> <span class="n">stacklevel</span><span class="o">=</span><span class="mi">2</span>
+    <span class="p">)</span>
+    <span class="n">uses_cuda</span> <span class="o">=</span> <span class="n">target_device</span><span class="o">.</span><span class="n">type</span> <span class="o">==</span> <span class="s1">'cuda'</span>
+    <span class="n">gathered_io_dict</span> <span class="o">=</span> <span class="p">{</span><span class="n">SELF_MODULE_PATH</span><span class="p">:</span> <span class="nb">dict</span><span class="p">()}</span>
+    <span class="k">for</span> <span class="n">module_path</span><span class="p">,</span> <span class="n">module_io_dict</span> <span class="ow">in</span> <span class="n">model_io_dict</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+        <span class="n">gathered_io_dict</span><span class="p">[</span><span class="n">module_path</span><span class="p">]</span> <span class="o">=</span> <span class="nb">dict</span><span class="p">()</span>
+        <span class="k">for</span> <span class="n">io_type</span> <span class="ow">in</span> <span class="nb">list</span><span class="p">(</span><span class="n">module_io_dict</span><span class="o">.</span><span class="n">keys</span><span class="p">()):</span>
+            <span class="n">sub_dict</span> <span class="o">=</span> <span class="n">module_io_dict</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="n">io_type</span><span class="p">)</span>
+            <span class="n">values</span> <span class="o">=</span> <span class="p">[</span><span class="n">sub_dict</span><span class="p">[</span><span class="n">key</span><span class="p">]</span> <span class="k">for</span> <span class="n">key</span> <span class="ow">in</span> <span class="nb">sorted</span><span class="p">(</span><span class="n">sub_dict</span><span class="o">.</span><span class="n">keys</span><span class="p">())]</span>
+            <span class="n">gathered_obj</span> <span class="o">=</span> <span class="n">gather</span><span class="p">(</span><span class="n">values</span><span class="p">,</span> <span class="n">target_device</span><span class="p">)</span> <span class="k">if</span> <span class="n">uses_cuda</span> <span class="ow">and</span> <span class="nb">len</span><span class="p">(</span><span class="n">values</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">1</span> <span class="k">else</span> <span class="n">values</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span>
+            <span class="n">gathered_io_dict</span><span class="p">[</span><span class="n">module_path</span><span class="p">][</span><span class="n">io_type</span><span class="p">]</span> <span class="o">=</span> <span class="n">gathered_obj</span>
+    <span class="k">return</span> <span class="n">gathered_io_dict</span></div>
+
+
+
+<div class="viewcode-block" id="update_io_dict">
+<a class="viewcode-back" href="../../../subpkgs/core.html#torchdistill.core.util.update_io_dict">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">update_io_dict</span><span class="p">(</span><span class="n">main_io_dict</span><span class="p">,</span> <span class="n">sub_io_dict</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">"""</span>
+<span class="sd">    Updates an I/O dict with a sub I/O dict.</span>
+
+<span class="sd">    :param main_io_dict: main I/O dict to be updated.</span>
+<span class="sd">    :type main_io_dict: dict</span>
+<span class="sd">    :param sub_io_dict: sub I/O dict.</span>
+<span class="sd">    :type sub_io_dict: dict</span>
+<span class="sd">    """</span>
+    <span class="k">for</span> <span class="n">key</span><span class="p">,</span> <span class="n">module_io_dict</span> <span class="ow">in</span> <span class="n">sub_io_dict</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+        <span class="k">for</span> <span class="n">io_type</span><span class="p">,</span> <span class="n">value</span> <span class="ow">in</span> <span class="n">module_io_dict</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+            <span class="c1"># Tensors are always treated as stored values as `len` is not defined for 0-dim tensors and</span>
+            <span class="c1"># would drop empty batches, while empty containers mean that nothing was stored</span>
+            <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">value</span><span class="p">,</span> <span class="n">torch</span><span class="o">.</span><span class="n">Tensor</span><span class="p">)</span> <span class="ow">or</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">value</span><span class="p">,</span> <span class="n">abc</span><span class="o">.</span><span class="n">Sized</span><span class="p">)</span> <span class="ow">or</span> <span class="nb">len</span><span class="p">(</span><span class="n">value</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
+                <span class="n">main_io_dict</span><span class="p">[</span><span class="n">key</span><span class="p">][</span><span class="n">io_type</span><span class="p">]</span> <span class="o">=</span> <span class="n">value</span></div>
+
+
+</pre></div>
+
+           </div>
+          </div>
+          <footer>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2023-2026, Yoshitomo Matsubara.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script>
+    <!-- Theme Analytics -->
+    <script async src="https://www.googletagmanager.com/gtag/js?id=G-LYK8SSJ7R5"></script>
+    <script>
+      window.dataLayer = window.dataLayer || [];
+      function gtag(){dataLayer.push(arguments);}
+      gtag('js', new Date());
+
+      gtag('config', 'G-LYK8SSJ7R5', {
+          'anonymize_ip': false,
+      });
+    </script> 
+
+</body>
+</html>
