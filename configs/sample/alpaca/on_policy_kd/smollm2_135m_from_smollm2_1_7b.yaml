@@ -58,6 +58,11 @@ models:
       pretrained_model_name_or_path: *teacher_model_key
       use_fast: True
     model_kwargs:
+      # SmolLM2's config.json declares bfloat16 and transformers 5.x honors it on load, which would
+      # leave the trainable weights in pure bf16 and break the fp16 GradScaler under
+      # `accelerate launch --mixed_precision fp16`. Mixed precision needs fp32 master weights, so
+      # load in fp32 and let autocast do the casting. Use `torch_dtype` on transformers 4.x
+      dtype: 'float32'
       pretrained_model_name_or_path: *teacher_model_key
   student_model:
     key: &student_model_key 'HuggingFaceTB/SmolLM2-135M-Instruct'
@@ -65,6 +70,11 @@ models:
       pretrained_model_name_or_path: *student_model_key
       use_fast: True
     model_kwargs:
+      # SmolLM2's config.json declares bfloat16 and transformers 5.x honors it on load, which would
+      # leave the trainable weights in pure bf16 and break the fp16 GradScaler under
+      # `accelerate launch --mixed_precision fp16`. Mixed precision needs fp32 master weights, so
+      # load in fp32 and let autocast do the casting. Use `torch_dtype` on transformers 4.x
+      dtype: 'float32'
       pretrained_model_name_or_path: *student_model_key
     _experiment: &student_experiment 'smollm2_135m_from_smollm2_1_7b'
     src_ckpt:
