@@ -1,0 +1,194 @@
+# Sample config for on-policy LLM distillation using torchdistill.
+# Teacher: SmolLM2-1.7B-Instruct (1.7B) --> Student: SmolLM2-135M-Instruct (135M)
+# Dataset: tatsu-lab/alpaca  (instruction-following, train-split only;
+#          split into 95 % train / 5 % test here via !call_method).
+#
+# The teacher-free baseline for this config is
+# configs/sample/alpaca/instruction_tuning/smollm2_135m.yaml, which shares every hyperparameter below.
+#
+# SmolLM2 was pre-trained in bf16 and has a small (49,152-entry) vocabulary. Both matter on a free-tier
+# T4: the numerical range survives the fp16 downcast (unlike GPT-2, which never saw reduced precision),
+# and the fp32 log-softmax tensors the KD loss materializes stay around 400 MB rather than the ~1.2 GB a
+# 128k-vocab model would need. Expected footprint here: about 8 GB with mixed precision.
+#
+# Usage (add `--mixed_precision fp16` on a T4, or `bf16` on an L4/A100):
+#   accelerate launch examples/hf_transformers/causal_language_modeling.py \
+#     --config configs/sample/alpaca/on_policy_kd/smollm2_135m_from_smollm2_1_7b.yaml \
+#     --run_log log/alpaca/on_policy_kd/smollm2_135m_from_smollm2_1_7b.txt \
+#     --seed 42
+
+dependencies:
+  - name: 'custom'
+
+# Load Alpaca and create a 95/5 train/test split (identical seed to the baseline config)
+datasets: &raw_datasets !call_method
+  obj: !import_call
+    key: 'datasets.load_dataset'
+    init:
+      kwargs:
+        path: 'tatsu-lab/alpaca'
+        split: 'train'
+  method_name: 'train_test_split'
+  kwargs:
+    test_size: 0.05
+    seed: 42
+
+preprocess:
+  prompt_key: 'instruction'
+  response_key: 'output'
+  max_prompt_length: 256
+  max_length: 512
+  base_split_name: 'train'
+  batched: True
+  # The prompts are wrapped in SmolLM2's chat template, which the instruct tokenizer ships. Switch to the
+  # base checkpoints (drop the '-Instruct' suffix) and set this to False for a base-model experiment; the
+  # tokenizer and vocabulary are shared across the whole SmolLM2 suite either way, which is what lets the
+  # token-level KL divergence below compare the two models' logits position by position
+  use_chat_template: True
+  system_prompt: 'You are a helpful assistant.'
+  dataset_id_map:
+    &train_dataset_id 'alpaca/train': 'train'
+    &val_dataset_id   'alpaca/val':   'test'
+    &test_dataset_id  'alpaca/test':  'test'
+
+models:
+  teacher_model:
+    key: &teacher_model_key 'HuggingFaceTB/SmolLM2-1.7B-Instruct'
+    tokenizer_kwargs:
+      pretrained_model_name_or_path: *teacher_model_key
+      use_fast: True
+    model_kwargs:
+      pretrained_model_name_or_path: *teacher_model_key
+  student_model:
+    key: &student_model_key 'HuggingFaceTB/SmolLM2-135M-Instruct'
+    tokenizer_kwargs:
+      pretrained_model_name_or_path: *student_model_key
+      use_fast: True
+    model_kwargs:
+      pretrained_model_name_or_path: *student_model_key
+    _experiment: &student_experiment 'smollm2_135m_from_smollm2_1_7b'
+    src_ckpt:
+    dst_ckpt: !join ['./resource/ckpt/alpaca/on_policy_kd/', *student_experiment]
+
+train:
+  log_freq: 100
+  num_epochs: &num_epochs 3
+  train_data_loader:
+    dataset_id: *train_dataset_id
+    sampler:
+      class_or_func: !import_get
+        key: 'torch.utils.data.RandomSampler'
+      kwargs:
+    kwargs:
+      batch_size: &train_batch_size 4
+      num_workers: 2
+      pin_memory: True
+      drop_last: False
+    collate_fn: 'OnPolicyDataCollator'
+    requires_supp: False
+  val_data_loader:
+    dataset_id: *val_dataset_id
+    sampler: &val_sampler
+      class_or_func: !import_get
+        key: 'torch.utils.data.SequentialSampler'
+      kwargs:
+    kwargs:
+      batch_size: 8
+      num_workers: 2
+      pin_memory: True
+      drop_last: False
+    collate_fn: 'OnPolicyDataCollator'
+    requires_supp: False
+  # `generate_on_policy_sequences` collects the on-policy rollouts before each forward process and stores
+  # them in the batch, so that the teacher and the student are scored on the sequences the student generated.
+  # These 64 sequential decode steps per batch dominate the run time; halve `max_new_tokens` to halve it
+  pre_forward_proc:
+    key: 'generate_on_policy_sequences'
+    kwargs:
+      max_new_tokens: 64
+      do_sample: True
+      temperature: 1.0
+      top_p: 0.9
+  teacher:
+    forward_proc: 'forward_on_policy_sequences'
+    adaptations:
+    sequential: []
+    # The criterion reads the logits from the model output (module path '.'), so no forward hook is needed
+    forward_hook:
+      input: []
+      output: []
+    wrapper:
+    requires_grad: False
+    frozen_modules: []
+  student:
+    # Scores the on-policy sequences and computes the off-policy task loss for the `model_term` below.
+    # Switch to 'forward_on_policy_sequences' to skip that second forward pass when `model_term` is removed
+    forward_proc: 'forward_on_policy_sequences_with_task_loss'
+    adaptations:
+    sequential: []
+    forward_hook:
+      input: []
+      output: []
+    wrapper:
+    requires_grad: True
+    frozen_modules: []
+  optimizer:
+    key: 'optimizer_no_decay'
+    kwargs:
+      optimizer_key: 'AdamW'
+      lr: 5.0e-5
+      weight_decay: 0.0
+    filters_params: False
+    max_grad_norm: 1.0
+    grad_accum_step: &grad_accum_step 4
+  scheduler:
+    key: 'get_linear_schedule_with_warmup'
+    kwargs:
+      num_warmup_steps: 100
+      num_training_steps: !import_call
+        key: 'custom.optim.compute_num_training_steps'
+        init:
+          kwargs:
+            dataset: !access_by_index_or_key
+              data: *raw_datasets
+              index_or_key: 'train'
+            batch_size: *train_batch_size
+            num_epochs: *num_epochs
+            grad_accum_step: *grad_accum_step
+            world_size: 1
+    scheduling_step: 1
+  # L_total = alpha * L_task (off-policy cross-entropy) + (1 - alpha) * L_KD (on-policy KL divergence).
+  # Set the `model_term` weight to 0.0 (or remove the term) for pure on-policy distillation, and remove the
+  # `on_policy_kd` sub term to fall back to the baseline config's plain fine-tuning
+  criterion:
+    key: 'WeightedSumLoss'
+    kwargs:
+      model_term:
+        # alpha: weight of the off-policy task loss
+        weight: 0.5
+      sub_terms:
+        on_policy_kd:
+          criterion:
+            key: 'OnPolicyKDLoss'
+            kwargs:
+              # 'forward': KL(p_teacher || p_student) - teacher-covering, recommended
+              # 'reverse': KL(p_student || p_teacher) - mode-seeking
+              kl_type: 'forward'
+              student_module_path: '.'
+              student_module_io: 'output'
+              teacher_module_path: '.'
+              teacher_module_io: 'output'
+          # 1 - alpha: weight of the on-policy KL divergence
+          weight: 0.5
+    func2extract_model_loss: 'extract_transformers_loss'
+
+test:
+  test_data_loader:
+    dataset_id: *test_dataset_id
+    sampler: *val_sampler
+    kwargs:
+      batch_size: 8
+      num_workers: 2
+      pin_memory: True
+      drop_last: False
+    collate_fn: 'OnPolicyDataCollator'
