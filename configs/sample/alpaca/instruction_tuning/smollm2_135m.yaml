@@ -80,7 +80,7 @@ train:
         key: 'torch.utils.data.RandomSampler'
       kwargs:
     kwargs:
-      batch_size: &train_batch_size 4
+      batch_size: &train_batch_size 16
       num_workers: 2
       pin_memory: True
       drop_last: False
@@ -120,7 +120,7 @@ train:
       weight_decay: 0.0
     filters_params: False
     max_grad_norm: 1.0
-    grad_accum_step: &grad_accum_step 4
+    grad_accum_step: &grad_accum_step 1
   scheduler:
     key: 'get_linear_schedule_with_warmup'
     kwargs:

@@ -4,7 +4,10 @@
 #          split into 95 % train / 5 % test here via !call_method).
 #
 # The teacher-free baseline for this config is
-# configs/sample/alpaca/instruction_tuning/smollm2_135m.yaml, which shares every hyperparameter below.
+# configs/sample/alpaca/instruction_tuning/smollm2_135m.yaml, which shares every hyperparameter below except
+# the micro-batch: it runs batch_size 16 without accumulation, while this config keeps batch_size 4 with
+# grad_accum_step 4 to leave T4 headroom for the 1.7B teacher. The effective batch size and optimizer step
+# count are the same.
 #
 # SmolLM2 was pre-trained in bf16 and has a small (49,152-entry) vocabulary. Both matter on a free-tier
 # T4: the numerical range survives the fp16 downcast (unlike GPT-2, which never saw reduced precision),
