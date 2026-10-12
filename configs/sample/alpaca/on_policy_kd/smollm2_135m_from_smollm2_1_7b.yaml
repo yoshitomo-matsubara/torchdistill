@@ -5,7 +5,7 @@
 #
 # The teacher-free baseline for this config is
 # configs/sample/alpaca/instruction_tuning/smollm2_135m.yaml, which shares every hyperparameter below except
-# the micro-batch: it runs batch_size 16 without accumulation, while this config keeps batch_size 4 with
+# the micro-batch: it runs batch_size 8 with grad_accum_step 2, while this config keeps batch_size 4 with
 # grad_accum_step 4 to leave T4 headroom for the 1.7B teacher. The effective batch size and optimizer step
 # count are the same.
 #
@@ -85,7 +85,7 @@ models:
 
 train:
   log_freq: 100
-  num_epochs: &num_epochs 3
+  num_epochs: &num_epochs 1
   train_data_loader:
     dataset_id: *train_dataset_id
     sampler:
@@ -114,11 +114,12 @@ train:
     requires_supp: False
   # `generate_on_policy_sequences` collects the on-policy rollouts before each forward process and stores
   # them in the batch, so that the teacher and the student are scored on the sequences the student generated.
-  # These 64 sequential decode steps per batch dominate the run time; halve `max_new_tokens` to halve it
+  # These sequential decode steps per batch dominate the run time, so `max_new_tokens` is kept at 32 to fit a
+  # free-tier T4 session; the run time scales roughly linearly with it
   pre_forward_proc:
     key: 'generate_on_policy_sequences'
     kwargs:
-      max_new_tokens: 64
+      max_new_tokens: 32
       do_sample: True
       temperature: 1.0
       top_p: 0.9

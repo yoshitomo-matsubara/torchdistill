@@ -4,7 +4,11 @@
 #          split into 95 % train / 5 % test here via !call_method).
 #
 # The teacher-free baseline for this config is
-# configs/sample/alpaca/instruction_tuning/smollm2_135m.yaml, which shares every hyperparameter below.
+# configs/sample/alpaca/instruction_tuning/smollm2_135m.yaml, which shares every hyperparameter below,
+# including the micro-batch: both use batch_size 8 with grad_accum_step 2 because batch_size 16 runs out of
+# memory on a T4 in the backward pass once a batch of long sequences arrives. batch_size 8 rather than 4
+# halves the number of `generate` calls, which dominate the run time; fall back to batch_size 4 with
+# grad_accum_step 4 if it runs out of memory.
 #
 # SmolLM2 was pre-trained in bf16 and has a small (49,152-entry) vocabulary. Both matter on a free-tier
 # T4: the numerical range survives the fp16 downcast (unlike GPT-2, which never saw reduced precision),
@@ -82,7 +86,7 @@ models:
 
 train:
   log_freq: 100
-  num_epochs: &num_epochs 3
+  num_epochs: &num_epochs 1
   train_data_loader:
     dataset_id: *train_dataset_id
     sampler:
@@ -90,7 +94,7 @@ train:
         key: 'torch.utils.data.RandomSampler'
       kwargs:
     kwargs:
-      batch_size: &train_batch_size 16
+      batch_size: &train_batch_size 8
       num_workers: 2
       pin_memory: True
       drop_last: False
@@ -111,11 +115,12 @@ train:
     requires_supp: False
   # `generate_on_policy_sequences` collects the on-policy rollouts before each forward process and stores
   # them in the batch, so that the teacher and the student are scored on the sequences the student generated.
-  # These 64 sequential decode steps per batch dominate the run time; halve `max_new_tokens` to halve it
+  # These sequential decode steps per batch dominate the run time, so `max_new_tokens` is kept at 32 to fit a
+  # free-tier T4 session; the run time scales roughly linearly with it
   pre_forward_proc:
     key: 'generate_on_policy_sequences'
     kwargs:
-      max_new_tokens: 64
+      max_new_tokens: 32
       do_sample: True
       temperature: 1.0
       top_p: 0.9
@@ -150,7 +155,7 @@ train:
       weight_decay: 0.0
     filters_params: False
     max_grad_norm: 1.0
-    grad_accum_step: &grad_accum_step 1
+    grad_accum_step: &grad_accum_step 2
   scheduler:
     key: 'get_linear_schedule_with_warmup'
     kwargs:
