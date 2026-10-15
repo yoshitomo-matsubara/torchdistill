@@ -23,12 +23,7 @@ def get_device_index(data):
             result = get_device_index(data)
             if result is not None:
                 return result
-    elif isinstance(data, tuple):
-        for d in data:
-            result = get_device_index(d)
-            if result is not None:
-                return result
-    elif isinstance(data, abc.Sequence) and not isinstance(data, (list, tuple)):
+    elif isinstance(data, abc.Sequence) and not isinstance(data, (str, bytes)):
         for d in data:
             result = get_device_index(d)
             if result is not None:
