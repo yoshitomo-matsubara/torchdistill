@@ -154,7 +154,8 @@ class KDLoss(nn.KLDivLoss):
     :param temperature: hyperparameter :math:`\\tau` to soften class-probability distributions.
     :type temperature: float
     :param alpha: balancing factor for :math:`L_{CE}`, cross-entropy.
-    :type alpha: float
+        If None, returns only the soft loss.
+    :type alpha: float or None
     :param beta: balancing factor (default: :math:`1 - \\alpha`) for :math:`L_{KL}`, KL divergence between class-probability distributions softened by :math:`\\tau`.
     :type beta: float or None
     :param reduction: ``reduction`` for KLDivLoss. If ``reduction`` = 'batchmean', CrossEntropyLoss's ``reduction`` will be 'mean'.
@@ -171,7 +172,9 @@ class KDLoss(nn.KLDivLoss):
         self.teacher_module_io = teacher_module_io
         self.temperature = temperature
         self.alpha = alpha
-        self.beta = 1 - alpha if beta is None else beta
+        if beta is None:
+            beta = 1 if alpha is None else 1 - alpha
+        self.beta = beta
         cel_reduction = 'mean' if reduction == 'batchmean' else reduction
         self.cross_entropy_loss = nn.CrossEntropyLoss(reduction=cel_reduction, **kwargs)
 
@@ -1775,7 +1778,8 @@ class LogitStdKDLoss(nn.KLDivLoss):
     :param eps: value added to the denominator for numerical stability.
     :type eps: float
     :param alpha: balancing factor for :math:`L_{CE}`, cross-entropy.
-    :type alpha: float
+        If None, returns only the soft loss.
+    :type alpha: float or None
     :param beta: balancing factor (default: :math:`1 - \\alpha`) for :math:`L_{KL}`, KL divergence between class-probability distributions softened by :math:`\\tau`.
     :type beta: float or None
     :param reduction: ``reduction`` for KLDivLoss. If ``reduction`` = 'batchmean', CrossEntropyLoss's ``reduction`` will be 'mean'.
@@ -1808,7 +1812,9 @@ class LogitStdKDLoss(nn.KLDivLoss):
         self.temperature = temperature
         self.eps = eps
         self.alpha = alpha
-        self.beta = 1 - alpha if beta is None else beta
+        if beta is None:
+            beta = 1 if alpha is None else 1 - alpha
+        self.beta = beta
         cel_reduction = 'mean' if reduction == 'batchmean' else reduction
         self.cross_entropy_loss = nn.CrossEntropyLoss(reduction=cel_reduction, **kwargs)
 
