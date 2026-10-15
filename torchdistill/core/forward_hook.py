@@ -74,7 +74,7 @@ def register_forward_hook_with_dict(
         if isinstance(func_input, tuple) and len(func_input) == 1:
             func_input = func_input[0]
 
-        device_index = get_device_index(func_output)
+        device_index = get_device_index(func_input)
         sub_io_dict = io_dict[module_path]
         if 'input' not in sub_io_dict:
             sub_io_dict['input'] = dict()

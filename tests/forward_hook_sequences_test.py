@@ -53,3 +53,31 @@ class HookSequenceTest(TestCase):
                 finally:
                     manager.clear()
                 self.assertFalse(model._forward_hooks)
+
+
+class MetadataOnlyModule(nn.Module):
+    def __init__(self, result):
+        super().__init__()
+        self.result = result
+
+    def forward(self, x):
+        return self.result
+
+
+class InputOnlyHookTest(TestCase):
+    def test_input_device_does_not_depend_on_output(self):
+        for output in (None, {'label': 'class'}):
+            with self.subTest(output=output):
+                model = MetadataOnlyModule(output)
+                manager = ForwardHookManager('cpu')
+                manager.add_hook_to_module(model, 'observer', True, False)
+                x = torch.randn(2, 3, requires_grad=True)
+                try:
+                    model(x)
+                    captured = manager.pop_io_dict_from_device(torch.device('cpu'))
+                    self.assertIs(captured['observer']['input'], x)
+                    captured['observer']['input'].sum().backward()
+                    torch.testing.assert_close(x.grad, torch.ones_like(x))
+                finally:
+                    manager.clear()
+                self.assertFalse(model._forward_hooks)
