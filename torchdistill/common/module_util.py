@@ -188,6 +188,7 @@ def get_module(root_module, module_path):
                         logger.warning('`{}` of `{}` could not be reached in `{}`'.format(
                             module_name, module_path, type(root_module).__name__)
                         )
+                        return None
                 else:
                     module = getattr(module, module_name)
             elif isinstance(module, (Sequential, ModuleList)) and module_name.lstrip('-').isnumeric():
