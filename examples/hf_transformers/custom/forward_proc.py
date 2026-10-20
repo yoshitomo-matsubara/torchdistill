@@ -47,9 +47,16 @@ def forward_on_policy_sequences(model, sample_batch, targets=None, supp_dict=Non
 
     Used for the teacher, and for the student when the criterion has no model (task) loss term.
     """
-    return model(
-        input_ids=sample_batch['on_policy_input_ids'], attention_mask=sample_batch['on_policy_attention_mask']
-    )
+    attention_mask = sample_batch['on_policy_attention_mask']
+    model_kwargs = {'input_ids': sample_batch['on_policy_input_ids'], 'attention_mask': attention_mask}
+    # The prompts are left-padded, and without explicit position ids most models count positions from the first
+    # (padding) column. `generate` derives them from the attention mask instead, so the scoring forward has to
+    # match it. This matters for learned absolute positions (e.g. GPT-2), not for RoPE, and models without
+    # positional ids (e.g. ALiBi in BLOOM) do not accept the argument at all
+    param_keys = get_forward_param_keys(type(unwrap_model(model)))
+    if param_keys is None or 'position_ids' in param_keys:
+        model_kwargs['position_ids'] = (attention_mask.cumsum(dim=-1) - 1).clamp(min=0)
+    return model(**model_kwargs)
 
 
 @register_forward_proc_func

@@ -13,7 +13,7 @@ def generate_on_policy_sequences(self, sample_batch=None, **generation_kwargs):
     generated (completion) tokens:
 
     * ``on_policy_input_ids`` / ``on_policy_attention_mask``: prompt + generated completion.
-    * ``completion_mask``: True at the generated positions that are not padding.
+    * ``completion_mask``: True at the generated positions up to and including the first EOS token.
     * ``prompt_length``: width of the left-padded prompt tensor, i.e. the offset at which completions start.
 
     Prompts are left-padded by the collate function, so every completion starts at the same offset and the
@@ -52,7 +52,21 @@ def generate_on_policy_sequences(self, sample_batch=None, **generation_kwargs):
     unwrapped_student_model.train(was_training)
 
     prompt_length = prompt_input_ids.shape[1]
+    # Many causal LMs reuse EOS as the pad token (SmolLM2's chat template even puts it inside every prompt), so
+    # comparing against pad_token_id would mask real tokens. The prompt part keeps the collator's mask, and a
+    # completion is valid up to and including its first EOS; `generate` only pads after that
+    generation_config = generation_kwargs.get('generation_config', unwrapped_student_model.generation_config)
+    eos_token_id = generation_kwargs.get('eos_token_id', generation_config.eos_token_id)
+    completion_ids = generated_ids[:, prompt_length:]
+    if eos_token_id is None:
+        completion_mask = torch.ones_like(completion_ids, dtype=torch.bool)
+    else:
+        is_eos = torch.isin(completion_ids, torch.tensor(eos_token_id, device=completion_ids.device).view(-1))
+        completion_mask = (is_eos.long().cumsum(dim=1) - is_eos.long()) == 0
+
     sample_batch['on_policy_input_ids'] = generated_ids
-    sample_batch['on_policy_attention_mask'] = (generated_ids != pad_token_id).long()
-    sample_batch['completion_mask'] = generated_ids[:, prompt_length:] != pad_token_id
+    sample_batch['on_policy_attention_mask'] = torch.cat(
+        [sample_batch['prompt_attention_mask'], completion_mask.long()], dim=1
+    )
+    sample_batch['completion_mask'] = completion_mask
     sample_batch['prompt_length'] = prompt_length
