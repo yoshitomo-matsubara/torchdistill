@@ -363,12 +363,15 @@ def train(
     ) if teacher_model is None else get_distillation_box(
         teacher_model, student_model, dataset_dict, train_config, device, device_ids, distributed, lr_factor, accelerator
     )
+    # Accelerator.prepare() may wrap the model (e.g., FSDP shards the original module's parameters into flat
+    # 1-D views), so evaluate and save through the box's prepared model rather than the original reference
+    prepared_model = training_box.model if teacher_model is None else training_box.student_model
     log_freq = train_config['log_freq']
     best_val_perplexity = float('inf')
     for epoch in range(training_box.num_epochs):
         training_box.pre_epoch_process(epoch=epoch)
         train_one_epoch(training_box, epoch, log_freq, tracker=tracker)
-        val_perplexity = evaluate(student_model, training_box.val_data_loader, accelerator, header='Validation: ')
+        val_perplexity = evaluate(prepared_model, training_box.val_data_loader, accelerator, header='Validation: ')
         if tracker is not None:
             tracker.log(
                 {'val/perplexity': val_perplexity, 'epoch': epoch},
@@ -381,10 +384,10 @@ def train(
             accelerator.wait_for_everyone()
             # get_state_dict() performs the collective full-parameter gather FSDP/FSDP2 require;
             # a plain unwrapped_model.state_dict() would only capture the local shard.
-            unwrapped_model = accelerator.unwrap_model(student_model)
+            unwrapped_model = accelerator.unwrap_model(prepared_model)
             unwrapped_model.save_pretrained(
                 dst_ckpt_dir_path, is_main_process=accelerator.is_main_process,
-                save_function=accelerator.save, state_dict=accelerator.get_state_dict(student_model),
+                save_function=accelerator.save, state_dict=accelerator.get_state_dict(prepared_model),
             )
         training_box.post_epoch_process()
 
