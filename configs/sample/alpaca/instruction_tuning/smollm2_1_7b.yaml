@@ -1,0 +1,173 @@
+# Sample config for fine-tuning the on-policy KD *teacher* on Alpaca using torchdistill.
+# Model:   SmolLM2-1.7B-Instruct (1.7B)
+# Dataset: tatsu-lab/alpaca  (instruction-following, train-split only;
+#          split into 95 % train / 5 % test here via !call_method).
+#
+# Builds a task-adapted teacher for configs/sample/alpaca/on_policy_kd/smollm2_135m_from_smollm2_1_7b.yaml.
+# The off-the-shelf instruct checkpoint never saw Alpaca's reference style, so the KL term would pull the
+# student toward a distribution the task loss is pulling it away from. The KD config loads its teacher from
+# this run's `dst_ckpt` and fails if the directory does not exist, so run this config first.
+#
+# Not sized for Colab: meant for two local 24 GB GPUs (e.g. 2x RTX 3090 Ti) with FSDP. Full fine-tuning with
+# AdamW keeps fp32 weights, gradients and two moment buffers, ~16 bytes/param = ~27 GB for 1.7B, which does
+# not fit one 24 GB card; FULL_SHARD splits that to ~14 GB per GPU. `batch_size` is per process, so the
+# effective batch size is 4 x grad_accum_step 4 x 2 GPUs = 32, and `world_size: 2` below (and `--world_size 2`
+# on the command line, which the script uses to recompute the schedule length) keeps the LR schedule in
+# optimizer steps. If the backward pass runs out of memory, use batch_size 2 with grad_accum_step 8.
+#
+# Usage (bf16 on Ampere or newer):
+#   CUDA_VISIBLE_DEVICES=0,1 uv run accelerate launch --num_processes 2 --mixed_precision bf16 \
+#     --use_fsdp --fsdp_sharding_strategy FULL_SHARD --fsdp_auto_wrap_policy TRANSFORMER_BASED_WRAP \
+#     --fsdp_transformer_layer_cls_to_wrap LlamaDecoderLayer --fsdp_state_dict_type FULL_STATE_DICT \
+#     --fsdp_use_orig_params true \
+#     examples/hf_transformers/causal_language_modeling.py \
+#     --config configs/sample/alpaca/instruction_tuning/smollm2_1_7b.yaml \
+#     --run_log log/alpaca/instruction_tuning/smollm2_1_7b.txt \
+#     --world_size 2 --seed 42
+
+dependencies:
+  - name: 'custom'
+
+# Load Alpaca and create a 95/5 train/test split (identical seed to the KD configs for a fair comparison)
+datasets: &raw_datasets !call_method
+  obj: !import_call
+    key: 'datasets.load_dataset'
+    init:
+      kwargs:
+        path: 'tatsu-lab/alpaca'
+        split: 'train'
+  method_name: 'train_test_split'
+  kwargs:
+    test_size: 0.05
+    seed: 42
+
+preprocess:
+  prompt_key: 'instruction'
+  response_key: 'output'
+  max_prompt_length: 256
+  max_length: 512
+  base_split_name: 'train'
+  batched: True
+  # The prompts are wrapped in SmolLM2's chat template, which the instruct tokenizer ships.
+  # Switch to the base checkpoints (drop the '-Instruct' suffix) and set this to False for a
+  # base-model experiment; the vocabulary is the same either way
+  use_chat_template: True
+  system_prompt: 'You are a helpful assistant.'
+  dataset_id_map:
+    &train_dataset_id 'alpaca/train': 'train'
+    &val_dataset_id   'alpaca/val':   'test'
+    &test_dataset_id  'alpaca/test':  'test'
+
+# No `teacher_model` entry: this is plain instruction tuning of the model that later serves as the teacher
+models:
+  model:
+    key: &model_key 'HuggingFaceTB/SmolLM2-1.7B-Instruct'
+    tokenizer_kwargs:
+      pretrained_model_name_or_path: *model_key
+      use_fast: True
+    model_kwargs:
+      # SmolLM2's config.json declares bfloat16 and transformers 5.x honors it on load, which would
+      # leave the trainable weights in pure bf16 and break the fp16 GradScaler under
+      # `accelerate launch --mixed_precision fp16`. Mixed precision needs fp32 master weights, so
+      # load in fp32 and let autocast do the casting. Use `torch_dtype` on transformers 4.x
+      dtype: 'float32'
+      pretrained_model_name_or_path: *model_key
+    _experiment: &experiment 'smollm2_1_7b'
+    src_ckpt:
+    dst_ckpt: !join ['./resource/ckpt/alpaca/instruction_tuning/', *experiment]
+
+train:
+  log_freq: 100
+  num_epochs: &num_epochs 3
+  train_data_loader:
+    dataset_id: *train_dataset_id
+    sampler:
+      class_or_func: !import_get
+        key: 'torch.utils.data.RandomSampler'
+      kwargs:
+    kwargs:
+      batch_size: &train_batch_size 4
+      num_workers: 2
+      pin_memory: True
+      drop_last: False
+    collate_fn: 'OnPolicyDataCollator'
+    requires_supp: False
+  val_data_loader:
+    dataset_id: *val_dataset_id
+    sampler: &val_sampler
+      class_or_func: !import_get
+        key: 'torch.utils.data.SequentialSampler'
+      kwargs:
+    kwargs:
+      batch_size: 8
+      num_workers: 2
+      pin_memory: True
+      drop_last: False
+    collate_fn: 'OnPolicyDataCollator'
+    requires_supp: False
+  # No `pre_forward_proc`: there are no on-policy rollouts to generate without a teacher to score them
+  model:
+    # The batch carries the prompt tensors the instruction pipeline adds for on-policy rollouts;
+    # `forward_batch_as_kwargs` drops the entries the model's forward does not accept
+    forward_proc: 'forward_batch_as_kwargs'
+    adaptations:
+    sequential: []
+    forward_hook:
+      input: []
+      output: []
+    wrapper:
+    requires_grad: True
+    frozen_modules: []
+  optimizer:
+    key: 'optimizer_no_decay'
+    kwargs:
+      optimizer_key: 'AdamW'
+      lr: 1.0e-5
+      weight_decay: 0.0
+    filters_params: False
+    max_grad_norm: 1.0
+    grad_accum_step: &grad_accum_step 4
+  scheduler:
+    key: 'get_linear_schedule_with_warmup'
+    kwargs:
+      num_warmup_steps: 100
+      num_training_steps: !import_call
+        key: 'custom.optim.compute_num_training_steps'
+        init:
+          kwargs:
+            dataset: !access_by_index_or_key
+              data: *raw_datasets
+              index_or_key: 'train'
+            batch_size: *train_batch_size
+            num_epochs: *num_epochs
+            grad_accum_step: *grad_accum_step
+            world_size: 2
+    scheduling_step: 1
+  # L_total = L_task: the cross-entropy over the reference completions (prompt tokens are masked with -100),
+  # i.e. the `alpha = 1` corner of the KD configs' weighted sum, with no sub terms
+  criterion:
+    key: 'WeightedSumLoss'
+    kwargs:
+      model_term:
+        weight: 1.0
+      sub_terms:
+    func2extract_model_loss: 'extract_transformers_loss'
+
+test:
+  test_data_loader:
+    dataset_id: *test_dataset_id
+    sampler: *val_sampler
+    kwargs:
+      batch_size: 8
+      num_workers: 2
+      pin_memory: True
+      drop_last: False
+    collate_fn: 'OnPolicyDataCollator'
+
+# Optional: remove this block (or pass -disable_tracker) to run without trackio; logs/trackio/ in dst_ckpt is
+# then not created. Runs of all the alpaca configs share one project so they can be compared on one dashboard
+tracker:
+  engine: 'trackio'
+  kwargs:
+    project: 'torchdistill-alpaca'
+    name: !join ['instruction_tuning-', *experiment]

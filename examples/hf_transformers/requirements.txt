@@ -6,3 +6,4 @@ torch >= 2.5.1
 transformers >= 4.6.1
 pandas
 evaluate
+trackio

@@ -13,8 +13,8 @@ Both pipelines support plain training (no teacher) and off-policy distillation. 
 `instruction` pipeline, the student can also generate the sequences it is scored on (on-policy data
 collection), minimizing the token-level KL divergence over those sequences. This follows the GKD framework:
 
-  Gu et al., "Generalized Knowledge Distillation for Auto-regressive Sequence Models"
-  https://arxiv.org/abs/2306.13649
+  Agarwal et al., "On-Policy Distillation of Language Models: Learning from Self-Generated Mistakes", ICLR 2024
+  https://openreview.net/forum?id=3zKtaqxLhW
 
 The rollouts, the sequence scoring, and the KL divergence are all driven by the yaml configuration through
 torchdistill's distillation box: `custom.pre_forward_proc` collects the rollouts, `custom.forward_proc`
@@ -36,8 +36,10 @@ Modifications by Yoshitomo Matsubara, Copyright 2025.
 # limitations under the License.
 
 import argparse
+import json
 import logging
 import os
+import shutil
 import time
 
 import datasets
@@ -55,7 +57,8 @@ from torchdistill.core.distillation import get_distillation_box
 from torchdistill.core.training import get_training_box
 from torchdistill.datasets import util
 from torchdistill.datasets.registry import register_collate_func
-from torchdistill.misc.log import set_basic_log_config, setup_log_file, setup_tracker, SmoothedValue, MetricLogger
+from torchdistill.misc.log import set_basic_log_config, setup_log_file, setup_tracker, SmoothedValue, MetricLogger, \
+    TrainingTrackerReader
 
 logger = def_logger.getChild(__name__)
 
@@ -363,12 +366,16 @@ def train(
     ) if teacher_model is None else get_distillation_box(
         teacher_model, student_model, dataset_dict, train_config, device, device_ids, distributed, lr_factor, accelerator
     )
+    # Accelerator.prepare() may wrap the model (e.g., FSDP shards the original module's parameters into flat
+    # 1-D views), so evaluate and save through the box's prepared model rather than the original reference
+    prepared_model = training_box.model if teacher_model is None else training_box.student_model
     log_freq = train_config['log_freq']
     best_val_perplexity = float('inf')
+    best_epoch = None
     for epoch in range(training_box.num_epochs):
         training_box.pre_epoch_process(epoch=epoch)
         train_one_epoch(training_box, epoch, log_freq, tracker=tracker)
-        val_perplexity = evaluate(student_model, training_box.val_data_loader, accelerator, header='Validation: ')
+        val_perplexity = evaluate(prepared_model, training_box.val_data_loader, accelerator, header='Validation: ')
         if tracker is not None:
             tracker.log(
                 {'val/perplexity': val_perplexity, 'epoch': epoch},
@@ -378,15 +385,45 @@ def train(
         if val_perplexity < best_val_perplexity:
             logger.info('Updating ckpt at {}'.format(dst_ckpt_dir_path))
             best_val_perplexity = val_perplexity
+            best_epoch = epoch
             accelerator.wait_for_everyone()
             # get_state_dict() performs the collective full-parameter gather FSDP/FSDP2 require;
             # a plain unwrapped_model.state_dict() would only capture the local shard.
-            unwrapped_model = accelerator.unwrap_model(student_model)
+            unwrapped_model = accelerator.unwrap_model(prepared_model)
             unwrapped_model.save_pretrained(
                 dst_ckpt_dir_path, is_main_process=accelerator.is_main_process,
-                save_function=accelerator.save, state_dict=accelerator.get_state_dict(student_model),
+                save_function=accelerator.save, state_dict=accelerator.get_state_dict(prepared_model),
             )
         training_box.post_epoch_process()
+    return best_val_perplexity, best_epoch
+
+
+def save_run_settings(logs_dir_path, config_file_path, args):
+    file_util.make_dirs(logs_dir_path)
+    # Copy the yaml file verbatim, keeping its anchors and tags, rather than dumping the resolved config
+    shutil.copyfile(config_file_path, os.path.join(logs_dir_path, 'config.yaml'))
+    with open(os.path.join(logs_dir_path, 'args.json'), 'w') as fp:
+        json.dump(vars(args), fp, indent=2)
+
+
+def save_metrics(logs_dir_path, metric_dict):
+    with open(os.path.join(logs_dir_path, 'metrics.json'), 'w') as fp:
+        json.dump(metric_dict, fp, indent=2)
+
+
+def export_tracker_run(tracker, logs_dir_path):
+    tracker_dir_path = os.path.join(logs_dir_path, tracker.engine)
+    file_util.make_dirs(tracker_dir_path)
+    project, run_name = tracker.run.project, tracker.run.name
+    with open(os.path.join(tracker_dir_path, 'run_manifest.json'), 'w') as fp:
+        json.dump({'engine': tracker.engine, 'project': project, 'run_name': run_name}, fp, indent=2)
+
+    # The run itself already lives in the tracker's own storage, so a failed export only costs this local copy
+    try:
+        history = TrainingTrackerReader(tracker.engine).load_run_history(project, run_name)
+        history.to_csv(os.path.join(tracker_dir_path, 'summary.csv'), index=False)
+    except Exception as e:
+        logger.warning(f'Failed to export the {tracker.engine} run history of `{project}/{run_name}`: {e}')
 
 
 def main(args):
@@ -400,7 +437,8 @@ def main(args):
         cudnn.benchmark = True
 
     set_seed(args.seed)
-    config = yaml_util.load_yaml_file(os.path.expanduser(args.config))
+    config_file_path = os.path.expanduser(args.config)
+    config = yaml_util.load_yaml_file(config_file_path)
     import_dependencies(config.get('dependencies', None))
 
     accelerator = Accelerator()
@@ -451,12 +489,18 @@ def main(args):
 
     tracker = setup_tracker(config.get('tracker', None), run_config=config) \
         if accelerator.is_main_process and not args.disable_tracker else None
-    if not args.test_only:
-        train(
+    logs_dir_path = os.path.join(dst_ckpt_dir_path, 'logs')
+    metric_dict = dict()
+    test_only = args.test_only
+    if not test_only:
+        if accelerator.is_main_process:
+            save_run_settings(logs_dir_path, config_file_path, args)
+        best_val_perplexity, best_epoch = train(
             teacher_model, student_model, dataset_dict, dst_ckpt_dir_path,
             device, device_ids, distributed, config, args, accelerator, tracker=tracker,
         )
         student_tokenizer.save_pretrained(dst_ckpt_dir_path)
+        metric_dict.update({'best_val_perplexity': best_val_perplexity, 'best_epoch': best_epoch})
 
     test_config = config['test']
     test_data_loader_config = test_config['test_data_loader']
@@ -469,7 +513,7 @@ def main(args):
 
     if not args.student_only and teacher_model is not None:
         teacher_model = teacher_model.to(accelerator.device)
-        evaluate(
+        metric_dict['teacher_test_perplexity'] = evaluate(
             teacher_model, test_data_loader, accelerator, title='[Teacher: {}]'.format(teacher_model_config['key'])
         )
 
@@ -479,9 +523,16 @@ def main(args):
     test_perplexity = evaluate(
         student_model, test_data_loader, accelerator, title='[Student: {}]'.format(student_model_config['key'])
     )
+    metric_dict['test_perplexity'] = test_perplexity
     if tracker is not None:
         tracker.log({'test/perplexity': test_perplexity})
         tracker.finish()
+
+    # A test-only run leaves logs/ alone so it does not overwrite the record of the run that trained the ckpt
+    if not test_only and accelerator.is_main_process:
+        save_metrics(logs_dir_path, metric_dict)
+        if tracker is not None:
+            export_tracker_run(tracker, logs_dir_path)
 
 
 if __name__ == '__main__':

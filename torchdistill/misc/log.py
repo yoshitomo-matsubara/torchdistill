@@ -81,7 +81,8 @@ class TrainingTracker(object):
             self.module = wandb
 
         self.engine = engine
-        self.module.init(**kwargs)
+        # Kept for its resolved `project` and `name`, which the library fills in when kwargs omit them
+        self.run = self.module.init(**kwargs)
 
     def log(self, metrics, step=None):
         """
