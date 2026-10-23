@@ -17,9 +17,9 @@ collection), minimizing the token-level KL divergence over those sequences. This
   https://openreview.net/forum?id=3zKtaqxLhW
 
 The rollouts, the sequence scoring, and the KL divergence are all driven by the yaml configuration through
-torchdistill's distillation box: `custom.pre_forward_proc` collects the rollouts, `custom.forward_proc`
-scores them, and `custom.loss.OnPolicyKDLoss` / `custom.loss.OffPolicyKDLoss` are the mid-level losses,
-combined with the task loss by `WeightedSumLoss`.
+torchdistill's distillation box: the `generate_on_policy_sequences` pre-forward process collects the rollouts,
+the `forward_on_policy_sequences*` forward processes score them, and `OnPolicyKDLoss` / `OffPolicyKDLoss` are
+the mid-level losses, combined with the task loss by `WeightedSumLoss`. All of them are in torchdistill.
 
 Modifications by Yoshitomo Matsubara, Copyright 2025.
 """
