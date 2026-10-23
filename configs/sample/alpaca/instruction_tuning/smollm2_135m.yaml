@@ -4,11 +4,15 @@
 #          split into 95 % train / 5 % test here via !call_method).
 #
 # This is the *baseline* for the SmolLM2 on-policy KD configs in
-# configs/sample/alpaca/on_policy_kd/smollm2_135m_from_smollm2_{360m,1_7b}.yaml: the same student, dataset,
-# split, sequence lengths, optimizer, scheduler and budget, trained only on the off-policy cross-entropy over
-# the reference completions (no teacher, no KL term). Since no teacher model is defined, the example script
-# builds a training box instead of a distillation box, and the criterion reduces to the model (task) loss.
-# Compare its test perplexity against the distilled students to isolate the gain from distillation.
+# configs/sample/alpaca/on_policy_kd/smollm2_135m_from_smollm2_{360m,1_7b}.yaml, trained only on the
+# off-policy cross-entropy over the reference completions (no teacher, no KL term). Since no teacher model is
+# defined, the example script builds a training box instead of a distillation box, and the criterion reduces
+# to the model (task) loss.
+#
+# The training budget matches the SmolLM2 teacher configs (smollm2_{360m,1_7b}.yaml in this directory):
+# 3 epochs at an effective batch size of 32 (8 x grad_accum_step 4), so the 135M/360M/1.7B fine-tunes differ
+# only in model size and learning rate (larger for the smaller model). Note this is a larger budget than the
+# 1-epoch KD students get, so a distilled student that beats this baseline does so against a fully trained one.
 #
 # SmolLM2 was pre-trained in bf16 and has a small (49,152-entry) vocabulary, which keeps both the numerical
 # range and the log-softmax tensors in the KD loss well within a free-tier T4.
@@ -72,7 +76,7 @@ models:
 
 train:
   log_freq: 100
-  num_epochs: &num_epochs 1
+  num_epochs: &num_epochs 3
   train_data_loader:
     dataset_id: *train_dataset_id
     sampler:
@@ -81,7 +85,7 @@ train:
       kwargs:
     kwargs:
       # batch_size 16 without accumulation runs out of memory on a T4 in the backward pass once a batch of
-      # long sequences arrives; 8 x grad_accum_step 2 keeps the effective batch size and optimizer step count
+      # long sequences arrives; 8 x grad_accum_step 4 gives the teacher configs' effective batch size of 32
       batch_size: &train_batch_size 8
       num_workers: 2
       pin_memory: True
@@ -122,7 +126,7 @@ train:
       weight_decay: 0.0
     filters_params: False
     max_grad_norm: 1.0
-    grad_accum_step: &grad_accum_step 2
+    grad_accum_step: &grad_accum_step 4
   scheduler:
     key: 'get_linear_schedule_with_warmup'
     kwargs:
@@ -159,3 +163,11 @@ test:
       pin_memory: True
       drop_last: False
     collate_fn: 'OnPolicyDataCollator'
+
+# Optional: remove this block (or pass -disable_tracker) to run without trackio; logs/trackio/ in dst_ckpt is
+# then not created. Runs of all the alpaca configs share one project so they can be compared on one dashboard
+tracker:
+  engine: 'trackio'
+  kwargs:
+    project: 'torchdistill-alpaca'
+    name: !join ['instruction_tuning-', *experiment]
