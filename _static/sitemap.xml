@@ -1,0 +1,62 @@
+<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9" xmlns:xhtml="http://www.w3.org/1999/xhtml">
+<url>
+    <loc>https://yoshitomo-matsubara.net/torchdistill/</loc>
+    <changefreq>monthly</changefreq>
+    <priority>0.8</priority>
+</url>
+<url>
+    <loc>https://yoshitomo-matsubara.net/torchdistill/usage.html</loc>
+    <changefreq>monthly</changefreq>
+    <priority>0.5</priority>
+</url>
+<url>
+    <loc>https://yoshitomo-matsubara.net/torchdistill/package.html</loc>
+    <changefreq>monthly</changefreq>
+    <priority>0.5</priority>
+</url>
+<url>
+    <loc>https://yoshitomo-matsubara.net/torchdistill/subpkgs/core.html</loc>
+    <changefreq>monthly</changefreq>
+    <priority>0.3</priority>
+</url>
+<url>
+    <loc>https://yoshitomo-matsubara.net/torchdistill/subpkgs/datasets.html</loc>
+    <changefreq>monthly</changefreq>
+    <priority>0.3</priority>
+</url>
+<url>
+    <loc>https://yoshitomo-matsubara.net/torchdistill/subpkgs/models.html</loc>
+    <changefreq>monthly</changefreq>
+    <priority>0.3</priority>
+</url>
+<url>
+    <loc>https://yoshitomo-matsubara.net/torchdistill/subpkgs/losses.html</loc>
+    <changefreq>monthly</changefreq>
+    <priority>0.3</priority>
+</url>
+<url>
+    <loc>https://yoshitomo-matsubara.net/torchdistill/subpkgs/optim.html</loc>
+    <changefreq>monthly</changefreq>
+    <priority>0.3</priority>
+</url>
+<url>
+    <loc>https://yoshitomo-matsubara.net/torchdistill/subpkgs/common.html</loc>
+    <changefreq>monthly</changefreq>
+    <priority>0.3</priority>
+</url>
+<url>
+    <loc>https://yoshitomo-matsubara.net/torchdistill/subpkgs/misc.html</loc>
+    <changefreq>monthly</changefreq>
+    <priority>0.3</priority>
+</url>
+<url>
+    <loc>https://yoshitomo-matsubara.net/torchdistill/benchmarks.html</loc>
+    <changefreq>monthly</changefreq>
+    <priority>0.5</priority>
+</url>
+<url>
+    <loc>https://yoshitomo-matsubara.net/torchdistill/projects.html</loc>
+    <changefreq>monthly</changefreq>
+    <priority>0.5</priority>
+</url>
+</urlset>
