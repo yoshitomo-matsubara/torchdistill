@@ -88,8 +88,8 @@ class OnPolicyKDLoss(TokenLevelKDLoss):
 
     The student generates the sequences (see ``generate_on_policy_sequences``), and both models are scored on
     them, so the divergence is measured where the student actually puts its probability mass. This follows the
-    GKD framework, Gu et al., "Generalized Knowledge Distillation for Auto-regressive Sequence Models"
-    (https://arxiv.org/abs/2306.13649).
+    GKD framework, Agarwal et al., "On-Policy Distillation of Language Models: Learning from Self-Generated
+    Mistakes", ICLR 2024 (https://openreview.net/forum?id=3zKtaqxLhW).
 
     Only the generated (completion) tokens are scored. The prompt/completion boundary and the padding mask are
     read from the batch, which the training script passes as ``targets``.
