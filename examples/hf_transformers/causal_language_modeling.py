@@ -104,6 +104,10 @@ def finalize_processed_datasets(processed_dataset_dict, dataset_id_map):
     """Maps split names to the dataset ids the yaml data loader configurations refer to."""
     if dataset_id_map is None:
         return processed_dataset_dict
+    # Checkpoints are selected on the validation split, so sharing it with the test split evaluates in sample
+    split_names = list(dataset_id_map.values())
+    if len(set(split_names)) < len(split_names):
+        raise ValueError(f'dataset_id_map maps multiple dataset ids to the same split: {dataset_id_map}')
     return {dataset_id: processed_dataset_dict[split_name] for dataset_id, split_name in dataset_id_map.items()}
 
 
@@ -183,9 +187,10 @@ def preprocess_instruction_datasets(
         }
 
     remove_columns = raw_dataset_dict[base_split_name].column_names
-    processed = raw_dataset_dict.map(
-        _preprocess, batched=batched, remove_columns=remove_columns, **kwargs
-    )
+    processed = {
+        split_name: raw_dataset.map(_preprocess, batched=batched, remove_columns=remove_columns, **kwargs)
+        for split_name, raw_dataset in raw_dataset_dict.items()
+    }
     return finalize_processed_datasets(processed, dataset_id_map)
 
 
@@ -233,9 +238,15 @@ def preprocess_causal_lm_datasets(
         }
 
     remove_columns = raw_dataset_dict[base_split_name].column_names
-    tokenized = raw_dataset_dict.map(_tokenize, batched=True, remove_columns=remove_columns, **kwargs)
+    tokenized = {
+        split_name: raw_dataset.map(_tokenize, batched=True, remove_columns=remove_columns, **kwargs)
+        for split_name, raw_dataset in raw_dataset_dict.items()
+    }
     # Blocks span document boundaries, so this map is batched regardless of what the instruction pipeline does
-    processed = tokenized.map(_group_into_blocks, batched=True, **kwargs)
+    processed = {
+        split_name: tokenized_dataset.map(_group_into_blocks, batched=True, **kwargs)
+        for split_name, tokenized_dataset in tokenized.items()
+    }
     return finalize_processed_datasets(processed, dataset_id_map)
 
 
