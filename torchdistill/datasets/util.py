@@ -11,7 +11,10 @@ from ..datasets.wrapper import BaseDatasetWrapper
 logger = def_logger.getChild(__name__)
 
 
-def split_dataset(dataset, lengths=None, generator_seed=None, sub_splits_configs=None, dataset_id=None):
+def split_dataset(
+        dataset, lengths=None, generator_seed=None, sub_splits_configs=None, dataset_id=None,
+        split_names=None
+):
     """
     Randomly splits ``dataset`` into sub datasets.
 
@@ -25,8 +28,12 @@ def split_dataset(dataset, lengths=None, generator_seed=None, sub_splits_configs
     :type sub_splits_configs: list[dict] or None
     :param dataset_id: dataset ID to be printed just for debugging purpose.
     :type dataset_id: str or None
-    :return: sub-splits of ``dataset``.
-    :rtype: list[torch.utils.data.Subset]
+    :param split_names: names of the sub-splits, one per entry in ``lengths``. If given, a dict keyed by these names
+        is returned instead of a list.
+    :type split_names: list[str] or None
+    :return: sub-splits of ``dataset``. If ``dataset`` has its own ``select`` method (e.g., Hugging Face
+        ``datasets.Dataset``), the sub-splits are built with it instead of :class:`torch.utils.data.Subset`.
+    :rtype: list[torch.utils.data.Subset] or dict[str, torch.utils.data.Subset]
     """
     org_dataset_length = len(dataset)
     if dataset_id is not None:
@@ -40,10 +47,19 @@ def split_dataset(dataset, lengths=None, generator_seed=None, sub_splits_configs
         if len(lengths) > 1 and sum(lengths) != org_dataset_length:
             lengths[-1] = org_dataset_length - sum(lengths[:-1])
 
+    if split_names is not None and len(split_names) != len(lengths):
+        raise ValueError(f'len(split_names) `{len(split_names)}` should be equal to len(lengths) `{len(lengths)}`')
+
     sub_datasets = random_split(dataset, lengths) if generator_seed is None \
         else random_split(dataset, lengths, generator=torch.Generator().manual_seed(generator_seed))
+    # A Subset would hide the dataset's own API (e.g., `map` of Hugging Face datasets) that preprocessing relies on
+    if hasattr(dataset, 'select'):
+        if sub_splits_configs is not None:
+            raise ValueError('sub_splits_configs is not supported for datasets with their own `select` method')
+        sub_datasets = [dataset.select(sub_dataset.indices) for sub_dataset in sub_datasets]
+
     if sub_splits_configs is None:
-        return sub_datasets
+        return sub_datasets if split_names is None else dict(zip(split_names, sub_datasets))
 
     # Deep-copy dataset to configure transforms independently as dataset in Subset class is shallow-copied
     for sub_dataset in sub_datasets:
@@ -64,7 +80,7 @@ def split_dataset(dataset, lengths=None, generator_seed=None, sub_splits_configs
             sub_dataset.dataset.target_transform = target_transform
         if hasattr(sub_dataset.dataset, 'transforms') and transforms is not None:
             sub_dataset.dataset.transforms = transforms
-    return sub_datasets
+    return sub_datasets if split_names is None else dict(zip(split_names, sub_datasets))
 
 
 def build_data_loader(dataset, data_loader_config, distributed, accelerator=None):

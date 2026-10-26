@@ -1,7 +1,9 @@
+from types import SimpleNamespace
 from unittest import TestCase
 
 import torch
 from torch import nn
+from torch.nn import DataParallel
 from torchvision import models
 
 import torchdistill.core.interfaces.forward_proc  # noqa: registers forward process functions
@@ -13,6 +15,7 @@ import torchdistill.losses.high_level  # noqa: registers high-level losses
 from torchdistill.common.constant import SELF_MODULE_PATH
 from torchdistill.core.distillation import get_distillation_box
 from torchdistill.core.forward_hook import ForwardHookManager
+from torchdistill.core.interfaces.registry import get_forward_proc_func, get_pre_forward_proc_func
 from torchdistill.core.training import get_training_box
 from torchdistill.losses.registry import register_high_level_loss
 from torchdistill.models.registry import register_auxiliary_model_wrapper
@@ -757,3 +760,125 @@ class AccumulatingForwardHookUnitTest(TestCase):
         assert not teacher_outputs.requires_grad
         assert student_outputs[0].requires_grad
         distillation_box.clean_modules()
+
+
+class ToyCausalLMOutput:
+    def __init__(self, logits, loss=None):
+        self.logits = logits
+        self.loss = loss
+
+
+class ToyCausalLM(nn.Module):
+    """Causal LM with an explicit ``forward`` signature that records the kwargs of each call."""
+    def __init__(self, vocab_size=10, generated_ids=None, eos_token_id=None):
+        super().__init__()
+        self.embed = nn.Embedding(vocab_size, vocab_size)
+        self.config = SimpleNamespace(pad_token_id=0)
+        self.generation_config = SimpleNamespace(eos_token_id=eos_token_id)
+        self.generated_ids = generated_ids
+        self.call_kwargs_list = list()
+
+    def forward(self, input_ids, attention_mask=None, position_ids=None, labels=None):
+        self.call_kwargs_list.append(
+            {'input_ids': input_ids, 'attention_mask': attention_mask, 'position_ids': position_ids, 'labels': labels}
+        )
+        logits = self.embed(input_ids)
+        loss = None if labels is None else logits.sum() * 0.0 + labels.float().mean()
+        return ToyCausalLMOutput(logits, loss)
+
+    def generate(self, input_ids, attention_mask=None, pad_token_id=None, **kwargs):
+        assert not self.training
+        return self.generated_ids
+
+
+class ToyCausalLMWithKwargs(ToyCausalLM):
+    def forward(self, input_ids, attention_mask=None, **kwargs):
+        self.call_kwargs_list.append({'input_ids': input_ids, 'attention_mask': attention_mask, **kwargs})
+        return ToyCausalLMOutput(self.embed(input_ids))
+
+
+class ToyCausalLMWithoutPositionIds(ToyCausalLM):
+    def forward(self, input_ids, attention_mask=None):
+        self.call_kwargs_list.append({'input_ids': input_ids, 'attention_mask': attention_mask})
+        return ToyCausalLMOutput(self.embed(input_ids))
+
+
+class AutoregressiveForwardProcUnitTest(TestCase):
+    def setUp(self):
+        self.sample_batch = {
+            'input_ids': torch.tensor([[3, 4, 5, 0], [6, 7, 0, 0]]),
+            'attention_mask': torch.tensor([[1, 1, 1, 0], [1, 1, 0, 0]]),
+            'labels': torch.tensor([[-100, 4, 5, -100], [-100, 7, -100, -100]]),
+            'prompt_input_ids': torch.tensor([[0, 3], [6, 7]]),
+            'prompt_attention_mask': torch.tensor([[0, 1], [1, 1]]),
+        }
+
+    def test_forward_batch_as_kwargs_drops_unaccepted_entries(self):
+        model = ToyCausalLM()
+        get_forward_proc_func('forward_batch_as_kwargs')(model, self.sample_batch)
+        assert set(model.call_kwargs_list[0].keys()) == {'input_ids', 'attention_mask', 'position_ids', 'labels'}
+        assert model.call_kwargs_list[0]['position_ids'] is None
+
+    def test_forward_batch_as_kwargs_keeps_all_entries_for_var_kwargs(self):
+        model = ToyCausalLMWithKwargs()
+        get_forward_proc_func('forward_batch_as_kwargs')(model, self.sample_batch)
+        assert set(model.call_kwargs_list[0].keys()) == set(self.sample_batch.keys())
+
+    def test_forward_batch_as_kwargs_reads_signature_of_wrapped_model(self):
+        model = ToyCausalLM()
+        get_forward_proc_func('forward_batch_as_kwargs')(DataParallel(model), self.sample_batch)
+        assert 'prompt_input_ids' not in model.call_kwargs_list[0]
+
+    def test_generate_on_policy_sequences_masks_completion_after_first_eos(self):
+        eos_token_id = 2
+        # Left-padded prompts of width 2, followed by 4 generated elements padded with EOS after the first EOS
+        generated_ids = torch.tensor([[0, 3, 8, 2, 2, 2], [6, 7, 8, 9, 9, 9]])
+        model = ToyCausalLM(generated_ids=generated_ids, eos_token_id=eos_token_id)
+        model.train()
+        box = SimpleNamespace(student_model=model, accelerator=None)
+        sample_batch = dict(self.sample_batch)
+        get_pre_forward_proc_func('generate_on_policy_sequences')(box, sample_batch=sample_batch, max_new_tokens=4)
+        assert model.training
+        assert sample_batch['prompt_length'] == 2
+        assert torch.equal(sample_batch['on_policy_input_ids'], generated_ids)
+        expected_completion_mask = torch.tensor([[True, True, False, False], [True, True, True, True]])
+        assert torch.equal(sample_batch['completion_mask'], expected_completion_mask)
+        assert torch.equal(
+            sample_batch['on_policy_attention_mask'], torch.tensor([[0, 1, 1, 1, 0, 0], [1, 1, 1, 1, 1, 1]])
+        )
+
+    def test_generate_on_policy_sequences_without_prompts_raises(self):
+        box = SimpleNamespace(student_model=ToyCausalLM(), accelerator=None)
+        with self.assertRaises(KeyError):
+            get_pre_forward_proc_func('generate_on_policy_sequences')(box, sample_batch={'input_ids': None})
+
+    def test_forward_on_policy_sequences_derives_position_ids_from_attention_mask(self):
+        model = ToyCausalLM()
+        sample_batch = {
+            'on_policy_input_ids': torch.tensor([[0, 3, 8, 2], [6, 7, 8, 9]]),
+            'on_policy_attention_mask': torch.tensor([[0, 1, 1, 1], [1, 1, 1, 1]]),
+        }
+        get_forward_proc_func('forward_on_policy_sequences')(model, sample_batch)
+        assert torch.equal(model.call_kwargs_list[0]['position_ids'], torch.tensor([[0, 0, 1, 2], [0, 1, 2, 3]]))
+
+    def test_forward_on_policy_sequences_omits_position_ids_if_not_accepted(self):
+        model = ToyCausalLMWithoutPositionIds()
+        sample_batch = {
+            'on_policy_input_ids': torch.tensor([[0, 3, 8, 2]]),
+            'on_policy_attention_mask': torch.tensor([[0, 1, 1, 1]]),
+        }
+        get_forward_proc_func('forward_on_policy_sequences')(model, sample_batch)
+        assert 'position_ids' not in model.call_kwargs_list[0]
+
+    def test_forward_on_policy_sequences_with_task_loss_scores_reference_sequences(self):
+        model = ToyCausalLM()
+        sample_batch = dict(self.sample_batch)
+        sample_batch['on_policy_input_ids'] = torch.tensor([[0, 3, 8, 2], [6, 7, 8, 9]])
+        sample_batch['on_policy_attention_mask'] = torch.tensor([[0, 1, 1, 1], [1, 1, 1, 1]])
+        outputs = get_forward_proc_func('forward_on_policy_sequences_with_task_loss')(model, sample_batch)
+        on_policy_kwargs, reference_kwargs = model.call_kwargs_list
+        assert torch.equal(outputs.logits, model.embed(sample_batch['on_policy_input_ids']))
+        assert torch.equal(on_policy_kwargs['input_ids'], sample_batch['on_policy_input_ids'])
+        assert torch.equal(reference_kwargs['input_ids'], sample_batch['input_ids'])
+        assert torch.equal(reference_kwargs['labels'], sample_batch['labels'])
+        assert torch.equal(outputs.loss, sample_batch['labels'].float().mean())

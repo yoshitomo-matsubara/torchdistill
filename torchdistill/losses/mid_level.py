@@ -2,10 +2,10 @@ import math
 
 import torch
 from torch import nn
-from torch.nn.functional import adaptive_avg_pool2d, adaptive_max_pool2d, normalize, cosine_similarity
+from torch.nn.functional import adaptive_avg_pool2d, adaptive_max_pool2d, normalize, cosine_similarity, kl_div
 
 from .registry import register_loss_wrapper, register_mid_level_loss
-from ..common.constant import def_logger
+from ..common.constant import SELF_MODULE_PATH, def_logger
 
 logger = def_logger.getChild(__name__)
 
@@ -2075,3 +2075,167 @@ class SKDDirectionLoss(nn.Module):
         if self.mode == 'paper':
             return self.compute_direction_loss_paper(student_logits, teacher_logits)
         return self.compute_direction_loss(student_logits, teacher_logits)
+
+
+class AutoregressiveKDLoss(nn.Module):
+    """
+    A base class of the KL divergence between the student's and teacher's next-step distributions of
+    autoregressive models.
+
+    Subclasses only decide *which* positions are scored, by implementing :meth:`get_scored_positions`.
+    The shift convention is shared: logits at position *t* predict the element at *t + 1*, so a slice
+    ``[start - 1: -1]`` of the logits lines up with the elements at ``[start:]``. Nothing else is assumed about
+    the elements, which can be text tokens as well as e.g., audio or vector-quantized image tokens.
+
+    The KL divergence is averaged over the scored positions.
+
+    :param kl_type: 'forward' for KL(p_teacher ∥ p_student), which is teacher-covering, or 'reverse' for KL(p_student ∥ p_teacher), which is mode-seeking.
+    :type kl_type: str
+    :param student_module_path: student model's logit module path.
+    :type student_module_path: str
+    :param student_module_io: 'input' or 'output' of the module in the student model.
+    :type student_module_io: str
+    :param teacher_module_path: teacher model's logit module path.
+    :type teacher_module_path: str
+    :param teacher_module_io: 'input' or 'output' of the module in the teacher model.
+    :type teacher_module_io: str
+
+    .. note::
+        If the module output has ``logits`` attribute (e.g., ``CausalLMOutput`` of Hugging Face transformers),
+        the logits are taken from the attribute.
+    """
+    def __init__(
+            self, kl_type='forward', student_module_path=SELF_MODULE_PATH, student_module_io='output',
+            teacher_module_path=SELF_MODULE_PATH, teacher_module_io='output', **kwargs
+    ):
+        super().__init__()
+        if kl_type not in ('forward', 'reverse'):
+            raise ValueError(f'kl_type `{kl_type}` should be either `forward` or `reverse`')
+
+        self.kl_type = kl_type
+        self.student_module_path = student_module_path
+        self.student_module_io = student_module_io
+        self.teacher_module_path = teacher_module_path
+        self.teacher_module_io = teacher_module_io
+
+    @staticmethod
+    def extract_logits(io_dict, module_path, module_io):
+        module_outputs = io_dict[module_path][module_io]
+        return module_outputs.logits if hasattr(module_outputs, 'logits') else module_outputs
+
+    def get_scored_positions(self, targets):
+        """
+        Returns the offset of the first scored element and the boolean mask over the scored positions.
+
+        :param targets: sample batch, which the training script passes as the targets.
+        :type targets: dict
+        :return: index of the first scored element, and a mask of shape (batch size, sequence length - offset).
+        :rtype: (int, torch.Tensor)
+        """
+        raise NotImplementedError
+
+    def forward(self, student_io_dict, teacher_io_dict, targets, *args, **kwargs):
+        student_logits = self.extract_logits(student_io_dict, self.student_module_path, self.student_module_io)
+        teacher_logits = self.extract_logits(teacher_io_dict, self.teacher_module_path, self.teacher_module_io)
+        start_index, scored_mask = self.get_scored_positions(targets)
+        if not scored_mask.any():
+            # Differentiable zero, in case a batch has nothing to score
+            return student_logits.sum() * 0.0
+
+        # logits[:, start_index - 1: -1] predicts the elements at [:, start_index:]
+        student_log_probs = torch.log_softmax(student_logits[:, start_index - 1: -1, :], dim=-1)[scored_mask]
+        teacher_log_probs = torch.log_softmax(teacher_logits[:, start_index - 1: -1, :], dim=-1)[scored_mask]
+        if self.kl_type == 'forward':
+            # KL(p_teacher ∥ p_student): the gradient flows through the student log-probabilities
+            return kl_div(student_log_probs, teacher_log_probs.detach().exp(), reduction='batchmean')
+        # KL(p_student ∥ p_teacher): the gradient flows through the student probabilities
+        return kl_div(teacher_log_probs.detach(), student_log_probs.exp(), reduction='batchmean')
+
+
+@register_mid_level_loss
+class OnPolicyKDLoss(AutoregressiveKDLoss):
+    """
+    A KL divergence loss between the student's and teacher's next-step distributions over on-policy sequences.
+
+    Rishabh Agarwal, Nino Vieillard, Yongchao Zhou, Piotr Stanczyk, Sabela Ramos, Matthieu Geist, Olivier Bachem: `"On-Policy Distillation of Language Models: Learning from Self-Generated Mistakes" <https://openreview.net/forum?id=3zKtaqxLhW>`_ @ ICLR 2024 (2024)
+
+    The student generates the sequences (see :func:`torchdistill.core.interfaces.pre_forward_proc.generate_on_policy_sequences`),
+    and both models score them (see :func:`torchdistill.core.interfaces.forward_proc.forward_on_policy_sequences`),
+    so the divergence is measured where the student actually puts its probability mass.
+
+    Only the generated (completion) elements are scored. The prompt/completion boundary and the completion mask
+    are read from ``prompt_length`` and ``completion_mask`` in the batch, which ``generate_on_policy_sequences``
+    writes and the training script passes as ``targets``.
+
+    :param kl_type: 'forward' for KL(p_teacher ∥ p_student), which is teacher-covering, or 'reverse' for KL(p_student ∥ p_teacher), which is mode-seeking.
+    :type kl_type: str
+    :param student_module_path: student model's logit module path.
+    :type student_module_path: str
+    :param student_module_io: 'input' or 'output' of the module in the student model.
+    :type student_module_io: str
+    :param teacher_module_path: teacher model's logit module path.
+    :type teacher_module_path: str
+    :param teacher_module_io: 'input' or 'output' of the module in the teacher model.
+    :type teacher_module_io: str
+
+    .. code-block:: yaml
+       :caption: An example YAML to instantiate :class:`OnPolicyKDLoss` for a teacher-student pair of causal language models in Hugging Face transformers.
+
+        criterion:
+          key: 'OnPolicyKDLoss'
+          kwargs:
+            kl_type: 'forward'
+            student_module_path: '.'
+            student_module_io: 'output'
+            teacher_module_path: '.'
+            teacher_module_io: 'output'
+    """
+    def get_scored_positions(self, targets):
+        return targets['prompt_length'], targets['completion_mask']
+
+
+@register_mid_level_loss
+class OffPolicyKDLoss(AutoregressiveKDLoss):
+    """
+    A KL divergence loss between the student's and teacher's next-step distributions over the ground-truth
+    sequences.
+
+    Unlike :class:`OnPolicyKDLoss`, no generation is involved: both models are scored on the sequences in the
+    dataset, which makes this usable for corpus pre-training as well as for instruction tuning. The scored
+    positions are the ones the task loss covers, i.e., those whose label is not ``ignore_index``.
+
+    :param kl_type: 'forward' for KL(p_teacher ∥ p_student), which is teacher-covering, or 'reverse' for KL(p_student ∥ p_teacher), which is mode-seeking.
+    :type kl_type: str
+    :param student_module_path: student model's logit module path.
+    :type student_module_path: str
+    :param student_module_io: 'input' or 'output' of the module in the student model.
+    :type student_module_io: str
+    :param teacher_module_path: teacher model's logit module path.
+    :type teacher_module_path: str
+    :param teacher_module_io: 'input' or 'output' of the module in the teacher model.
+    :type teacher_module_io: str
+    :param label_key: key of the labels in the targets, aligned with the input elements.
+    :type label_key: str
+    :param ignore_index: label value of the positions to be excluded e.g., prompt and padding.
+    :type ignore_index: int
+
+    .. code-block:: yaml
+       :caption: An example YAML to instantiate :class:`OffPolicyKDLoss` for a teacher-student pair of causal language models in Hugging Face transformers.
+
+        criterion:
+          key: 'OffPolicyKDLoss'
+          kwargs:
+            kl_type: 'forward'
+            student_module_path: '.'
+            student_module_io: 'output'
+            teacher_module_path: '.'
+            teacher_module_io: 'output'
+    """
+    def __init__(self, label_key='labels', ignore_index=-100, **kwargs):
+        super().__init__(**kwargs)
+        self.label_key = label_key
+        self.ignore_index = ignore_index
+
+    def get_scored_positions(self, targets):
+        # Labels are aligned with the input elements, so position 0 is never predicted by any logit
+        return 1, targets[self.label_key][:, 1:] != self.ignore_index

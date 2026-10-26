@@ -16,6 +16,7 @@ import torchdistill.losses.mid_level  # noqa: registers mid-level losses
 import torchdistill.models.wrapper  # noqa: registers auxiliary model wrappers
 from torchdistill.core.forward_hook import ForwardHookManager
 from torchdistill.core.util import update_io_dict
+from torchdistill.losses.mid_level import OffPolicyKDLoss, OnPolicyKDLoss
 from torchdistill.losses.registry import get_high_level_loss, get_mid_level_loss
 from torchdistill.models.wrapper import AuxiliaryModelWrapper
 
@@ -684,3 +685,112 @@ class MidLevelLossTest(TestCase):
             loss = criterion(io_dict, {}, self.targets)
         self._record(key, loss.item())
         self._assert_loss_close(key, loss.item())
+
+
+class AutoregressiveKDLossUnitTest(TestCase):
+    def setUp(self):
+        generator = torch.Generator().manual_seed(0)
+        self.batch_size, self.seq_len, self.vocab_size, self.prompt_length = 2, 7, 11, 3
+        self.student_logits = torch.randn(self.batch_size, self.seq_len, self.vocab_size, generator=generator)
+        self.teacher_logits = torch.randn(self.batch_size, self.seq_len, self.vocab_size, generator=generator)
+
+    def _compute_loss(self, criterion, targets, student_logits=None, teacher_logits=None):
+        student_logits = self.student_logits if student_logits is None else student_logits
+        teacher_logits = self.teacher_logits if teacher_logits is None else teacher_logits
+        return criterion({'.': {'output': student_logits}}, {'.': {'output': teacher_logits}}, targets)
+
+    def _manual_kl(self, scored_pairs, kl_type):
+        # Each scored pair is (batch index, index of the scored element), whose distribution is at index - 1
+        kl_list = list()
+        for batch_idx, elem_idx in scored_pairs:
+            student_log_probs = torch.log_softmax(self.student_logits[batch_idx, elem_idx - 1], dim=-1)
+            teacher_log_probs = torch.log_softmax(self.teacher_logits[batch_idx, elem_idx - 1], dim=-1)
+            if kl_type == 'forward':
+                kl_list.append((teacher_log_probs.exp() * (teacher_log_probs - student_log_probs)).sum())
+            else:
+                kl_list.append((student_log_probs.exp() * (student_log_probs - teacher_log_probs)).sum())
+        return torch.stack(kl_list).mean()
+
+    def test_invalid_kl_type_raises(self):
+        with self.assertRaises(ValueError):
+            OffPolicyKDLoss(kl_type='symmetric')
+
+    def test_off_policy_scores_positions_with_labels(self):
+        labels = torch.randint(0, self.vocab_size, (self.batch_size, self.seq_len))
+        labels[:, :self.prompt_length] = -100
+        labels[1, -2:] = -100
+        scored_pairs = [
+            (b, t) for b in range(self.batch_size) for t in range(1, self.seq_len) if labels[b, t] != -100
+        ]
+        for kl_type in ('forward', 'reverse'):
+            loss = self._compute_loss(OffPolicyKDLoss(kl_type=kl_type), {'labels': labels})
+            assert torch.allclose(loss, self._manual_kl(scored_pairs, kl_type), atol=1e-6)
+
+    def test_off_policy_custom_label_key_and_ignore_index(self):
+        labels = torch.randint(0, self.vocab_size, (self.batch_size, self.seq_len))
+        labels[:, :self.prompt_length] = -1
+        default_labels = labels.masked_fill(labels == -1, -100)
+        criterion = OffPolicyKDLoss(label_key='target_ids', ignore_index=-1)
+        loss = self._compute_loss(criterion, {'target_ids': labels})
+        expected_loss = self._compute_loss(OffPolicyKDLoss(), {'labels': default_labels})
+        assert torch.equal(loss, expected_loss)
+
+    def test_on_policy_scores_masked_completion_only(self):
+        completion_mask = torch.ones(self.batch_size, self.seq_len - self.prompt_length, dtype=torch.bool)
+        completion_mask[0, -1] = False
+        targets = {'prompt_length': self.prompt_length, 'completion_mask': completion_mask}
+        scored_pairs = [
+            (b, self.prompt_length + t) for b in range(self.batch_size)
+            for t in range(completion_mask.shape[1]) if completion_mask[b, t]
+        ]
+        for kl_type in ('forward', 'reverse'):
+            loss = self._compute_loss(OnPolicyKDLoss(kl_type=kl_type), targets)
+            assert torch.allclose(loss, self._manual_kl(scored_pairs, kl_type), atol=1e-6)
+
+    def test_on_policy_ignores_logits_before_last_prompt_position(self):
+        completion_mask = torch.ones(self.batch_size, self.seq_len - self.prompt_length, dtype=torch.bool)
+        targets = {'prompt_length': self.prompt_length, 'completion_mask': completion_mask}
+        perturbed_student_logits = self.student_logits.clone()
+        perturbed_student_logits[:, :self.prompt_length - 1] += 10.0
+        loss = self._compute_loss(OnPolicyKDLoss(), targets)
+        perturbed_loss = self._compute_loss(OnPolicyKDLoss(), targets, student_logits=perturbed_student_logits)
+        assert torch.equal(loss, perturbed_loss)
+
+    def test_forward_kl_gradient_flows_to_student_only(self):
+        student_logits = self.student_logits.clone().requires_grad_()
+        teacher_logits = self.teacher_logits.clone().requires_grad_()
+        labels = torch.randint(0, self.vocab_size, (self.batch_size, self.seq_len))
+        for kl_type in ('forward', 'reverse'):
+            student_logits.grad = None
+            loss = self._compute_loss(
+                OffPolicyKDLoss(kl_type=kl_type), {'labels': labels}, student_logits, teacher_logits
+            )
+            loss.backward()
+            assert student_logits.grad is not None and student_logits.grad.abs().sum() > 0
+            assert teacher_logits.grad is None
+
+    def test_nothing_to_score_returns_differentiable_zero(self):
+        student_logits = self.student_logits.clone().requires_grad_()
+        labels = torch.full((self.batch_size, self.seq_len), -100)
+        loss = self._compute_loss(OffPolicyKDLoss(), {'labels': labels}, student_logits=student_logits)
+        loss.backward()
+        assert loss.item() == 0.0
+        assert torch.equal(student_logits.grad, torch.zeros_like(student_logits))
+
+    def test_logits_are_taken_from_model_output_attribute(self):
+        class CausalLMOutput:
+            def __init__(self, logits):
+                self.logits = logits
+
+        labels = torch.randint(0, self.vocab_size, (self.batch_size, self.seq_len))
+        criterion = OffPolicyKDLoss()
+        loss = self._compute_loss(
+            criterion, {'labels': labels}, CausalLMOutput(self.student_logits), CausalLMOutput(self.teacher_logits)
+        )
+        assert torch.equal(loss, self._compute_loss(criterion, {'labels': labels}))
+
+    def test_registered_as_mid_level_losses(self):
+        for key, cls in (('OnPolicyKDLoss', OnPolicyKDLoss), ('OffPolicyKDLoss', OffPolicyKDLoss)):
+            criterion = get_mid_level_loss({'key': key, 'kwargs': {'kl_type': 'reverse'}})
+            assert type(criterion) is cls
+            assert criterion.kl_type == 'reverse'
