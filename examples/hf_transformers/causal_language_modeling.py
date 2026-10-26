@@ -318,8 +318,8 @@ def train_one_epoch(training_box, epoch, log_freq, tracker=None):
         delimiter='  ', tracker=tracker, tracker_prefix='train/',
         tracker_start_step=epoch * len(training_box.train_data_loader)
     )
-    metric_logger.add_meter('lr', SmoothedValue(window_size=1, fmt='{value}'))
-    metric_logger.add_meter('sample/s', SmoothedValue(window_size=10, fmt='{value}'))
+    metric_logger.add_meter('lr', SmoothedValue(window_size=1, fmt='{value:.2e}'))
+    metric_logger.add_meter('sample/s', SmoothedValue(window_size=10, fmt='{value:.2f}'))
     header = 'Epoch: [{}]'.format(epoch)
     for sample_batch in metric_logger.log_every(training_box.train_data_loader, log_freq, header):
         start_time = time.time()
@@ -484,6 +484,7 @@ def main(args):
 
     preprocess_config = dict(config['preprocess'])
     preprocess_key = preprocess_config.pop('key', 'instruction')
+    org_padding_side = student_tokenizer.padding_side
     if preprocess_key == 'instruction':
         # Set left-padding on the student tokenizer for batched generation
         student_tokenizer.padding_side = 'left'
@@ -510,6 +511,12 @@ def main(args):
             teacher_model, student_model, dataset_dict, dst_ckpt_dir_path,
             device, device_ids, distributed, config, args, accelerator, tracker=tracker,
         )
+        if student_tokenizer.is_fast:
+            # Preprocessing with truncation=True leaves truncation enabled on the backend tokenizer,
+            # which save_pretrained would otherwise persist into tokenizer.json
+            student_tokenizer.backend_tokenizer.no_truncation()
+        # Left-padding is only for batched generation during training; don't ship it with the checkpoint
+        student_tokenizer.padding_side = org_padding_side
         student_tokenizer.save_pretrained(dst_ckpt_dir_path)
         metric_dict.update({'best_val_perplexity': best_val_perplexity, 'best_epoch': best_epoch})
 
