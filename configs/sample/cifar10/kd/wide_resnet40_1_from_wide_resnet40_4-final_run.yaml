@@ -1,47 +1,57 @@
 datasets:
-  cifar10:
-    name: &dataset_name 'cifar10'
-    key: 'CIFAR10'
-    root: &root_dir !join ['./resource/dataset/', *dataset_name]
-    splits:
-      train:
-        dataset_id: &cifar10_train !join [*dataset_name, '/train']
-        kwargs:
-          root: *root_dir
-          train: True
-          download: True
-          transform_configs:
-            - key: 'RandomCrop'
-              kwargs:
-                size: 32
-                padding: 4
-            - key: 'RandomHorizontalFlip'
-              kwargs:
-                p: 0.5
-            - key: 'ToTensor'
-              kwargs:
-            - &normalize
-              key: 'Normalize'
-              kwargs:
-                mean: [0.49139968, 0.48215841, 0.44653091]
-                std: [0.24703223, 0.24348513, 0.26158784]
-      val:
-        dataset_id: &cifar10_val !join [ *dataset_name, '/val' ]
-        kwargs:
-          root: *root_dir
-          train: False
-          download: True
-          transform_configs: &val_transform
-            - key: 'ToTensor'
-              kwargs:
-            - *normalize
-      test:
-        dataset_id: &cifar10_test !join [*dataset_name, '/test']
-        kwargs:
-          root: *root_dir
-          train: False
-          download: True
-          transform_configs: *val_transform
+  &cifar10_train cifar10/train: !import_call
+    _name: &dataset_name 'cifar10'
+    _root: &root_dir !join ['~/datasets/', *dataset_name]
+    key: 'torchvision.datasets.CIFAR10'
+    init:
+      kwargs:
+        root: *root_dir
+        train: True
+        download: True
+        transform: !import_call
+          key: 'torchvision.transforms.Compose'
+          init:
+            kwargs:
+              transforms:
+                - !import_call
+                  key: 'torchvision.transforms.RandomCrop'
+                  init:
+                    kwargs:
+                      size: 32
+                      padding: 4
+                - !import_call
+                  key: 'torchvision.transforms.RandomHorizontalFlip'
+                  init:
+                    kwargs:
+                      p: 0.5
+                - !import_call
+                  key: 'torchvision.transforms.ToTensor'
+                  init:
+                - !import_call
+                  key: 'torchvision.transforms.Normalize'
+                  init:
+                    kwargs: &normalize_kwargs
+                      mean: [0.49139968, 0.48215841, 0.44653091]
+                      std: [0.24703223, 0.24348513, 0.26158784]
+  &cifar10_test cifar10/test: !import_call
+    key: 'torchvision.datasets.CIFAR10'
+    init:
+      kwargs:
+        root: *root_dir
+        train: False
+        download: True
+        transform: !import_call
+          key: 'torchvision.transforms.Compose'
+          init:
+            kwargs:
+              transforms:
+                - !import_call
+                  key: 'torchvision.transforms.ToTensor'
+                  init:
+                - !import_call
+                  key: 'torchvision.transforms.Normalize'
+                  init:
+                    kwargs: *normalize_kwargs
 
 models:
   teacher_model:
