@@ -6,7 +6,7 @@
 # Builds a task-adapted teacher for configs/sample/alpaca/on_policy_kd/smollm2_135m_from_smollm2_1_7b.yaml.
 # The off-the-shelf instruct checkpoint never saw Alpaca's reference style, so the KL term would pull the
 # student toward a distribution the task loss is pulling it away from. The checkpoint of this run is released
-# as yoshitomo-matsubara/smollm2_1_7b-alpaca, which the on- and off-policy KD configs load from the Hub, so this
+# as yoshitomo-matsubara/smollm2_1_7b-alpaca-it, which the on- and off-policy KD configs load from the Hub, so this
 # config is only needed to reproduce or replace that teacher.
 #
 # Not sized for Colab: meant for two local 24 GB GPUs (e.g. 2x RTX 3090 Ti) with FSDP. Full fine-tuning with
