@@ -1,0 +1,218 @@
+# Sample config for off-policy LLM distillation using torchdistill.
+# Teacher: SmolLM2-360M-Instruct (360M) fine-tuned on Alpaca --> Student: SmolLM2-135M-Instruct (135M)
+#          (teacher checkpoint: yoshitomo-matsubara/smollm2_360m-alpaca-it)
+# Dataset: tatsu-lab/alpaca  (instruction-following, train-split only;
+#          split into 90 % train / 5 % validation / 5 % test here).
+#
+# This is the off-policy counterpart of configs/sample/alpaca/on_policy_kd/smollm2_135m_from_smollm2_360m.yaml.
+# For a fair comparison, everything but the source of the scored sequences is kept identical: data split,
+# chat template, Alpaca-tuned teacher, batch size, grad_accum_step, epochs, optimizer, scheduler, loss weights
+# (alpha) and kl_type. The differences are confined to:
+#   - no `pre_forward_proc`: the student generates nothing, and both models are scored on the reference
+#     (dataset) completions instead of the student's rollouts
+#   - `forward_proc`: 'forward_batch_as_kwargs' for both models, instead of the `forward_on_policy_sequences*`
+#     procs. The student's task loss is the same cross-entropy over the reference completions either way
+#   - criterion sub term: `OffPolicyKDLoss` instead of `OnPolicyKDLoss`
+# The KL divergence is averaged per scored token in both configs, so the loss scales match even though the
+# on-policy config scores at most `max_new_tokens` (32) generated tokens while this one scores the whole
+# reference completion. Without generation, this run is much faster than its on-policy counterpart.
+#
+# Usage (add `--mixed_precision fp16` on a T4, or `bf16` on an L4/A100):
+#   accelerate launch examples/hf_transformers/causal_language_modeling.py \
+#     --config configs/sample/alpaca/off_policy_kd/smollm2_135m_from_smollm2_360m.yaml \
+#     --run_log log/alpaca/off_policy_kd/smollm2_135m_from_smollm2_360m.txt \
+#     --seed 42
+
+dependencies:
+  - name: 'custom'
+
+# Load Alpaca and create a 90/5/5 train/validation/test split (identical seed to the baseline config)
+datasets: &raw_datasets !import_call
+  key: 'torchdistill.datasets.util.split_dataset'
+  init:
+    kwargs:
+      dataset: !import_call
+        key: 'datasets.load_dataset'
+        init:
+          kwargs:
+            path: 'tatsu-lab/alpaca'
+            split: 'train'
+      lengths: [90, 5, 5]
+      generator_seed: 42
+      split_names: ['train', 'validation', 'test']
+      dataset_id: 'alpaca'
+
+preprocess:
+  prompt_key: 'instruction'
+  response_key: 'output'
+  max_prompt_length: 256
+  max_length: 512
+  base_split_name: 'train'
+  batched: True
+  # The prompts are wrapped in SmolLM2's chat template, which the instruct tokenizer ships. Switch to the
+  # base checkpoints (drop the '-Instruct' suffix) and set this to False for a base-model experiment; the
+  # tokenizer and vocabulary are shared across the whole SmolLM2 suite either way, which is what lets the
+  # token-level KL divergence below compare the two models' logits position by position
+  use_chat_template: True
+  system_prompt: 'You are a helpful assistant.'
+  dataset_id_map:
+    &train_dataset_id 'alpaca/train': 'train'
+    &val_dataset_id   'alpaca/val':   'validation'
+    &test_dataset_id  'alpaca/test':  'test'
+
+models:
+  teacher_model:
+    # Alpaca-tuned teacher released from configs/sample/alpaca/instruction_tuning/smollm2_360m.yaml, not the
+    # off-the-shelf instruct checkpoint
+    key: &teacher_model_key 'yoshitomo-matsubara/smollm2_360m-alpaca-it'
+    tokenizer_kwargs:
+      pretrained_model_name_or_path: *teacher_model_key
+      use_fast: True
+    model_kwargs:
+      # SmolLM2's config.json declares bfloat16 and transformers 5.x honors it on load, which would
+      # leave the trainable weights in pure bf16 and break the fp16 GradScaler under
+      # `accelerate launch --mixed_precision fp16`. Mixed precision needs fp32 master weights, so
+      # load in fp32 and let autocast do the casting. Use `torch_dtype` on transformers 4.x
+      dtype: 'float32'
+      pretrained_model_name_or_path: *teacher_model_key
+  student_model:
+    key: &student_model_key 'HuggingFaceTB/SmolLM2-135M-Instruct'
+    tokenizer_kwargs:
+      pretrained_model_name_or_path: *student_model_key
+      use_fast: True
+    model_kwargs:
+      # SmolLM2's config.json declares bfloat16 and transformers 5.x honors it on load, which would
+      # leave the trainable weights in pure bf16 and break the fp16 GradScaler under
+      # `accelerate launch --mixed_precision fp16`. Mixed precision needs fp32 master weights, so
+      # load in fp32 and let autocast do the casting. Use `torch_dtype` on transformers 4.x
+      dtype: 'float32'
+      pretrained_model_name_or_path: *student_model_key
+    _experiment: &student_experiment 'smollm2_135m_from_smollm2_360m'
+    src_ckpt:
+    dst_ckpt: !join ['./resource/ckpt/alpaca/off_policy_kd/', *student_experiment]
+
+train:
+  log_freq: 100
+  num_epochs: &num_epochs 3
+  train_data_loader:
+    dataset_id: *train_dataset_id
+    sampler:
+      class_or_func: !import_get
+        key: 'torch.utils.data.RandomSampler'
+      kwargs:
+    kwargs:
+      # Same as the on-policy counterpart for a fair comparison, not because of a memory limit here
+      batch_size: &train_batch_size 8
+      num_workers: 2
+      pin_memory: True
+      drop_last: False
+    collate_fn: 'OnPolicyDataCollator'
+    requires_supp: False
+  val_data_loader:
+    dataset_id: *val_dataset_id
+    sampler: &val_sampler
+      class_or_func: !import_get
+        key: 'torch.utils.data.SequentialSampler'
+      kwargs:
+    kwargs:
+      batch_size: 8
+      num_workers: 2
+      pin_memory: True
+      drop_last: False
+    collate_fn: 'OnPolicyDataCollator'
+    requires_supp: False
+  # No `pre_forward_proc`: off-policy distillation scores the reference completions, so nothing is generated
+  teacher:
+    # The collated `input_ids` / `attention_mask` / `labels` are right-padded, so no explicit position ids are
+    # needed, and the prompt-only entries of the batch are dropped for models that do not accept them
+    forward_proc: 'forward_batch_as_kwargs'
+    adaptations:
+    sequential: []
+    # The criterion reads the logits from the model output (module path '.'), so no forward hook is needed
+    forward_hook:
+      input: []
+      output: []
+    wrapper:
+    requires_grad: False
+    frozen_modules: []
+  student:
+    # A single forward pass yields both the logits for the KL term and the task loss over the reference
+    # completions, which the on-policy counterpart needs a second forward pass for
+    forward_proc: 'forward_batch_as_kwargs'
+    adaptations:
+    sequential: []
+    forward_hook:
+      input: []
+      output: []
+    wrapper:
+    requires_grad: True
+    frozen_modules: []
+  optimizer:
+    key: 'optimizer_no_decay'
+    kwargs:
+      optimizer_key: 'AdamW'
+      lr: 5.0e-5
+      weight_decay: 0.0
+    filters_params: False
+    max_grad_norm: 1.0
+    grad_accum_step: &grad_accum_step 4
+  scheduler:
+    key: 'get_linear_schedule_with_warmup'
+    kwargs:
+      num_warmup_steps: 100
+      num_training_steps: !import_call
+        key: 'custom.optim.compute_num_training_steps'
+        init:
+          kwargs:
+            dataset: !access_by_index_or_key
+              data: *raw_datasets
+              index_or_key: 'train'
+            batch_size: *train_batch_size
+            num_epochs: *num_epochs
+            grad_accum_step: *grad_accum_step
+            world_size: 1
+    scheduling_step: 1
+  # L_total = alpha * L_task (cross-entropy) + (1 - alpha) * L_KD (KL divergence), both over the reference
+  # completions. Set the `model_term` weight to 0.0 (or remove the term) for pure off-policy distillation
+  # (word-level KD), and remove the `off_policy_kd` sub term to fall back to the baseline config's plain
+  # fine-tuning
+  criterion:
+    key: 'WeightedSumLoss'
+    kwargs:
+      model_term:
+        # alpha: weight of the task loss
+        weight: 0.5
+      sub_terms:
+        off_policy_kd:
+          criterion:
+            key: 'OffPolicyKDLoss'
+            kwargs:
+              # 'forward': KL(p_teacher || p_student) - teacher-covering, recommended
+              # 'reverse': KL(p_student || p_teacher) - mode-seeking
+              kl_type: 'forward'
+              student_module_path: '.'
+              student_module_io: 'output'
+              teacher_module_path: '.'
+              teacher_module_io: 'output'
+          # 1 - alpha: weight of the off-policy KL divergence
+          weight: 0.5
+    func2extract_model_loss: 'extract_transformers_loss'
+
+test:
+  test_data_loader:
+    dataset_id: *test_dataset_id
+    sampler: *val_sampler
+    kwargs:
+      batch_size: 8
+      num_workers: 2
+      pin_memory: True
+      drop_last: False
+    collate_fn: 'OnPolicyDataCollator'
+
+# Optional: remove this block (or pass -disable_tracker) to run without trackio; logs/trackio/ in dst_ckpt is
+# then not created. Runs of all the alpaca configs share one project so they can be compared on one dashboard
+tracker:
+  engine: 'trackio'
+  kwargs:
+    project: 'torchdistill-alpaca'
+    name: !join ['off_policy_kd-', *student_experiment]
