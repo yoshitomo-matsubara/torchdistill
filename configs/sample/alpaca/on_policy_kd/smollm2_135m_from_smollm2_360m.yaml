@@ -1,14 +1,16 @@
 # Sample config for on-policy LLM distillation using torchdistill.
-# Teacher: SmolLM2-360M-Instruct (360M) --> Student: SmolLM2-135M-Instruct (135M)
+# Teacher: SmolLM2-360M-Instruct (360M) fine-tuned on Alpaca --> Student: SmolLM2-135M-Instruct (135M)
+#          (teacher checkpoint: yoshitomo-matsubara/smollm2_360m-alpaca-it)
 # Dataset: tatsu-lab/alpaca  (instruction-following, train-split only;
-#          split into 95 % train / 5 % test here via !call_method).
+#          split into 90 % train / 5 % validation / 5 % test here).
 #
 # The teacher-free baseline for this config is
-# configs/sample/alpaca/instruction_tuning/smollm2_135m.yaml, which shares every hyperparameter below,
-# including the micro-batch: both use batch_size 8 with grad_accum_step 2 because batch_size 16 runs out of
-# memory on a T4 in the backward pass once a batch of long sequences arrives. batch_size 8 rather than 4
-# halves the number of `generate` calls, which dominate the run time; fall back to batch_size 4 with
-# grad_accum_step 4 if it runs out of memory.
+# configs/sample/alpaca/instruction_tuning/smollm2_135m.yaml. For a fair comparison this config matches its
+# training budget (3 epochs at an effective batch size of 32, i.e. the same optimizer step count), optimizer,
+# learning rate and scheduler. It uses batch_size 8 with grad_accum_step 4 because batch_size 16 runs out of
+# memory on a T4 in the backward pass once a batch of long sequences arrives. batch_size 8 rather than 4 halves
+# the number of `generate` calls, which dominate the run time; fall back to batch_size 4 with grad_accum_step 8
+# if it runs out of memory. At 3 epochs this run does not fit in one free Colab session.
 #
 # SmolLM2 was pre-trained in bf16 and has a small (49,152-entry) vocabulary. Both matter on a free-tier
 # T4: the numerical range survives the fp16 downcast (unlike GPT-2, which never saw reduced precision),
@@ -24,18 +26,21 @@
 dependencies:
   - name: 'custom'
 
-# Load Alpaca and create a 95/5 train/test split (identical seed to the baseline config)
-datasets: &raw_datasets !call_method
-  obj: !import_call
-    key: 'datasets.load_dataset'
-    init:
-      kwargs:
-        path: 'tatsu-lab/alpaca'
-        split: 'train'
-  method_name: 'train_test_split'
-  kwargs:
-    test_size: 0.05
-    seed: 42
+# Load Alpaca and create a 90/5/5 train/validation/test split (identical seed to the baseline config)
+datasets: &raw_datasets !import_call
+  key: 'torchdistill.datasets.util.split_dataset'
+  init:
+    kwargs:
+      dataset: !import_call
+        key: 'datasets.load_dataset'
+        init:
+          kwargs:
+            path: 'tatsu-lab/alpaca'
+            split: 'train'
+      lengths: [90, 5, 5]
+      generator_seed: 42
+      split_names: ['train', 'validation', 'test']
+      dataset_id: 'alpaca'
 
 preprocess:
   prompt_key: 'instruction'
@@ -52,12 +57,14 @@ preprocess:
   system_prompt: 'You are a helpful assistant.'
   dataset_id_map:
     &train_dataset_id 'alpaca/train': 'train'
-    &val_dataset_id   'alpaca/val':   'test'
+    &val_dataset_id   'alpaca/val':   'validation'
     &test_dataset_id  'alpaca/test':  'test'
 
 models:
   teacher_model:
-    key: &teacher_model_key 'HuggingFaceTB/SmolLM2-360M-Instruct'
+    # Alpaca-tuned teacher released from configs/sample/alpaca/instruction_tuning/smollm2_360m.yaml, not the
+    # off-the-shelf instruct checkpoint
+    key: &teacher_model_key 'yoshitomo-matsubara/smollm2_360m-alpaca-it'
     tokenizer_kwargs:
       pretrained_model_name_or_path: *teacher_model_key
       use_fast: True
@@ -86,7 +93,7 @@ models:
 
 train:
   log_freq: 100
-  num_epochs: &num_epochs 1
+  num_epochs: &num_epochs 3
   train_data_loader:
     dataset_id: *train_dataset_id
     sampler:
@@ -115,8 +122,8 @@ train:
     requires_supp: False
   # `generate_on_policy_sequences` collects the on-policy rollouts before each forward process and stores
   # them in the batch, so that the teacher and the student are scored on the sequences the student generated.
-  # These sequential decode steps per batch dominate the run time, so `max_new_tokens` is kept at 32 to fit a
-  # free-tier T4 session; the run time scales roughly linearly with it
+  # These sequential decode steps per batch dominate the run time, so `max_new_tokens` is kept at 32 to keep the
+  # run time down; the run time scales roughly linearly with it
   pre_forward_proc:
     key: 'generate_on_policy_sequences'
     kwargs:
@@ -155,7 +162,7 @@ train:
       weight_decay: 0.0
     filters_params: False
     max_grad_norm: 1.0
-    grad_accum_step: &grad_accum_step 2
+    grad_accum_step: &grad_accum_step 4
   scheduler:
     key: 'get_linear_schedule_with_warmup'
     kwargs:
@@ -207,3 +214,11 @@ test:
       pin_memory: True
       drop_last: False
     collate_fn: 'OnPolicyDataCollator'
+
+# Optional: remove this block (or pass -disable_tracker) to run without trackio; logs/trackio/ in dst_ckpt is
+# then not created. Runs of all the alpaca configs share one project so they can be compared on one dashboard
+tracker:
+  engine: 'trackio'
+  kwargs:
+    project: 'torchdistill-alpaca'
+    name: !join ['on_policy_kd-', *student_experiment]

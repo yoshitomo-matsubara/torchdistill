@@ -1,12 +1,13 @@
 # Sample config for fine-tuning the on-policy KD *teacher* on Alpaca using torchdistill.
 # Model:   SmolLM2-360M-Instruct (360M)
 # Dataset: tatsu-lab/alpaca  (instruction-following, train-split only;
-#          split into 95 % train / 5 % test here via !call_method).
+#          split into 90 % train / 5 % validation / 5 % test here).
 #
 # Builds a task-adapted teacher for configs/sample/alpaca/on_policy_kd/smollm2_135m_from_smollm2_360m.yaml.
 # The off-the-shelf instruct checkpoint never saw Alpaca's reference style, so the KL term would pull the
-# student toward a distribution the task loss is pulling it away from. The KD config loads its teacher from
-# this run's `dst_ckpt` and fails if the directory does not exist, so run this config first.
+# student toward a distribution the task loss is pulling it away from. The checkpoint of this run is released
+# as yoshitomo-matsubara/smollm2_360m-alpaca, which the on- and off-policy KD configs load from the Hub, so this
+# config is only needed to reproduce or replace that teacher.
 #
 # Not sized for Colab: meant for a local 24 GB GPU (e.g. RTX 3090 Ti). Same data, split, chat template and
 # sequence lengths as the student configs; 3 epochs at an effective batch size of 32 (8 x grad_accum_step 4)
@@ -22,18 +23,21 @@
 dependencies:
   - name: 'custom'
 
-# Load Alpaca and create a 95/5 train/test split (identical seed to the KD configs for a fair comparison)
-datasets: &raw_datasets !call_method
-  obj: !import_call
-    key: 'datasets.load_dataset'
-    init:
-      kwargs:
-        path: 'tatsu-lab/alpaca'
-        split: 'train'
-  method_name: 'train_test_split'
-  kwargs:
-    test_size: 0.05
-    seed: 42
+# Load Alpaca and create a 90/5/5 train/validation/test split (identical seed to the KD configs for a fair comparison)
+datasets: &raw_datasets !import_call
+  key: 'torchdistill.datasets.util.split_dataset'
+  init:
+    kwargs:
+      dataset: !import_call
+        key: 'datasets.load_dataset'
+        init:
+          kwargs:
+            path: 'tatsu-lab/alpaca'
+            split: 'train'
+      lengths: [90, 5, 5]
+      generator_seed: 42
+      split_names: ['train', 'validation', 'test']
+      dataset_id: 'alpaca'
 
 preprocess:
   prompt_key: 'instruction'
@@ -49,7 +53,7 @@ preprocess:
   system_prompt: 'You are a helpful assistant.'
   dataset_id_map:
     &train_dataset_id 'alpaca/train': 'train'
-    &val_dataset_id   'alpaca/val':   'test'
+    &val_dataset_id   'alpaca/val':   'validation'
     &test_dataset_id  'alpaca/test':  'test'
 
 # No `teacher_model` entry: this is plain instruction tuning of the model that later serves as the teacher

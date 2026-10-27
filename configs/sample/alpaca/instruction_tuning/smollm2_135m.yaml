@@ -1,7 +1,7 @@
 # Sample config for plain instruction tuning (no teacher) using torchdistill.
 # Model:   SmolLM2-135M-Instruct (135M)
 # Dataset: tatsu-lab/alpaca  (instruction-following, train-split only;
-#          split into 95 % train / 5 % test here via !call_method).
+#          split into 90 % train / 5 % validation / 5 % test here).
 #
 # This is the *baseline* for the SmolLM2 on-policy KD configs in
 # configs/sample/alpaca/on_policy_kd/smollm2_135m_from_smollm2_{360m,1_7b}.yaml, trained only on the
@@ -26,18 +26,21 @@
 dependencies:
   - name: 'custom'
 
-# Load Alpaca and create a 95/5 train/test split (identical seed to the KD configs for a fair comparison)
-datasets: &raw_datasets !call_method
-  obj: !import_call
-    key: 'datasets.load_dataset'
-    init:
-      kwargs:
-        path: 'tatsu-lab/alpaca'
-        split: 'train'
-  method_name: 'train_test_split'
-  kwargs:
-    test_size: 0.05
-    seed: 42
+# Load Alpaca and create a 90/5/5 train/validation/test split (identical seed to the KD configs for a fair comparison)
+datasets: &raw_datasets !import_call
+  key: 'torchdistill.datasets.util.split_dataset'
+  init:
+    kwargs:
+      dataset: !import_call
+        key: 'datasets.load_dataset'
+        init:
+          kwargs:
+            path: 'tatsu-lab/alpaca'
+            split: 'train'
+      lengths: [90, 5, 5]
+      generator_seed: 42
+      split_names: ['train', 'validation', 'test']
+      dataset_id: 'alpaca'
 
 preprocess:
   prompt_key: 'instruction'
@@ -53,7 +56,7 @@ preprocess:
   system_prompt: 'You are a helpful assistant.'
   dataset_id_map:
     &train_dataset_id 'alpaca/train': 'train'
-    &val_dataset_id   'alpaca/val':   'test'
+    &val_dataset_id   'alpaca/val':   'validation'
     &test_dataset_id  'alpaca/test':  'test'
 
 # No `teacher_model` entry here, which is what makes this a teacher-free baseline
