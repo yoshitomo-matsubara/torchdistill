@@ -275,8 +275,11 @@ def main(args):
 
     test_config = config['test']
     test_data_loader_config = test_config['test_data_loader']
+    # Passing the accelerator keeps build_data_loader from adding a DistributedSampler: prepare() shards the
+    # loader itself, and sharding twice would leave each process 1/N^2 of the samples
     test_data_loader = util.build_data_loader(
-        dataset_dict[test_data_loader_config['dataset_id']], test_data_loader_config, distributed
+        dataset_dict[test_data_loader_config['dataset_id']], test_data_loader_config, distributed,
+        accelerator=accelerator
     )
     test_data_loader = accelerator.prepare(test_data_loader)
     cudnn.benchmark = False
@@ -288,6 +291,8 @@ def main(args):
             title='[Teacher: {}]'.format(teacher_model_config['key'])
         )
 
+    # Only the main process writes the checkpoint; the others must not reload it before it is complete
+    accelerator.wait_for_everyone()
     # Reload the best checkpoint based on validation result
     student_tokenizer, student_model = load_tokenizer_and_model(student_model_config, task_name, True)
     student_model = accelerator.prepare(student_model)
