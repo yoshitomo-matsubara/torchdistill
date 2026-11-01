@@ -1,6 +1,6 @@
+import importlib
 import inspect
 import os
-import sys
 
 
 def check_if_plottable():
@@ -24,7 +24,7 @@ def get_classes(package_name, require_names=False):
     :return: collection of classes defined in the given package.
     :rtype: list[(str, class)] or list[class]
     """
-    members = inspect.getmembers(sys.modules[package_name], inspect.isclass)
+    members = inspect.getmembers(importlib.import_module(package_name), inspect.isclass)
     if require_names:
         return members
     return [obj for _, obj in members]
@@ -59,7 +59,7 @@ def get_functions(package_name, require_names=False):
     :return: collection of functions defined in the given package.
     :rtype: list[(str, typing.Callable)] or list[typing.Callable]
     """
-    members = inspect.getmembers(sys.modules[package_name], inspect.isfunction)
+    members = inspect.getmembers(importlib.import_module(package_name), inspect.isfunction)
     if require_names:
         return members
     return [obj for _, obj in members]
