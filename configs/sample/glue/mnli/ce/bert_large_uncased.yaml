@@ -14,7 +14,7 @@ datasets:
       validation_mismatched: &glue_val_mm !join [*dataset_name, '/val_mm']
       test_mismatched: &glue_test_mm !join [*dataset_name, '/test_mm']
   glue_ax:
-    key: &ax_dataset_key 'ax'
+    name: &ax_dataset_key 'ax'
     base_split_name: 'test'
     raw_data_kwargs:
       train_file_path:
