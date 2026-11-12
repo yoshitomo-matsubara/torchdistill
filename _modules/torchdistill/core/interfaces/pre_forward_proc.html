@@ -1,0 +1,201 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" data-content_root="../../../../">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>torchdistill.core.interfaces.pre_forward_proc &mdash; torchdistill v1.2.0-dev documentation</title>
+      <link rel="stylesheet" type="text/css" href="../../../../_static/pygments.css?v=b86133f3" />
+      <link rel="stylesheet" type="text/css" href="../../../../_static/css/theme.css?v=9edc463e" />
+
+  
+      <script src="../../../../_static/jquery.js?v=5d32c60e"></script>
+      <script src="../../../../_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+      <script src="../../../../_static/documentation_options.js?v=53b07a3a"></script>
+      <script src="../../../../_static/doctools.js?v=9bcbadda"></script>
+      <script src="../../../../_static/sphinx_highlight.js?v=dc90522c"></script>
+    <script src="../../../../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../../search.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="../../../../index.html">
+            
+              <img src="../../../../_static/logo-white.png" class="logo" alt="Logo"/>
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">📚 Overview</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../../usage.html">Usage</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../package.html">torchdistill API</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">🧑🏻‍💻 Research</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../../benchmarks.html">Benchmarks</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../projects.html">Projects</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../../../index.html">torchdistill</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content style-external-links">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../../../../index.html" class="icon icon-home" aria-label="Home"></a></li>
+          <li class="breadcrumb-item"><a href="../../../index.html">Module code</a></li>
+      <li class="breadcrumb-item active">torchdistill.core.interfaces.pre_forward_proc</li>
+      <li class="wy-breadcrumbs-aside">
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <h1>Source code for torchdistill.core.interfaces.pre_forward_proc</h1><div class="highlight"><pre>
+<span></span><span class="kn">import</span><span class="w"> </span><span class="nn">torch</span>
+
+<span class="kn">from</span><span class="w"> </span><span class="nn">.registry</span><span class="w"> </span><span class="kn">import</span> <span class="n">register_pre_forward_proc_func</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">...common.constant</span><span class="w"> </span><span class="kn">import</span> <span class="n">def_logger</span>
+
+<span class="n">logger</span> <span class="o">=</span> <span class="n">def_logger</span><span class="o">.</span><span class="n">getChild</span><span class="p">(</span><span class="vm">__name__</span><span class="p">)</span>
+
+
+<span class="nd">@register_pre_forward_proc_func</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">default_pre_forward_process</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+    <span class="k">pass</span>
+
+
+<div class="viewcode-block" id="generate_on_policy_sequences">
+<a class="viewcode-back" href="../../../../subpkgs/core.html#torchdistill.core.interfaces.pre_forward_proc.generate_on_policy_sequences">[docs]</a>
+<span class="nd">@register_pre_forward_proc_func</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">generate_on_policy_sequences</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">sample_batch</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="o">**</span><span class="n">generation_kwargs</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">"""</span>
+<span class="sd">    Collects on-policy data by letting the student generate completions for the prompts in ``sample_batch``.</span>
+
+<span class="sd">    The generated sequences are written back into ``sample_batch`` so that the teacher and student forward</span>
+<span class="sd">    processes score the same sequences, and so that the mid-level loss can restrict the KL divergence to the</span>
+<span class="sd">    generated (completion) tokens:</span>
+
+<span class="sd">    * ``on_policy_input_ids`` / ``on_policy_attention_mask``: prompt + generated completion.</span>
+<span class="sd">    * ``completion_mask``: True at the generated positions up to and including the first EOS token.</span>
+<span class="sd">    * ``prompt_length``: width of the left-padded prompt tensor, i.e. the offset at which completions start.</span>
+
+<span class="sd">    Prompts are left-padded by the collate function, so every completion starts at the same offset and the</span>
+<span class="sd">    boundary is a single integer rather than a per-sample index.</span>
+
+<span class="sd">    :param self: training/distillation box.</span>
+<span class="sd">    :type self: torchdistill.core.training.TrainingBox or torchdistill.core.distillation.DistillationBox</span>
+<span class="sd">    :param sample_batch: sample batch, updated in place.</span>
+<span class="sd">    :type sample_batch: dict</span>
+<span class="sd">    :param generation_kwargs: kwargs for ``generate`` e.g., ``max_new_tokens``, ``do_sample``, ``temperature``.</span>
+<span class="sd">    :type generation_kwargs: dict</span>
+<span class="sd">    """</span>
+    <span class="k">if</span> <span class="n">sample_batch</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="k">return</span>
+
+    <span class="k">if</span> <span class="s1">'prompt_input_ids'</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">sample_batch</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">KeyError</span><span class="p">(</span>
+            <span class="s1">'on-policy rollouts require prompts (`prompt_input_ids` and `prompt_attention_mask`) in the batch'</span>
+        <span class="p">)</span>
+
+    <span class="c1"># TrainingBox exposes the model as `model`, and DistillationBox as `student_model`</span>
+    <span class="n">student_model</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">student_model</span> <span class="k">if</span> <span class="nb">hasattr</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="s1">'student_model'</span><span class="p">)</span> <span class="k">else</span> <span class="bp">self</span><span class="o">.</span><span class="n">model</span>
+    <span class="c1"># Unwrap so that `generate` is reachable regardless of DataParallel/DDP/FSDP wrapping</span>
+    <span class="n">unwrapped_student_model</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">accelerator</span><span class="o">.</span><span class="n">unwrap_model</span><span class="p">(</span><span class="n">student_model</span><span class="p">)</span> <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">accelerator</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> \
+        <span class="k">else</span> <span class="n">student_model</span>
+    <span class="n">pad_token_id</span> <span class="o">=</span> <span class="n">unwrapped_student_model</span><span class="o">.</span><span class="n">config</span><span class="o">.</span><span class="n">pad_token_id</span>
+    <span class="n">prompt_input_ids</span> <span class="o">=</span> <span class="n">sample_batch</span><span class="p">[</span><span class="s1">'prompt_input_ids'</span><span class="p">]</span>
+    <span class="n">was_training</span> <span class="o">=</span> <span class="n">unwrapped_student_model</span><span class="o">.</span><span class="n">training</span>
+    <span class="n">unwrapped_student_model</span><span class="o">.</span><span class="n">eval</span><span class="p">()</span>
+    <span class="k">with</span> <span class="n">torch</span><span class="o">.</span><span class="n">no_grad</span><span class="p">():</span>
+        <span class="n">generated_ids</span> <span class="o">=</span> <span class="n">unwrapped_student_model</span><span class="o">.</span><span class="n">generate</span><span class="p">(</span>
+            <span class="n">input_ids</span><span class="o">=</span><span class="n">prompt_input_ids</span><span class="p">,</span> <span class="n">attention_mask</span><span class="o">=</span><span class="n">sample_batch</span><span class="p">[</span><span class="s1">'prompt_attention_mask'</span><span class="p">],</span>
+            <span class="n">pad_token_id</span><span class="o">=</span><span class="n">pad_token_id</span><span class="p">,</span> <span class="o">**</span><span class="n">generation_kwargs</span>
+        <span class="p">)</span>
+    <span class="n">unwrapped_student_model</span><span class="o">.</span><span class="n">train</span><span class="p">(</span><span class="n">was_training</span><span class="p">)</span>
+
+    <span class="n">prompt_length</span> <span class="o">=</span> <span class="n">prompt_input_ids</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span>
+    <span class="c1"># Many causal LMs reuse EOS as the pad token (SmolLM2's chat template even puts it inside every prompt), so</span>
+    <span class="c1"># comparing against pad_token_id would mask real tokens. The prompt part keeps the collator's mask, and a</span>
+    <span class="c1"># completion is valid up to and including its first EOS; `generate` only pads after that</span>
+    <span class="n">generation_config</span> <span class="o">=</span> <span class="n">generation_kwargs</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">'generation_config'</span><span class="p">,</span> <span class="n">unwrapped_student_model</span><span class="o">.</span><span class="n">generation_config</span><span class="p">)</span>
+    <span class="n">eos_token_id</span> <span class="o">=</span> <span class="n">generation_kwargs</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">'eos_token_id'</span><span class="p">,</span> <span class="n">generation_config</span><span class="o">.</span><span class="n">eos_token_id</span><span class="p">)</span>
+    <span class="n">completion_ids</span> <span class="o">=</span> <span class="n">generated_ids</span><span class="p">[:,</span> <span class="n">prompt_length</span><span class="p">:]</span>
+    <span class="k">if</span> <span class="n">eos_token_id</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="n">completion_mask</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">ones_like</span><span class="p">(</span><span class="n">completion_ids</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="n">torch</span><span class="o">.</span><span class="n">bool</span><span class="p">)</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">is_eos</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">isin</span><span class="p">(</span><span class="n">completion_ids</span><span class="p">,</span> <span class="n">torch</span><span class="o">.</span><span class="n">tensor</span><span class="p">(</span><span class="n">eos_token_id</span><span class="p">,</span> <span class="n">device</span><span class="o">=</span><span class="n">completion_ids</span><span class="o">.</span><span class="n">device</span><span class="p">)</span><span class="o">.</span><span class="n">view</span><span class="p">(</span><span class="o">-</span><span class="mi">1</span><span class="p">))</span>
+        <span class="n">completion_mask</span> <span class="o">=</span> <span class="p">(</span><span class="n">is_eos</span><span class="o">.</span><span class="n">long</span><span class="p">()</span><span class="o">.</span><span class="n">cumsum</span><span class="p">(</span><span class="n">dim</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span> <span class="o">-</span> <span class="n">is_eos</span><span class="o">.</span><span class="n">long</span><span class="p">())</span> <span class="o">==</span> <span class="mi">0</span>
+
+    <span class="n">sample_batch</span><span class="p">[</span><span class="s1">'on_policy_input_ids'</span><span class="p">]</span> <span class="o">=</span> <span class="n">generated_ids</span>
+    <span class="n">sample_batch</span><span class="p">[</span><span class="s1">'on_policy_attention_mask'</span><span class="p">]</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">cat</span><span class="p">(</span>
+        <span class="p">[</span><span class="n">sample_batch</span><span class="p">[</span><span class="s1">'prompt_attention_mask'</span><span class="p">],</span> <span class="n">completion_mask</span><span class="o">.</span><span class="n">long</span><span class="p">()],</span> <span class="n">dim</span><span class="o">=</span><span class="mi">1</span>
+    <span class="p">)</span>
+    <span class="n">sample_batch</span><span class="p">[</span><span class="s1">'completion_mask'</span><span class="p">]</span> <span class="o">=</span> <span class="n">completion_mask</span>
+    <span class="n">sample_batch</span><span class="p">[</span><span class="s1">'prompt_length'</span><span class="p">]</span> <span class="o">=</span> <span class="n">prompt_length</span></div>
+
+</pre></div>
+
+           </div>
+          </div>
+          <footer>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2023-2026, Yoshitomo Matsubara.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script>
+    <!-- Theme Analytics -->
+    <script async src="https://www.googletagmanager.com/gtag/js?id=G-LYK8SSJ7R5"></script>
+    <script>
+      window.dataLayer = window.dataLayer || [];
+      function gtag(){dataLayer.push(arguments);}
+      gtag('js', new Date());
+
+      gtag('config', 'G-LYK8SSJ7R5', {
+          'anonymize_ip': false,
+      });
+    </script> 
+
+</body>
+</html>
