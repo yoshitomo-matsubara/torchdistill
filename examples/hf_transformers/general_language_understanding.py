@@ -115,7 +115,7 @@ def load_raw_glue_datasets_and_misc(task_name, train_file_path=None, valid_file_
     # download the dataset.
     if task_name is not None:
         # Downloading and loading a dataset from the hub.
-        raw_datasets = load_dataset('glue', task_name)
+        raw_datasets = load_dataset('nyu-mll/glue', task_name)
     else:
         # Loading the dataset from local csv or json file.
         data_files = {}
@@ -421,7 +421,9 @@ def main(args):
 
     # register collate function
     register_collate_func(
-        DataCollatorWithPadding(student_tokenizer, pad_to_multiple_of=(8 if accelerator.use_fp16 else None))
+        DataCollatorWithPadding(
+            student_tokenizer, pad_to_multiple_of=(8 if accelerator.mixed_precision != 'no' else None)
+        )
     )
 
     # Get the metric function
