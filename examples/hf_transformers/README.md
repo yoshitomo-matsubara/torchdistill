@@ -142,3 +142,51 @@ Add `--mixed_precision fp16` (T4) or `--mixed_precision bf16` (Ampere or newer G
 for mixed-precision training.
 Add `-test_only` to evaluate a trained checkpoint without training, and `-disable_tracker` to run without the
 trackio tracker configured in the sample configs.
+
+## 4. Summarization tasks
+[summarization.py](summarization.py) trains summarization models with or without a teacher, and evaluates them by
+ROUGE-1/2/L of the generated summaries.
+Both encoder-decoder (e.g., T5) and decoder-only (e.g., SmolLM2) models are supported; the architecture is read
+from the checkpoint, and the teacher and the student must agree.
+The sample configs `configs/sample/xsum/` reproduce the XSum experiments of
+[GKD (Agarwal et al., ICLR 2024)](https://openreview.net/forum?id=3zKtaqxLhW) with the LM-adapted T5 v1.1 models
+the paper uses, following its hyperparameters (Table A.1): 40,000 steps at batch size 32 with Adafactor,
+greedy decoding, and ROUGE-2 on the validation split of the last checkpoint.
+
+| Setting | Config directory | Teacher |
+| :-- | :-- | :-- |
+| Fine-tuning (no teacher) | `configs/sample/xsum/fine_tuning/` | — |
+| Off-policy KD (supervised KD) | `configs/sample/xsum/off_policy_kd/` | T5-XL fine-tuned on XSum |
+| On-policy KD (GKD, forward or reverse KL) | `configs/sample/xsum/on_policy_kd/` | T5-XL fine-tuned on XSum |
+
+The sample configs assume two GPUs (e.g., 2x RTX 3090 Ti) with bf16; T5 overflows in fp16.
+On a single GPU, drop `--multi_gpu --num_processes 2` and double `grad_accum_step` to keep the batch size at 32.
+Keep `--multi_gpu` in the commands below: if `~/.cache/huggingface/accelerate/default_config.yaml` exists and says
+`distributed_type: 'NO'`, `--num_processes 2` alone is silently ignored and the run uses one GPU at half the
+batch size. The run log's `Distributed environment` line should show `MULTI_GPU` and `Num processes: 2`.
+
+### Fine-tuning
+Every KD config starts from fine-tuned checkpoints, so fine-tune the teacher (T5-XL) and the student first.
+e.g., Fine-tuning T5-small on XSum, which is also the student's no-distillation baseline
+```shell
+accelerate launch --multi_gpu --num_processes 2 --mixed_precision bf16 examples/hf_transformers/summarization.py \
+  --config configs/sample/xsum/fine_tuning/t5_small.yaml \
+  --run_log log/xsum/fine_tuning/t5_small.txt \
+  --seed 42
+```
+
+T5-XL does not fit one 24 GB GPU for fine-tuning; the header of `configs/sample/xsum/fine_tuning/t5_xl.yaml`
+gives the FSDP launch command.
+
+### Off-policy and on-policy knowledge distillation
+e.g., Distilling the fine-tuned T5-XL into the fine-tuned T5-small with on-policy GKD (forward KL)
+```shell
+accelerate launch --multi_gpu --num_processes 2 --mixed_precision bf16 examples/hf_transformers/summarization.py \
+  --config configs/sample/xsum/on_policy_kd/t5_small_from_t5_xl.yaml \
+  --run_log log/xsum/on_policy_kd/t5_small_from_t5_xl.txt \
+  --seed 42
+```
+
+Use `configs/sample/xsum/off_policy_kd/t5_small_from_t5_xl.yaml` for supervised KD, and
+`configs/sample/xsum/on_policy_kd/t5_small_from_t5_xl_reverse_kl.yaml` for on-policy GKD with reverse KL.
+Configs for T5-base and T5-large students follow the same naming.

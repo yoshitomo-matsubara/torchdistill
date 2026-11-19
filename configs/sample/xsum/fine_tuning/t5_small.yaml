@@ -1,0 +1,187 @@
+# Sample config for fine-tuning T5-small (77M) on XSum using torchdistill, reproducing the supervised
+# fine-tuning stage of GKD (Agarwal et al., ICLR 2024, Appendix A.2). This checkpoint is the student that every KD config for T5-small starts from, and its no-distillation baseline.
+# Model:   LM-adapted T5 v1.1 small (google/t5-small-lm-adapt), as in the paper
+# Dataset: EdinburghNLP/xsum; ROUGE-2 of greedy decoding on the validation split is the paper's metric
+#
+# The paper fine-tunes T5-small for 100,000 steps and gives no other SFT hyperparameters, so this config reuses
+# those of its distillation runs (Table A.1: Adafactor, batch size 32, input/output length
+# 1024/64, LR 1.0e-3 per Appendix A.3), with the warmup and cooldown at the same proportions of the run (5% and
+# the last 25%). Paper's ROUGE-2 after this stage: 13.4.
+# Dropout is the one exception: T5 v1.1's default 0.1 instead of Table A.1's 0.0. With 0.0 these runs overfit
+# (T5-base: monitor perplexity 5.2 after epoch 1, 52 after epoch 8) and fall short of the paper's ROUGE-2;
+# see designs/xsum_gkd_reproduction.md.
+#
+# Usage (bf16 on Ampere or newer; T5 overflows in fp16):
+#   CUDA_VISIBLE_DEVICES=0,1 uv run accelerate launch --multi_gpu --num_processes 2 --mixed_precision bf16 \
+#     examples/hf_transformers/summarization.py \
+#     --config configs/sample/xsum/fine_tuning/t5_small.yaml \
+#     --run_log log/xsum/fine_tuning/t5_small.txt \
+#     --seed 42
+
+dependencies:
+  - name: 'custom'
+
+# XSum's own splits, plus a fixed 1% carve-out of the training split used only to monitor perplexity. The
+# paper reports the validation split and selects no checkpoint, so no split that is reported is ever used
+# for a decision; `ckpt_selection: 'last'` below keeps it that way
+datasets:
+  train: !import_call
+    key: 'datasets.load_dataset'
+    init:
+      kwargs:
+        path: 'EdinburghNLP/xsum'
+        split: 'train[:99%]'
+  monitor: !import_call
+    key: 'datasets.load_dataset'
+    init:
+      kwargs:
+        path: 'EdinburghNLP/xsum'
+        split: 'train[99%:]'
+  validation: !import_call
+    key: 'datasets.load_dataset'
+    init:
+      kwargs:
+        path: 'EdinburghNLP/xsum'
+        split: 'validation'
+  test: !import_call
+    key: 'datasets.load_dataset'
+    init:
+      kwargs:
+        path: 'EdinburghNLP/xsum'
+        split: 'test'
+
+preprocess:
+  document_key: 'document'
+  summary_key: 'summary'
+  # The paper does not state its input format; this is the T5 convention
+  input_prefix: 'summarize: '
+  max_input_length: 1024
+  max_target_length: 64
+  base_split_name: 'train'
+  batched: True
+  num_proc: 8
+  dataset_id_map:
+    &train_dataset_id 'xsum/train': 'train'
+    &monitor_dataset_id 'xsum/monitor': 'monitor'
+    &val_dataset_id 'xsum/val': 'validation'
+    &test_dataset_id 'xsum/test': 'test'
+
+models:
+  model:
+    key: &model_key 'google/t5-small-lm-adapt'
+    tokenizer_kwargs:
+      pretrained_model_name_or_path: *model_key
+    model_kwargs:
+      pretrained_model_name_or_path: *model_key
+      # T5 v1.1's default. Table A.1's 0.0 is for distillation and overfits in plain fine-tuning
+      dropout_rate: 0.1
+    _experiment: &experiment 't5_small'
+    src_ckpt:
+    dst_ckpt: !join ['./resource/ckpt/xsum/fine_tuning/', *experiment]
+
+train:
+  log_freq: 1000
+  # max_steps caps the run; num_epochs only has to be large enough to reach it
+  max_steps: &max_steps 100000
+  num_epochs: 16
+  ckpt_selection: 'last'
+  train_data_loader:
+    dataset_id: *train_dataset_id
+    sampler:
+      class_or_func: !import_get
+        key: 'torch.utils.data.RandomSampler'
+      kwargs:
+    kwargs:
+      # Per process: 8 x grad_accum_step 2 x 2 GPUs = 32, the paper's batch size. On a
+      # single GPU, double grad_accum_step
+      batch_size: 8
+      num_workers: 4
+      pin_memory: True
+      drop_last: False
+    collate_fn: 'Seq2SeqDataCollator'
+    requires_supp: False
+  val_data_loader:
+    dataset_id: *monitor_dataset_id
+    sampler: &val_sampler
+      class_or_func: !import_get
+        key: 'torch.utils.data.SequentialSampler'
+      kwargs:
+    kwargs:
+      batch_size: 16
+      num_workers: 4
+      pin_memory: True
+      drop_last: False
+    collate_fn: 'Seq2SeqDataCollator'
+    requires_supp: False
+  # No `pre_forward_proc`: plain fine-tuning on the reference summaries
+  model:
+    forward_proc: 'forward_batch_as_kwargs'
+    adaptations:
+    sequential: []
+    forward_hook:
+      input: []
+      output: []
+    wrapper:
+    requires_grad: True
+    frozen_modules: []
+  optimizer:
+    # T5's Adafactor with an external LR schedule (custom/optim.py registers it as 'HFAdafactor')
+    key: 'HFAdafactor'
+    kwargs:
+      lr: 1.0e-3
+      scale_parameter: False
+      relative_step: False
+      warmup_init: False
+    filters_params: True
+    grad_accum_step: 2
+  scheduler:
+    # Linear warmup, constant, then linear cooldown to 0 over the last 25000 steps
+    key: 'get_wsd_schedule'
+    kwargs:
+      num_warmup_steps: 5000
+      num_decay_steps: 25000
+      num_training_steps: *max_steps
+      warmup_type: 'linear'
+      decay_type: 'linear'
+    scheduling_step: 1
+  criterion:
+    key: 'WeightedSumLoss'
+    kwargs:
+      model_term:
+        weight: 1.0
+      sub_terms:
+    func2extract_model_loss: 'extract_transformers_loss'
+
+test:
+  # Greedy decoding, as for the paper's Figure 1 and Figure A.13
+  generation_kwargs:
+    max_new_tokens: 64
+    do_sample: False
+    num_beams: 1
+  test_data_loaders:
+    # The paper's reporting split
+    validation:
+      dataset_id: *val_dataset_id
+      sampler: *val_sampler
+      kwargs:
+        batch_size: 32
+        num_workers: 4
+        pin_memory: True
+        drop_last: False
+      collate_fn: 'Seq2SeqDataCollator'
+    test:
+      dataset_id: *test_dataset_id
+      sampler: *val_sampler
+      kwargs:
+        batch_size: 32
+        num_workers: 4
+        pin_memory: True
+        drop_last: False
+      collate_fn: 'Seq2SeqDataCollator'
+
+# Optional: remove this block (or pass -disable_tracker) to run without trackio
+tracker:
+  engine: 'trackio'
+  kwargs:
+    project: 'torchdistill-xsum'
+    name: !join ['fine_tuning-', *experiment]

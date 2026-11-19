@@ -175,6 +175,9 @@ def forward_on_policy_sequences(model, sample_batch, targets=None, supp_dict=Non
 
     Used for the teacher, and for the student when the criterion has no model (task) loss term.
 
+    For an encoder-decoder model, i.e., when `sample_batch` carries ``on_policy_decoder_input_ids``, the prompt is
+    the encoder input and the rollout is the decoder input.
+
     :param model: model.
     :type model: nn.Module
     :param sample_batch: sample batch.
@@ -186,6 +189,13 @@ def forward_on_policy_sequences(model, sample_batch, targets=None, supp_dict=Non
     :return: model's forward output.
     :rtype: Any
     """
+    if 'on_policy_decoder_input_ids' in sample_batch:
+        return model(
+            input_ids=sample_batch['prompt_input_ids'], attention_mask=sample_batch['prompt_attention_mask'],
+            decoder_input_ids=sample_batch['on_policy_decoder_input_ids'],
+            decoder_attention_mask=sample_batch['on_policy_decoder_attention_mask']
+        )
+
     attention_mask = sample_batch['on_policy_attention_mask']
     model_kwargs = {'input_ids': sample_batch['on_policy_input_ids'], 'attention_mask': attention_mask}
     # The prompts are left-padded, and without explicit position ids most models count positions from the first

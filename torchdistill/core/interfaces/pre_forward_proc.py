@@ -27,6 +27,11 @@ def generate_on_policy_sequences(self, sample_batch=None, **generation_kwargs):
     Prompts are left-padded by the collate function, so every completion starts at the same offset and the
     boundary is a single integer rather than a per-sample index.
 
+    For an encoder-decoder model (``config.is_encoder_decoder``), the prompt goes to the encoder and ``generate``
+    returns the decoder sequence only, starting with the decoder start token. The rollout is then stored as
+    ``on_policy_decoder_input_ids`` / ``on_policy_decoder_attention_mask`` instead of ``on_policy_input_ids`` /
+    ``on_policy_attention_mask``, and ``prompt_length`` is 1, the offset of the first generated token.
+
     :param self: training/distillation box.
     :type self: torchdistill.core.training.TrainingBox or torchdistill.core.distillation.DistillationBox
     :param sample_batch: sample batch, updated in place.
@@ -58,7 +63,8 @@ def generate_on_policy_sequences(self, sample_batch=None, **generation_kwargs):
         )
     unwrapped_student_model.train(was_training)
 
-    prompt_length = prompt_input_ids.shape[1]
+    is_encoder_decoder = getattr(unwrapped_student_model.config, 'is_encoder_decoder', False)
+    prompt_length = 1 if is_encoder_decoder else prompt_input_ids.shape[1]
     # Many causal LMs reuse EOS as the pad token (SmolLM2's chat template even puts it inside every prompt), so
     # comparing against pad_token_id would mask real tokens. The prompt part keeps the collator's mask, and a
     # completion is valid up to and including its first EOS; `generate` only pads after that
@@ -71,9 +77,16 @@ def generate_on_policy_sequences(self, sample_batch=None, **generation_kwargs):
         is_eos = torch.isin(completion_ids, torch.tensor(eos_token_id, device=completion_ids.device).view(-1))
         completion_mask = (is_eos.long().cumsum(dim=1) - is_eos.long()) == 0
 
-    sample_batch['on_policy_input_ids'] = generated_ids
-    sample_batch['on_policy_attention_mask'] = torch.cat(
-        [sample_batch['prompt_attention_mask'], completion_mask.long()], dim=1
-    )
+    if is_encoder_decoder:
+        # The decoder start token is always attended, like the prompt in the decoder-only case
+        sample_batch['on_policy_decoder_input_ids'] = generated_ids
+        sample_batch['on_policy_decoder_attention_mask'] = torch.cat(
+            [torch.ones_like(generated_ids[:, :1]), completion_mask.long()], dim=1
+        )
+    else:
+        sample_batch['on_policy_input_ids'] = generated_ids
+        sample_batch['on_policy_attention_mask'] = torch.cat(
+            [sample_batch['prompt_attention_mask'], completion_mask.long()], dim=1
+        )
     sample_batch['completion_mask'] = completion_mask
     sample_batch['prompt_length'] = prompt_length
