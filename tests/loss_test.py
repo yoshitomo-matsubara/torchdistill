@@ -735,6 +735,26 @@ class AutoregressiveKDLossUnitTest(TestCase):
         expected_loss = self._compute_loss(OffPolicyKDLoss(), {'labels': default_labels})
         assert torch.equal(loss, expected_loss)
 
+    def test_off_policy_without_shift_scores_logits_at_label_positions(self):
+        labels = torch.randint(0, self.vocab_size, (self.batch_size, self.seq_len))
+        labels[1, -2:] = -100
+        # Unshifted labels: logits[:, t] is scored against labels[:, t], i.e. the scored element t + 1 below
+        scored_pairs = [
+            (b, t + 1) for b in range(self.batch_size) for t in range(self.seq_len) if labels[b, t] != -100
+        ]
+        for kl_type in ('forward', 'reverse'):
+            loss = self._compute_loss(OffPolicyKDLoss(kl_type=kl_type, shift_labels=False), {'labels': labels})
+            assert torch.allclose(loss, self._manual_kl(scored_pairs, kl_type), atol=1e-6)
+
+    def test_teacher_temperature_scales_teacher_logits_only(self):
+        labels = torch.randint(0, self.vocab_size, (self.batch_size, self.seq_len))
+        temperature = 0.1
+        loss = self._compute_loss(OffPolicyKDLoss(teacher_temperature=temperature), {'labels': labels})
+        expected_loss = self._compute_loss(
+            OffPolicyKDLoss(), {'labels': labels}, teacher_logits=self.teacher_logits / temperature
+        )
+        assert torch.equal(loss, expected_loss)
+
     def test_on_policy_scores_masked_completion_only(self):
         completion_mask = torch.ones(self.batch_size, self.seq_len - self.prompt_length, dtype=torch.bool)
         completion_mask[0, -1] = False

@@ -2082,10 +2082,11 @@ class AutoregressiveKDLoss(nn.Module):
     A base class of the KL divergence between the student's and teacher's next-step distributions of
     autoregressive models.
 
-    Subclasses only decide *which* positions are scored, by implementing :meth:`get_scored_positions`.
-    The shift convention is shared: logits at position *t* predict the element at *t + 1*, so a slice
-    ``[start - 1: -1]`` of the logits lines up with the elements at ``[start:]``. Nothing else is assumed about
-    the elements, which can be text tokens as well as e.g., audio or vector-quantized image tokens.
+    Subclasses only decide *which* positions are scored, by implementing :meth:`get_scored_positions`, which
+    returns the slice of the logits over the sequence dimension and the mask over that slice. In a decoder-only
+    model, logits at position *t* predict the element at *t + 1*, so a slice ``[start - 1: -1]`` of the logits
+    lines up with the elements at ``[start:]``. Nothing else is assumed about the elements, which can be text
+    tokens as well as e.g., audio or vector-quantized image tokens.
 
     The KL divergence is averaged over the scored positions.
 
@@ -2099,6 +2100,8 @@ class AutoregressiveKDLoss(nn.Module):
     :type teacher_module_path: str
     :param teacher_module_io: 'input' or 'output' of the module in the teacher model.
     :type teacher_module_io: str
+    :param teacher_temperature: softmax temperature applied to the teacher logits.
+    :type teacher_temperature: float
 
     .. note::
         If the module output has ``logits`` attribute (e.g., ``CausalLMOutput`` of Hugging Face transformers),
@@ -2106,7 +2109,7 @@ class AutoregressiveKDLoss(nn.Module):
     """
     def __init__(
             self, kl_type='forward', student_module_path=SELF_MODULE_PATH, student_module_io='output',
-            teacher_module_path=SELF_MODULE_PATH, teacher_module_io='output', **kwargs
+            teacher_module_path=SELF_MODULE_PATH, teacher_module_io='output', teacher_temperature=1.0, **kwargs
     ):
         super().__init__()
         if kl_type not in ('forward', 'reverse'):
@@ -2117,6 +2120,7 @@ class AutoregressiveKDLoss(nn.Module):
         self.student_module_io = student_module_io
         self.teacher_module_path = teacher_module_path
         self.teacher_module_io = teacher_module_io
+        self.teacher_temperature = teacher_temperature
 
     @staticmethod
     def extract_logits(io_dict, module_path, module_io):
@@ -2125,26 +2129,29 @@ class AutoregressiveKDLoss(nn.Module):
 
     def get_scored_positions(self, targets):
         """
-        Returns the offset of the first scored element and the boolean mask over the scored positions.
+        Returns the slice of the logits to score and the boolean mask over the sliced positions.
 
         :param targets: sample batch, which the training script passes as the targets.
         :type targets: dict
-        :return: index of the first scored element, and a mask of shape (batch size, sequence length - offset).
-        :rtype: (int, torch.Tensor)
+        :return: slice over the sequence dimension of the logits, and a mask of shape (batch size, sliced length).
+        :rtype: (slice, torch.Tensor)
         """
         raise NotImplementedError
 
     def forward(self, student_io_dict, teacher_io_dict, targets, *args, **kwargs):
         student_logits = self.extract_logits(student_io_dict, self.student_module_path, self.student_module_io)
         teacher_logits = self.extract_logits(teacher_io_dict, self.teacher_module_path, self.teacher_module_io)
-        start_index, scored_mask = self.get_scored_positions(targets)
+        logit_slice, scored_mask = self.get_scored_positions(targets)
         if not scored_mask.any():
             # Differentiable zero, in case a batch has nothing to score
             return student_logits.sum() * 0.0
 
-        # logits[:, start_index - 1: -1] predicts the elements at [:, start_index:]
-        student_log_probs = torch.log_softmax(student_logits[:, start_index - 1: -1, :], dim=-1)[scored_mask]
-        teacher_log_probs = torch.log_softmax(teacher_logits[:, start_index - 1: -1, :], dim=-1)[scored_mask]
+        teacher_logits = teacher_logits[:, logit_slice, :]
+        if self.teacher_temperature != 1.0:
+            teacher_logits = teacher_logits / self.teacher_temperature
+
+        student_log_probs = torch.log_softmax(student_logits[:, logit_slice, :], dim=-1)[scored_mask]
+        teacher_log_probs = torch.log_softmax(teacher_logits, dim=-1)[scored_mask]
         if self.kl_type == 'forward':
             # KL(p_teacher ∥ p_student): the gradient flows through the student log-probabilities
             return kl_div(student_log_probs, teacher_log_probs.detach().exp(), reduction='batchmean')
@@ -2165,7 +2172,8 @@ class OnPolicyKDLoss(AutoregressiveKDLoss):
 
     Only the generated (completion) elements are scored. The prompt/completion boundary and the completion mask
     are read from ``prompt_length`` and ``completion_mask`` in the batch, which ``generate_on_policy_sequences``
-    writes and the training script passes as ``targets``.
+    writes and the training script passes as ``targets``. This covers encoder-decoder models as well, whose
+    rollout is the decoder sequence with ``prompt_length`` 1.
 
     :param kl_type: 'forward' for KL(p_teacher ∥ p_student), which is teacher-covering, or 'reverse' for KL(p_student ∥ p_teacher), which is mode-seeking.
     :type kl_type: str
@@ -2177,6 +2185,8 @@ class OnPolicyKDLoss(AutoregressiveKDLoss):
     :type teacher_module_path: str
     :param teacher_module_io: 'input' or 'output' of the module in the teacher model.
     :type teacher_module_io: str
+    :param teacher_temperature: softmax temperature applied to the teacher logits.
+    :type teacher_temperature: float
 
     .. code-block:: yaml
        :caption: An example YAML to instantiate :class:`OnPolicyKDLoss` for a teacher-student pair of causal language models in Hugging Face transformers.
@@ -2191,7 +2201,8 @@ class OnPolicyKDLoss(AutoregressiveKDLoss):
             teacher_module_io: 'output'
     """
     def get_scored_positions(self, targets):
-        return targets['prompt_length'], targets['completion_mask']
+        # logits[:, prompt_length - 1: -1] predict the generated elements at [:, prompt_length:]
+        return slice(targets['prompt_length'] - 1, -1), targets['completion_mask']
 
 
 @register_mid_level_loss
@@ -2214,10 +2225,16 @@ class OffPolicyKDLoss(AutoregressiveKDLoss):
     :type teacher_module_path: str
     :param teacher_module_io: 'input' or 'output' of the module in the teacher model.
     :type teacher_module_io: str
+    :param teacher_temperature: softmax temperature applied to the teacher logits.
+    :type teacher_temperature: float
     :param label_key: key of the labels in the targets, aligned with the input elements.
     :type label_key: str
     :param ignore_index: label value of the positions to be excluded e.g., prompt and padding.
     :type ignore_index: int
+    :param shift_labels: True if the labels are aligned with the input elements as in decoder-only models, and
+        False if ``labels[:, t]`` is the target of ``logits[:, t]`` as in encoder-decoder models of Hugging Face
+        transformers, which shift the labels into the decoder input internally.
+    :type shift_labels: bool
 
     .. code-block:: yaml
        :caption: An example YAML to instantiate :class:`OffPolicyKDLoss` for a teacher-student pair of causal language models in Hugging Face transformers.
@@ -2231,11 +2248,15 @@ class OffPolicyKDLoss(AutoregressiveKDLoss):
             teacher_module_path: '.'
             teacher_module_io: 'output'
     """
-    def __init__(self, label_key='labels', ignore_index=-100, **kwargs):
+    def __init__(self, label_key='labels', ignore_index=-100, shift_labels=True, **kwargs):
         super().__init__(**kwargs)
         self.label_key = label_key
         self.ignore_index = ignore_index
+        self.shift_labels = shift_labels
 
     def get_scored_positions(self, targets):
+        labels = targets[self.label_key]
+        if not self.shift_labels:
+            return slice(None), labels != self.ignore_index
         # Labels are aligned with the input elements, so position 0 is never predicted by any logit
-        return 1, targets[self.label_key][:, 1:] != self.ignore_index
+        return slice(0, -1), labels[:, 1:] != self.ignore_index

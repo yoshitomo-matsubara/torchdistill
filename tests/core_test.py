@@ -803,6 +803,23 @@ class ToyCausalLMWithoutPositionIds(ToyCausalLM):
         return ToyCausalLMOutput(self.embed(input_ids))
 
 
+class ToySeq2SeqLM(ToyCausalLM):
+    """Encoder-decoder LM whose ``generate`` returns decoder sequences only, starting with the start token."""
+    def __init__(self, vocab_size=10, generated_ids=None, eos_token_id=None):
+        super().__init__(vocab_size, generated_ids, eos_token_id)
+        self.config = SimpleNamespace(pad_token_id=0, is_encoder_decoder=True)
+
+    def forward(self, input_ids, attention_mask=None, decoder_input_ids=None, decoder_attention_mask=None,
+                labels=None):
+        self.call_kwargs_list.append({
+            'input_ids': input_ids, 'attention_mask': attention_mask, 'decoder_input_ids': decoder_input_ids,
+            'decoder_attention_mask': decoder_attention_mask, 'labels': labels
+        })
+        logits = self.embed(decoder_input_ids if decoder_input_ids is not None else labels.clamp(min=0))
+        loss = None if labels is None else logits.sum() * 0.0 + labels.float().mean()
+        return ToyCausalLMOutput(logits, loss)
+
+
 class AutoregressiveForwardProcUnitTest(TestCase):
     def setUp(self):
         self.sample_batch = {
@@ -882,3 +899,35 @@ class AutoregressiveForwardProcUnitTest(TestCase):
         assert torch.equal(reference_kwargs['input_ids'], sample_batch['input_ids'])
         assert torch.equal(reference_kwargs['labels'], sample_batch['labels'])
         assert torch.equal(outputs.loss, sample_batch['labels'].float().mean())
+
+    def test_generate_on_policy_sequences_for_encoder_decoder_stores_decoder_rollouts(self):
+        eos_token_id = 2
+        # Decoder sequences: start token 0, then 4 generated elements padded with 0 after the first EOS
+        generated_ids = torch.tensor([[0, 8, 2, 0, 0], [0, 6, 7, 8, 9]])
+        model = ToySeq2SeqLM(generated_ids=generated_ids, eos_token_id=eos_token_id)
+        model.train()
+        box = SimpleNamespace(student_model=model, accelerator=None)
+        sample_batch = dict(self.sample_batch)
+        get_pre_forward_proc_func('generate_on_policy_sequences')(box, sample_batch=sample_batch, max_new_tokens=4)
+        assert model.training
+        assert sample_batch['prompt_length'] == 1
+        assert 'on_policy_input_ids' not in sample_batch
+        assert torch.equal(sample_batch['on_policy_decoder_input_ids'], generated_ids)
+        expected_completion_mask = torch.tensor([[True, True, False, False], [True, True, True, True]])
+        assert torch.equal(sample_batch['completion_mask'], expected_completion_mask)
+        assert torch.equal(
+            sample_batch['on_policy_decoder_attention_mask'], torch.tensor([[1, 1, 1, 0, 0], [1, 1, 1, 1, 1]])
+        )
+
+    def test_forward_on_policy_sequences_for_encoder_decoder_feeds_prompt_to_encoder(self):
+        model = ToySeq2SeqLM()
+        sample_batch = dict(self.sample_batch)
+        sample_batch['on_policy_decoder_input_ids'] = torch.tensor([[0, 8, 2], [0, 6, 7]])
+        sample_batch['on_policy_decoder_attention_mask'] = torch.tensor([[1, 1, 1], [1, 1, 1]])
+        outputs = get_forward_proc_func('forward_on_policy_sequences')(model, sample_batch)
+        call_kwargs = model.call_kwargs_list[0]
+        assert torch.equal(call_kwargs['input_ids'], sample_batch['prompt_input_ids'])
+        assert torch.equal(call_kwargs['attention_mask'], sample_batch['prompt_attention_mask'])
+        assert torch.equal(call_kwargs['decoder_input_ids'], sample_batch['on_policy_decoder_input_ids'])
+        assert torch.equal(call_kwargs['decoder_attention_mask'], sample_batch['on_policy_decoder_attention_mask'])
+        assert torch.equal(outputs.logits, model.embed(sample_batch['on_policy_decoder_input_ids']))

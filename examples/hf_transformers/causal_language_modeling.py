@@ -49,6 +49,7 @@ from accelerate import Accelerator
 from torch.backends import cudnn
 from transformers import AutoModelForCausalLM, AutoTokenizer
 
+from custom.dataset import OnPolicyDataCollator
 from custom.optim import customize_lr_config
 from torchdistill.common import file_util, yaml_util
 from torchdistill.common.constant import def_logger
@@ -257,53 +258,6 @@ def collate_lm_blocks(features):
         key: torch.tensor([f[key] for f in features], dtype=torch.long)
         for key in ('input_ids', 'attention_mask', 'labels')
     }
-
-
-class OnPolicyDataCollator:
-    """
-    Collates variable-length sequences for on-policy LLM distillation.
-
-    Full sequences are right-padded (standard for training).
-    Prompt sequences are left-padded so that all prompts end at the same
-    position in the tensor — a requirement for batched causal-LM generation.
-    """
-
-    def __init__(self, pad_token_id):
-        self.pad_token_id = pad_token_id
-
-    def __call__(self, features):
-        input_ids = [f['input_ids'] for f in features]
-        attention_mask = [f['attention_mask'] for f in features]
-        labels = [f['labels'] for f in features]
-        prompt_input_ids = [f['prompt_input_ids'] for f in features]
-        prompt_attention_mask = [f['prompt_attention_mask'] for f in features]
-        prompt_lengths = [f['prompt_length'] for f in features]
-
-        max_len = max(len(ids) for ids in input_ids)
-        max_prompt_len = max(len(ids) for ids in prompt_input_ids)
-
-        padded_input_ids, padded_attn_mask, padded_labels = [], [], []
-        for ids, mask, label in zip(input_ids, attention_mask, labels):
-            pad_len = max_len - len(ids)
-            padded_input_ids.append(ids + [self.pad_token_id] * pad_len)
-            padded_attn_mask.append(mask + [0] * pad_len)
-            padded_labels.append(label + [-100] * pad_len)
-
-        # Left-pad prompts so all real tokens are flush with the right edge
-        padded_prompt_ids, padded_prompt_mask = [], []
-        for ids, mask in zip(prompt_input_ids, prompt_attention_mask):
-            pad_len = max_prompt_len - len(ids)
-            padded_prompt_ids.append([self.pad_token_id] * pad_len + ids)
-            padded_prompt_mask.append([0] * pad_len + mask)
-
-        return {
-            'input_ids': torch.tensor(padded_input_ids, dtype=torch.long),
-            'attention_mask': torch.tensor(padded_attn_mask, dtype=torch.long),
-            'labels': torch.tensor(padded_labels, dtype=torch.long),
-            'prompt_input_ids': torch.tensor(padded_prompt_ids, dtype=torch.long),
-            'prompt_attention_mask': torch.tensor(padded_prompt_mask, dtype=torch.long),
-            'prompt_lengths': torch.tensor(prompt_lengths, dtype=torch.long),
-        }
 
 
 # Chosen by `preprocess.key` in the yaml file, defaulting to 'instruction' for backward compatibility
@@ -522,8 +476,11 @@ def main(args):
 
     test_config = config['test']
     test_data_loader_config = test_config['test_data_loader']
+    # Passing the accelerator keeps build_data_loader from adding a DistributedSampler: prepare() shards the
+    # loader itself, and sharding twice would leave each process 1/N^2 of the samples
     test_data_loader = util.build_data_loader(
-        dataset_dict[test_data_loader_config['dataset_id']], test_data_loader_config, distributed
+        dataset_dict[test_data_loader_config['dataset_id']], test_data_loader_config, distributed,
+        accelerator=accelerator
     )
     test_data_loader = accelerator.prepare(test_data_loader)
     cudnn.benchmark = False
@@ -535,6 +492,8 @@ def main(args):
             teacher_model, test_data_loader, accelerator, title='[Teacher: {}]'.format(teacher_model_config['key'])
         )
 
+    # Only the main process writes the checkpoint; the others must not reload it before it is complete
+    accelerator.wait_for_everyone()
     # Reload best checkpoint for final evaluation
     _, student_model = load_tokenizer_and_model(student_model_config, prioritizes_dst_ckpt=True)
     student_model = accelerator.prepare(student_model)
